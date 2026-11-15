@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101720">
+<meta name="description" content="Paperchalk World 卡牌小游戏独立完整关卡：猎人枪手对吸血鬼小公主，三路线、三行动点、银弹与预告回合制。">
+<title>银月夜路｜猎人 vs 吸血鬼 · Paperchalk World</title>
+<link rel="stylesheet" href="./ui/hunter-vampire-duel.css?v=2">
+<script src="./engine/hunter-vampire-duel.js?v=2" defer></script>
+<script src="./ui/hunter-vampire-duel.js?v=2" defer></script>
+</head>
+<body>
+<div class="world" aria-hidden="true">
+ <div class="night-sky"></div><div class="moon-glow"></div><div class="moon"></div>
+ <div class="starfield"></div><div class="far-forest"></div><div class="near-forest"></div>
+ <div class="fog fog-a"></div><div class="fog fog-b"></div><div class="ground"></div>
+ <div class="floor-shine"></div><div class="vignette"></div>
+</div>
+<div id="game" class="game">
+<header class="topbar">
+ <a class="back" href="./forest-level-01.html" aria-label="返回森林关卡">‹ <span>森林关卡</span></a>
+ <div class="chapter"><small>第一场 · 独立猎杀战局</small><strong>银月夜路</strong><span>HUNTER × VAMPIRE</span></div>
+ <div class="top-actions"><button type="button" id="sound" title="声音开关" aria-pressed="false">♪ <span>声音关</span></button><button type="button" id="restart-top">↻ <span>重开</span></button></div>
+</header>
+<main class="arena" aria-label="猎人对吸血鬼的战斗区域">
+ <section class="fighter fighter-hunter" id="fighter-hunter" aria-label="我方猎人">
+  <div class="nameplate">
+   <div class="faction-name"><span class="crest">✣</span> 怪物猎人组织</div>
+   <h2>赏金枪手 <em>MARKSWOMAN</em></h2>
+   <div class="hp-line"><span class="bar"><span id="hero-hpbar"></span></span><strong id="hero-hp">30 / 30</strong></div>
+   <div class="mini-status"><span id="hero-shield" hidden>护盾 0</span><span id="hero-focus" hidden>蓄力 0</span></div>
+  </div>
+  <div class="portrait-wrap hero-portrait" id="hero-wrap"><img id="hero-original" src="../assets/characters/monster-hunters/04-bounty-markswoman.png" alt="赏金枪手的原始人物立绘"><canvas id="hero-cutout" width="704" height="1024" aria-hidden="true"></canvas></div>
+  <div class="ground-shadow"></div>
+  <div class="sprite-status" id="hero-effect" aria-hidden="true"></div>
+ </section>
+ <section class="tactical-center" aria-label="敌方行动预告">
+  <div class="round-marker"><span>ROUND</span><strong id="turn-count">01</strong></div>
+  <div class="versus">✦</div>
+  <div class="intent" id="intent-panel" aria-live="polite">
+   <div class="intent-eyebrow"><span class="pulsing-dot"></span> 下次敌方行动 · 已预告</div>
+   <div class="intent-title"><span id="intent-icon">✕</span><strong id="intent-name">血爪 · 猎杀</strong></div>
+   <p id="intent-desc"></p>
+  </div>
+  <div class="path-map" role="group" aria-label="三个可移动的战场位置">
+   <p>站位 <span>点击路线移动 · 花费 1 行动点</span></p>
+   <div id="lane-buttons" class="lane-buttons">
+    <button type="button" data-lane="0"><span class="lane-name">左翼</span><span class="lane-dot"></span><small></small></button>
+    <button type="button" data-lane="1"><span class="lane-name">中路</span><span class="lane-dot"></span><small></small></button>
+    <button type="button" data-lane="2"><span class="lane-name">右翼</span><span class="lane-dot"></span><small></small></button>
+   </div>
+   <div class="lane-legend"><span><i class="legend-you"></i> 你的位置</span><span><i class="legend-foe"></i> 敌人位置</span><span><i class="legend-danger"></i> 预告打击</span></div>
+  </div>
+ </section>
+ <section class="fighter fighter-vampire" id="fighter-vampire" aria-label="敌方吸血鬼">
+  <div class="nameplate">
+   <div class="faction-name"><span class="crest">♛</span> 绯月血族</div>
+   <h2>血族小公主 <em>VAMPIRE PRINCESS</em></h2>
+   <div class="hp-line"><span class="bar"><span id="boss-hpbar"></span></span><strong id="boss-hp">46 / 46</strong></div>
+   <div class="mini-status"><span id="boss-shield" hidden>护盾 0</span><span id="boss-seal" hidden>银弹封疗</span></div>
+  </div>
+  <div class="portrait-wrap vampire-portrait" id="vampire-wrap"><img id="vampire-original" src="../assets/characters/crimson-vampires/vampire-princess.png" alt="血族小公主的原始人物立绘"><canvas id="vampire-cutout" width="704" height="1024" aria-hidden="true"></canvas></div>
+  <div class="ground-shadow"></div><div class="sprite-status" id="vampire-effect" aria-hidden="true"></div>
+ </section>
+ <div id="shots" class="shots" aria-hidden="true"></div>
+ <div class="battle-message" role="status"><span id="battle-toast">猎人进入夜路 · 留意敌方的攻击预告</span></div>
+</main>
+<footer class="action-dock">
+ <div class="dock-head">
+  <div class="turn-resources">
+   <div class="resource ap-resource"><small>行动点 / AP</small><div class="ap-pips" id="ap-pips"></div></div>
+   <div class="resource ammo-resource"><small>弹药 / AMMO</small><div id="ammo-pips" class="ammo-pips"></div></div>
+  </div>
+  <div class="instructions" id="hint">选择下方战术牌直接执行；射击同一路线伤害更高</div>
+  <button class="end-turn" type="button" id="end-turn">结束回合 <span>→</span></button>
+ </div>
+ <div class="hand-scroll"><div class="hand" id="hand" aria-label="当前战术手牌"></div></div>
+ <div class="dock-bottom"><span id="deck-status">本回合 5 张战术牌</span><span class="key-hint">触屏可用 · 点击卡牌 / 路线操作</span><button type="button" id="open-help">规则说明 ⓘ</button></div>
+</footer>
+<dialog id="intro" class="battle-dialog">
+ <div class="dialog-hero"><span>ONE ON ONE · STORY ENCOUNTER</span><h1>银月夜路</h1><p>赏金枪手追踪到了血族小公主。夜色正在变浓，而第一发银弹已经装入枪膛。</p></div>
+ <div class="dialog-rules"><div><b>01 · 读预告</b><span>敌人行动目标会提前暴露。</span></div><div><b>02 · 选站位</b><span>三个位置可移动，绕开被锁定的路线。</span></div><div><b>03 · 出战术牌</b><span>每回合3行动点，射击消耗弹药，银弹能封锁吸血恢复。</span></div></div>
+ <button id="start-game" type="button" class="dialog-primary">开始猎杀 <span>→</span></button>
+</dialog>
+<dialog id="results" class="battle-dialog">
+ <div class="dialog-hero"><span>ENCOUNTER COMPLETED</span><h1 id="result-title">狩猎成功</h1><p id="result-subtitle"></p></div>
+ <div class="result-stats"><div><small>经历回合</small><strong id="result-round">1</strong></div><div><small>战术出牌</small><strong id="result-cards">0</strong></div><div><small>成功闪避</small><strong id="result-dodges">0</strong></div></div>
+ <button id="retry-game" class="dialog-primary" type="button">再次挑战 <span>↻</span></button>
+ <a href="./forest-level-01.html" class="dialog-secondary">返回森林关卡</a>
+</dialog>
+<dialog id="help" class="battle-dialog">
+ <div class="dialog-hero"><span>HOW TO PLAY</span><h1>战斗规则</h1><p>猎人只有一个人，但能随时利用站位与银弹改变局面。</p></div>
+ <div class="help-copy">
+  <p><b>行动</b> · 每回合3 AP。点击战术牌立即生效；点击左、中、右路线消耗1 AP移动。</p>
+  <p><b>射击</b> · 与吸血鬼站在同一条路线伤害+2，不同路线伤害-2。射击消耗弹药；使用「快速装填」恢复。</p>
+  <p><b>反击</b> · 敌方意图预先展示。锁定路线的攻击可以靠换位闪避，蝠群范围攻击则需要护盾。</p>
+  <p><b>银弹</b> · 可以无视敌方护盾，并短暂阻止吸血鬼恢复生命。</p>
+  <p><b>获胜</b> · 在猎人生命耗尽之前将吸血鬼生命降到0。没有自动摸牌或自动开火，每个回合要自己操作。</p>
+ </div><button id="close-help" type="button" class="dialog-primary">返回战斗</button>
+</dialog>
+</div>
+</body>
+</html>
