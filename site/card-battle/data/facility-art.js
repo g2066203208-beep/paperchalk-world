@@ -5,9 +5,9 @@
 (function(root){'use strict';
 const entries=Object.freeze({
  'farm-field':Object.freeze({file:'farm-field.png',size:[1024,1024],name:'农田'}),
- 'plant-tree':Object.freeze({file:'plant-tree.png',size:[1024,1024],name:'植树'}),
- 'water-well':Object.freeze({file:'water-well.png',size:[1024,1024],name:'水井'}),
- 'scarecrow':Object.freeze({file:'scarecrow.png',size:[1024,1024],name:'稻草人'}),
+ 'plant-tree':Object.freeze({file:'plant-tree.png',size:[704,1024],name:'植树'}),
+ 'water-well':Object.freeze({file:'water-well.png',size:[704,1024],name:'水井'}),
+ 'scarecrow':Object.freeze({file:'scarecrow.png',size:[704,1024],name:'稻草人'}),
  'irrigated-field':Object.freeze({file:'irrigated-field.png',size:[1536,1536],name:'灌溉农田'})
 });
 const BASE='../assets/card-battle/farmer/';
