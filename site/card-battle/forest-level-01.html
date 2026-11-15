@@ -710,7 +710,7 @@ const combatController=window.PaperchalkCombatTurnController.create({
   combatFeedback.guard(victim.id,guard.blocked);
   if(guard.destroyed){
    const destroyed=cards.find(c=>c.facilityId===guard.facilityId);
-   if(destroyed)objectFX.exit('card:'+destroyed.id,now,{duration:.36});
+   if(destroyed)removeFacilityVisual(destroyed);
   }
  },
  onEnemyResolved:({result})=>{
@@ -829,9 +829,11 @@ function selectHandCard(instance){
   active=selectedFacilityDef(selected);
   preview=active?makeCard(active):null;
   message('选择设施格放置「'+selected.name+'」');
- }else if(selected?.type==='attack')message('选择敌人使用「'+selected.name+'」');
- else if(selected?.type==='guard'||selected?.type==='resource')
-  message('点击「使用 · '+selected.name+'」执行；伐木还可以点击己方树木');
+ }else if(selected?.type==='attack'){
+  const woodcutter=selected.characterId==='farmer-warrior-loli-lumberjack';
+  message('选择敌人'+(woodcutter?'或己方树木':'')+'使用「'+selected.name+'」');
+ }else if(selected?.type==='guard'||selected?.type==='resource')
+  message('点击「使用 · '+selected.name+'」执行');
  sync();return true;
 }
 // Shared target resolution for both mouse/touch drag and click-to-place.
@@ -847,9 +849,10 @@ function playSelectedAt(instance,clientX,clientY){
   drop(slot);return window.__forestHand.snapshot.count<before;
  }
  const target=closestCard(clientX,clientY);
- if(held.type==='attack')return target?.side==='enemy'?tapUnit(target):false;
- if(held.type==='resource'&&target?.kind==='facility'&&
-    cardEffects.catalog)return tapFacility(target);
+ if(held.type==='attack'){
+  if(target?.kind==='facility')return tapFacility(target);
+  return target?.side==='enemy'?tapUnit(target):false;
+ }
  // Guard and basic resource skills are self-targeted: release over allied board.
  const slot=slotAtPointer(clientX,clientY);
  if(['guard','resource'].includes(held.type)&&slot?.side==='ally')
@@ -961,6 +964,7 @@ document.getElementById('demo').addEventListener('click',()=>{
 function closestCard(clientX,clientY){
  const cr=canvas.getBoundingClientRect(),px=(clientX-cr.left)*w/cr.width,py=(clientY-cr.top)*h/cr.height;
  let best=null,score=1e9;for(const c of cards){
+ if(c.removing)continue;
  const q=projection2D(c.x,c.y,c.z);const l=projection2D(c.x-cardW/2,c.y,c.z);
  const t=projection2D(c.x,c.y,c.z-cardH/2),b=projection2D(c.x,c.y,c.z+cardH/2);
  const hw=Math.abs(q.x-l.x)+8,hh=Math.abs(b.y-t.y)/2+10;
@@ -1141,6 +1145,11 @@ let previousFrameTime=0,drawCalls=0,averageFrameMs=16.67;
 let renderScale=1,frameSamples=0,lastQualityChangeAt=0;
 function frame(timeMs){
  now=timeMs/1000;
+ for(let i=cards.length-1;i>=0;i--){
+  if(cards[i].removing&&now>=cards[i].removeAt){
+   objectFX.clear('card:'+cards[i].id);cards.splice(i,1);
+  }
+ }
  const dt=previousFrameTime?Math.min(.05,now-previousFrameTime):1/60;
  if(previousFrameTime){
   averageFrameMs=averageFrameMs*.93+(now-previousFrameTime)*1000*.07;
@@ -1330,13 +1339,31 @@ function useSelectedUtility(){
  sync();syncLevelHud();return true;
 }
 useSelectedButton.addEventListener('click',useSelectedUtility);
-function tapFacility(card){
- if(card.kind!=='facility'||!card.facilityId)return false;
- const result=cardEffects.interactFacility(card.facilityId);
- if(!result.ok)return false;
+function removeFacilityVisual(card){
+ if(!card||card.removing)return;
+ card.removing=true;card.removeAt=now+.42;
  objectFX.exit('card:'+card.id,now,{duration:.40});
- message(result.card.name+' · '+result.target.name+'拆除 · 材料精华 +'+result.amount);
- sync();syncLevelHud();return true;
+ for(const tile of card.coveredSlots||[card.slot]){
+  if(tile&&occupied.get(tile.id)===card)occupied.delete(tile.id);
+ }
+}
+function tapFacility(card){
+ if(card.kind!=='facility'||card.removing||!card.facilityId||
+    level.phase!=='active'||combatController.busy)return false;
+ const result=cardEffects.attackFacility(card.facilityId);
+ if(!result.ok){
+  if(result.reason==='character-cannot-chop')message('只有伐木少女的攻击可以砍树');
+  else if(result.reason==='not-a-tree')message('这不是可砍伐的树木');
+  return false;
+ }
+ card.attackStart=now;
+ objectFX.pulse('card:'+card.id,now,{strength:.18,duration:.34});
+ if(result.destroyed){
+  removeFacilityVisual(card);
+  message(result.card.name+'砍倒树木 · 材料精华 +'+result.amount);
+ }else message(result.card.name+'砍树 · 树木耐久 '+result.remainingHp+'/'+result.target.maxHp);
+ sync();syncLevelHud();
+ return true;
 }
 function tapUnit(card){
  if(!card||card.side!=='enemy'||!attackMode)return false;
