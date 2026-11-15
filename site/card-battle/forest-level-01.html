@@ -201,7 +201,7 @@ html,body{background:#d8ded0}
 <script src="./engine/forest-dressing.js?v=3"></script>
 <script src="./engine/stone-street-environment.js?v=1"></script>
 <script src="./engine/royal-hall-environment.js?v=2"></script>
-<script src="./engine/landscape-environments.js?v=7"></script>
+<script src="./engine/landscape-environments.js?v=8"></script>
 <script src="./engine/staggered-stone-paving.js?v=2"></script>
 <script src="./engine/visual-shaders.js?v=11"></script>
 <script src="./engine/spatial-shadows.js?v=2"></script>
@@ -340,7 +340,7 @@ const terrain=window.PaperchalkVoxelTerrain.create({
    shale:{name:'shale',light:visualLook.get('cliff').terrainLight,
     dark:visualLook.get('cliff').terrainDark,side:visualLook.get('cliff').terrainSide,
     variance:visualLook.get('cliff').terrainVariance,height:0},
-   deck:{name:'deck',light:visualLook.get('ocean').terrainLight,
+   marineStone:{name:'marineStone',light:visualLook.get('ocean').terrainLight,
     dark:visualLook.get('ocean').terrainDark,side:visualLook.get('ocean').terrainSide,
     variance:visualLook.get('ocean').terrainVariance,height:0},
    caveRock:{name:'caveRock',light:visualLook.get('cave').terrainLight,
@@ -755,7 +755,7 @@ const scenePresets={
  hall:{name:'石砌大厅',material:'marble',background:visualLook.get('hall').background},
  coast:{name:'海岸沙滩',material:'sand',background:visualLook.get('coast').background},
  cliff:{name:'悬崖高地',material:'shale',background:visualLook.get('cliff').background},
- ocean:{name:'海上甲板',material:'deck',background:visualLook.get('ocean').background},
+ ocean:{name:'开阔海面',material:'marineStone',background:visualLook.get('ocean').background},
  cave:{name:'地下山洞',material:'caveRock',background:visualLook.get('cave').background}
 };
 const initialScene=scenePresets[urlOptions.get('scene')]?urlOptions.get('scene'):'forest';
