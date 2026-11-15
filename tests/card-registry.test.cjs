@@ -22,11 +22,12 @@ assert.equal(C.cardsFor({profession:'engineer',
 assert.equal(C.cardsFor({profession:'ranger',faction:'farmer'}).length,10);
 assert.equal(C.cardsFor({profession:'ranger',faction:'knight'}).length,5);
 assert.equal(C.forArchetype('captain').length,5);
-assert.equal(Object.isFrozen(C.get('lumber').interactions),true);
-assert.equal(Object.isFrozen(C.get('lumber').interactions[0].grant),true);
+assert.equal(C.get('lumber'),null,'no standalone lumber resource card exists');
+assert.equal(C.get('diagonal-slash').type,'attack');
+assert.equal(C.get('diagonal-slash').power,4);
 assert.equal(B.PROFILES.captain.cards.length,5);
 assert.equal(F.DEFINITIONS['farm-field'].hp,C.get('farm-field').facilityHp);
-assert.deepEqual([...F.DEFINITIONS.windmill.footprint],[2,2]);
+assert.deepEqual([...F.DEFINITIONS['irrigated-field'].footprint],[2,2]);
 const deck=D.create({ownedCharacters:[
  {id:'woodcutter',profession:'warrior',characterId:'farmer-warrior-loli-lumberjack'},
  {id:'farmer',profession:'engineer',characterId:'farmer-engineer-farmer'}
