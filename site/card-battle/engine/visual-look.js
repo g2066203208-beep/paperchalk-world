@@ -84,11 +84,12 @@ const CLIFF=freeze({
  ambient:.71,sunIntensity:.36
 });
 const OCEAN=freeze({
- id:'ocean',version:'1.0',stage:11,terrainDetail:.016,goldColor:FOREST.goldColor,
- terrainSide:freeze([.28,.27,.27,1]),
+ id:'ocean',version:'2.0',stage:11,terrainDetail:.018,goldColor:FOREST.goldColor,
+ // Ocean keeps the same 16x6 rock-backed tactical board, NOT ship planks.
+ terrainSide:freeze([.29,.345,.388,1]),
  background:freeze([.36,.59,.73,1]),
- terrainLight:freeze([.57,.44,.33,1]),terrainDark:freeze([.546,.423,.322,1]),
- terrainVariance:.009,ground:freeze([.18,.39,.51,1]),
+ terrainLight:freeze([.53,.59,.60,1]),terrainDark:freeze([.475,.535,.57,1]),
+ terrainVariance:.011,ground:freeze([.18,.39,.51,1]),
  foliage:FOREST.foliage,sunDirection:FOREST.sunDirection,
  skyFill:freeze([.86,.96,1.03]),sunColor:freeze([1.00,.97,.90]),
  ambient:.77,sunIntensity:.31
