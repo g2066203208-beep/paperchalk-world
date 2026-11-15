@@ -1,0 +1,63 @@
+import {chromium} from 'playwright';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+
+const folder='artifacts/stone-street';
+fs.mkdirSync(folder,{recursive:true});
+const browser=await chromium.launch({headless:true,
+ args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader']});
+const errors=[];
+try{
+ const open=async(width,height)=>{
+  const page=await browser.newPage({viewport:{width,height},deviceScaleFactor:1});
+  page.on('pageerror',e=>errors.push(String(e)));
+  page.on('console',msg=>{if(msg.type()==='error')console.log('PAGE_CONSOLE_ERROR',msg.text())});
+  await page.goto('http://127.0.0.1:4173/card-battle/forest-level-01.html?scene=street&quality=high',
+   {waitUntil:'domcontentloaded',timeout:35000});
+  await page.waitForFunction(()=>window.__forestLevelDebug?.environment?.id==='street'&&
+   window.__forestLevelDebug.environment.street?.rendered>0,null,{timeout:35000});
+  await page.waitForTimeout(1950);
+  return page;
+ };
+ const desktop=await open(1600,900);
+ const state=await desktop.evaluate(()=>{
+  const d=window.__forestLevelDebug,e=d.environment;
+  return {scene:e.id,material:e.material,street:e.street,
+   terrain:window.__terrainEngine.snapshot().map(t=>t.kind),
+   sceneOrder:d.sceneSwitch,shadow:d.spatialShadows,
+   performance:d.performance,unitSlots:d.slots.filter(s=>s.zone==='unit').length,
+   facilitySlots:d.slots.filter(s=>s.zone==='facility').length,
+   webgl:!!document.getElementById('stage').getContext('webgl')};
+ });
+ assert.equal(state.webgl,true,'must use actual WebGL, not an illustration');
+ assert.equal(state.scene,'street');
+ assert.equal(state.material,'stone');
+ assert.equal(state.terrain.length,96);
+ assert.ok(state.terrain.every(s=>s==='stone'));
+ assert.equal(state.street.houseCount,13);
+ assert.equal(state.street.alleyModules,5);
+ assert.equal(state.street.lamps,4);
+ assert.equal(state.street.placementCellsOccupied,0);
+ assert.ok(state.street.rendered<=28,'settled houses must be batched for performance');
+ assert.equal(state.unitSlots,18);
+ assert.equal(state.facilitySlots,48);
+ assert.equal(state.shadow?.enabled,true,'night scene preserves the real shadow map');
+ console.log('STREET_3D_WEBGL_PASS',JSON.stringify(state));
+ await desktop.screenshot({path:folder+'/01-real-night-street-desktop.png'});
+ // Verify the original three-scene switch and terrain changes without rebuilding combat.
+ for(const [next,material] of [['forest','grass'],['clearing','dirt'],['street','stone']]){
+  assert.equal(await desktop.evaluate(()=>window.__forestLevelDebug.switchScene()),true);
+  await desktop.waitForFunction(([id,kind])=>{
+   const d=window.__forestLevelDebug;
+   return d?.environment.id===id&&!d.sceneSwitch.busy&&d.environment.material===kind
+  },[next,material],{timeout:30000});
+  console.log('SCENE_SWITCH_PASS',next);
+ }
+ await desktop.screenshot({path:folder+'/02-real-street-after-three-way-switch.png'});
+ await desktop.close();
+ const mobile=await open(390,844);
+ await mobile.screenshot({path:folder+'/03-real-night-street-mobile.png'});
+ await mobile.close();
+ assert.deepEqual(errors,[],'no JavaScript errors in live street scene');
+ console.log('STONE_STREET_ALL_PASS',{screenshots:3});
+}finally{await browser.close()}
