@@ -4,7 +4,7 @@
  * Everything stays outside the 16x6 gameplay grid.
  */
 (function(root){'use strict';
-function create({terrain,cube,appearance}){
+function create({terrain,makeGeom,renderGeom,I,T,S,mul,appearance}){
  const y=terrain.topY-.80,north=terrain.minZ-5.30,south=terrain.minZ+terrain.depth+5.30;
  const c={
   wall:[.55,.54,.49,1],plaster:[.43,.45,.46,1],slate:[.28,.32,.37,1],
@@ -91,21 +91,56 @@ function create({terrain,cube,appearance}){
    add(0,.43,0,.34,.86,.34,c.old);
    add(0,.92,0,.50,.17,.50,c.curb);
   });
+ // Static architecture batches all world-space stone/iron/glass pieces by material.
+ // The SAME meshes draw with per-prop root pivots only during scene transition.
+ function addBox(g,x,y,z,w,h,d){
+  const faces=[
+   [[-.5,.5,.5],[.5,.5,.5],[.5,.5,-.5],[-.5,.5,-.5],[0,1,0]],
+   [[.5,-.5,.5],[-.5,-.5,.5],[-.5,-.5,-.5],[.5,-.5,-.5],[0,-1,0]],
+   [[-.5,-.5,.5],[.5,-.5,.5],[.5,.5,.5],[-.5,.5,.5],[0,0,1]],
+   [[.5,-.5,-.5],[-.5,-.5,-.5],[-.5,.5,-.5],[.5,.5,-.5],[0,0,-1]],
+   [[.5,-.5,.5],[.5,-.5,-.5],[.5,.5,-.5],[.5,.5,.5],[1,0,0]],
+   [[-.5,-.5,-.5],[-.5,-.5,.5],[-.5,.5,.5],[-.5,.5,-.5],[-1,0,0]]
+  ];
+  for(const f of faces){
+   const k=g.v.length/8;
+   for(let n=0;n<4;n++){
+    const q=f[n];g.v.push(x+q[0]*w,y+q[1]*h,z+q[2]*d,...f[4],
+     n===0||n===3?0:1,n<2?0:1);
+   }
+   g.i.push(k,k+1,k+2,k,k+2,k+3);
+  }
+ }
+ function append(groups,o){
+  for(const p of o.parts){
+   const key=[p.mat,p.unlit?1:0,...p.col].join('/');
+   let g=groups.get(key);
+   if(!g){g={color:p.col,material:p.mat,unlit:p.unlit,v:[],i:[]};groups.set(key,g)}
+   addBox(g,o.x+p.dx,y+p.py,o.z+p.dz,p.w,p.h,p.d);
+  }
+ }
+ const combined=new Map();
+ for(const o of objects){
+  const local=new Map();append(local,o);append(combined,o);
+  o.meshes=[...local.values()].map(g=>({mesh:makeGeom(g.v,g.i),...g}));
+ }
+ const batch=[...combined.values()].map(g=>({mesh:makeGeom(g.v,g.i),...g}));
  const idsFor=scene=>scene==='street'?objects.map(o=>o.id):[];
  let drawn=0;
  function draw(now,scene){
   if(scene!=='street'){drawn=0;return;}
   drawn=0;
-  for(const o of objects){
-   const pose=appearance?.(o.id,now)||{scale:1,opacity:1};
-   if(pose.scale<=.025||pose.opacity<=.002)continue;
-   const scale=pose.scale;
-   for(const p of o.parts){
-    // Transition each object around its own world-space ground pivot.
-    cube(o.x+p.dx*scale,y+p.py*scale,o.z+p.dz*scale,
-     p.w*scale,p.h*scale,p.d*scale,p.col,p.mat,p.unlit);
-    drawn++;
-   }
+  const phases=objects.map(o=>appearance?.(o.id,now)||{scale:1,opacity:1});
+  if(phases.every(p=>Math.abs(p.scale-1)<.0001&&p.opacity>.999)){
+   for(const g of batch){renderGeom(g.mesh,I(),g.color,null,g.unlit,null,0,g.material);drawn++}
+   return;
+  }
+  for(let i=0;i<objects.length;i++){
+   const o=objects[i],p=phases[i];
+   if(p.scale<=.025||p.opacity<=.002)continue;
+   const m=Math.abs(p.scale-1)<.0001?I():
+    root.PaperchalkObjectAnchor.atRoot([o.x,y,o.z],p.scale,{T,S,mul});
+   for(const g of o.meshes){renderGeom(g.mesh,m,g.color,null,g.unlit,null,0,g.material);drawn++}
   }
  }
  return Object.freeze({draw,idsFor,get propIds(){return idsFor('street')},
