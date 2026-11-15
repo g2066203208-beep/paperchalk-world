@@ -447,7 +447,7 @@ function create(o){
   }
   if(!moved&&p?.id===old.id){
    if(p.kind==='deck')takeFromPile(p);
-   if(p.kind==='hand')o.select?.(p.instance);
+   if(p.kind==='hand')prepareSelected(p.instance);
   }
   return true;
  }
@@ -472,6 +472,7 @@ function create(o){
  return Object.freeze({
   render:draw,hit,move,down,up,cancelPress,pointFor,animateScene,resetAnimations,setCollapsed,
   get collapsed(){return collapsed;},
+  get dragging(){return !!drag;},
   get drawn(){return drawCalls;},
   get snapshot(){
    const g=dims(),count=o.snapshot();
