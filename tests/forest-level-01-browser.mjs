@@ -702,31 +702,31 @@ try{
  assert.equal(await chapter2.evaluate(()=>window.__sceneCardHUD.dragging),false);
  // An already-drawn hand card also supports drag-to-place, including 2x2.
  await clickCard(chapter2,'deck:farmer');
- const windmillHand=await chapter2.evaluate(()=>window.__forestHand.snapshot.hand
-  .find(c=>c.id==='windmill'));
- assert.ok(windmillHand,'third farmer draw is windmill in fixed level-two seed');
+ const irrigatedHand=await chapter2.evaluate(()=>window.__forestHand.snapshot.hand
+  .find(c=>c.id==='irrigated-field'));
+ assert.ok(irrigatedHand,'third farmer draw is irrigated-field in fixed level-two seed');
  const fromHand=await chapter2.evaluate(instance=>window.__sceneCardHUD.pointFor('hand:'+instance),
-  windmillHand.instance);
- const millTile=await chapter2.evaluate(()=>window.__forestLevelDebug.slotPoints.find(s=>
+  irrigatedHand.instance);
+ const fieldTile=await chapter2.evaluate(()=>window.__forestLevelDebug.slotPoints.find(s=>
   s.side==='ally'&&s.zone==='facility'&&s.flank==='right'&&s.tileC===11&&s.tileR===3).point);
- const beforeMill=await chapter2.evaluate(()=>window.__forestLevelDebug.facilities.length);
+ const beforeIrrigated=await chapter2.evaluate(()=>window.__forestLevelDebug.facilities.length);
  await chapter2.mouse.move(fromHand.x,fromHand.y);
  await chapter2.mouse.down();
- await chapter2.mouse.move(millTile.x,millTile.y,{steps:16});
+ await chapter2.mouse.move(fieldTile.x,fieldTile.y,{steps:16});
  assert.equal(await chapter2.evaluate(()=>window.__sceneCardHUD.dragging),true);
  await chapter2.mouse.up();
  await chapter2.waitForFunction(n=>window.__forestLevelDebug.facilities.length===n+1,
-  beforeMill,{timeout:12000});
- const mill=await chapter2.evaluate(()=>window.__forestLevelDebug.facilities.at(-1));
- assert.equal(mill.id,'windmill');
- assert.deepEqual(mill.footprint,[2,2]);
- await screenshot(chapter2,'09c-windmill-hand-drag-2x2');
+  beforeIrrigated,{timeout:12000});
+ const irrigated=await chapter2.evaluate(()=>window.__forestLevelDebug.facilities.at(-1));
+ assert.equal(irrigated.id,'irrigated-field');
+ assert.deepEqual(irrigated.footprint,[2,2]);
+ await screenshot(chapter2,'09c-irrigated-field-hand-drag-2x2');
  await chapter2.locator('#end-turn').click();
  await chapter2.waitForFunction(()=>window.__forestLevelDebug.state.turn===2&&
   window.__forestLevelDebug.state.phase==='active',null,{timeout:18000});
  const resources=await chapter2.evaluate(()=>window.__forestLevelDebug.essence);
- assert.ok(resources.material>=1,
-  'farm produces life essence and windmill converts it to material at the next upkeep');
+ assert.ok(resources.life>=2,
+  'farm and irrigated plot both produce life essence at the next upkeep');
  assert.equal(await chapter2.locator('.enemy-intent').count(),0,
   'enemy actions are never telegraphed even when bandit skills vary');
  await chapter2.close();
