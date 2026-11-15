@@ -47,7 +47,7 @@ function create(){
  function updateIntent(){s.intent=intent(s.turn,s.hunter.lane,s.vampire.lane,s.hunter.hp);}
  function reset(){
   queue=ROTATION.slice();cursor=0;used=[];history=[];
-  s={phase:'player',turn:1,ap:3,maxAP:3,plays:0,moves:0,dodges:0,seconds:0,
+  s={phase:'player',turn:1,ap:3,maxAP:3,plays:0,moves:0,dodges:0,seconds:0,drawAllowance:0,
    hunter:{hp:MAX_HP,maxHp:MAX_HP,block:0,ammo:4,maxAmmo:MAX_AMMO,lane:1,focus:0},
    vampire:{hp:BOSS_HP,maxHp:BOSS_HP,block:0,lane:1,silver:0},
    hand:[],intent:null,result:null};
@@ -76,6 +76,15 @@ function create(){
   s.ap--;s.moves++;s.hunter.lane=lane;
   const ev=[report('move','猎人移动到'+LANES[lane],{lane})];
   return done(ev);
+ }
+ function drawHand(){
+  if(s.phase!=='player')return fail('只有我方回合可以摸牌');
+  if(s.drawAllowance<=0)return fail('本回合已经摸完牌');
+  if(s.hand.length>=7)return fail('手牌已满，先使用手里的战术牌');
+  const fresh=draw(1);
+  if(!fresh.length)return fail('牌库暂时无法摸牌');
+  s.hand.push(fresh[0]);s.drawAllowance--;
+  return done([report('draw','手动摸牌 · 获得 '+INDEX[fresh[0]].name,{cardId:fresh[0]})]);
  }
  function canPlay(id){
   const card=INDEX[id];if(!card)return '没有这张战术牌';
@@ -145,12 +154,12 @@ function create(){
   // The vampire's temporary defense lasts until the next player attack;
   // ward from earlier cycles does not accumulate without bound.
   if((s.turn-1)%5===0)v.block=Math.max(0,v.block-2);
-  if(s.hand.length)used.push(...s.hand);s.hand=draw(5);s.phase='player';
-  updateIntent();ev.push(report('turn','第 '+s.turn+' 回合 · 新抽取5张战术牌'));
+  if(s.hand.length)used.push(...s.hand);s.hand=[];s.drawAllowance=5;s.phase='player';
+  updateIntent();ev.push(report('turn','第 '+s.turn+' 回合 · 点击摸牌按钮领取战术牌'));
   return done(ev);
  }
  reset();
- return Object.freeze({reset,snapshot,move,play,endTurn,canPlay,cardList:CARD_LIST,lanes:LANES});
+ return Object.freeze({reset,snapshot,move,play,endTurn,drawHand,canPlay,cardList:CARD_LIST,lanes:LANES});
 }
 root.PaperchalkHunterVampireDuel=Object.freeze({version:'1.0.0',create,CARD_LIST,LANES});
 })(window);
