@@ -1,49 +1,55 @@
-# 黑帮经营管理｜首张完整 1080 竖屏游戏画面 Anima 提示词候选（2026-11-15）
+# 黑帮经营管理｜1080竖屏完整游戏界面 Anima 正式截图候选 V2（2026-11-15）
 
-> **最新用户方向：优先由 Anima 画一整张实际游玩画面，而不是先批量绘制单独人物立绘。** 当前为设计与提示词候选，未实际运行 Anima、没有生成图、未替换游戏文件。上一轮“先做角色01全身母图”的制作顺序暂缓，等用户审阅完整游戏画面后再选择是否拆层。
+> **V2 纠错：上一版过度强调场景并要求 UI 容器留白，导致用户指出“UI 都没有”。此版明确将 HUD、状态数据、左侧功能导航、员工档案、经营事件文本、四项交互决策与底栏都作为首图中可见的实质内容。** 用户尚未批准，仍为提示词候选；未执行 Anima 或生成图片。
 
-## 美术目标与镜头
+## 核心画面规格
 
-- 类型：黑帮组织经营管理／人员管理／办公室事件交互／视觉小说式会面。
-- 目标最终画面：**1080×1920（9:16 竖屏手机）**；首测推荐生成 **1088×1920**，左右各裁 4 px，获得 1080×1920。具体出图尺寸要以所用 Anima 前端支持为准；屏幕固定像素不等于 Anima 官方特殊优化分辨率。
-- 构图：**第一人称黑帮老大坐在办公桌后**；桌面居于前景下段；手下到桌前汇报，人物面部与上半身居中央；建筑、家具和窗光承担环境氛围。主角不再另画一名坐在画面正中央的可见人物。
-- 手机 UI 先由 Anima 一起**绘制装饰性外观与布局**，不要让模型负责准确生成中文文字与数据；这些交给代码叠加。画面实际布局遵循上部状态栏 / 中央人物+场景 / 中下部桌面 / 底部对话操作区。
-- 本次可以让 Anima 画出“场景里有一个访客”的整体效果来验证美术；通过用户审核后，把 **办公室静态背景、桌面前景遮挡、人物、装饰性 UI 边框、窗口动态光照、按钮文字** 分离，避免每次访客变化都重绘整个屏幕。
-- **优先确定整体审美**，人物衣着、脸和动作是本张测试的人物原型，不标为已批准的正式员工角色；禁止把“成片中已出现人物”直接误当成可换角色的独立 RGBA PNG。
-- 官方模型信息以 [CircleStone Labs Anima](https://huggingface.co/circlestone-labs/Anima/blob/main/README.md) 为准。本文采用本项目已锁定正常版 LoRA，官方推荐的 Anima Base 可首测 ER SDE / 35 steps / CFG 4.5；这只是参数起点，不能保证 9:16 超长画幅、精密人物手部或清晰汉字。
+- **最终目标 1080×1920，竖屏 9:16。** 推荐尝试 Anima 输出 1088×1920 后左右各裁 4 px；如果当前前端不支持该画幅则以可用尺寸试画并重新合成，不能虚报模型保证。
+- 第一人称桌后视角：玩家是黑帮老大，对面是来汇报工作的手下；不把玩家本人画在正中央。
+- **UI 不准留空：** 第一张用于评估游戏审美的效果图，应当**画出像已经在游玩的完整游戏截图**。Anima 尽量表现 UI 字符、数字和按钮，但不保证文字无错，后续正式程序用真实文本覆盖。
+- 上部 0–11% 状态 HUD；左侧 12–58% 五项管理导航；中心 12–66% 访客与办公室；右侧 32–64% 员工资料；下部 68–96% 事件汇报与 2×2 经营决策；底边 96–100% 主导航。
+- 当前图片中出现的「林柚」「西街事务」及数值仅是为了让试作截图**像真正有玩法的游戏**而写的临时示范，不是已获用户批准的世界观、角色档案或数值平衡。
+- 美术统一在画面中描绘完整 UI，正式实装时将人物、环境、办公桌、UI 装饰单独拆层；中文、按钮与数值、动态光影、可点击区域仍由运行时负责。
+- 画风采用 GitHub 中已确认 Anima normal 完整 LoRA，不擅加 `safe`；通用负面固定六项。
+- 官方模型卡参考：https://huggingface.co/circlestone-labs/Anima/blob/main/README.md 。建议先试 Anima Base / ER SDE / 35 steps / CFG 4.5（只是试验起点，不保证复杂 UI 的文字/位置精确）。
 
-## Anima 正向提示词（完整可复制）
+## V2 完整可复制正向提示词
 
 ```text
-masterpiece, best quality, highres, anime screenshot, visual novel game interface, single complete game screen, portrait mobile game screen, 9:16 composition, grounded contemporary crime drama, richly illustrated anime game background and game UI, <lora:akipekoanima_v1_1:0.8> @akipekostyle <lora:Munji_Anima_AITK_KNA35_18ep2520_1024_20261031:1> @muji_style <lora:anima-highres-aesthetic-boost:1>,
+masterpiece, best quality, highres, detailed anime game screenshot, polished Japanese-style 2D management simulation game UI, functional mobile game interface, portrait 9:16 full-screen gameplay screenshot, immersive crime syndicate management game, visually designed interactive HUD, clean hierarchy, professional UI/UX layout, <lora:akipekoanima_v1_1:0.8> @akipekostyle <lora:Munji_Anima_AITK_KNA35_18ep2520_1024_20261031:1> @muji_style <lora:anima-highres-aesthetic-boost:1>,
 
-A complete playable-screen composition for an original story-driven mafia management game, viewed from the seated player's eyes at the boss's office desk. The player is the gang boss receiving a subordinate who has come to report on a job. This is a coherent in-game screen with carefully placed interface elements, not a title screen, character poster, promotional artwork or an isometric map.
+A finished, fully populated, playable-looking vertical mobile game screen for an original modern mafia management and subordinate-management simulation. The player is sitting behind a desk as the boss, receiving a subordinate's report. The image MUST prominently show a complete real game HUD with readable-looking labels, filled numbers, stat bars, navigation controls, report text and decision buttons. The UI is a major part of the image rather than a decorative afterthought. The entire composition is one actual gameplay moment, not a key visual, character poster, menu illustration or empty visual-novel background.
 
-Frontal seated eye-level camera, natural human proportions, controlled perspective with long straight architectural lines, visually clear near/middle/far depth. The visitor stands at conversational distance on the far side of the office desk, centered, shown very large and clearly from the head to around the upper thighs, naturally integrated into the office rather than shown inside a trading card. A single adult woman in her early twenties, petite with realistic adult proportions, shoulder-length tousled dark chestnut hair, narrow warm brown eyes, lively observant expression and a slightly guarded half-smile. She wears a slightly worn cropped charcoal jacket over an ivory collared blouse, a loosely tied muted wine-red necktie, dark tailored straight trousers and understated street accessories. She holds a thin paper folder casually near her waist while the other hand rests naturally at her side. She is an individual working-class junior runner, not a glamorous fashion model, not a uniformed police officer. Her face, hairstyle and upper-body gesture are the primary focus, with a reserved believable story character pose suitable for prolonged dialogue.
+SCREEN COMPOSITION AND VISUAL HIERARCHY, carefully designed for a 1080 by 1920 phone screen:
+TOP HUD, upper 11 percent of screen: a sophisticated dark charcoal and warm cream management status header with the organization emblem and name at upper left, DAY 12 and a tiny clock, a distinct cash counter showing ¥48,600, a territory indicator 3/6, a red police attention/heat indicator 28%, and a small reputation value 72. All five game values appear as separate compact, functional HUD elements with small icons, clear typography, consistent alignment, attractive tactile materials and high contrast. A small settings button at the right edge.
+LEFT MANAGEMENT RAIL, beneath the top bar, running from upper-middle to the center-left: five individually visible interactive navigation tabs in a slim vertical column with neat icons and short Chinese labels: 人员, 地盘, 任务, 账本, 情报. Give the current OFFICE/personnel tab a restrained cream highlight. These are practical game navigation buttons, not decorative wall fixtures.
+CENTER MAIN SCENE, roughly 12 to 66 percent of screen: first-person desk-level office scene, with a single subordinate standing at conversation distance directly in front of the player's office desk. The visitor is the dominant character artwork and her head, upper torso and hands must remain unobstructed by overlays. A believable young adult female streetwise junior runner, short tousled dark chestnut hair, knowing playful expression, old charcoal short jacket, ivory shirt and a loosened burgundy tie, dark trousers. One hand naturally holds a thin envelope folder. She is human and expressive, with convincing adult anatomy, casual asymmetrical posture, a distinct face and clear soft cel-shaded linework. Render the visitor large, roughly head to mid-thigh, so she is identifiable in a mobile screenshot.
+BACKGROUND OFFICE, behind the visitor: tastefully aged real criminal organization office, warm walnut cabinet, paper files, slightly worn wall plaster, framed city map, vintage telephone, practical desk lamp, urban window with natural late-afternoon daylight. The desk occupies a narrow horizontal foreground strip just below the visitor's hands, giving actual depth but not blocking the game's interface. Restrained golden-brown and gray environmental palette, illustrated anime visual-novel quality with coherent real room perspective.
+RIGHT SUBORDINATE DATA PANEL, visually distinct narrow inset panel along the right of the central scene, roughly 32 to 64 percent screen height: a dark translucent profile panel with a small circular head portrait, name 林柚, designation 跑腿, employee level LV.1, readable numerical loyalty 忠诚 62, skill 能力 45, stress 压力 18, three short horizontal stat bars colored restrained cream/blue/red, plus two small meaningful icons for current assignment and mood. This UI card is attached to the screen and not a physical object in the office.
+BOTTOM MANAGEMENT DECISION AREA, occupying the bottom 32 percent of the screen and clearly visible: a wide premium dialog/report panel with paper-like cream background, dark ink typography, bold short heading '西街事务' and an actual two-line report sentence about a rival gang wanting to negotiate on the western street. Beneath the report there are four substantial equal-sized tappable action buttons arranged in a balanced 2x2 grid. Every button has a short visible Chinese label and a specific small icon: 派人交涉, 先调查, 直接拒绝, 稍后处理. Display a small estimated cost or risk next to one or two choices, for example -¥2,000 or +警戒, so this unmistakably looks like a strategic management game with consequences.
+BOTTOM EDGE NAVIGATION, integrated as a very slim bar: distinguishable tabs 办公室, 成员, 任务, 地盘, with a subtle active selection highlight. The interface must not overlap the four decisions or disappear into the frame.
 
-The office feels like an inhabited, functioning underworld management office rather than a throne room. In the rear left, a tall window with a believable city exterior and gentle late-afternoon indirect daylight; a substantial wooden filing cabinet and shelves with ledgers and folders toward the right, a muted analog wall clock, utilitarian brass desk lamp, dark aged plaster walls, muted walnut wood furnishings, restrained warm gray, tobacco brown, burgundy and antique brass color accents. Layered lighting: cool soft window illumination and gentle warm desk lamp fill, readable shadows, a refined hand-painted illustrated material finish, crisp expressive linework, matte surfaces and disciplined cel shading, believable furniture dimensions, high-end polished 2D visual novel art.
-
-A beautiful wooden office desk runs horizontally across the lower foreground, its top just beneath the visitor's visible hands, with a compact analog telephone, one neat open account ledger, a pen, an envelope tray and a small desk lamp base. The desk feels substantial but does not swallow half the screen. Keep enough clean unobstructed floor-to-waist space around the visitor so character art can later be layered over the environment.
-
-Design the entire game's interface as part of this composition: a slim integrated status strip at the very top with subtle aged-paper and dark lacquer material, tiny quiet decorative containers at the upper corners for organization/day/funds data, a small vertically grouped set of clean inset management tabs along one side below the midline, and an elegant wide dialogue/action panel occupying only the bottommost portion below the desk foreground. The UI feels like premium illustrated office stationery and period-inspired administrative equipment, not futuristic HUD panels, metallic fantasy frames or ornate trading-card borders. Keep all text containers deliberately blank and clean so accurate Chinese type, numerical stats and interactive buttons can later be rendered by the game engine. Make the central character and spatial setting visually dominant, with a very deliberate mobile touchscreen layout.
-
-A finished, unified premium mobile game screenshot, quiet crime-drama atmosphere, polished art direction, visually beautiful composition, adult cast aesthetic, subtle signs of lived-in daily life, strong readable silhouette, clearly separated foreground desk, middle-ground visitor and back office, detailed but never cluttered, full frame carefully composed with functional negative space for UI overlays.
+Art direction: quiet but dangerous organized-crime office, rich hand-painted 2D materials, refined compact type scale, visually deliberate spacing, restrained aged paper, dark lacquered wood, dark charcoal ink and muted burgundy accents. Flat-screen UI panels float above the illustration with crisp functional edges, true button shapes, numeric meters and consistent spacing, distinct from the physical office environment. The UI should occupy substantial screen space, at least one third of the whole screenshot, while the character remains visually central. All UI slots are FILLED with plausible information rather than blank placeholders, and the screen feels like a real management game being played during an employee report. Prioritize recognizable game layout, clear data and meaningful decisions. Short Chinese labels are design guidance; final production type and exact numbers can be replaced by code after art approval.
 ```
 
-## Anima 负向提示词（已确认通用六项，不加 safe）
+## 通用负向提示词
 
 ```text
 worst quality, low quality, blurry, jpeg artifacts, chromatic aberration, watermark
 ```
 
-## 分层落地与验收
+## 第一张图必须通过的构图检查
 
-1. 第一阶段仅测试完整画面：先看整体观感是否像一款能玩的精品黑帮经营游戏；不制作单人的空白证件照或战斗卡框来代替画面。
-2. 确认镜头、人景比例与桌子遮挡关系后，绘制 **不带访客** 的同构背景和桌子遮罩。可先人工保留并修复首张游戏截图为背景，不能期望 Anima 重生成一张自动像素一致。
-3. 已有完整人物立绘可后续加画为 1024×1536 全身母图，再由程序按当前镜头裁切成约大腿以上访客；用户原始美术保留。人物遮挡、桌面层与可点击区域分别独立。
-4. 导出：实际背景图、带 Alpha 的人物源图、前景桌面遮罩、纯装饰 UI 源片。Anima 输出不自动等于带透明通道，需明确检验 RGBA Alpha；准确的中文、日期、组织资金等必须程序渲染。
-5. 需在手机实际纵向尺寸评估：人脸是否清楚、办公室空间比例是否自然、家具不遮挡、状态及按钮是否可点击、中央人物是否能替换；夜晚/昼光应由场景灯光或独立遮罩控制，不把某一时刻的强烈固定窗光当通用全时段运行光效。
+- [ ] 顶部能看到：组织名、天数、资金、地盘、警戒与声望（不是空色块）。
+- [ ] 左边能看到五个管理功能按钮（不是单纯圆点装饰）。
+- [ ] 中央人脸足够大，办公室前景桌子有合理透视，人物处在桌子另一侧。
+- [ ] 右侧资料有头像、姓名、职位、三条数值/进度条。
+- [ ] 下方有**真正写了事件内容的汇报框**与四个清楚的、可点击样式的经营决策按钮。
+- [ ] 底部显示不同管理页面标签；整屏必须看起来已经能游玩，而不只是角色站在办公室。
+- [ ] UI 风格古典办公用品感且足够简洁，不做未来科技 HUD，不做华丽幻想卡牌外框。
+- [ ] 如果 Anima 中文乱码，先用样图验收布局和 UI 层级，正式界面以程序字体替换；不能拿带乱码的生成图当可直接上线的 UI。
+- [ ] 通过完整画面评审后再拆成真正可复用的办公室背景、桌前景、人物立绘与 UI 资源；**不先画人事证件照或组织卡框**。
 
-## 身份边界
+## V1 状态
 
-这张女下属只是为了统一构图使用的**候选场景样角**，未批准“第一个正式黑帮成员”的真实身份或长相；不默认全员成年女性或同款衣服。当前只需用户验收完整首屏设计。
+旧版 V1 的“文字容器留空”“只做细薄状态条与底部对话”的优先级被本版本否决；修正原因是当前阶段首图最重要的是验证**完整可玩游戏界面**，而不是纯概念环境美术。
