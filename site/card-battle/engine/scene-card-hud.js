@@ -361,9 +361,10 @@ function create(o){
   if(drag){
    const pos=worldPoint({clientX:drag.x,clientY:drag.y});
    if(pos){
-    const sc=g.mobile?.75:1.10;
+    const sc=g.mobile?.90:1.19;
+    const lean=Math.max(-.22,Math.min(.22,(drag.vx||0)*.0035));
     const m=mul(T(pos.x,pos.y+.16,2.2),
-     mul(RZ(-.07),S(sc,sc,1)));
+     mul(RZ(-.07+lean),S(sc,sc,1)));
     renderCard(m,textureFor(drag.card,drag.card.art||drag.card.image||null),g);
    }
   }
@@ -444,6 +445,7 @@ function create(o){
       source:press.kind,ownerId:card.ownerId};
    }
    if(drag){
+    drag.vx=(drag.vx||0)*.35+(e.clientX-drag.x)*.65;
     drag.x=e.clientX;drag.y=e.clientY;
     o.dragMove?.(drag.instance,e.clientX,e.clientY);
     return true;
@@ -466,7 +468,12 @@ function create(o){
   const p=hit(e),moved=Math.hypot(e.clientX-old.x,e.clientY-old.y)>dragThreshold;
   if(drag){
    const held=drag;drag=null;
-   o.dropCard?.(held.instance,e.clientX,e.clientY);
+   const played=o.dropCard?.(held.instance,e.clientX,e.clientY)===true;
+   if(!played){
+    const pos=worldPoint(e);
+    if(pos)motion.returnCard(held.instance,
+     {x:pos.x,y:pos.y+.16,scale:dims().mobile?.90:1.19},now);
+   }
    return true;
   }
   if(old.kind==='character'){
@@ -548,5 +555,5 @@ function create(o){
   }
  });
 }
-root.PaperchalkSceneCardHUD=Object.freeze({version:'12.1.0-readable-face-up',create});
+root.PaperchalkSceneCardHUD=Object.freeze({version:'12.2.0-elastic-return',create});
 })(window);
