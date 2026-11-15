@@ -44,7 +44,9 @@ function create(o){
  // UI-only tactile state. Never changes the underlying pile or world scene.
  const deckLift=new Map();
  const motion=root.PaperchalkCardHandMotion?.create();
- if(!motion)throw Error('Load card-hand-motion engine before scene-card-hud');
+ const caseMotion=root.PaperchalkCardCaseMotion?.create();
+ if(!motion||!caseMotion)
+  throw Error('Load card-hand-motion and card-case-motion before scene-card-hud');
  let lastFrame=0,drag=null;
  const dragThreshold=10;
  let collapsed=true; // Default view is an unobstructed 16x6 board; deck stays in game state.
@@ -161,17 +163,14 @@ function create(o){
  function boxMesh(x,y,z,w,h,d,color,g){
   renderGeom(box,mul(mul(sceneScale(g),T(x,y,z)),S(w,h,d)),color);drawCalls++;
  }
- function stageK(){
-  if(sceneMotion.mode==='exit')return 1-smooth((now-sceneMotion.start)/.52);
-  if(sceneMotion.mode==='enter')return smooth((now-sceneMotion.start)/.68);
-  return 1;
- }
- function sceneScale(g){
-  const k=stageK();return mul(mul(T(0,g.y,0),S(k,k,k)),T(0,-g.y,0));
- }
- function renderCard(matrix,texture,g){
-  if(stageK()<.012)return;
-  drawCard({hudMatrix:mul(sceneScale(g),matrix),texture,side:'ally'},now);drawCalls++;
+ // A card case is anchored to the SCREEN bottom, not to the forest biome.
+ // Each curved case mesh / paper pile shares exactly this ONE translation.
+ function stageK(g){return caseMotion.transform(now,(g||dims()).h).visible;}
+ function sceneScale(g){return T(0,caseMotion.transform(now,g.h).y,0);}
+ function renderCard(matrix,texture,g,layer='hand'){
+  if(layer==='case'&&stageK(g)<.008)return;
+  const model=layer==='case'?mul(sceneScale(g),matrix):matrix;
+  drawCard({hudMatrix:model,texture,side:'ally'},now);drawCalls++;
  }
  function textureFor(card,url){
   if(url){
@@ -226,7 +225,7 @@ function create(o){
  }
  function layout(snapshot,staged,g){
   const slots=[],roster=snapshot.roster||[];
-  if(!collapsed){
+  if(!collapsed||caseMotion.transform(now,g.h).visible>.005){
    for(let i=0;i<7;i++){
     const x=g.x0+i*g.bay,owner=roster[i];
     if(!owner){slots.push({kind:'empty',id:'empty:'+i,slot:i,x,y:g.y});continue;}
@@ -237,7 +236,8 @@ function create(o){
     const pending=staged.find(u=>u.id===owner.id);
     if(pending)slots.push({...card,kind:'character',id:'character:'+pending.id,
      unitId:pending.id,portrait:pending.portrait,
-     y:g.y+g.h*(g.mobile?.80:.75),scale:g.scale*1.08});
+     // One-to-one overlay of the OWNER'S stack. No floating second row.
+     x,y:g.y,scale:g.scale});
    }
   }
   // Closing the physical case ONLY hides case/decks; cards stay in a larger,
@@ -317,7 +317,7 @@ function create(o){
    // precisely the same source pose to avoid a visible animation jump.
    const m=mul(T(pose.x,pose.y,pose.z),
      mul(RX(pose.tilt),S(pose.scale,pose.scale,1)));
-   renderCard(m,textureFor(next,next.art||next.image||null),g);
+   renderCard(m,textureFor(next,next.art||next.image||null),g,'case');
   }
  }
  function draw(t,w,h){
@@ -325,10 +325,14 @@ function create(o){
   lastFrame=t;now=t;size(w,h);
   const g=dims(),snapshot=o.snapshot(),staged=o.staged?.()||[];
   const positions=layout(snapshot,staged,g);scene=positions;
-  hot=positions.filter(p=>p.kind==='hand'||(!collapsed&&p.kind!=='empty'));
+  const drawer=caseMotion.transform(now,g.h);
+  hot=positions.filter(p=>p.kind==='hand'||(!collapsed&&drawer.interactive&&
+   p.kind!=='empty'));
   drawCalls=0;deckMeshes=0;
   // No visible tray AND no hand needs no rendering pass.
-  if(collapsed&&!snapshot.hand?.length){hover=null;motion.tick(now,[]);return;}
+  if(drawer.visible<.008&&!snapshot.hand?.length){
+   hover=null;motion.tick(now,[]);return;
+  }
   const ease=1-Math.exp(-delta*19);
   for(const p of positions.filter(x=>x.kind==='deck')){
    const focus=(hover===p.id||hover==='character:'+p.ownerId||
@@ -340,15 +344,18 @@ function create(o){
   o.beginScreenPass?.(); // Same world lighting, only cloud coverage is masked.
   gl.viewport(0,0,width,height);gl.clear(gl.DEPTH_BUFFER_BIT);
   uniformVP(mul(perspective(fov,width/height,.1,80),T(0,0,-cameraZ)));
-  if(!collapsed){
+  if(drawer.visible>.008){
    geometry(g);decks(g,positions,staged);
-   // A pending hero is a DIFFERENT card floating just above the face-up
-   // action pile. It must not turn the deck itself back into a portrait.
+   // The unplaced character portrait is literally the TOP paper sheet of
+   // its owner's physical pile. It uses the same card scale and position;
+   // only one paper thickness separates it from the face-up action card.
    for(const p of positions.filter(x=>x.kind==='character')){
-    const tilt=deckLift.get('deck:'+p.ownerId)||0;
-    const m=mul(T(p.x,p.y+tilt*.07,1.55),
-     mul(RZ(-.055),S(p.scale*(1+tilt*.045),p.scale*(1+tilt*.045),1)));
-    renderCard(m,textureFor({profession:p.profession,name:'人物卡'},p.portrait),g);
+    const deck=positions.find(q=>q.kind==='deck'&&q.ownerId===p.ownerId);
+    if(!deck)continue;
+    const pose=topCardPose(deck,g);
+    const m=mul(T(pose.x,pose.y,pose.z+cardD+.007),
+     mul(RX(pose.tilt),S(pose.scale*1.012,pose.scale*1.012,1)));
+    renderCard(m,textureFor({profession:p.profession,name:'人物卡'},p.portrait),g,'case');
    }
   }
   const cards=positions.filter(p=>p.kind==='hand');
@@ -519,23 +526,24 @@ function create(o){
    y:r.top+(.5-p.y/spanH)*r.height};
  }
  function setCollapsed(next){
-  collapsed=!!next;cancelPress();deckLift.clear();
-  if(collapsed){
-   // Do not clear the hand: it remains on screen and can still be dragged.
-   scene=scene.filter(p=>p.kind==='hand');
-   hot=scene.slice();deckMeshes=0;
-  }
+  collapsed=!!next;caseMotion.setOpen(!collapsed,now);
+  cancelPress();deckLift.clear();
+  // Closing is a real, interruptible slide. The old scene geometry stays
+  // alive until it has physically passed below the screen boundary.
+  hot=hot.filter(p=>p.kind==='hand');
   return collapsed;
  }
  function animateScene(mode,at){sceneMotion={mode,start:at};}
  function resetAnimations(){
-  scene=[];lastDeal=null;lastFrame=0;deckLift.clear();motion.reset();cancelPress();
+  scene=[];lastDeal=null;lastFrame=0;deckLift.clear();motion.reset();
+  caseMotion.reset(!collapsed);cancelPress();
   sceneMotion={mode:'steady',start:0};
  }
  return Object.freeze({
   render:draw,hit,move,down,up,cancelPress,pointFor,animateScene,resetAnimations,setCollapsed,
   get collapsed(){return collapsed;},
   get dragging(){return !!drag;},
+  get drawer(){return caseMotion.transform(now,dims().h);},
   get drawn(){return drawCalls;},
   get snapshot(){
    const g=dims(),count=o.snapshot();
@@ -561,6 +569,8 @@ function create(o){
     ownedCharacters:(count.roster||[]).map(c=>({id:c.id,profession:c.profession,slot:c.slot})),
     stagedCharacterCards:scene.filter(p=>p.kind==='character').length,
     collapsed,canExpand:true,
+    drawer:caseMotion.transform(now,g.h),caseSlideAxis:'screen-vertical',
+    characterRestingOnOwnerPile:true,
     renderSpace:'screen-fixed-post-world',receivesWorldClouds:false,
     receivesWorldShadows:true,sceneLighting:true,
     hoverTopCard:!!hover&&(['deck','character'].includes(scene.find(p=>p.id===hover)?.kind)),
