@@ -193,7 +193,8 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
     const q=i/steps,f=j/bands;
     const along=(isX?x0:z0)+length*q;
     const jitter=norm*width*f*(1+.15*noise(q*7,f*3));
-    const y=top-2.61-f*.16+
+    const shoulderY=scene==='coast'?top-2.61:top-.14;
+    const y=shoulderY-f*.16+
      (f===0?0:noise(q*8,f*8)*.085*Math.sin(pi*f));
     return isX?[along,y,edge+jitter]:
      [edge+jitter,y,along];
@@ -281,7 +282,7 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
    ringRock('coast',i+300,x,seaLevel-3.6,z,
     4+rand(i*2)*3.7,3.5+rand(i*3)*5.5,5.0+rand(i)*3.1);
   }
-  stats.coast={sandBattlefield:false,boardIndependent:true,
+  stats.coast={sandBattlefield:true,boardIndependent:false,
    sandOutsideBoard:true,shorelineModules:nx*nz,seaModules:1,
    coastline:'continuous-curved-wet-sand-surf',bridgeCount:0};
  }
@@ -376,17 +377,17 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
     quad('ocean',C.wood[(i+1)%3],4,topA,topB,qB,qA);
    }
   }
-  // Detailed deck boards exactly on the 16x6 playable footprint. They sit
-  // under slot decals and never alter the authoritative terrain coordinates.
+  // Deck slats are physical geometry ON TOP of this scene's wooden board.
+  // They do not change any cell coordinates, card placements or grid bounds.
   for(let j=0;j<44;j++){
    const z=z0+(j+.5)*D/44,wood=C.wood[j%3];
-   const y=top-2.61+(j%5)*.001;
+   const y=top+.021+(j%5)*.001;
    plane('ocean',wood,4,x0+.055,x1-.055,z-D/93,z+D/93,y);
   }
   // Plank joints are interrupted between separate board lengths.
   for(let i=0;i<15;i++)for(let j=0;j<10;j++){
    const x=x0+(i+1)*W/16+(j%2)*.035,z=z0+(j+.5)*D/10;
-   plane('ocean',C.wood[2],4,x-.021,x+.021,z-.77,z+.77,top-2.605);
+   plane('ocean',C.wood[2],4,x-.021,x+.021,z-.77,z+.77,top+.026);
   }
   // Fitted bulwark posts, rail, deck cleats and captain's stern cabin are
   // all OUTSIDE the battle cells. No prebuilt bridge, no occupancy changes.
@@ -525,5 +526,5 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
   }}
  });
 }
-root.PaperchalkLandscapeEnvironments=Object.freeze({version:'3.0.0',create});
+root.PaperchalkLandscapeEnvironments=Object.freeze({version:'3.1.0',create});
 })(window);
