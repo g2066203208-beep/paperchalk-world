@@ -52,7 +52,7 @@ function create({terrain,makeGeom,renderGeom,mul,T,S,cube,appearance,look=null})
  }
  const green=(look?.get('forest').foliage||[[.33,.46,.29,1],[.39,.53,.34,1],[.25,.42,.32,1],[.42,.56,.35,1]]);
  const stone=[[.58,.55,.50,1],[.52,.51,.48,1],[.69,.65,.58,1],[.56,.53,.45,1]];
- const scenes={forest,clearing};
+ const scenes={forest,clearing,street:[]};
  // This is ENVIRONMENT GROUND, not extra tactical cells.
  // It remains beneath the exact 3x6 battle grid and stretches beyond the
  // camera/framing limits so trees and rocks never stand over a void.
@@ -65,7 +65,8 @@ function create({terrain,makeGeom,renderGeom,mul,T,S,cube,appearance,look=null})
  const groundTop=terrain.topY-.80,groundThickness=1.50;
  const groundPalette={
   forest:look?.get('forest').ground||[.52,.635,.398,1],
-  clearing:look?.get('clearing').ground||[.65,.585,.479,1]
+  clearing:look?.get('clearing').ground||[.65,.585,.479,1],
+  street:look?.get('street').ground||[.265,.292,.320,1]
  };
  function setScene(next){
   if(!scenes[next])throw Error('Unknown environment scene: '+next);
@@ -78,7 +79,7 @@ function create({terrain,makeGeom,renderGeom,mul,T,S,cube,appearance,look=null})
    // A unified spring transform makes the WHOLE world enter/leave on switch.
    const k=pose.scale;
    cube(terrain.centerX,groundTop-groundThickness*.5*k,terrain.centerZ,
-    groundWidth*k,groundThickness*k,groundDepth*k,groundPalette[scene],scene==='forest'?1:2);
+    groundWidth*k,groundThickness*k,groundDepth*k,groundPalette[scene],scene==='forest'?1:scene==='street'?3:2);
   }
   for(const p of scenes[scene]){
    const pose=appearance?.(p.id,now)||{scale:1,opacity:1};
