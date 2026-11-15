@@ -89,7 +89,7 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,appearance,cube}){
   const x=minX+(i+.5)*W/14,z=minZ-4.0-(j+.5)*11;
   part('coast','coast-sea-'+j+'-'+i,x,z,'water',put=>{
    put(0,.14,0,W/14+.035,.21,11.05,
-    [colors.water,colors.deep][(i+j)%2],9);
+    colors.water,9);
   });
  }
  // Sand dunes near the two flanks and the landward perimeter.
@@ -130,6 +130,18 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,appearance,cube}){
    put(.32,-depth+.84,-2.25,terrain.tileW*.65,1.3,1.4,colors.rock3);
   });
  }
+ // The near (camera-facing) rim is a genuine vertical precipice.
+ // Without its frontal face a top-down screenshot looks like a flat checker.
+ for(let k=0;k<16;k++){
+  const x=minX+(k+.5)*terrain.tileW,z=maxZ+2.0;
+  part('cliff','cliff-near-face-'+k,x,z,'precipice',put=>{
+   const drop=11+(k%6)*1.3;
+   put(0,-drop*.5+.23,0,terrain.tileW+.055,drop,3.8,
+    [colors.rock3,colors.rock,colors.shale][k%3]);
+   put(0,.07,-1.3,terrain.tileW+.06,.24,1.7,colors.stone);
+   put(.32,-drop*.66,1.16,terrain.tileW*.47,2.1,1.18,colors.rock2);
+  });
+ }
  for(const side of [-1,1])for(let k=0;k<8;k++){
   const x=cx+side*(W*.5+2.3),z=minZ+(k+.5)*D/8;
   part('cliff','cliff-flank-'+side+'-'+k,x,z,'wall',put=>{
@@ -158,7 +170,7 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,appearance,cube}){
   const x=cx+(col-4.5)*18,z=cz+(row-4.5)*17;
   part('ocean','open-ocean-'+row+'-'+col,x,z,'sea',put=>{
    put(0,.10,0,18.05,.23,17.05,
-    [colors.deep,colors.water][(row+col)%2],9);
+    colors.deep,9);
   });
  }
  // Real hull foundation wraps the actual 16x6 deck and sides; nothing
