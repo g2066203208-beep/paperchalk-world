@@ -15,7 +15,7 @@ uniform vec2 uShadowTexel,uResolution;
 uniform vec3 uSoil,uSunDirection,uSkyFill,uSunColor,uCameraEye;
 uniform float uStreetMode,uStreetTime,uStreetFog;
 uniform float uNightFactor,uWorldFog;
-uniform float uIndoorMode,uHallDaylight;
+uniform float uIndoorMode,uHallDaylight,uCaveMode;
 uniform vec3 uHallWindows[4];
 uniform vec3 uWorldFogColor;
 uniform vec3 uStreetLamps[4];
@@ -95,26 +95,33 @@ void main(){
  vec3 bounce=mix(vec3(.17,.26,.13),vec3(.26,.28,.20),clamp(normal.y*.5+.5,0.,1.));
  illumination+=bounce*(.30+max(0.,1.-diffuse)*.18)*uVisualMix;
  illumination*=1.-cloudShade;
- if(uIndoorMode>.5 && uUnlit<.5){
-  // Opaque shadow-only roof cuts outdoor sun/sky off.
-  // Interior wall-window projectors provide the DAYLIGHT, as narrow beams.
-  illumination=illumination*.22+vec3(.115,.108,.105);
-  if(uMaterialKind<5.5){
+ if(uIndoorMode>.5&&uUnlit<.5){
+  // Cutaway roof keeps sun and sky OUT of the room. Rebuild the daylight
+  // contribution by mathematically projecting each actual rear-window
+  // APERTURE along the real world-clock sun vector. The ray traverses a
+  // different point in the opening as the sun travels east-west; there is
+  // no fixed positional window-light decal.
+  illumination=illumination*.17+vec3(.11,.105,.099);
+  vec3 sunRay=normalize(uSunDirection);
+  if(uHallDaylight>.001&&sunRay.z<-.055){
    for(int wi=0;wi<4;wi++){
-    vec3 from=vP-uHallWindows[wi];
-    float forward=max(0.,from.z);
-    float windowReach=smoothstep(0.0,3.0,forward)*
-      (1.-smoothstep(18.,31.,forward));
-    float width=1.0+forward*.30;
-    float band=1.-smoothstep(width*.55,width,abs(from.x));
-    float vertical=1.-smoothstep(5.0,13.0,abs(from.y));
-    float receiver=max(.18,max(0.,normal.y));
-    illumination+=vec3(1.12,.91,.64)*uHallDaylight*
-       windowReach*band*vertical*receiver*.96;
+    float t=(uHallWindows[wi].z-vP.z)/sunRay.z;
+    vec3 hit=vP+sunRay*t;
+    float insideX=1.-smoothstep(1.12,1.48,abs(hit.x-uHallWindows[wi].x));
+    float insideY=1.-smoothstep(1.68,2.04,abs(hit.y-uHallWindows[wi].y));
+    float inside=step(0.,t)*insideX*insideY;
+    float receive=max(.08,dot(normal,sunRay));
+    illumination+=vec3(1.13,.96,.78)*inside*
+       uHallDaylight*receive*1.52;
    }
   }
  }
- if((uStreetMode>.5||uIndoorMode>.5) && uUnlit<.5){
+ if(uCaveMode>.5&&uUnlit<.5){
+  // A real ceiling occludes exterior ambient. Cave crystals provide
+  // separate local light via the shared four-light array below.
+  illumination=illumination*.10+vec3(.074,.093,.113);
+ }
+ if((uStreetMode>.5||uIndoorMode>.5||uCaveMode>.5) && uUnlit<.5){
   // Shared lighting shader; local lamps illuminate real 3D receivers.
   // The existing directional moonlight uses the shadow map.
   for(int li=0;li<4;li++){
@@ -122,7 +129,7 @@ void main(){
    float sq=dot(delta,delta),range=1./(1.+sq*.035+sq*sq*.00013);
    float facing=max(.12,dot(normal,normalize(delta)));
    illumination+=vec3(1.00,.64,.34)*range*facing*.98*
-      (uIndoorMode>.5?.57+.43*uNightFactor:uNightFactor);
+      (uCaveMode>.5?1.3:uIndoorMode>.5?.57+.43*uNightFactor:uNightFactor);
   }
  }
  if(uVisualMix>.5&&uMaterialKind>.5&&uMaterialKind<4.5){
@@ -208,5 +215,5 @@ void main(){
  }
  gl_FragColor=vec4(clamp(finalColor,0.,1.),base.a);
 }`;
-root.PaperchalkVisualShaders=Object.freeze({version:'1.6.0',fragment});
+root.PaperchalkVisualShaders=Object.freeze({version:'1.7.0',fragment});
 })(window);
