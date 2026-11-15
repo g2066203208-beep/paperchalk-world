@@ -71,7 +71,7 @@ a{color:inherit;text-decoration:none}
 .bullet-trail{position:absolute;height:3px;transform-origin:left center;background:linear-gradient(90deg,transparent,#fff8cc,#ffc17d,transparent);filter:drop-shadow(0 0 8px #e1b36d);animation:trail .32s ease-out forwards}
 @keyframes trail{0%{opacity:1;scale:0 1}50%{opacity:1;scale:1 1}100%{opacity:0;scale:1 1}}
 .action-dock{position:relative;z-index:10;height:236px;min-height:236px;padding:9px clamp(10px,2vw,30px) 7px;background:linear-gradient(#111e2cee,#090f18f8 28%);border-top:1px solid #bec7b36b;backdrop-filter:blur(15px);box-shadow:0 -14px 40px #0208109e}
-.dock-head{max-width:1320px;margin:auto;display:grid;grid-template-columns:minmax(195px,1fr) minmax(0,1.3fr) auto;gap:10px;align-items:center}
+.dock-head{max-width:1320px;margin:auto;display:grid;grid-template-columns:minmax(165px,1fr) minmax(0,1.3fr) auto auto;gap:9px;align-items:center}
 .turn-resources{display:flex;gap:19px}.resource{display:flex;flex-direction:column;gap:4px}.resource small{font-size:9px;color:#aabbc2;letter-spacing:.1em}
 .ap-pips,.ammo-pips{height:18px;display:flex;align-items:center;gap:5px}
 .ap-pips i{width:12px;height:12px;display:block;background:#e3c998;transform:rotate(45deg);border-radius:3px;box-shadow:0 0 8px #e8c98d66}
@@ -80,6 +80,8 @@ a{color:inherit;text-decoration:none}
 .instructions{font-size:11px;text-align:center;color:#afc0c8}
 .end-turn{background:#e6d0a6;color:#19212c;border:0;border-radius:8px;padding:10px 17px;min-width:133px;font-weight:750;box-shadow:0 4px 17px #c6a66d4e}
 .end-turn:not(:disabled):hover{filter:brightness(1.1)}.end-turn span{font-size:18px;margin-left:9px}
+#draw-cards{background:#293e4b;border:1px solid #b9c7c5a1;color:#f0dfb7;min-width:105px;box-shadow:none;font-size:12px}
+#draw-cards span{font-size:12px;margin-left:4px}
 .hand-scroll{width:100%;overflow-x:auto;scrollbar-width:thin;padding:9px 3px 7px}
 .hand{display:flex;gap:9px;justify-content:center;min-width:max-content;margin:auto}
 .action-card{width:clamp(155px,16.8vw,217px);height:128px;flex:none;position:relative;text-align:left;display:flex;flex-direction:column;gap:2px;padding:11px 12px;color:#f3f1e9;border:1px solid #9ba4a46b;border-top-color:#d6c4ac86;border-radius:10px;background:linear-gradient(150deg,#303e49,#1a2935);box-shadow:inset 0 1px #ffffff1f,0 5px 16px #0005;transition:transform .16s,border-color .16s}
@@ -124,11 +126,13 @@ a{color:inherit;text-decoration:none}
 .battle-message{font-size:10px;bottom:5px;padding:6px 9px;min-width:190px}
 .action-dock{height:206px;min-height:206px;padding:7px 9px 5px}
 .dock-head{grid-template-columns:1fr auto;gap:7px}.instructions{display:none}.turn-resources{gap:9px}.resource small{font-size:8px}
-.ap-pips i{width:9px;height:9px}.ammo-pips i{width:5px;height:12px}.end-turn{min-width:108px;padding:8px 10px;font-size:12px}
+.ap-pips i{width:9px;height:9px}.ammo-pips i{width:5px;height:12px}.end-turn{min-width:0;width:100%;padding:8px 6px;font-size:11px}
+#draw-cards{min-width:0;width:100%;padding:8px 4px;font-size:10px}
+#draw-cards span{font-size:10px;margin-left:2px}
 .hand-scroll{padding:7px 2px}.hand{gap:6px;justify-content:flex-start}
 .action-card{width:126px;height:125px;padding:8px 9px}.action-card .card-name{font-size:14px}.action-card .mark{font-size:19px}.action-card .cost{min-width:22px;height:23px;font-size:11px}.action-card .detail{font-size:9px}
 .key-hint{display:none}.dock-bottom{font-size:9px}.moon{width:120px;top:15%;left:52%}
 }
-@media(max-width:440px){.portrait-wrap{height:64%}.intent{top:44px}.intent p{font-size:9px}.path-map{bottom:41px}.action-dock{height:200px;min-height:200px}.action-card{height:120px}}
+@media(max-width:440px){.portrait-wrap{height:64%}.intent{top:44px}.intent p{font-size:9px}.path-map{bottom:41px}.action-dock{height:200px;min-height:200px}.dock-head{grid-template-columns:minmax(0,1fr) 73px 90px;gap:4px}.turn-resources{gap:6px}.action-card{height:120px}}
 @media(max-height:660px) and (min-width:761px){.topbar{height:53px;min-height:53px}.action-dock{height:199px;min-height:199px}.action-card{height:101px}.tactical-center{gap:5px}.intent{padding:9px}.path-map{padding:8px}.lane-buttons button{min-height:45px}.portrait-wrap{height:88%}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.001ms!important;transition-duration:.001ms!important}}
