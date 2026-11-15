@@ -12,8 +12,8 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
  const lamps={coast:[],cliff:[],ocean:[],cave:[]};
  const stats={},seed0=917243;
  const C={
-  sand:[[.78,.70,.54,1],[.75,.67,.52,1],[.80,.72,.57,1],[.72,.65,.51,1]],
-  wet:[[.49,.60,.56,1],[.54,.62,.56,1]],
+  sand:[[.91,.78,.57,1],[.88,.75,.55,1],[.94,.81,.62,1],[.85,.72,.54,1]],
+  wet:[[.74,.70,.58,1],[.79,.74,.63,1]],
   foam:[[.83,.93,.89,1],[.70,.87,.86,1]],
   water:[[.22,.49,.62,1],[.17,.42,.57,1]],
   rock:[[.49,.52,.52,1],[.45,.48,.50,1],[.53,.55,.53,1],[.42,.46,.49,1]],
@@ -91,8 +91,9 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
   }
   for(let i=0;i<n;i++){
    const j=(i+1)%n;
-   quad(scene,palette[i%palette.length],2,outer[i],outer[j],inner[j],inner[i]);
-   tri(scene,palette[(i+1)%palette.length],2,inner[i],inner[j],peak);
+   const mat=scene==='coast'?11:2;
+   quad(scene,palette[i%palette.length],mat,outer[i],outer[j],inner[j],inner[i]);
+   tri(scene,palette[(i+1)%palette.length],mat,inner[i],inner[j],peak);
   }
  }
  function grass(scene,id,x,z,h,col=C.moss[0],groundY=top){
@@ -235,7 +236,7 @@ function create({terrain,makeGeom,renderGeom,I,T,S,mul,cube,appearance}){
     c=vertex(i+1,j+1),d=vertex(i,j+1);
    const grad=Math.min(7,Math.max(0,Math.floor(j/6.0)+
     (j>11?2:0)));
-   quad('coast',sandColors[grad],2,a,b,c,d);
+   quad('coast',sandColors[grad],11,a,b,c,d);
   }
   // Shallow water smoothly meets the irregular shore. Unlike the previous
   // version there is no beige rectangle extending across the sea.
