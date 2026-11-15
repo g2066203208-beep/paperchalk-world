@@ -23,7 +23,7 @@ for(const test of cases){
  const context=await browser.newContext({viewport:test.viewport,isMobile:test.mobile,hasTouch:test.mobile,deviceScaleFactor:1});
  const page=await context.newPage(),errors=[];
  page.on('pageerror',e=>errors.push('JS: '+e.message));
- page.on('response',response=>{if(response.status()>=400&&/hunter-vampire|bounty-markswoman|vampire-princess|duel-card-art/i.test(response.url()))errors.push('HTTP '+response.status()+' '+response.url());});
+ page.on('response',response=>{if(response.status()>=400&&/hunter-vampire|bounty-markswoman|vampire-princess|duel-card-art|duel-night-forest/i.test(response.url()))errors.push('HTTP '+response.status()+' '+response.url());});
  try{
   await page.goto(BASE,{waitUntil:'networkidle',timeout:25000});
   await page.waitForFunction(()=>!!window.__hunterVampireDuel?.state,{timeout:12000});
@@ -47,6 +47,22 @@ for(const test of cases){
   assert(metric.intent.x>=0&&metric.intent.right<=test.viewport.width+3,'enemy intent visible');
   assert(metric.horizOverflow<4,'no horizontal document overflow');
   assert(metric.vertOverflow<4,'no vertical document overflow');
+
+  // Portrait and landscape touch targets must not be covered by any card.
+  const intersectArea=(a,b)=>{
+   const w=Math.max(0,Math.min(a.right,b.right)-Math.max(a.x,b.x));
+   const h=Math.max(0,Math.min(a.bottom,b.bottom)-Math.max(a.y,b.y));
+   return w*h;
+  };
+  for(const control of [metric.energy,metric.draw,metric.discard,metric.end]){
+   assert(control,'primary battle control present');
+   for(const c of metric.cards){
+    const overlap=intersectArea(control,c);
+    const max=Math.min(control.w*control.h,c.w*(c.bottom-c.y));
+    assert(overlap<max*.11,'card must not cover energy, deck, discard or end-turn controls: '+test.name+' '+JSON.stringify({control,c,overlap,max}));
+   }
+  }
+
   await page.screenshot({path:OUT+'/'+test.name+'-initial.png',fullPage:true});
   const first=page.locator('.action-card').first();
   await first.click();
