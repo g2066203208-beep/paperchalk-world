@@ -623,3 +623,12 @@
 .battle-scene.stage-actors .battle-grid .battle-slot .slot-drop{
  pointer-events:auto!important;
 }
+
+/* Full formations: pull the near row toward the viewer by one depth
+   increment. The previous shared x-column caused the front portrait to
+   cover the rear companion's clickable face/body at the centre point. */
+@media (min-width:701px) and (min-height:540px){
+ .battle-scene.stage-actors.stage-crowded .battle-grid[data-row="0"] .battle-slot{
+   --actor-ground:-1%;
+ }
+}
