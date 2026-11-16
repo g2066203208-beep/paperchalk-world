@@ -4,13 +4,13 @@ import fs from "node:fs";
 const OUT="artifacts/snowbound-pixel-audit";
 fs.mkdirSync(OUT,{recursive:true});
 const scenarios=[
- ["desktop-1920",1920,1080,190,205],
- ["laptop-1366",1366,768,128,160],
- ["mobile-landscape-844",844,390,69,70],
- ["mobile-portrait-390",390,844,76,85],
- ["tablet-1024",1024,768,96,145],
- ["compact-android-360",360,740,70,79],
- ["large-iphone-430",430,932,83,100]
+ ["desktop-1920",1920,1080,160,215],
+ ["laptop-1366",1366,768,120,170],
+ ["mobile-landscape-844",844,390,57,75],
+ ["mobile-portrait-390",390,844,64,90],
+ ["tablet-1024",1024,768,85,120],
+ ["compact-android-360",360,740,58,84],
+ ["large-iphone-430",430,932,72,103]
 ];
 const browser=await chromium.launch({headless:true,args:["--no-sandbox"]});
 const reports=[];
@@ -37,6 +37,7 @@ for(const [name,width,height,minW,minH] of scenarios){
   assert.equal(m.slots.length,12,"all 12 slots present");
   assert(m.cards.length>=3,"initial encounter visible");
   assert(m.cards.every(c=>c.box.w+2>=minW&&c.box.h+2>=minH),"cards too small: "+JSON.stringify(m.cards));
+  assert(m.cards.every(c=>Math.abs(c.box.w/c.box.h-.7)<.025),"every deployed card must preserve the 7:10 portrait ratio; no aspect-ratio stretching: "+JSON.stringify(m.cards));
   assert(m.cards.every(c=>c.box.x>=-2&&c.box.right<=width+2&&c.box.y>=0&&c.box.bottom<=m.deck.y+2),"cards overlap tabletop or leave screen");
   assert(m.units.every(u=>u.font>=8),"character name smaller than 8 CSS pixels");
   assert(m.hand.length>=5&&m.hand.every(c=>c.box.x>=-2&&c.box.right<=width+2&&c.box.bottom<=height+2),"initial five-card hand clipped");
@@ -45,7 +46,7 @@ for(const [name,width,height,minW,minH] of scenarios){
    assert(intersect(m.cards[i].box,m.cards[j].box)<4,"deployed cards overlap");
   for(const c of m.cards)for(const ctl of m.controls)
    assert(intersect(c.box,ctl.box)<c.box.w*c.box.h*.04,"UI control covers player card");
-  const report={name,passed:true,size:[width,height],cardWidth:m.cards[0].box.w,cardHeight:m.cards[0].box.h,deckHeightPercent:+(100*m.deck.h/height).toFixed(1),units:m.units,controls:m.controls,slots:m.slots};
+  const report={name,passed:true,size:[width,height],cardRatio:+(m.cards[0].box.w/m.cards[0].box.h).toFixed(4),cardWidth:m.cards[0].box.w,cardHeight:m.cards[0].box.h,deckHeightPercent:+(100*m.deck.h/height).toFixed(1),units:m.units,controls:m.controls,slots:m.slots};
   await page.screenshot({path:OUT+"/"+name+"-real-battle.png",fullPage:true});
   await page.evaluate(()=>{
     for(const lane of document.querySelectorAll(".battle-grid")){
