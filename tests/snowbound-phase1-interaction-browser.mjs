@@ -21,10 +21,10 @@ for(const cfg of cases){
  page.on("pageerror",err=>errors.push(err.message));
  try{
   await page.goto("http://127.0.0.1:4173/card-battle/snowbound-journey.html",{waitUntil:"networkidle"});
-  await page.locator('[data-act="town"]').first().click();
-  await page.locator('[data-act="new"]').first().click();
-  await page.locator('[data-act="leader"]').first().click();
-  await page.locator('[data-act="node"]:visible:not([disabled])').first().click();
+  for(const act of ["town","new","leader","node"]){
+   await page.locator('[data-act="'+act+'"]:visible:not([disabled])').first().click();
+   await page.waitForFunction(()=>!window.PaperchalkSnowboundUI?.motion?.isBusy(),null,{timeout:14000});
+  }
   await page.waitForFunction(()=>!window.PaperchalkSnowboundUI?.motion?.isBusy(),null,{timeout:14000});
   await page.waitForTimeout(80);
   const state=await page.evaluate(()=>window.PaperchalkSnowboundUI.state.run.battle);
