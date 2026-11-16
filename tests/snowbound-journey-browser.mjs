@@ -86,8 +86,9 @@ for(const cfg of scenarios){
    // Portrait layout intentionally unfolds each logical lane into two 3-card
    // strips instead of illegible 6 columns at 390 CSS pixels.
    assert(board.every(l=>l.slots.slice(0,3).every((x,i)=>i===0||x.x>l.slots[i-1].x)),"ally positions advance left to right");
-   assert(board.every(l=>l.slots.slice(3).every((x,i)=>i===0||x.x>l.slots[i+2].x)),"enemy positions advance left to right");
+   assert(board.every(l=>l.slots.slice(3).every((x,i)=>i===0||x.x<l.slots[i+2].x)),"enemy positions mirror their opponent to align front ranks");
    assert(board.every(l=>l.slots[3].y>l.slots[0].y+15),"foe half visible below ally half within same tactical lane");
+   assert(board.every(l=>Math.abs(l.slots[2].x-l.slots[3].x)<=3),"frontmost ally and foe card centers must align in portrait");
    assert(board.every(l=>l.slots[0].width>=70),"portrait cards must not shrink to icon sizes");
   }else{
    assert(board.every(l=>l.slots.every((x,i)=>i===0||x.x>l.slots[i-1].x)),"columns progress left to right");
