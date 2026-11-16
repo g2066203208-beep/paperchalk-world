@@ -38,9 +38,12 @@ for(const cfg of scenarios){
   // Physically click the SECOND hand card, then verify its own art is used
   // as the cinematic source. The old implementation incorrectly used card 0.
   const secondHand=page.locator('.battle-bottom .hand>button').nth(1);
+  await page.evaluate(()=>{window.__snowboundStableHandNode=document.querySelector('.battle-bottom .hand>button');});
   const playedKey=await secondHand.getAttribute("data-card-key");
   assert(playedKey,"hand cards must expose stable semantic identity");
   await secondHand.click({force:true});
+  assert(await page.evaluate(()=>window.__snowboundStableHandNode===document.querySelector('.battle-bottom .hand>button')),
+   "selecting another hand card must not remount the first physical hand-card DOM node");
   await page.locator('.battle-bottom .hand>button').nth(1).click({force:true});
   await idle();
   const tracePlayed=await page.evaluate(()=>window.PaperchalkSnowboundUI.motion.trace());
