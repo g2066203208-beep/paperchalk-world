@@ -110,3 +110,43 @@
  .motion-projectile{display:none}
  .motion-float{filter:none}
 }
+/* Tactical reserve: an actual character roster, not a new viewport layout. */
+.battle-summon-picker{
+ position:fixed;inset:0;z-index:175;display:grid;place-items:center;
+ padding:max(14px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(14px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));
+ background:#142f43a8;backdrop-filter:blur(3px);
+}
+.summon-picker-paper{
+ width:min(610px,94vw);max-height:88dvh;overflow-y:auto;
+ border:6px solid #61596d;border-radius:16px;
+ background:linear-gradient(155deg,#fbf4da,#d1c9b6);
+ box-shadow:0 17px 50px #1b3049ab,inset 0 0 0 2px #f9fbe1;
+ padding:clamp(12px,2vw,24px);
+ display:grid;gap:13px;color:#473e49;
+}
+.summon-picker-paper h2{margin:0;font:900 clamp(17px,2vw,24px) "Noto Sans SC",sans-serif}
+.summon-picker-paper p{margin:0;font:700 12px/1.7 "Noto Sans SC",sans-serif;color:#74645f}
+.summon-roster{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:12px}
+.summon-roster button{
+ display:flex;align-items:center;justify-content:center;flex-direction:column;
+ min-height:160px;padding:7px;gap:6px;border:3px solid #68888d;
+ border-radius:12px;background:linear-gradient(#e9f2e3,#bfced0);
+ box-shadow:0 4px 0 #577582,0 10px 20px #53758c41;
+}
+.summon-roster button:hover,.summon-roster button:focus-visible{transform:translateY(-5px)}
+.summon-portrait{
+ display:block;width:82px;height:93px;overflow:hidden;border-radius:7px;
+ background:linear-gradient(#e2f2e3,#90b2b8);
+}
+.summon-portrait img{width:100%;height:100%;object-fit:cover;object-position:center top}
+.summon-roster strong{font:900 13px "Noto Sans SC",sans-serif}
+.summon-roster small{font:750 10px "Noto Sans SC",sans-serif;color:#6c5b55}
+.summon-picker-paper>.wood-button{justify-self:center;min-width:140px}
+.battle-scene .battle-slot.is-move-target:before{
+ opacity:.88!important;background:radial-gradient(ellipse,#d8f4d4c5,#f7fbf077,transparent 85%);
+}
+@media(orientation:landscape) and (max-height:440px){
+ .summon-picker-paper{max-height:96dvh;gap:7px;padding:8px}
+ .summon-roster button{min-height:113px}
+ .summon-portrait{width:58px;height:55px}
+}
