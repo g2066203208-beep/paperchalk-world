@@ -8,6 +8,7 @@ on:
       - 'site/card-battle/ui/snowbound-journey.css'
       - 'site/card-battle/ui/snowbound-journey-ui.js'
       - 'tests/snowbound-journey-browser.mjs'
+      - 'tests/snowbound-full-run.test.cjs'
       - '.github/workflows/snowbound-journey-qa.yml'
   workflow_dispatch:
 permissions:
@@ -26,6 +27,8 @@ jobs:
           node --check site/card-battle/engine/snowbound-journey.js
           node --check site/card-battle/ui/snowbound-journey-ui.js
           node --check tests/snowbound-journey-browser.mjs
+      - name: Verify whole three-act campaign rule engine
+        run: node tests/snowbound-full-run.test.cjs
       - name: Install Playwright Chromium
         run: |
           npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
