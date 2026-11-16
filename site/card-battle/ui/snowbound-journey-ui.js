@@ -395,44 +395,10 @@ function helpPanel(){
  '</div></div>';
 }
 
-const portraitCache=new Map();
-function prepareBattlePortraits(){
- for(const img of app.querySelectorAll(".battle-unit .unit-art img")){
-  const src=img.getAttribute("src");
-  if(!src||src.startsWith("data:"))continue;
-  if(portraitCache.has(src)){img.src=portraitCache.get(src);continue;}
-  const process=()=>{
-   if(portraitCache.has(src)){img.src=portraitCache.get(src);return;}
-   try{
-    const nativeW=img.naturalWidth,nativeH=img.naturalHeight;
-    if(!nativeW||!nativeH)return;
-    const scale=Math.min(1,850/Math.max(nativeW,nativeH));
-    const w=Math.max(1,Math.round(nativeW*scale)),h=Math.max(1,Math.round(nativeH*scale));
-    const canvas=document.createElement("canvas");canvas.width=w;canvas.height=h;
-    const ctx=canvas.getContext("2d",{willReadFrequently:true});ctx.drawImage(img,0,0,w,h);
-    const frame=ctx.getImageData(0,0,w,h),pixels=frame.data,seen=new Uint8Array(w*h),queue=new Int32Array(w*h);
-    let start=0,end=0;
-    function add(i){
-     if(seen[i])return;seen[i]=1;
-     const n=i*4,r=pixels[n],g=pixels[n+1],b=pixels[n+2];
-     if(r>232&&g>232&&b>232&&Math.max(r,g,b)-Math.min(r,g,b)<25)queue[end++]=i;
-    }
-    for(let x=0;x<w;x++){add(x);add((h-1)*w+x);}
-    for(let y=0;y<h;y++){add(y*w);add(y*w+w-1);}
-    while(start<end){
-     const n=queue[start++],x=n%w;pixels[n*4+3]=0;
-     if(x>0)add(n-1);if(x<w-1)add(n+1);
-     if(n>=w)add(n-w);if(n<(h-1)*w)add(n+w);
-    }
-    ctx.putImageData(frame,0,0);
-    const result=canvas.toDataURL("image/png");
-    portraitCache.set(src,result);if(img.isConnected)img.src=result;
-   }catch(error){console.warn("Preserving original Anima artwork",error);}
-  };
-  if(img.complete&&img.naturalWidth)process();
-  else img.addEventListener("load",process,{once:true});
- }
-}
+/* Source-art contract: character cards retain the exact original 704x1024
+ * PNG <img src> from GitHub. No in-browser downscale to 584x850,
+ * no flood-fill alpha stripping, no conversion to a data URL.
+ * CSS object-fit:contain preserves its full original composition. */
 function traceAttack(source,target){
  if(!source||!target)return;
  const a=source.getBoundingClientRect(),b=target.getBoundingClientRect();
@@ -582,7 +548,7 @@ function render(){
   }
   app.replaceChildren(template.content);
  }else app.innerHTML=html;
- if(view==='battle')prepareBattlePortraits();
+
  document.querySelector(".ambient-snow").style.display=game.state().settings.particles?"":"none";
  document.title=(view==="battle"?"战斗 · ":view==="map"?"地图 · ":"")+"雪境行旅";
 }
