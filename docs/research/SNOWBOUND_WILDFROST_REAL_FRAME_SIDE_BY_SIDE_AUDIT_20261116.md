@@ -1,5 +1,9 @@
 # 雪境行旅 × Wildfrost 实图对比与人物卡比例审查（2026-11-16）
 
+> **后续纠正（同日）**：原稿 V4 的 7:10 是错误的设计假设。仓库 `monster-hunters/README.md`、`crimson-vampires/README.md` 和血族小兵素材登记均确认原始人物 PNG 为 **704×1024**，即 **11:16 = 0.6875**。已将旧 `hunter-vampire-duel.html` 入口转发到 `snowbound-journey.html`，并使人物卡、领队卡、招募卡全部采用 11:16。更重要的是删除战斗 UI 原先自动把 704×1024 人物 PNG 缩成 **584×850** 的 Canvas 重绘/抠白底代码，直接使用原图 `img.src` 和 `object-fit: contain`。下文原始 7:10 测试数字仅作为**错误旧版的历史审计基线**，不能再称现行尺寸。
+
+> **质量边界**：来源图严格锁定的是我们自己的角色原画比率，不代表原作 Wildfrost 卡牌精准比率；后者依然是 `NOT_MEASURED`。新测试必须提供 GitHub CI 实际截图和每张 PNG 的 `naturalWidth/naturalHeight`。
+
 > **结论：之前“像素级还原”的表述错误。** 只测了我们自己的网页，却没有测量原作截图的实际卡牌边界。真实审美验收未通过。
 
 ## 一、已经检索并在对话里展示的原作参考
@@ -27,7 +31,16 @@
 | 小屏 360×740 | 107×105 | 1.019 | 73.8×105.5 | **0.6995** |
 | 大屏手机 430×932 | 110×140 | 0.786 | 98.8×141.2 | **0.6997** |
 
-### 代码改动
+### 2026-11-16 补充：源图 11:16 执行结果与修改文件
+
+- 原图档案：猎人核心、血族核心和血族小兵 704×1024；人物卡的设计宽高比更新为 11:16。
+- 旧 URL：`site/card-battle/hunter-vampire-duel.html` 现在跳转到完整 `site/card-battle/snowbound-journey.html`，保留 URL 查询参数和锚点。
+- `site/card-battle/ui/snowbound-card-geometry-v4.css`：11:16，整张立绘完整显示，角色/领队/招募卡不因文字栏被挤压变形。
+- `site/card-battle/ui/snowbound-journey-ui.js`：移除 Canvas 降采样和临时换源（曾输出 584×850），保持原始 PNG 在页面里。
+- `tests/hunter-vampire-duel-browser.mjs`：测试旧入口跳转、五种尺寸领导卡/场上卡原图尺寸与比例。
+- `tests/snowbound-pixel-geometry-browser.mjs`：测试七尺寸的 11:16、图片加载、contain 与无卡牌重叠。
+
+### 旧 V4 代码改动（历史记录，现已被纠正）
 
 - site/card-battle/ui/snowbound-card-geometry-v4.css：新增卡牌固定形制 7:10、根据可用行高及列宽约束尺寸，原画仅等比裁切，不拉扁。
 - site/card-battle/snowbound-journey.html：按正确样式覆盖优先级引入 V4。
