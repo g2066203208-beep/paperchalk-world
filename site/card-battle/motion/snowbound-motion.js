@@ -46,7 +46,7 @@
     function tick(){
      if(settled)return;
      if(skipped||run!==token||document.hidden){done();return}
-     const t=now();remaining-=Math.min(65,t-last);last=t;
+     const t=now();remaining-=Math.max(0,t-last);last=t;
      if(remaining<=0){done();return}
      requestAnimationFrame(tick);
     }
