@@ -47,6 +47,12 @@ for(const [name,width,height,minW,minH] of scenarios){
   assert(m.units.every(u=>u.font>=8),"character name smaller than 8 CSS pixels");
   assert(m.hand.length>=5&&m.hand.every(c=>c.box.x>=-2&&c.box.right<=width+2&&c.box.bottom<=height+2),"initial five-card hand clipped");
   assert(m.overflowX<=3&&m.overflowY<=3,"screen scroll overflow");
+  if(height>width&&width<=430){
+    // Do not let every card occupy the rightmost column on portrait phones.
+    const centre=width/2;
+    assert(m.cards.every(c=>Math.abs((c.box.x+c.box.right)/2-centre)<width*.2),
+      "portrait front-row combat units must be centrally visible, not all at the far-right edge: "+JSON.stringify(m.cards));
+  }
   for(let i=0;i<m.cards.length;i++)for(let j=i+1;j<m.cards.length;j++)
    assert(intersect(m.cards[i].box,m.cards[j].box)<4,"deployed cards overlap");
   for(const c of m.cards)for(const ctl of m.controls)
