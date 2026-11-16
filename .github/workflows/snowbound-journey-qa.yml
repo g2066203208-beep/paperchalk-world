@@ -11,6 +11,8 @@ on:
       - 'tests/snowbound-phase1-interaction-browser.mjs'
       - 'tests/snowbound-pixel-geometry-browser.mjs'
       - 'site/card-battle/ui/snowbound-battle-v3.css'
+      - 'site/card-battle/ui/snowbound-card-geometry-v4.css'
+      - 'tests/snowbound-reference-comparison-report.mjs'
       - 'tests/snowbound-full-run.test.cjs'
       - 'tests/snowbound-semantic-events.test.cjs'
       - 'tests/snowbound-motion-capture-browser.mjs'
@@ -39,6 +41,7 @@ jobs:
           node --check tests/snowbound-motion-capture-browser.mjs
           node --check tests/snowbound-cinematic-outcomes-browser.mjs
           node --check tests/snowbound-journey-browser.mjs
+          node --check tests/snowbound-reference-comparison-report.mjs
       - name: Verify semantic event sequence and atomic transaction behavior
         run: node tests/snowbound-semantic-events.test.cjs
       - name: Verify whole three-act campaign rule engine
@@ -61,6 +64,9 @@ jobs:
         run: node tests/snowbound-motion-capture-browser.mjs
       - name: Validate fatal-hit death and full victory-defeat cinematic branch
         run: node tests/snowbound-cinematic-outcomes-browser.mjs
+      - name: Publish side-by-side official reference and actual game screenshots
+        if: always()
+        run: node tests/snowbound-reference-comparison-report.mjs
       - name: Store actual browser screenshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -72,4 +78,5 @@ jobs:
             artifacts/snowbound-pixel-audit/
             artifacts/snowbound-motion-v2/
             artifacts/snowbound-outcome-cinema/
+            artifacts/snowbound-reference-comparison/
           if-no-files-found: warn
