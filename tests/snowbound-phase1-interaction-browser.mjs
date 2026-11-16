@@ -33,11 +33,11 @@ for(const cfg of cases){
   assert.equal(await page.locator(".double-board .battle-slot").count(),12);
   const heroBefore=state.allies.find(u=>u.leader);
   const src=page.locator('.battle-unit.friendly[data-id="'+heroBefore.uid+'"]');
-  const destination=page.locator('.battle-slot[data-side="friendly"][data-slot="0"]');
+  const destination=page.locator('.battle-slot[data-side="friendly"][data-slot="3"]');
   await src.dragTo(destination,{force:true,timeout:15000});
   await page.waitForTimeout(100);
   const moved=await page.evaluate(()=>window.PaperchalkSnowboundUI.state.run.battle.allies.find(u=>u.leader).slot);
-  assert.equal(moved,0,"drag ally across rows from lower front to upper front");
+  assert.equal(moved,3,"drag ally across rows from upper front to lower front");
   const handBefore=await page.evaluate(()=>window.PaperchalkSnowboundUI.state.run.battle.hand.length);
   const cards=await page.locator('.battle-bottom .hand>button').all();
   const handState=await page.evaluate(()=>window.PaperchalkSnowboundUI.state.run.battle.hand.map(c=>c.id));
