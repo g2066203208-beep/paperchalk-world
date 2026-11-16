@@ -263,7 +263,7 @@
   background:transparent!important;
   box-shadow:none!important;
   border-radius:0!important;
-  isolation:isolate;
+  isolation:auto!important;
   pointer-events:auto;
 }
 /* 3 allied + 3 enemy standing positions, two depths, per side.
@@ -332,6 +332,7 @@
   box-shadow:none!important;
   filter:drop-shadow(1px 7px 3px #1e3b514a);
   transform-origin:50% 95%;
+  isolation:auto!important;
 }
 .battle-scene.stage-actors .battle-grid .battle-unit:before,
 .battle-scene.stage-actors .battle-grid .battle-unit:after{
