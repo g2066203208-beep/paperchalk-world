@@ -1,9 +1,15 @@
-name: Hunter Vampire Duel Responsive Browser QA
+name: Hunter vs Vampire Hosted URL Replacement QA
 on:
   push:
     branches: [main]
     paths:
       - 'site/card-battle/hunter-vampire-duel.html'
+      - 'site/card-battle/snowbound-journey.html'
+      - 'site/card-battle/ui/snowbound-card-geometry-v4.css'
+      - 'site/card-battle/ui/snowbound-journey.css'
+      - 'site/card-battle/ui/snowbound-battle-v3.css'
+      - 'site/card-battle/ui/snowbound-journey-ui.js'
+      - 'site/card-battle/engine/snowbound-journey.js'
       - 'site/card-battle/ui/hunter-vampire-duel.css'
       - 'site/card-battle/ui/hunter-vampire-duel.js'
       - 'site/card-battle/ui/duel-card-art.js'
@@ -36,12 +42,12 @@ jobs:
         run: |
           nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/duel-http.log 2>&1 &
           sleep 2
-      - name: Run 5 screen sizes and tactical interaction checks
+      - name: Verify old public URL redirects into new full game with 11:16 original cards
         run: node tests/hunter-vampire-duel-browser.mjs
       - name: Archive browser screenshots and metrics
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: hunter-vampire-duel-real-browser
+          name: hunter-vampire-redirected-to-snowbound-real-browser
           path: artifacts/hunter-vampire-duel/
           if-no-files-found: warn
