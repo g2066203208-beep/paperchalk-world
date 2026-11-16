@@ -9,6 +9,8 @@ on:
       - 'site/card-battle/ui/snowbound-journey-ui.js'
       - 'tests/snowbound-journey-browser.mjs'
       - 'tests/snowbound-phase1-interaction-browser.mjs'
+      - 'tests/snowbound-pixel-geometry-browser.mjs'
+      - 'site/card-battle/ui/snowbound-battle-v3.css'
       - 'tests/snowbound-full-run.test.cjs'
       - '.github/workflows/snowbound-journey-qa.yml'
   workflow_dispatch:
@@ -42,6 +44,8 @@ jobs:
         run: node tests/snowbound-journey-browser.mjs
       - name: Verify drag-to-position, drag-to-attack and stage geometry
         run: node tests/snowbound-phase1-interaction-browser.mjs
+      - name: Pixel geometry plus full-capacity visual stress benchmark
+        run: node tests/snowbound-pixel-geometry-browser.mjs
       - name: Store actual browser screenshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -50,4 +54,5 @@ jobs:
           path: |
             artifacts/snowbound-journey/
             artifacts/snowbound-phase1/
+            artifacts/snowbound-pixel-audit/
           if-no-files-found: warn
