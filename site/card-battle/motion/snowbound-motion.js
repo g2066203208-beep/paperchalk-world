@@ -35,7 +35,7 @@
   function skip(){
    if(!busy)return;
    skipped=true;token++;
-   removeOverlay();busy=false;onChange(false);record("director","skipped");
+   removeOverlay();document.querySelectorAll(".motion-entering").forEach(n=>n.classList.remove("motion-entering"));app.querySelectorAll(".battle-unit").forEach(n=>n.style.visibility="");busy=false;onChange(false);record("director","skipped");
   }
   function wait(ms,run){
    if(!ms||skipped||run!==token||document.hidden)return Promise.resolve();
@@ -100,13 +100,13 @@
   function placeOldScene(snapshot){
    if(!snapshot?.scene)return null;
    const old=snapshot.scene,rect=snapshot.box;
-   old.classList.add("motion-snapshot");
+   old.classList.add("motion-snapshot");old.removeAttribute("data-scene");
    old.style.position="absolute";
    old.style.left=rect.left+"px";old.style.top=rect.top+"px";
    old.style.width=rect.width+"px";old.style.height=rect.height+"px";
    old.style.margin="0";
    overlay.append(old);
-   for(const b of old.querySelectorAll("button")){b.disabled=true;b.tabIndex=-1;}
+   for(const b of old.querySelectorAll("button"))b.tabIndex=-1; // visual snapshot, not disabled/washed-out
    return old;
   }
   function unit(node,id){
@@ -207,7 +207,7 @@
    const clone=newCard.cloneNode(true);clone.classList.add("motion-new-entrant");
    clone.style.position="fixed";clone.style.left=rect.left+"px";clone.style.top=rect.top+"px";
    clone.style.width=rect.width+"px";clone.style.height=rect.height+"px";
-   overlay.append(clone);
+   old.append(clone);
    newCard.style.visibility="hidden";
    beep("paper");
    await animate(clone,[{transform:"translateX(84px) translateY(-14px) rotate(9deg) scale(.83)",opacity:0},
@@ -224,7 +224,7 @@
    }else await wait(150,run);
   }
   async function purchase(old,cue,run){
-   const shelf=[...old.querySelectorAll('.choice-row [data-act="buy"]')][cue.index];
+   const shelf=[...old.querySelectorAll('.choice-row [data-act="shopinspect"]')][cue.index];
    if(!shelf){await wait(260,run);return}
    const target=old.querySelector(".choice-currency"),a=shelf.getBoundingClientRect(),b=target?.getBoundingClientRect();
    const dx=(b?.left??a.left)-a.left,dy=(b?.top??a.top)-a.top;
