@@ -5,15 +5,16 @@
  * 0.873 widths-to-heights. This is prohibited: every deployed card must
  * use one physically consistent portrait aspect ratio.
  *
- * Design intent: 7:10 (0.700), INITIAL TARGET based on visible real
- * Wildfrost card silhouette, NOT an independently verified exact Wildfrost
- * texture pixel measurement. Match mechanics/composition, not their art.
+ * Source-locked shape: 704x1024 pixels = 11:16 = 0.6875, confirmed
+ * in original Hunter and Vampire GitHub art READMEs. The original art is
+ * never stretched or cropped. This is our source ratio, NOT an assertion
+ * about the exact Wildfrost card-frame dimensions.
  *
  * Container query units ensure the card fits BOTH available track width
  * and row height without 2-axis distortion on 16:9 and 9:19 screens.
  */
 .battle-scene{
- --battle-unit-ratio: .7;
+ --battle-unit-ratio: .6875;
  --battle-unit-width-cap: 190px;
 }
 .battle-scene .battle-grid{
@@ -21,7 +22,7 @@
 }
 .battle-scene .battle-grid .battle-slot{
  box-sizing:border-box;
- aspect-ratio:7 / 10 !important;
+ aspect-ratio:11 / 16 !important;
  width:min(100%,58cqh,var(--battle-unit-width-cap)) !important;
  height:auto !important;
  max-width:none !important;
@@ -32,7 +33,7 @@
  align-self:center;
 }
 .battle-scene .battle-grid .battle-unit{
- aspect-ratio:7 / 10 !important;
+ aspect-ratio:11 / 16 !important;
  box-sizing:border-box;
  width:100% !important;
  height:100% !important;
@@ -40,14 +41,13 @@
  max-height:none !important;
  min-height:0 !important;
 }
-/* Unit portrait area is a crop in the FIXED card shape; the original
- * Anima source is never resized nonuniformly or permanently modified.
- * The detail view keeps showing the original full-height source. */
+/* Use the complete 704x1024 source on the art layer. No cover-crop,
+ * selective face zoom, distorted rescale, or image source mutation. */
 .battle-scene .battle-unit .unit-art img{
  width:100%;
  height:100%;
- object-fit:cover !important;
- object-position:center 12% !important;
+ object-fit:contain !important;
+ object-position:center center !important;
 }
 /* Avoid synthetic width-biased card borders and cap HUD ornaments. */
 .battle-scene .battle-unit .unit-name{
@@ -73,11 +73,11 @@
  .battle-scene{--battle-unit-width-cap:105px}
  .battle-scene .battle-grid .battle-slot{
   width:min(100%,34cqh,var(--battle-unit-width-cap)) !important;
-  aspect-ratio:7 / 10 !important;
+  aspect-ratio:11 / 16 !important;
  }
  .battle-scene .battle-grid .battle-unit{
-  aspect-ratio:7 / 10 !important;
+  aspect-ratio:11 / 16 !important;
  }
 }
-/* Anima art should have a natural close-up at this small size,
- * never squish 1024x1536 full body artwork into a landscape rectangle. */
+/* Portrait detail may be enlarged using the separate inspection view;
+ * gameplay cards always preserve full-body proportions and source framing. */
