@@ -11,6 +11,8 @@ on:
       - 'tests/snowbound-phase1-interaction-browser.mjs'
       - 'tests/snowbound-pixel-geometry-browser.mjs'
       - 'site/card-battle/ui/snowbound-battle-v3.css'
+      - 'site/card-battle/ui/snowbound-forest-reference.css'
+      - 'site/card-battle/assets/snowy-forest-reference.webp'
       - 'site/card-battle/ui/snowbound-card-geometry-v4.css'
       - 'site/card-battle/ui/snowbound-card-geometry-v4.css'
       - 'tests/snowbound-reference-comparison-report.mjs'
