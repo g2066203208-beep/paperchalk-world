@@ -38,8 +38,8 @@ function apply(action){
  const result=action();
  if(result&&result.ok===false){flash(result.message);return false}
  save();sound("tap");render();
- const after=game.state().logs[0]?.text;
- if(after&&after!==before&&game.view()==="battle")flash(after);
+ // Combat events are already displayed by the dedicated battle log.
+ // Avoid a redundant toast covering readable hand-card text.
  return true;
 }
 function backdrop(village=false){
@@ -509,7 +509,7 @@ function onClick(event){
   }else if(selectedCard===index&&isTargetingCard()){
    // Clicking selected targeted card again plays it on the nearest foe.
    selectedCard=-1;apply(()=>game.play(index));
-  }else{selectedCard=index;selectedAlly=null;render();flash("已选中战术牌，可以点击敌人选择目标");}
+  }else{selectedCard=index;selectedAlly=null;render();}
   break;
  }
  case "enemy":{
