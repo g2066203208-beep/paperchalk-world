@@ -326,7 +326,10 @@ function battleClear(){
  '<button class="pill-button" data-act="continuebattle" type="button">继续前进 ❯</button></div></div>');
 }
 function results(){
- const r=game.state().run,rr=r.result;
+ const state=game.state(),r=state.run,rr=r.result;
+ const recent=state.logs.filter(x=>x&&typeof x.text==="string").slice(0,3);
+ const defeatAudit=!rr.won?'<section class="defeat-audit"><h2>最后战况</h2><p>战败原因：'+esc(rr.cause||"领队生命归零")+'</p>'+
+ '<ol>'+recent.map(x=>'<li>'+esc(x.text)+'</li>').join("")+'</ol></section>':'';
  return wrap("results-scene",commonHead("远征结算",{back:"town"})+
  '<div class="selection-shell"><div class="panel results-panel"><div class="dialog-crest" style="font-size:49px;color:#cf9f6e">☾ ✦</div>'+
  '<h1>'+(rr.won?'冬夜终结':'风雪暂歇')+'</h1>'+
@@ -334,6 +337,7 @@ function results(){
  '<div class="results-stats">'+[
   ['胜利',rr.battlesWon],['击败',rr.kills],['造成伤害',rr.damage],['回合',rr.turns],['金币',rr.coins],['获得同伴',rr.companions]
  ].map(([name,value])=>'<div><strong>'+value+'</strong><small>'+name+'</small></div>').join("")+'</div>'+
+ defeatAudit+
  '<div class="choice-footer"><button class="pill-button" data-act="backtown" type="button">返回营地 ❯</button>'+
  '<button class="wood-button" data-act="new" type="button">重新远征</button></div></div></div>');
 }
