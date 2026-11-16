@@ -370,12 +370,14 @@ function settings(){
  '<div class="panel" style="width:min(650px,94vw);padding:20px;overflow:auto;max-height:60vh">'+
  '<div class="panel-header"><h2>系统选项</h2></div><div class="choice-footer">'+
  '<button data-act="togglesound" class="outline-button" type="button">音效：'+(s.sound?'开启':'关闭')+'</button>'+
- '<button data-act="toggleparticles" class="outline-button" type="button">飘雪：'+(s.particles?'开启':'关闭')+'</button></div>'+
+ '<button data-act="toggleparticles" class="outline-button" type="button">飘雪：'+(s.particles?'开启':'关闭')+'</button>'+
+ '<button data-act="motionspeed" data-speed="1" class="outline-button" type="button">正常 1×</button>'+
+ '<button data-act="motionspeed" data-speed="2" class="outline-button" type="button">快速 2×</button></div>'+
  '<div style="font:12px/2.1 sans-serif;margin-top:15px"><p>① 村庄选领队 → 地图选路线 → 战斗 / 商店 / 事件 → 地区首领 → 结算。</p>'+
  '<p>② 每回合只出一张战术道具牌。倒计时归零的敌我单位自动攻击。</p>'+
- '<p>③ 点击我方卡再点击空格可调整站位；先看敌方倒计时，保护领队。</p>'+
+ '<p>③ 点击我方卡再点击空格调整站位；伙伴详情可召回同伴，召唤按钮用于派遣后备伙伴。</p>'+
  '<p>④ 重抽钟四格充满时免费刷新手牌，提前重抽会结束回合。</p>'+
- '<p>⑤ 商店、护符、招募和战利品会真实修改本次远征的状态。</p></div></div></div>');
+ '<p>⑤ 商店先查看再确认购买；动画可按空格跳到安全检查点，不改变规则结算。</p></div></div></div>');
 }
 function helpPanel(){
  return '<div class="deck-modal"><div class="panel" style="width:min(640px,95vw);padding:20px;max-height:87vh;overflow:auto">'+
@@ -654,6 +656,7 @@ function onClick(event){
  case "backtown":apply(()=>game.backTown());break;
  case "townbuilding":layoutMode=id;apply(()=>game.go("townbuilding"));break;
  case "settings":apply(()=>game.go("settings"));break;
+ case "motionspeed":motion?.setSpeed(Number(el.dataset.speed)||1);render();break;
  case "togglesound":apply(()=>game.settings({sound:!game.state().settings.sound}));break;
  case "toggleparticles":apply(()=>game.settings({particles:!game.state().settings.particles}));break;
  default:break;
@@ -662,6 +665,7 @@ function onClick(event){
 app.addEventListener("click",onClick);
 installCardGestures();
 window.addEventListener("keydown",e=>{
+ if(e.code==="Space"&&motion?.isBusy()){e.preventDefault();motion.skipToSafeCheckpoint();return;}
  if(e.key==="Escape"&&app.querySelector(".shop-inspect-backdrop")){closeShopInspect();return;}
  if(e.key==="Escape"&&app.querySelector(".battle-summon-picker")){app.querySelector(".battle-summon-picker").remove();return;}
  if(e.key==="Escape"&&document.querySelector(".battle-inspect-backdrop")){document.querySelector(".battle-inspect-backdrop").remove();return;}
