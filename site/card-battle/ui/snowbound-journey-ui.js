@@ -10,6 +10,9 @@ if(!rules)throw Error("Snowbound rules missing");
 const STORE="paperchalk-snowbound-campaign-v1",app=document.getElementById("app"),toast=document.getElementById("toast");
 const saved=(()=>{try{return JSON.parse(localStorage.getItem(STORE)||"null");}catch{return null}})();
 const game=rules.create(saved);
+const motion=window.PaperchalkMotion?.create({app,getSoundEnabled:()=>game.state().settings.sound})||null;
+let shopInspectIndex=-1;
+
 let selectedCard=-1,selectedAlly=null,help=false,infoMessage="",lastScreen="",toastTimer=null,layoutMode="",soundCtx=null;
 const find=(a,id)=>a.find(x=>x.id===id);
 const esc=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -34,12 +37,17 @@ function sound(kind){
  }catch(e){}
 }
 function apply(action){
- const before=game.state().logs[0]?.text;
+ // Any prior cinematic may be skipped to a safe, already-committed rules
+ // checkpoint. Rapid player inputs never execute against a stale view.
+ if(motion?.isBusy())motion.skipToSafeCheckpoint();
+ const before=motion?.capture();
  const result=action();
  if(result&&result.ok===false){flash(result.message);return false}
- save();sound("tap");render();
- // Combat events are already displayed by the dedicated battle log.
- // Avoid a redundant toast covering readable hand-card text.
+ save();
+ render();
+ if(motion){
+  motion.play(before,result,game.view()).catch(err=>console.error("Cinematic fallback",err));
+ }else sound("tap");
  return true;
 }
 function backdrop(village=false){
@@ -181,7 +189,7 @@ function eventView(kind){
  if(["shop","treasure"].includes(kind)){
   offers=r.offers.map((p,i)=>{
    const sold=kind==="shop"&&p.sold;
-   return '<div><button '+(sold?'disabled':'')+' data-act="'+(kind==="shop"?"buy":"claim")+'" data-i="'+i+'" type="button">'+paperCard(p,{selectable:true})+'</button>'+
+   return '<div><button '+(sold&&kind!=="shop"?'disabled':'')+' data-act="'+(kind==="shop"?"shopinspect":"claim")+'" data-i="'+i+'" type="button" aria-label="'+(kind==="shop"?"查看商品 ":"领取 ")+esc(p.name)+'">'+paperCard(p,{selectable:true})+'</button>'+
     (kind==="shop"?'<div class="price-pill '+(sold?'sold':'')+'">'+(sold?"已售罄":p.price+" ◈")+'</div>':'')+'</div>';
   });
  }else if(kind==="recruit"){
@@ -207,6 +215,37 @@ function eventView(kind){
  '<button class="wood-button" data-act="leave" type="button">离开并继续旅程 ❯</button>':'')+
  '</div></div>',kind==="shop"?"shop-scene":"");
 }
+
+function closeShopInspect(){
+ shopInspectIndex=-1;
+ app.querySelector(".shop-inspect-backdrop")?.remove();
+}
+function showShopInspect(index){
+ const state=game.state(),item=state.run?.offers?.[index];
+ if(state.screen!=="shop"||!item)return;
+ closeShopInspect();shopInspectIndex=index;
+ const enough=state.run.gold>=item.price;
+ const sold=!!item.sold;
+ const overlay=document.createElement("div");
+ overlay.className="shop-inspect-backdrop";
+ overlay.setAttribute("role","dialog");overlay.setAttribute("aria-modal","true");
+ overlay.setAttribute("aria-label","查看"+item.name);
+ overlay.innerHTML='<div class="shop-inspect" role="document">'+
+ '<button type="button" class="shop-close" data-act="shopcancel" aria-label="关闭商品详情">×</button>'+
+ '<div class="shop-card-preview">'+paperCard(item,{selectable:false})+'</div>'+
+ '<div class="shop-details"><h2>'+esc(item.name)+'</h2>'+
+ '<p>'+esc(item.desc||"远征旅途中可以使用的战术道具")+'</p>'+
+ '<div class="shop-price">◈ '+item.price+'</div>'+
+ '<div class="shop-balance">当前古金币：◈ '+state.run.gold+'</div>'+
+ '<div class="shop-status" aria-live="polite">'+(sold?'该商品已售罄':enough?'确认购买后才会扣款':'金币不足，还差 ◈ '+(item.price-state.run.gold))+'</div>'+
+ '<div class="shop-buttons"><button type="button" class="wood-button" data-act="shopcancel">返回</button>'+
+ '<button type="button" class="pill-button" data-act="shopconfirm" '+(sold||!enough?'disabled':'')+'>确认购买</button></div></div></div>';
+ overlay.addEventListener("click",e=>{if(e.target===overlay)closeShopInspect()});
+ app.append(overlay);
+ overlay.querySelector(".shop-close").focus({preventScroll:true});
+ motion?.beep("paper");
+}
+
 function battleUnit(unit,side){
  const creature=find(rules.ENEMIES,unit.template);
  const portrait=unit.art?'<img loading="eager" src="'+esc(unit.art)+'" alt="'+esc(unit.name)+'角色插画">':enemyIllustration(unit.template);
@@ -471,7 +510,34 @@ function render(){
  const route={menu,town,leader,map:mapScene,battle,"battle-clear":battleClear,result:results,shop:()=>eventView("shop"),
  recruit:()=>eventView("recruit"),treasure:()=>eventView("treasure"),charm:()=>eventView("charm"),
  camp:()=>eventView("camp"),forge:()=>eventView("forge"),deck,townbuilding:townBuilding,settings};
- app.innerHTML=(route[view]||menu)()+(help?helpPanel():"");
+ const html=(route[view]||menu)()+(help?helpPanel():"");
+ // Keep the physical DOM identity of surviving units between game updates.
+ // A keyed mount moves the existing element into its new slot while updating
+ // only the changing data, preserving image decoding and browser animation IDs.
+ if(view==="battle"&&app.querySelector(".battle-scene")){
+  const current=new Map([...app.querySelectorAll(".battle-unit[data-id]")].map(el=>[el.dataset.id,el]));
+  const template=document.createElement("template");template.innerHTML=html;
+  for(const fresh of [...template.content.querySelectorAll(".battle-unit[data-id]")]){
+   const existing=current.get(fresh.dataset.id);
+   if(!existing)continue;
+   const oldPortrait=existing.querySelector(".unit-art img");
+   const freshPortrait=fresh.querySelector(".unit-art img");
+   // Images generated from the existing Anima original must not reload.
+   const priorImage=oldPortrait?.src;
+   existing.className=fresh.className;
+   existing.setAttribute("aria-label",fresh.getAttribute("aria-label")||"");
+   for(const badge of fresh.querySelectorAll(".badge")){
+    const key=[...badge.classList].find(c=>c!=="badge");
+    const previous=existing.querySelector(".badge."+key);
+    if(previous){previous.textContent=badge.textContent;previous.className=badge.className}
+   }
+   const name=existing.querySelector(".unit-name"),freshName=fresh.querySelector(".unit-name");
+   if(name&&freshName)name.textContent=freshName.textContent;
+   if(oldPortrait&&freshPortrait&&priorImage)oldPortrait.src=priorImage;
+   fresh.replaceWith(existing);
+  }
+  app.replaceChildren(template.content);
+ }else app.innerHTML=html;
  if(view==='battle')prepareBattlePortraits();
  document.querySelector(".ambient-snow").style.display=game.state().settings.particles?"":"none";
  document.title=(view==="battle"?"战斗 · ":view==="map"?"地图 · ":"")+"雪境行旅";
@@ -497,7 +563,16 @@ function onClick(event){
  case "map":apply(()=>game.go("map"));break;
  case "node":apply(()=>game.selectNode(index));break;
  case "claim":apply(()=>game.claim(index));break;
- case "buy":apply(()=>game.buy(index));break;
+ case "shopinspect":showShopInspect(index);break;
+ case "shopcancel":closeShopInspect();break;
+ case "shopconfirm":{
+  if(shopInspectIndex<0)break;
+  const i=shopInspectIndex;
+  closeShopInspect();
+  apply(()=>game.buy(i));
+  break;
+ }
+ case "buy":showShopInspect(index);break;
  case "leave":apply(()=>game.leaveEvent());break;
  case "continuebattle":apply(()=>game.afterBattle());break;
  case "endturn":selectedCard=-1;selectedAlly=null;apply(()=>game.endTurn());break;
@@ -538,6 +613,7 @@ function onClick(event){
 app.addEventListener("click",onClick);
 installCardGestures();
 window.addEventListener("keydown",e=>{
+ if(e.key==="Escape"&&app.querySelector(".shop-inspect-backdrop")){closeShopInspect();return;}
  if(e.key==="Escape"&&document.querySelector(".battle-inspect-backdrop")){document.querySelector(".battle-inspect-backdrop").remove();return;}
  if(e.key==="Escape"&&help){help=false;render();return;}
  if(e.key==="Escape"&&selectedCard>=0){selectedCard=-1;render();return;}
@@ -552,6 +628,9 @@ window.PaperchalkSnowboundUI=Object.freeze({
  get state(){return game.state();},
  get view(){return game.view();},
  engine:game,render,
+ motion,
+ get timeline(){return motion?.trace()||[];},
+ skipAnimation:()=>motion?.skipToSafeCheckpoint(),
  selectNode:branch=>apply(()=>game.selectNode(branch)),
  action:(index,target)=>apply(()=>game.play(index,target)),
  go:view=>apply(()=>game.go(view)),
