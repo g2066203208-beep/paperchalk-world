@@ -301,7 +301,8 @@ function battle(){
  }).join("");
  const selected=selectedCard>=0?find(rules.ITEMS,b.hand[selectedCard]?.id):null;
  const reserve=r.companions.filter(id=>!b.fallenCompanions?.includes(id)&&!b.allies.some(a=>a.hp>0&&a.template===id));
- return wrap("battle-scene stage-actors "+(r.zone===1?"ice-zone":r.zone===2?"summit-zone":""),commonHead(z.name+" · "+(b.boss?"首领战":"遭遇战"),{back:"map",className:"battle-header",subtitle:"ROUND "+b.turn})+
+ const stageDensity=b.allies.filter(u=>u.hp>0).length+b.foes.filter(u=>u.hp>0).length>3?"stage-crowded":"stage-sparse";
+ return wrap("battle-scene stage-actors "+stageDensity+" "+(r.zone===1?"ice-zone":r.zone===2?"summit-zone":""),commonHead(z.name+" · "+(b.boss?"首领战":"遭遇战"),{back:"map",className:"battle-header",subtitle:"ROUND "+b.turn})+
  '<div class="battle-core"><div class="battle-field">'+
  '<div class="battle-log" aria-live="polite">'+esc(latest)+'</div><div class="battle-caption"><span>己方</span><span>双排战线</span><span>敌方</span></div>'+
  '<div class="battle-side left"><button class="battle-bell" data-act="redraw" type="button" title="重抽钟"><span class="bell-glyph">♧</span><b>重抽 '+b.redrawCharge+'/4</b></button><button class="side-btn" data-act="summonlist" type="button" '+(!reserve.length||!b.playsLeft?'disabled':'')+'>召唤 '+reserve.length+'</button></div>'+
