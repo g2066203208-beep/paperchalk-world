@@ -84,4 +84,21 @@ assert.equal(party.summon(recruited,4).ok,false,"already deployed companion cann
 assert.equal(party.recall(party.state().run.battle.allies.find(x=>x.leader).uid).ok,false,"leader cannot be recalled");
 console.log("PASS companion recall, legal summon, duplicate guard, turn cost and leader immunity");
 
+// Save/reload must not reset the serial allocator to an already live ID.
+// In the old engine a recalled/recruited companion could reuse 'ally-1'
+// (which belongs to an existing unit), confusing targeting and motion.
+const preSave=newGame();preSave.selectNode(0);
+const fixture=preSave.state();
+fixture.run.companions=["medic"];
+const existingIds=new Set([...fixture.run.battle.allies,...fixture.run.battle.foes].map(x=>x.uid));
+const restored=context.window.PaperchalkSnowbound.create(fixture);
+const savedSummon=restored.summon("medic",3);
+assert.equal(savedSummon.ok,true,"reloaded battle must permit legal companion summon");
+const newUid=savedSummon.visualEvents.find(x=>x.type==="summon")?.actorId;
+assert(newUid&&!existingIds.has(newUid),
+ "reloaded summon must never reuse an existing ally or foe UID");
+const liveIds=[...restored.state().run.battle.allies,...restored.state().run.battle.foes].map(x=>x.uid);
+assert.equal(new Set(liveIds).size,liveIds.length,"all live combat IDs must be globally unique");
+console.log("PASS saved battle preserves unique unit identity across subsequent summons");
+
 console.log("PASS ALL SEMANTIC EVENT RULES");
