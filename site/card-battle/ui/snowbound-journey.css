@@ -344,3 +344,104 @@ button:not(:disabled):hover{filter:brightness(1.05)}
  .price-pill{font-size:10px;margin:3px}
 }
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+
+/* QA revision: empty board slots are terrain markings, never placeholder
+ * rectangles; and all five starting cards are readable on narrow phones. */
+.battle-slot{
+ background:transparent;
+ border:0;
+ box-shadow:none;
+ border-radius:0;
+}
+.battle-slot:before{
+ content:"◇";
+ color:#eff9e2ad;
+ font:26px Georgia,serif;
+ text-shadow:0 1px 3px #527d90;
+}
+.battle-slot:after{
+ content:"";
+ position:absolute;
+ width:68%;
+ height:13%;
+ bottom:4%;
+ border-radius:50%;
+ background:#eafbea2a;
+ border:1px solid #f3ffed68;
+ pointer-events:none;
+}
+.battle-slot:has(.battle-unit):before,
+.battle-slot:has(.battle-unit):after{display:none}
+.battle-slot.is-active-target{outline:none;background:#ffe9a71e}
+.battle-slot.is-move-target{
+ border:2px dashed #f8e7ab;
+ border-radius:8px;
+ background:#f4f9d64d;
+}
+.battle-bottom .hand>button{
+ position:relative;
+ display:block;
+ flex:none;
+ padding:0;
+ margin:0;
+ border:0;
+ appearance:none;
+ background:transparent;
+ line-height:normal;
+}
+.battle-bottom .hand>button:focus-visible{outline:2px solid #bceee0;outline-offset:2px;border-radius:9px}
+@media(max-width:700px) and (orientation:portrait){
+ .battle-bottom .hand{
+  justify-content:center;
+  overflow:visible;
+  gap:0;
+  padding:5px 30px 21px;
+ }
+ .battle-bottom .hand>button{
+  margin-left:-20px;
+  z-index:1;
+  flex:none;
+ }
+ .battle-bottom .hand>button:first-child{margin-left:0}
+ .battle-bottom .hand>button:focus-within{z-index:15}
+ .battle-bottom .hand .paint-card.compact{
+  width:73px;
+  height:139px;
+  border-width:2px;
+ }
+ .battle-bottom .hand .paint-card.compact .title{font-size:9px}
+ .battle-bottom .hand .paint-card.compact .text{font-size:8px;line-height:1.2}
+ .battle-bottom .hand:has(>button:nth-child(6))>button{margin-left:-26px}
+ .battle-bottom .hand:has(>button:nth-child(6)) .paint-card.compact{width:65px}
+ .battle-bottom .hand:has(>button:nth-child(7))>button{margin-left:-30px}
+ .battle-bottom .hand:has(>button:nth-child(7)) .paint-card.compact{width:63px}
+ .battle-bottom .hand .paint-card.selected{transform:translateY(-11px) scale(1.1)}
+ .shop-scene .selection-shell{justify-content:flex-start;gap:6px;padding-top:10px}
+ .shop-scene .scene-title h1{font-size:25px}
+ .shop-scene .scene-title p{font-size:10px}
+ .shop-scene .speech-bubble{padding:4px 9px;font-size:11px}
+ .shop-scene .choice-row{max-height:61dvh;gap:6px 10px;padding:3px 5px 8px}
+ .shop-scene .choice-row .paint-card{width:clamp(129px,35vw,153px);height:clamp(156px,21dvh,186px)}
+ .shop-scene .choice-row .paint-card .title{font-size:11px}
+ .shop-scene .choice-row .paint-card .text{font-size:9px;line-height:1.25}
+ .shop-scene .price-pill{font-size:10px;margin:3px auto 0;padding:2px 8px}
+ .shop-scene .event-rail{gap:8px}
+ .shop-scene .event-rail .wood-button{min-height:34px;padding:5px 9px;font-size:11px}
+}
+@media(max-height:500px) and (orientation:landscape){
+ .battle-bottom .hand{
+  justify-content:center;
+  overflow:visible;
+  gap:0;
+  padding:4px 42px 13px;
+ }
+ .battle-bottom .hand>button{margin-left:-9px}
+ .battle-bottom .hand>button:first-child{margin-left:0}
+ .battle-bottom .hand:has(>button:nth-child(6))>button{margin-left:-22px}
+ .battle-bottom .hand .paint-card.compact{width:clamp(60px,10vw,81px)}
+ .battle-bottom .hand .paint-card.selected{transform:translateY(-8px) scale(1.06);z-index:10}
+ .shop-scene .selection-shell{gap:4px}
+ .shop-scene .speech-bubble{font-size:9px}
+ .shop-scene .choice-row{gap:5px}
+ .shop-scene .choice-row .paint-card{height:clamp(111px,37dvh,155px)}
+}
