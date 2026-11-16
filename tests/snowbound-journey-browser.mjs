@@ -111,7 +111,12 @@ for(const cfg of scenarios){
     actorArt:getComputedStyle(el.querySelector('.unit-art img')).mixBlendMode
   }));
   assert.equal(stageStyle.border,'0px','stage character must have no card frame');
-  assert.equal(stageStyle.actorArt,'multiply','original Anima actor artwork must blend with forest');
+  await page.waitForFunction(()=>[...document.querySelectorAll('.stage-actor .unit-art img')].every(i=>i.dataset.cutoutReady==='1'),null,{timeout:12000});
+  assert.equal(stageStyle.actorArt,'normal','transparent cutout portraits must composite naturally against forest');
+  const cutoutPaths=await page.locator('.stage-actor .unit-art img').evaluateAll(nodes=>nodes.map(n=>({
+    ready:n.dataset.cutoutReady,source:n.dataset.originalArt,displayed:n.currentSrc
+  })));
+  assert(cutoutPaths.every(i=>i.ready==='1'&&i.source),'source Anima art must stay referenced after transparent conversion');
   if(portrait){
    // Three distinct world positions: support left, front centre, support right.
    assert(board.every(l=>l.slots[1].x<l.slots[2].x&&l.slots[2].x<l.slots[0].x),
