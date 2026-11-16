@@ -157,3 +157,12 @@
  text-shadow:0 2px 1px #7e5a49,0 0 7px #ffc985;
  pointer-events:none;will-change:transform,opacity;
 }
+
+.defeat-audit{
+ background:#343f5494;border:2px solid #e6dec6;
+ border-radius:10px;color:#f0ecdc;padding:9px 14px;margin:10px auto;
+ max-width:540px;text-align:left;font-size:12px;
+}
+.defeat-audit h2{font-size:14px;margin:0 0 5px}
+.defeat-audit p{margin:3px 0 5px}
+.defeat-audit ol{margin:5px 0 0 17px;padding:0;line-height:1.65}
