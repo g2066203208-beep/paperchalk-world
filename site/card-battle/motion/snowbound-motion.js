@@ -185,7 +185,10 @@
    }
    beep(cue.kind==="gun"?"gun":"paper");
    await wait(TOKENS.charge,run);
-   if(cue.type==="itemHit")launchPlayedCard(from,target,run,cue);
+   if(cue.type==="itemHit"&&from&&from.dataset.motionLaunched!=="1"){
+    from.dataset.motionLaunched="1";
+    launchPlayedCard(from,target,run,cue);
+   }
    line(from||target,target,cue.kind,run);
    await wait(TOKENS.travel,run);
    record(label,"impact");
