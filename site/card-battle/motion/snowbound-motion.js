@@ -204,16 +204,26 @@
    const newCard=unit(app,cue.actorId);
    if(!newCard)return;
    const rect=newCard.getBoundingClientRect();
+   const side=cue.side==="friendly"?-1:1;
    const clone=newCard.cloneNode(true);clone.classList.add("motion-new-entrant");
    clone.style.position="fixed";clone.style.left=rect.left+"px";clone.style.top=rect.top+"px";
    clone.style.width=rect.width+"px";clone.style.height=rect.height+"px";
    old.append(clone);
    newCard.style.visibility="hidden";
    beep("paper");
-   await animate(clone,[{transform:"translateX(84px) translateY(-14px) rotate(9deg) scale(.83)",opacity:0},
+   await animate(clone,[{transform:"translateX("+(side*84)+"px) translateY(-14px) rotate("+(side*9)+"deg) scale(.83)",opacity:0},
      {transform:"translateX(-4px) translateY(-4px) rotate(-2deg) scale(1.055)",opacity:1,offset:.82},
      {transform:"translate(0) rotate(0) scale(1)",opacity:1}],TOKENS.summon,{},run);
    newCard.style.visibility="";clone.remove();
+  }
+  async function recall(old,cue,run){
+   const card=unit(old,cue.actorId);
+   if(!card)return;
+   beep("paper");
+   await animate(card,[{transform:"translate(0,0) rotate(0) scale(1)",opacity:1},
+     {transform:"translate(-35px,-14px) rotate(-7deg) scale(.9)",opacity:1,offset:.4},
+     {transform:"translate(-110px,64px) rotate(-16deg) scale(.25)",opacity:0}],380,{},run);
+   card.style.visibility="hidden";
   }
   async function itemSupport(old,cue,run){
    const card=old?.querySelector(".battle-bottom .hand>button");
@@ -286,7 +296,8 @@
      else if(cue.type==="frozen"){const card=unit(old,cue.actorId);if(card)await animate(card,[{filter:"saturate(1)"},{filter:"saturate(.3) brightness(1.27)"},{filter:"saturate(1)"}],220,{},run);}
      else if(cue.type==="move")await move(old,cue,run);
      else if(cue.type==="redraw")await redraw(old,run);
-     else if(cue.type==="reinforcement")await reinforce(old,cue,run);
+     else if(cue.type==="reinforcement"||cue.type==="summon")await reinforce(old,cue,run);
+     else if(cue.type==="recall")await recall(old,cue,run);
      else if(cue.type==="itemSupport")await itemSupport(old,cue,run);
      else if(cue.type==="shopPurchase")await purchase(old,cue,run);
      else if(cue.type==="victory"||cue.type==="defeat")await outcome(cue.type,run);
