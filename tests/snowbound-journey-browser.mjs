@@ -65,6 +65,38 @@ for(const cfg of scenarios){
   assert.equal(await page.locator(".battle-slot").count(),12);
   assert.equal(await page.locator(".battle-grid").count(),2);
   assert(await page.locator(".battle-unit").count()>=3);
+
+  const board=await page.evaluate(()=>{
+   const lanes=[...document.querySelectorAll('.double-board>.battle-grid')];
+   return lanes.map((lane,index)=>({
+    row:index,slots:[...lane.querySelectorAll('.battle-slot')].map(el=>{
+     const r=el.getBoundingClientRect();
+     return {side:el.dataset.side,logicalSlot:Number(el.dataset.slot),x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom};
+    })
+   }));
+  });
+  assert.equal(board.length,2,"the battlefield is two HORIZONTAL rows, not two faction blocks");
+  assert(board.every(l=>l.slots.length===6),"each lane contains six positions");
+  assert.deepEqual(board[0].slots.map(x=>x.side),["friendly","friendly","friendly","enemy","enemy","enemy"]);
+  assert.deepEqual(board[1].slots.map(x=>x.side),["friendly","friendly","friendly","enemy","enemy","enemy"]);
+  assert.deepEqual(board[0].slots.map(x=>x.logicalSlot),[2,1,0,0,1,2]);
+  assert.deepEqual(board[1].slots.map(x=>x.logicalSlot),[5,4,3,3,4,5]);
+  assert(board.every(l=>l.slots.every((x,i)=>i===0||x.x>l.slots[i-1].x)),"columns progress left to right");
+  assert(board[1].slots[0].y>board[0].slots[0].y+10,"lower tactical lane truly below upper lane");
+  assert(board.every(l=>l.slots.every(c=>c.x>=-1&&c.right<=cfg.viewport.width+1&&c.y>=0&&c.bottom<=cfg.viewport.height+1)),"all twelve slots fully onscreen");
+  const unitBounds=await page.locator(".battle-unit").evaluateAll(nodes=>nodes.map(e=>{
+   const b=e.getBoundingClientRect();return {width:b.width,height:b.height,x:b.x,right:b.right};
+  }));
+  assert(unitBounds.every(u=>u.width>=40&&u.height>=55),"every deployed card remains visible in target viewport");
+  const bgOk=await page.evaluate(()=>{
+    const scene=getComputedStyle(document.querySelector(".battle-scene"));
+    return scene.backgroundImage.includes("snowbound-battle-forest.svg");
+  });
+  assert(bgOk,"battle scene uses the authored forest painting instead of CSS triangles");
+  await page.locator('.battle-unit.enemy').first().click();
+  assert(await page.locator('.battle-inspect-backdrop').isVisible(),"enemy unit opens readable detail card");
+  await page.locator('.battle-inspect-backdrop button').click();
+
   const heroLoaded=await page.locator('.battle-unit.friendly .unit-art img').first().evaluate(img=>img.complete&&img.naturalWidth>0);
   assert(heroLoaded,"real Anima portrait loaded in formation card");
   await screenshot("05-battle");
