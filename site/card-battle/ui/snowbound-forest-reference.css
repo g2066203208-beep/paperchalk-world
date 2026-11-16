@@ -330,7 +330,7 @@
   outline:0!important;
   background:transparent!important;
   box-shadow:none!important;
-  filter:drop-shadow(1px 7px 3px #1e3b514a);
+  filter:none!important;
   transform-origin:50% 95%;
   isolation:auto!important;
 }
@@ -362,8 +362,8 @@
   object-position:center bottom!important;
   width:100%!important;
   height:100%!important;
-  mix-blend-mode:multiply!important;
-  filter:contrast(1.05) saturate(.93);
+  mix-blend-mode:normal!important;
+  filter:drop-shadow(1px 4px 2px #1e3b5159);
 }
 /* Compact status labels live by the character's feet, never across
    the upper body. No rectangular photo background or nameplate card. */
@@ -498,4 +498,15 @@
     min-width:18px!important;height:18px!important;font-size:10px!important;
     line-height:14px!important;bottom:4px!important;
   }
+}
+
+/* Hide the flat paper while the in-browser alpha cutout is being computed.
+   Fade in only the real PNG silhouette; the original source stays saved. */
+.battle-scene.stage-actors .battle-unit .unit-art img:not([data-cutout-ready]),
+.battle-scene.stage-actors .battle-unit .unit-art img[data-cutout-ready="fallback"]{
+  opacity:0;
+}
+.battle-scene.stage-actors .battle-unit .unit-art img[data-cutout-ready="1"]{
+  opacity:1;
+  transition:opacity .2s ease-out;
 }
