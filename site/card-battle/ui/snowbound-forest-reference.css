@@ -527,9 +527,9 @@
  .battle-scene.stage-actors.stage-sparse .battle-slot[data-side="friendly"][data-slot="2"],
  .battle-scene.stage-actors.stage-sparse .battle-slot[data-side="friendly"][data-slot="5"]{--actor-x:45%}
  .battle-scene.stage-actors.stage-sparse .battle-slot[data-side="enemy"][data-slot="0"],
- .battle-scene.stage-actors.stage-sparse .battle-slot[data-side="enemy"][data-slot="3"]{--actor-x:68%}
+ .battle-scene.stage-actors.stage-sparse .battle-slot[data-side="enemy"][data-slot="3"]{--actor-x:64%}
  .battle-scene.stage-actors.stage-sparse .battle-slot[data-side="enemy"][data-slot="1"],
- .battle-scene.stage-actors.stage-sparse .battle-slot[data-side="enemy"][data-slot="4"]{--actor-x:88%}
+ .battle-scene.stage-actors.stage-sparse .battle-slot[data-side="enemy"][data-slot="4"]{--actor-x:87%}
  .battle-scene.stage-actors.stage-sparse .battle-slot[data-side="enemy"][data-slot="2"],
  .battle-scene.stage-actors.stage-sparse .battle-slot[data-side="enemy"][data-slot="5"]{--actor-x:52%}
  .battle-scene.stage-actors.stage-sparse .battle-grid[data-row="0"] .battle-slot[data-side="enemy"]{--actor-ground:13%}
