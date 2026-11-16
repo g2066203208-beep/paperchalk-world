@@ -19,7 +19,8 @@ for(const [name,width,height,minW,minH] of scenarios){
  try{
   await page.goto("http://127.0.0.1:4173/card-battle/snowbound-journey.html",{waitUntil:"networkidle"});
   for(const action of ["town","new","leader","node"])await page.locator('[data-act="'+action+'"]:visible:not([disabled])').first().click();
-  await page.waitForTimeout(350);
+  await page.waitForFunction(()=>!window.PaperchalkSnowboundUI?.motion?.isBusy(),null,{timeout:14000});
+  await page.waitForTimeout(90);
   const enemyPortraits=await page.locator(".battle-unit.enemy img").evaluateAll(imgs=>imgs.map(img=>({src:img.getAttribute("src"),loaded:img.complete&&img.naturalWidth>0})));
   assert.equal(enemyPortraits.length,2,"forest encounter uses two original Anima enemy character illustrations");
   assert(enemyPortraits.every(i=>i.loaded),"both original vampire minion portraits must load");
