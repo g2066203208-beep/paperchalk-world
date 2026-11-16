@@ -351,7 +351,7 @@ function onClick(event){
  case "menu":apply(()=>game.go("menu"));break;
  case "town":apply(()=>game.town());break;
  case "new":apply(()=>game.startFresh());break;
- case "resume":apply(()=>game.go(game.state().run?.battle&&!game.state().run.battle.finished?"battle":"map"));break;
+ case "resume":{const rr=game.state().run;const target=rr?.result?"result":rr?.battle?.finished?"battle-clear":rr?.battle?"battle":"map";apply(()=>game.go(target));break;}
  case "leader":apply(()=>game.selectHero(id));break;
  case "map":apply(()=>game.go("map"));break;
  case "node":apply(()=>game.selectNode(index));break;
