@@ -49,6 +49,52 @@
  object-fit:contain !important;
  object-position:center center !important;
 }
+/* Portrait artwork uses the full card canvas, like the 704x1024 PNG.
+ * Names/stats are a legible overlay, not a section that compresses
+ * the available full-body painting into a shorter odd-ratio viewport. */
+.battle-scene .battle-grid .battle-unit{
+ position:relative!important;
+ display:block!important;
+}
+.battle-scene .battle-grid .battle-unit .unit-art{
+ position:absolute!important;
+ inset:0!important;
+ display:block!important;
+ width:100%!important;
+ height:100%!important;
+ min-height:0!important;
+ overflow:hidden!important;
+}
+.battle-scene .battle-grid .battle-unit .unit-art img{
+ display:block!important;
+ width:100%!important;
+ height:100%!important;
+ object-fit:contain!important;
+ object-position:center!important;
+ mix-blend-mode:normal!important;
+}
+.battle-scene .battle-unit .unit-name{
+ position:absolute!important;
+ bottom:0!important;
+ left:0!important;
+ right:0!important;
+ z-index:3!important;
+ width:100%!important;
+ line-height:1.55!important;
+ padding:3px 22px 3px 4px!important;
+ background:#f8eccde8!important;
+ border-top:1px solid #9c8680!important;
+}
+.battle-scene .battle-unit .unit-trait{
+ display:none!important; /* skill description available in full card inspection */
+}
+.battle-scene .battle-unit .unit-badges .tick{
+ right:1px!important;
+ bottom:1px!important;
+ top:auto!important;
+ transform:none!important;
+ z-index:4!important;
+}
 /* Avoid synthetic width-biased card borders and cap HUD ornaments. */
 .battle-scene .battle-unit .unit-name{
  box-sizing:border-box;
