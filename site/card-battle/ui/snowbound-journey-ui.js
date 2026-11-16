@@ -270,7 +270,7 @@ function showCompanionPicker(){
 function battleUnit(unit,side){
  const creature=find(rules.ENEMIES,unit.template);
  const portrait=unit.art?'<img loading="eager" src="'+esc(unit.art)+'" alt="'+esc(unit.name)+'角色插画">':enemyIllustration(unit.template);
- return '<button class="battle-unit '+(side==="enemy"?"enemy":"friendly")+(unit.uid===selectedAlly?' is-selected':'')+'" data-act="'+(side==="enemy"?"enemy":"ally")+'" data-id="'+esc(unit.uid)+'" type="button" aria-label="'+esc(unit.name)+' 生命'+unit.hp+' 攻击'+unit.atk+' 倒计时'+unit.tick+'">'+
+ return '<button class="battle-unit stage-actor '+(side==="enemy"?"enemy":"friendly")+(unit.uid===selectedAlly?' is-selected':'')+'" data-act="'+(side==="enemy"?"enemy":"ally")+'" data-id="'+esc(unit.uid)+'" type="button" aria-label="'+esc(unit.name)+' 生命'+unit.hp+' 攻击'+unit.atk+' 倒计时'+unit.tick+'">'+
   '<span class="unit-art">'+portrait+'</span><span class="unit-name">'+esc(unit.name)+'</span><span class="unit-trait">'+esc(unit.leader?'队长':unit.template==='medic'?'治愈':unit.template==='engineer'?'破甲':unit.template==='scout'?'卫护':'自动攻击')+'</span>'+
   '<span class="unit-badges"><span class="badge hp">'+unit.hp+'</span><span class="badge atk">'+unit.atk+'</span><span class="badge tick">'+unit.tick+'</span>'+
   (unit.shield?'<span class="badge shield">'+unit.shield+'</span>':'')+
@@ -301,7 +301,7 @@ function battle(){
  }).join("");
  const selected=selectedCard>=0?find(rules.ITEMS,b.hand[selectedCard]?.id):null;
  const reserve=r.companions.filter(id=>!b.fallenCompanions?.includes(id)&&!b.allies.some(a=>a.hp>0&&a.template===id));
- return wrap("battle-scene "+(r.zone===1?"ice-zone":r.zone===2?"summit-zone":""),commonHead(z.name+" · "+(b.boss?"首领战":"遭遇战"),{back:"map",className:"battle-header",subtitle:"ROUND "+b.turn})+
+ return wrap("battle-scene stage-actors "+(r.zone===1?"ice-zone":r.zone===2?"summit-zone":""),commonHead(z.name+" · "+(b.boss?"首领战":"遭遇战"),{back:"map",className:"battle-header",subtitle:"ROUND "+b.turn})+
  '<div class="battle-core"><div class="battle-field">'+
  '<div class="battle-log" aria-live="polite">'+esc(latest)+'</div><div class="battle-caption"><span>己方</span><span>双排战线</span><span>敌方</span></div>'+
  '<div class="battle-side left"><button class="battle-bell" data-act="redraw" type="button" title="重抽钟"><span class="bell-glyph">♧</span><b>重抽 '+b.redrawCharge+'/4</b></button><button class="side-btn" data-act="summonlist" type="button" '+(!reserve.length||!b.playsLeft?'disabled':'')+'>召唤 '+reserve.length+'</button></div>'+
