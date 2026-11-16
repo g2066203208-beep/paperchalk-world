@@ -49,6 +49,8 @@ for(const cfg of scenarios){
   const tracePlayed=await page.evaluate(()=>window.PaperchalkSnowboundUI.motion.trace());
   assert(tracePlayed.some(t=>t.stage==="card-source"&&t.detail===playedKey),
    "item animation must originate at the exact second hand card played");
+  assert(tracePlayed.some(t=>t.event==="itemHit"&&t.stage==="card-launched"&&t.detail===playedKey),
+   "the consumed physical card must launch toward the target, not simply disappear");
   await page.screenshot({path:OUT+"/"+cfg.name+"-second-card-accurate-source.png"});
   let attack=false,count=0;
   for(;count<5;count++){
