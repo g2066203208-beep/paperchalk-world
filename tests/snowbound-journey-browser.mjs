@@ -118,22 +118,21 @@ for(const cfg of scenarios){
   })));
   assert(cutoutPaths.every(i=>i.ready==='1'&&i.source),'source Anima art must stay referenced after transparent conversion');
   if(portrait){
-   // Three distinct world positions: support left, front centre, support right.
+   // The scene has real LEFT and RIGHT world positions, no vertical stack.
    assert(board.every(l=>l.slots[1].x<l.slots[2].x&&l.slots[2].x<l.slots[0].x),
-     'allied stage actor stands at centre between the two supports');
-   assert(board.every(l=>l.slots[4].x<l.slots[3].x&&l.slots[3].x<l.slots[5].x),
-     'enemy stage actor stands at centre between the two supports');
-   assert(board.every(l=>l.slots[3].bottom<l.slots[2].y-10),
-     'enemies stand deeper among trees, allies nearer the viewpoint');
-   assert(board.every(l=>Math.abs((l.slots[2].x+l.slots[2].width/2)-(l.slots[3].x+l.slots[3].width/2))<=3),
-     'frontmost ally and foe share the scene centreline in portrait');
+     'allied near-front character stands among left-side supports');
+   assert(board.every(l=>l.slots[5].x<l.slots[3].x&&l.slots[3].x<l.slots[4].x),
+     'enemy near-front character stands among right-side supports');
+   assert(board.every(l=>l.slots[2].right<l.slots[3].x+6),
+     'opposing portraits occupy distinct halves of the snowy clearing');
    assert(board.every(l=>l.slots[0].width>=60),'portrait actors visible');
-   assert(board[1].slots[0].y>board[0].slots[0].y+10,'foreground allies below rear allies');
+   assert(board[1].slots[0].y<board[0].slots[0].y-10,
+     'second character row stands deeper into the same scene');
   }else{
    assert(board.every(l=>l.slots.every((x,i)=>i===0||x.x>l.slots[i-1].x)),
      'landscape stage actors follow left-side allies and right-side enemies');
    assert(board[1].slots[0].y<board[0].slots[0].y-10,
-     'second lane stands farther back in the snowfield, not in a floating card row');
+     'second lane stands farther back in the snowfield');
   }
   assert(board.every(l=>l.slots.every(c=>c.x>=-1&&c.right<=cfg.viewport.width+1&&c.y>=0&&c.bottom<=cfg.viewport.height+1)),
     'all twelve standing actors fit within the viewport');
