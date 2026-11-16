@@ -177,10 +177,10 @@ function create(initial){
  function startBattle(boss=false){
   const r=s.run,zone=r.zone;
   const enemyIds=boss?[ZONES[zone].boss,ZONES[zone].battle[0]]:ZONES[zone].battle;
-  const foes=enemyIds.map((id,i)=>foeFrom(id,boss&&i===0?4:i,zone));
-  const allies=[allyFrom(r.heroId,3,true)];
+  const foes=enemyIds.map((id,i)=>foeFrom(id,[0,3,1,4,2,5][i]??(i%6),zone));
+  const allies=[allyFrom(r.heroId,0,true)];
   // A previously rescued companion joins the board at the start of battle.
-  if(r.companions.length)allies.push(allyFrom(r.companions[0],4));
+  if(r.companions.length)allies.push(allyFrom(r.companions[0],3));
   r.battle={turn:1,playsLeft:1,redrawCharge:4,boss,foes,allies,
    draw:shuffle(newCards(r),21+r.zone*9+r.step*23),hand:[],discard:[],
    log:[],finished:false,victory:false,goldWon:0,reinforcement:9,wavesSpawned:0,selected:null};
