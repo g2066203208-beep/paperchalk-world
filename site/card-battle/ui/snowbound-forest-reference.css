@@ -286,7 +286,7 @@
   z-index:3;
 }
 .battle-scene.stage-actors .battle-grid[data-row="1"] .battle-slot{
-  --actor-ground:46%;
+  --actor-ground:54%;
   --actor-size:var(--stage-actor-far);
   z-index:2;
 }
