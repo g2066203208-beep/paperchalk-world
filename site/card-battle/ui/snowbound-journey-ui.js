@@ -434,7 +434,12 @@ function installCardGestures(){
   app.querySelectorAll(".battle-slot.is-move-target").forEach(v=>v.classList.remove("is-move-target"));
   if(!info.moved)return;
   suppressClickUntil=Date.now()+260;
+  // A moving card can visually cover the destination while its transform eases back.
+  // Exclude the dragged card from hit-testing before resolving the actual slot.
+  const originalPointerEvents=info.origin.style.pointerEvents;
+  info.origin.style.pointerEvents="none";
   const slot=document.elementFromPoint(e.clientX,e.clientY)?.closest(".battle-slot");
+  info.origin.style.pointerEvents=originalPointerEvents;
   if(!slot)return;
   if(info.isHand&&slot.dataset.side==="enemy"){
    const target=slot.querySelector(".battle-unit.enemy");
