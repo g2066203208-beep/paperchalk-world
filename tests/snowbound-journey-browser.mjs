@@ -28,6 +28,9 @@ for(const cfg of scenarios){
  });
  const screenshot=async name=>{
   await page.waitForFunction(()=>!window.PaperchalkSnowboundUI?.motion?.isBusy(),null,{timeout:12000});
+  if(await page.locator(".battle-scene.stage-actors").count()){
+   await page.waitForFunction(()=>[...document.querySelectorAll(".stage-actor .unit-art img")].every(i=>i.dataset.cutoutReady==="1"),null,{timeout:12000});
+  }
   await page.waitForTimeout(80);
   const label=out+"/"+cfg.id+"-"+name+".png";
   await page.screenshot({path:label,fullPage:true});shots.push(label);
