@@ -55,16 +55,16 @@ const html="<!DOCTYPE html><html lang='zh'><head><meta charset='utf-8'><meta nam
  "@media(max-width:720px){.pair{grid-template-columns:1fr}}"+
  "</style></head><body><h1>Wildfrost reference × Snowbound actual Chromium comparison</h1>"+
  "<p class='warning'><b>Reference card pixel bounds: NOT_MEASURED.</b> Current game frame dimensions: from real Chromium geometry JSON. "+
- "The provisional 7:10 original-project frame is an implementation candidate, not a measured exact Wildfrost ratio.</p>"+
+ "The 11:16 shape is taken from our original 704x1024 Hunter/Vampire character PNGs. It is NOT a measured Wildfrost frame ratio.</p>"+
  "<p>Compare card shape, x/y positions, column gaps, portrait versus text area, tabletop-to-arena ratio and HUD. Publisher graphics are external references and are never used as game textures.</p>"+
  "<h2>Measured current project frames</h2><table><tr><th>Viewport</th><th>Pixels</th><th>W/H</th><th>Screenshot</th><th>CI</th></tr>"+
  tableRows+"</table><h2>Side-by-side original source and our 1920x1080 battle</h2>"+blocks+
  "<h2>All-device game screenshots</h2>"+additional+
  "<p class='warning'>No exact-match claim is allowed until every official reference is inspected in its original pixel dimensions and manually measured card bounding boxes are stored with source and screenshot coordinates.</p></body></html>";
 fs.writeFileSync(path.join(out,"index.html"),html);
-const report={sourceImages,referenceCardBounds:"NOT_MEASURED",targetRatio:0.7,devices:records,
+const report={sourceImages,referenceCardBounds:"NOT_MEASURED",sourceArtworkRatio:704/1024,targetRatio:704/1024,devices:records,
  allScreenshotsCaptured:records.every(x=>x.exists),
- allGameRatiosPass:records.every(x=>x.metric?.passed&&Math.abs(x.metric.cardRatio-.7)<=.025)};
+ allGameRatiosPass:records.every(x=>x.metric?.passed&&Math.abs(x.metric.cardRatio-704/1024)<=.006)};
 fs.writeFileSync(path.join(out,"report.json"),JSON.stringify(report,null,2));
 
 /*
