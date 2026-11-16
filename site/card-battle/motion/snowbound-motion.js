@@ -169,6 +169,15 @@
      {transform:"translateX(-2px) rotate(-.6deg) scale(1.01)",filter:"brightness(1.05)",offset:.6},
      {transform:"translateX(0) rotate(0)",filter:"brightness(1)"}],TOKENS.hurt,{},run);
    await wait(TOKENS.hitstop+TOKENS.hurt,run);
+   if(cue.kind==="freeze"){
+    const badge=document.createElement("span");badge.className="motion-float is-blocked";
+    badge.textContent="冰封";const box=target.getBoundingClientRect(),p=midpoint(box);
+    badge.style.left=p.x+"px";badge.style.top=(p.y-29)+"px";
+    overlay.append(badge);
+    animate(badge,[{opacity:0,transform:"translate(-50%,4px) scale(.83)"},
+      {opacity:1,transform:"translate(-50%,-12px) scale(1)",offset:.36},
+      {opacity:0,transform:"translate(-50%,-36px) scale(.94)"}],430,{},run).then(()=>badge.remove());
+   }
    if(cue.lethal){
     record(label,"death-start");beep("shatter");
     await animate(target,[{transform:"translateY(0) rotate(0) scale(1)",opacity:1,filter:"saturate(1)"},
@@ -224,6 +233,34 @@
      {transform:"translate(-35px,-14px) rotate(-7deg) scale(.9)",opacity:1,offset:.4},
      {transform:"translate(-110px,64px) rotate(-16deg) scale(.25)",opacity:0}],380,{},run);
    card.style.visibility="hidden";
+  }
+  async function travel(old,cue,run){
+   const options=[...old.querySelectorAll(".map-node.is-current")];
+   const node=options[cue.branch]||options[0];
+   if(!node){await wait(180,run);return}
+   beep("paper");
+   await animate(node,[{transform:"translateY(0) scale(1)",filter:"brightness(1)"},
+    {transform:"translateY(-9px) scale(1.14)",filter:"brightness(1.5)",offset:.35},
+    {transform:"translateY(-3px) scale(1.04)",filter:"brightness(1.15)"}],430,{},run);
+  }
+  async function reward(old,cue,run){
+   const options=[...old.querySelectorAll('.choice-row [data-act="claim"]')];
+   const item=options[cue.index]||options[0];
+   beep("paper");
+   if(item)await animate(item,[{transform:"translate(0,0) rotate(0) scale(1)",opacity:1},
+     {transform:"translateY(-22px) rotate(-3deg) scale(1.12)",opacity:1,offset:.38},
+     {transform:"translate(-95px,-105px) rotate(-12deg) scale(.22)",opacity:0}],520,{},run);
+   else await wait(260,run);
+   beep("win");
+  }
+  async function depart(old,cue,run){
+   const hero=[...old.querySelectorAll('[data-act="leader"]')].find(n=>n.dataset.id===cue.heroId);
+   if(hero){
+    beep("paper");
+    await animate(hero,[{transform:"translateY(0) scale(1)",opacity:1},
+     {transform:"translateY(-25px) rotate(2deg) scale(1.075)",opacity:1,offset:.46},
+     {transform:"translateY(-70px) scale(.65)",opacity:0}],370,{},run);
+   }
   }
   async function itemSupport(old,cue,run){
    const card=old?.querySelector(".battle-bottom .hand>button");
@@ -299,6 +336,10 @@
      else if(cue.type==="reinforcement"||cue.type==="summon")await reinforce(old,cue,run);
      else if(cue.type==="recall")await recall(old,cue,run);
      else if(cue.type==="itemSupport")await itemSupport(old,cue,run);
+     else if(cue.type==="mapTravel")await travel(old,cue,run);
+     else if(cue.type==="reward")await reward(old,cue,run);
+     else if(cue.type==="depart")await depart(old,cue,run);
+     else if(cue.type==="mapReturn"||cue.type==="battleExit")await wait(190,run);
      else if(cue.type==="shopPurchase")await purchase(old,cue,run);
      else if(cue.type==="victory"||cue.type==="defeat")await outcome(cue.type,run);
     }
