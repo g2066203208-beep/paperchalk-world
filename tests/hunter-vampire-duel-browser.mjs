@@ -54,7 +54,8 @@ for(const x of viewports){
   });
   assert(metrics.cards.length>=3,"real art character cards should be visible");
   assert(metrics.cards.every(c=>Math.abs(c.ratio-11/16)<.006),"all card shapes match 704:1024");
-  assert(metrics.cards.every(c=>c.sourceW===704&&c.sourceH===1024),"Anima sources still 704x1024");
+  console.log("ART SOURCE PIXELS "+x.name+": "+JSON.stringify({leaderCards,cards:metrics.cards}));
+  assert(metrics.cards.every(c=>c.sourceW===704&&c.sourceH===1024),"Anima sources still 704x1024: "+JSON.stringify(metrics.cards));
   assert(metrics.cards.every(c=>c.fit==="contain"),"no crop or cover mode");
   assert(metrics.scrollX<=3,"no horizontal overflow");
   assert.deepEqual(errors,[],"no page runtime errors");
