@@ -26,6 +26,7 @@ for(const cfg of cases){
    await page.waitForFunction(()=>!window.PaperchalkSnowboundUI?.motion?.isBusy(),null,{timeout:14000});
   }
   await page.waitForFunction(()=>!window.PaperchalkSnowboundUI?.motion?.isBusy(),null,{timeout:14000});
+  await page.waitForFunction(()=>[...document.querySelectorAll(".stage-actor .unit-art img")].every(i=>i.dataset.cutoutReady==="1"),null,{timeout:12000});
   await page.waitForTimeout(80);
   const state=await page.evaluate(()=>window.PaperchalkSnowboundUI.state.run.battle);
   assert(state.allies.length>=1,"hunter art loaded");
