@@ -137,7 +137,7 @@ function create(initial){
   if(r.gold<item.price)return {ok:false,message:"古金币不足"};
   r.gold-=item.price;item.sold=true;r.deck.push(item.id);
   emit("购买了「"+item.name+"」 · "+item.price+"金币","shop");
-  return {ok:true,state:present()};
+  return {ok:true,state:present(),visualEvents:[{type:"shopPurchase",index,cardId:item.id,price:item.price,goldAfter:r.gold,name:item.name}]};
  }
  function leaveEvent(){
   if(!s.run||!s.run.event)return {ok:false,message:"暂无事件"};
@@ -186,7 +186,7 @@ function create(initial){
    log:[],finished:false,victory:false,goldWon:0,reinforcement:9,wavesSpawned:0,selected:null};
   deal(r.battle,5);
   emit(boss?"首领出现在雪路尽头！":"遇到了雪境巡游者","battle");
-  return {ok:true,state:go("battle")};
+  return {ok:true,state:go("battle"),visualEvents:[{type:"battleIntro",foes:foes.map(x=>x.uid),allies:allies.map(x=>x.uid),hand:r.battle.hand.map(x=>x.key)}]};
  }
  function applyDamage(unit,damage){
   const shield=Math.min(unit.shield,Math.max(0,damage));unit.shield-=shield;
@@ -210,30 +210,33 @@ function create(initial){
  function takeTurn(){
   const r=s.run,b=r?.battle;if(!b||b.finished)return {ok:false,message:"没有正在进行的战斗"};
   b.turn++;r.turns++;b.playsLeft=1;b.redrawCharge=Math.min(4,b.redrawCharge+1);
-  const log=[];
+  const log=[],visuals=[{type:"turnTick",turn:b.turn}];
   // First tick enemy countdowns, then ally countdowns, deterministic target selection.
   for(const unit of ordered(b.foes)){
-   if(unit.stunned>0){unit.stunned--;log.push(unit.name+"被冰霜困住");continue;}
+   if(unit.stunned>0){unit.stunned--;log.push(unit.name+"被冰霜困住");visuals.push({type:"frozen",actorId:unit.uid,side:"enemy"});continue;}
    unit.tick--;
    if(unit.tick<=0){
     const target=frontTarget(b.allies,unit.slot);
     if(target){
-     const amount=Math.max(1,unit.atk-unit.weak);const out=applyDamage(target,amount);
+     const amount=Math.max(1,unit.atk-unit.weak),previousHp=target.hp,previousShield=target.shield;
+     const out=applyDamage(target,amount);
+     visuals.push({type:"attack",actorId:unit.uid,targetId:target.uid,actorSide:"enemy",kind:"basic",damage:out.actual,blocked:out.blocked,hpBefore:previousHp,hpAfter:target.hp,shieldBefore:previousShield,shieldAfter:target.shield,lethal:target.hp<=0});
      log.push(unit.name+"攻击"+target.name+" · "+out.actual+"伤害");
      if(target.leader)r.health=Math.max(0,target.hp);
     }
     unit.tick=unit.cd;
    }
   }
-  if(r.health<=0)return resolveBattle(false,log);
+  if(r.health<=0)return resolveBattle(false,log,visuals);
   for(const unit of ordered(b.allies)){
    if(unit.stunned>0){unit.stunned--;continue;}
    unit.tick--;
    if(unit.tick<=0){
     const target=frontTarget(b.foes,unit.slot);
     if(target){
-     const amount=unit.atk+Math.max(0,target.mark);
+     const amount=unit.atk+Math.max(0,target.mark),previousHp=target.hp,previousShield=target.shield;
      const hit=applyDamage(target,amount);
+     visuals.push({type:"attack",actorId:unit.uid,targetId:target.uid,actorSide:"friendly",kind:unit.template==="marksman"?"gun":"basic",damage:hit.actual,blocked:hit.blocked,hpBefore:previousHp,hpAfter:target.hp,shieldBefore:previousShield,shieldAfter:target.shield,lethal:target.hp<=0});
      r.damageDealt+=hit.actual;
      log.push(unit.name+"命中"+target.name+" · "+hit.actual+"伤害");
      if(unit.template==="marksman")target.mark+=1;
@@ -246,23 +249,23 @@ function create(initial){
    }
   }
   b.foes=b.foes.filter(x=>{if(x.hp<=0){r.kills++;return false;}return true;});
-  if(!b.foes.length||hasDefeatedBoss(b))return resolveBattle(true,log);
+  if(!b.foes.length||hasDefeatedBoss(b))return resolveBattle(true,log,visuals);
   if(b.turn>=b.reinforcement&&!b.boss&&b.wavesSpawned<1&&b.foes.length>=2){
    const occupied=new Set(b.foes.map(x=>x.slot));
    const spot=[1,2,4,5].find(x=>!occupied.has(x));
-   if(spot!==undefined){b.foes.push(foeFrom(ZONES[r.zone].battle[(b.turn+1)%ZONES[r.zone].battle.length],spot,r.zone));log.push("新的巡游者加入战斗");}
+   if(spot!==undefined){const reinforcement=foeFrom(ZONES[r.zone].battle[(b.turn+1)%ZONES[r.zone].battle.length],spot,r.zone);b.foes.push(reinforcement);visuals.push({type:"reinforcement",actorId:reinforcement.uid,slot:spot});log.push("新的巡游者加入战斗");}
    b.wavesSpawned++;b.reinforcement=999;
   }
   b.log=[...log,...b.log].slice(0,20);
   emit("第"+b.turn+"回合 · "+(log[0]||"战局继续"),"turn");
-  return {ok:true,events:log,state:present()};
+  return {ok:true,events:log,visualEvents:visuals,state:present()};
  }
- function checkBattleAlive(log=[]){
+ function checkBattleAlive(log=[],visuals=[]){
   const r=s.run,b=r.battle;
   b.foes=b.foes.filter(x=>{if(x.hp<=0){r.kills++;return false;}return true;});
-  if(!b.foes.length||hasDefeatedBoss(b))return resolveBattle(true,log);
+  if(!b.foes.length||hasDefeatedBoss(b))return resolveBattle(true,log,visuals);
   const hero=b.allies.find(x=>x.leader);
-  if(!hero||hero.hp<=0)return resolveBattle(false,log);
+  if(!hero||hero.hp<=0)return resolveBattle(false,log,visuals);
   return null;
  }
  function play(index,targetUid=null){
@@ -275,9 +278,11 @@ function create(initial){
   const needsEnemy=["hit","pierce","freeze","weaken"].includes(def.kind);
   if(needsEnemy&&!enemy)return {ok:false,message:"没有可攻击的目标"};
   b.hand.splice(index,1);b.discard.push(card);b.playsLeft=0;
-  let message="",out={actual:0};
+  let message="",out={actual:0};const visuals=[];
   if(needsEnemy){
+   const previousHp=enemy.hp,previousShield=enemy.shield;
    out=applyDamage(enemy,def.power+(def.kind==="pierce"?Math.max(0,enemy.shield):0));
+   visuals.push({type:"itemHit",cardKey:card.key,cardId:card.id,targetId:enemy.uid,kind:def.kind,damage:out.actual,blocked:out.blocked,hpBefore:previousHp,hpAfter:enemy.hp,shieldBefore:previousShield,shieldAfter:enemy.shield,lethal:enemy.hp<=0});
    if(def.kind==="pierce")enemy.mark+=1;
    if(def.kind==="freeze")enemy.stunned+=2;
    if(def.kind==="weaken")enemy.weak+=1;
@@ -285,29 +290,33 @@ function create(initial){
    message=def.name+" → "+enemy.name+" · "+out.actual+"伤害";
   }else if(def.kind==="all"){
    for(const unit of [frontTarget(b.foes,0),frontTarget(b.foes,3)].filter((u,i,a)=>u&&a.indexOf(u)===i)){
+    const previousHp=unit.hp,previousShield=unit.shield;
     const hit=applyDamage(unit,def.power);r.damageDealt+=hit.actual;
+    visuals.push({type:"itemHit",cardKey:card.key,cardId:card.id,targetId:unit.uid,kind:"all",damage:hit.actual,blocked:hit.blocked,hpBefore:previousHp,hpAfter:unit.hp,shieldBefore:previousShield,shieldAfter:unit.shield,lethal:unit.hp<=0});
    }
    message="连环铳横扫敌人前排";
   }else if(def.kind==="shield"){const hero=b.allies.find(x=>x.leader);hero.shield+=def.power;message="首领获得"+def.power+"护盾";}
   else if(def.kind==="heal"){const hero=b.allies.find(x=>x.leader);hero.hp=Math.min(hero.maxHp,hero.hp+def.power);r.health=hero.hp;message="首领恢复"+def.power+"生命";}
   else if(def.kind==="tea"){const hero=b.allies.find(x=>x.leader);hero.shield+=4;hero.hp=Math.min(hero.maxHp,hero.hp+2);r.health=hero.hp;message="暖心热茶 · 护盾+4 治疗+2";}
   else if(def.kind==="haste"){for(const unit of alive(b.allies))unit.tick=Math.max(1,unit.tick-1);message="全队行动倒计时-1";}
+  if(!visuals.length)visuals.push({type:"itemSupport",cardKey:card.key,cardId:card.id,kind:def.kind,power:def.power||0});
   b.log.unshift(message);emit(message,"action");
-  const result=checkBattleAlive([message]);
+  const result=checkBattleAlive([message],visuals);
   if(result)return result;
-  return {ok:true,events:[message],state:present()};
+  return {ok:true,events:[message],visualEvents:visuals,state:present()};
  }
  function move(uid,slot){
   const b=s.run?.battle;if(!b||b.finished)return {ok:false,message:"不在战斗中"};
   const unit=alive(b.allies).find(x=>x.uid===uid);
   if(!unit)return {ok:false,message:"请选择我方角色"};
   if(!Number.isInteger(slot)||slot<0||slot>5)return {ok:false,message:"格子无效"};
+  const previousSlot=unit.slot;
   const other=b.allies.find(x=>x.hp>0&&x.slot===slot);
   if(other&&other.uid===uid)return {ok:true,state:present()};
   if(other)other.slot=unit.slot;
   unit.slot=slot;
   emit("调整了"+unit.name+"的位置","move");
-  return {ok:true,state:present()};
+  return {ok:true,state:present(),visualEvents:[{type:"move",actorId:uid,fromSlot:previousSlot,toSlot:slot}]};
  }
  function redraw(){
   const b=s.run?.battle;if(!b||b.finished)return {ok:false,message:"目前无法重抽"};
@@ -315,24 +324,24 @@ function create(initial){
   const free=b.redrawCharge>=4;
   b.redrawCharge=0;deal(b,5);
   emit(free?"免费重抽了手牌":"重抽手牌并结束本回合","draw");
-  if(!free)return takeTurn();
-  return {ok:true,state:present()};
+  if(!free){const result=takeTurn();return {...result,visualEvents:[{type:"redraw",free:false},...(result.visualEvents||[])]};}
+  return {ok:true,state:present(),visualEvents:[{type:"redraw",free:true}]};
  }
  function endTurn(){
   const b=s.run?.battle;if(!b||b.finished)return {ok:false,message:"没有正在进行的战斗"};
   b.playsLeft=0;return takeTurn();
  }
- function resolveBattle(victory,log=[]){
+ function resolveBattle(victory,log=[],visuals=[]){
   const r=s.run,b=r.battle;
   b.finished=true;b.victory=victory;
-  if(!victory){emit("长夜吞没了远征队","defeat");return resolveRun(false);}
+  if(!victory){emit("长夜吞没了远征队","defeat");const result=resolveRun(false);return {...result,visualEvents:[...visuals,{type:"defeat",cause:log.at(-1)||"领队倒下"}]};}
   r.battlesWon++;
   const recovered=Math.max(3,Math.ceil((r.maxHealth-r.health)*.75));
   r.health=Math.min(r.maxHealth,r.health+recovered);
   const amount=(b.boss?65:30)+r.zone*12+(r.charms.includes("coin")?15:0);
   r.gold+=amount;b.goldWon=amount;
   emit("获胜！取得"+amount+"枚古金币","victory");
-  return {ok:true,events:log,state:go("battle-clear")};
+  return {ok:true,events:log,state:go("battle-clear"),visualEvents:[...visuals,{type:"victory",gold:amount}]};
  }
  function afterBattle(){if(s.screen!=="battle-clear")return {ok:false,message:"请完成本场战斗"};return finishNode();}
  function resolveRun(won){
@@ -353,7 +362,7 @@ function create(initial){
   state:present,view:activeView,go:setScreen,startFresh,town,selectHero,choices,
   selectNode,claim,buy,leaveEvent,finishNode,afterBattle,play,move,redraw,endTurn,
   startBattle,backTown,showDeck,closeDeck,settings,heroWithCharm,
-  version:"1.1.0-two-row-side-by-side"
+  version:"2.0.0-semantic-events"
  });
 }
 root.PaperchalkSnowbound=Object.freeze({create,HEROES,FRIENDS,ENEMIES,ITEMS,CHARMS,ZONES,EVENT_ROUTES});
