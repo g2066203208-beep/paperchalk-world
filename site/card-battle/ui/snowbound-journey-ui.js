@@ -208,12 +208,13 @@ function eventView(kind){
  }
  return wrap("event-scene",commonHead(name,{back:"leave",subtitle:en})+
  '<div class="selection-shell">'+headerTitle(name,desc,en)+
+ (kind==="treasure"?'<div class="event-chest" aria-hidden="true"><span class="chest-lid"></span><span class="chest-body"></span><span class="chest-lock">◈</span></div>':'')+
  (kind==="shop"?'<div class="speech-bubble">欢迎来到远征商店。看上哪张牌，点击购买就好！</div>':'')+
  '<div class="choice-row">'+offers.join("")+'</div>'+
  '<div class="event-rail"><span class="choice-currency">当前古金币 ◈ '+r.gold+'</span>'+
  (kind==="shop"||kind==="treasure"||kind==="charm"||kind==="forge"?
  '<button class="wood-button" data-act="leave" type="button">离开并继续旅程 ❯</button>':'')+
- '</div></div>',kind==="shop"?"shop-scene":"");
+ '</div></div>',kind+"-scene");
 }
 
 function closeShopInspect(){
