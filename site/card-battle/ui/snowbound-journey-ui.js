@@ -328,7 +328,7 @@ function render(){
   selectedCard=-1;selectedAlly=null;
   lastScreen=view;
  }
- const route={menu,town,leader,map:mapScene,battle,"battle-clear":battleClear,result,shop:()=>eventView("shop"),
+ const route={menu,town,leader,map:mapScene,battle,"battle-clear":battleClear,result:results,shop:()=>eventView("shop"),
  recruit:()=>eventView("recruit"),treasure:()=>eventView("treasure"),charm:()=>eventView("charm"),
  camp:()=>eventView("camp"),forge:()=>eventView("forge"),deck,townbuilding:townBuilding,settings};
  app.innerHTML=(route[view]||menu)()+(help?helpPanel():"");
