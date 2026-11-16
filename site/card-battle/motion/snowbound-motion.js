@@ -106,6 +106,10 @@
    old.style.width=rect.width+"px";old.style.height=rect.height+"px";
    old.style.margin="0";
    overlay.append(old);
+   // A committed action is already past its confirmation UI. Keeping the
+   // pre-click "play/cancel" tray visible over the lethal-hit movie makes
+   // the gameplay clip look like a frozen webpage.
+   old.querySelector(".fight-choice")?.remove();
    for(const b of old.querySelectorAll("button"))b.tabIndex=-1; // visual snapshot, not disabled/washed-out
    return old;
   }
@@ -136,6 +140,30 @@
     {clipPath:"inset(0 0% 0 0)",opacity:1,offset:.68},
     {clipPath:"inset(0 0% 0 0)",opacity:0}],TOKENS.travel,{easing:"ease-out"},run).then(()=>bullet.remove());
   }
+  function launchPlayedCard(source,target,run,cue){
+   if(!source||!target||!overlay)return;
+   const a=source.getBoundingClientRect(),b=target.getBoundingClientRect();
+   const dx=(b.left+b.width/2)-(a.left+a.width/2);
+   const dy=(b.top+b.height/2)-(a.top+a.height/2);
+   const ghost=source.cloneNode(true);
+   ghost.classList.remove("is-dragging");
+   ghost.classList.add("motion-played-card");
+   Object.assign(ghost.style,{
+    position:"fixed",left:a.left+"px",top:a.top+"px",
+    width:a.width+"px",height:a.height+"px",
+    margin:"0",pointerEvents:"none",visibility:"visible",
+    zIndex:"11"
+   });
+   overlay.append(ghost);
+   source.style.opacity="0";
+   record("itemHit","card-launched",cue.cardKey||cue.cardId||"");
+   animate(ghost,[
+    {transform:"translate(0px,0px) rotate(0deg) scale(1)",opacity:1},
+    {transform:"translate("+dx*.28+"px,"+(dy*.24-44)+"px) rotate(-9deg) scale(1.10)",opacity:1,offset:.38},
+    {transform:"translate("+dx+"px,"+dy+"px) rotate(12deg) scale(.24)",opacity:0}
+   ],TOKENS.travel+TOKENS.charge,{easing:"cubic-bezier(.28,.02,.3,1)"},run)
+    .then(()=>ghost.remove());
+  }
   async function attack(old,cue,run){
    if(skipped||run!==token)return;
    const actor=cue.actorId?unit(old,cue.actorId):null;
@@ -156,6 +184,7 @@
    }
    beep(cue.kind==="gun"?"gun":"paper");
    await wait(TOKENS.charge,run);
+   if(cue.type==="itemHit")launchPlayedCard(from,target,run,cue);
    line(from||target,target,cue.kind,run);
    await wait(TOKENS.travel,run);
    record(label,"impact");
