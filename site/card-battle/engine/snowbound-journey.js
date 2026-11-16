@@ -183,7 +183,7 @@ function create(initial){
   if(r.companions.length)allies.push(allyFrom(r.companions[0],4));
   r.battle={turn:1,playsLeft:1,redrawCharge:4,boss,foes,allies,
    draw:shuffle(newCards(r),21+r.zone*9+r.step*23),hand:[],discard:[],
-   log:[],finished:false,victory:false,goldWon:0,reinforcement:5,wavesSpawned:0,selected:null};
+   log:[],finished:false,victory:false,goldWon:0,reinforcement:9,wavesSpawned:0,selected:null};
   deal(r.battle,5);
   emit(boss?"首领出现在雪路尽头！":"遇到了雪境巡游者","battle");
   return {ok:true,state:go("battle")};
@@ -247,7 +247,7 @@ function create(initial){
   }
   b.foes=b.foes.filter(x=>{if(x.hp<=0){r.kills++;return false;}return true;});
   if(!b.foes.length||hasDefeatedBoss(b))return resolveBattle(true,log);
-  if(b.turn>=b.reinforcement&&!b.boss&&b.wavesSpawned<1&&b.foes.length<4){
+  if(b.turn>=b.reinforcement&&!b.boss&&b.wavesSpawned<1&&b.foes.length>=2){
    const occupied=new Set(b.foes.map(x=>x.slot));
    const spot=[1,2,4,5].find(x=>!occupied.has(x));
    if(spot!==undefined){b.foes.push(foeFrom(ZONES[r.zone].battle[(b.turn+1)%ZONES[r.zone].battle.length],spot,r.zone));log.push("新的巡游者加入战斗");}
