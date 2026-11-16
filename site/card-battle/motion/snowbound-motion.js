@@ -148,6 +148,7 @@
    const ghost=source.cloneNode(true);
    ghost.classList.remove("is-dragging");
    ghost.classList.add("motion-played-card");
+   ghost.querySelector(".paint-card")?.classList.remove("selected");
    Object.assign(ghost.style,{
     position:"fixed",left:a.left+"px",top:a.top+"px",
     width:a.width+"px",height:a.height+"px",
