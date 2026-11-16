@@ -13,7 +13,7 @@ const game=rules.create(saved);
 const motion=window.PaperchalkMotion?.create({app,getSoundEnabled:()=>game.state().settings.sound})||null;
 let shopInspectIndex=-1;
 
-let selectedCard=-1,selectedAlly=null,help=false,infoMessage="",lastScreen="",toastTimer=null,layoutMode="",soundCtx=null;
+let selectedCard=-1,selectedAlly=null,selectedCompanion=null,help=false,infoMessage="",lastScreen="",toastTimer=null,layoutMode="",soundCtx=null;
 const find=(a,id)=>a.find(x=>x.id===id);
 const esc=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const save=()=>{try{const s=game.state();localStorage.setItem(STORE,JSON.stringify({screen:s.screen,run:s.run,meta:s.meta,settings:s.settings}));}catch(e){console.warn("local save failed",e)}};
@@ -246,6 +246,26 @@ function showShopInspect(index){
  motion?.beep("paper");
 }
 
+function showCompanionPicker(){
+ const r=game.state().run,b=r?.battle;
+ if(!b)return;
+ const reserve=r.companions.filter(id=>!b.fallenCompanions?.includes(id)&&!b.allies.some(u=>u.hp>0&&u.template===id));
+ if(!reserve.length){flash("没有可召唤的后备伙伴");return}
+ app.querySelector(".battle-summon-picker")?.remove();
+ const pane=document.createElement("div");pane.className="battle-summon-picker";
+ pane.setAttribute("role","dialog");pane.setAttribute("aria-modal","true");
+ pane.setAttribute("aria-label","选择召唤伙伴");
+ pane.innerHTML='<div class="summon-picker-paper"><h2>伙伴后备席</h2><p>选择一名伙伴，再点击我方空阵位。召唤消耗本回合出牌机会。</p>'+
+ '<div class="summon-roster">'+reserve.map(id=>{
+  const info=find(rules.FRIENDS,id);
+  return '<button type="button" data-act="selectsummon" data-id="'+esc(id)+'">'+
+    '<span class="summon-portrait"><img loading="eager" src="'+esc(info?.art||"")+'" alt=""></span>'+
+    '<strong>'+esc(info?.name||id)+'</strong><small>HP '+(info?.hp||0)+' · 攻击 '+(info?.atk||0)+'</small></button>';
+ }).join("")+'</div><button class="wood-button" type="button" data-act="summonclose">返回战斗</button></div>';
+ pane.addEventListener("click",e=>{if(e.target===pane)pane.remove()});
+ app.append(pane);
+}
+
 function battleUnit(unit,side){
  const creature=find(rules.ENEMIES,unit.template);
  const portrait=unit.art?'<img loading="eager" src="'+esc(unit.art)+'" alt="'+esc(unit.name)+'角色插画">':enemyIllustration(unit.template);
@@ -258,10 +278,10 @@ function battleUnit(unit,side){
 function combatCell(units,side,slot){
  const unit=units.find(x=>x.slot===slot&&x.hp>0);
  const target=side==="enemy"&&selectedCard>=0;
- const movable=side==="friendly"&&selectedAlly&&!unit;
+ const movable=side==="friendly"&&(selectedAlly||selectedCompanion)&&!unit;
  return '<div class="battle-slot '+(target?'is-active-target ':'')+(movable?'is-move-target':'')+'" data-side="'+side+'" data-slot="'+slot+'" data-row="'+Math.floor(slot/3)+'" role="group" aria-label="'+
   (side==="friendly"?'我方':'敌方')+(Math.floor(slot/3)===0?'上':'下')+'排第'+(slot%3+1)+'号位">'+
-  (unit?battleUnit(unit,side):movable?'<button class="slot-drop" type="button" data-act="slot" data-i="'+slot+'" aria-label="移动到空格">＋</button>':'')+'</div>';
+  (unit?battleUnit(unit,side):movable?'<button class="slot-drop" type="button" data-act="slot" data-i="'+slot+'" aria-label="放置或移动到空格">＋</button>':'')+'</div>';
 }
 function combatRow(allies,foes,row){
  const friendSlots=row===0?[2,1,0]:[5,4,3];
@@ -279,10 +299,11 @@ function battle(){
    ' aria-label="使用 '+esc(item.name)+'">'+paperCard(item,{kind:"item",compact:true,selectable:true,selected:selectedCard===index})+'</button>';
  }).join("");
  const selected=selectedCard>=0?find(rules.ITEMS,b.hand[selectedCard]?.id):null;
+ const reserve=r.companions.filter(id=>!b.fallenCompanions?.includes(id)&&!b.allies.some(a=>a.hp>0&&a.template===id));
  return wrap("battle-scene "+(r.zone===1?"ice-zone":r.zone===2?"summit-zone":""),commonHead(z.name+" · "+(b.boss?"首领战":"遭遇战"),{back:"map",className:"battle-header",subtitle:"ROUND "+b.turn})+
  '<div class="battle-core"><div class="battle-field">'+
  '<div class="battle-log" aria-live="polite">'+esc(latest)+'</div><div class="battle-caption"><span>己方</span><span>双排战线</span><span>敌方</span></div>'+
- '<div class="battle-side left"><button class="battle-bell" data-act="redraw" type="button" title="重抽钟"><span class="bell-glyph">♧</span><b>重抽 '+b.redrawCharge+'/4</b></button><button class="side-btn" data-act="deck" type="button">牌组 ▤</button></div>'+
+ '<div class="battle-side left"><button class="battle-bell" data-act="redraw" type="button" title="重抽钟"><span class="bell-glyph">♧</span><b>重抽 '+b.redrawCharge+'/4</b></button><button class="side-btn" data-act="summonlist" type="button" '+(!reserve.length||!b.playsLeft?'disabled':'')+'>召唤 '+reserve.length+'</button></div>'+
  '<div class="double-board" aria-label="双方各三列上下两排，共12阵位">'+combatRow(b.allies,b.foes,0)+combatRow(b.allies,b.foes,1)+'</div>'+
  '<div class="battle-side right"><div class="reinforcement-bell" aria-label="敌方增援倒计时"><span>♜</span><b>'+(b.boss?"首领":b.wavesSpawned?"已增援":Math.max(0,b.reinforcement-b.turn)+"回合")+'</b><small>敌方援军</small></div><div class="wave-note">回合 '+b.turn+'</div></div></div>'+
  '<div class="battle-bottom"><div class="hand-indicator">手牌 '+b.hand.length+' · '+(b.playsLeft?'可出一张':'本回合已出牌')+'</div>'+
@@ -434,7 +455,19 @@ function inspectUnit(node){
  const button=document.createElement("button");button.className="pill-button";button.textContent="返回战斗 ×";
  button.addEventListener("click",()=>overlay.remove());
  overlay.addEventListener("click",e=>{if(e.target===overlay)overlay.remove();});
- panel.append(art,title,detail,button);overlay.append(panel);
+ panel.append(art,title,detail);
+ const uid=node.dataset.id;
+ const active=game.state().run?.battle?.allies?.find(x=>x.uid===uid);
+ if(active&&!active.leader){
+  const recallButton=document.createElement("button");
+  recallButton.className="wood-button";recallButton.textContent="召回伙伴";
+  recallButton.addEventListener("click",()=>{
+   overlay.remove();selectedAlly=null;selectedCompanion=null;
+   apply(()=>game.recall(uid));
+  });
+  panel.append(recallButton);
+ }
+ panel.append(button);overlay.append(panel);
  document.querySelector(".game-shell").append(overlay);
 }
 let dragState=null,holdTimer=0,suppressClickUntil=0;
@@ -504,7 +537,7 @@ function installCardGestures(){
 function render(){
  const view=game.view();
  if(view!==lastScreen){
-  selectedCard=-1;selectedAlly=null;
+  selectedCard=-1;selectedAlly=null;selectedCompanion=null;
   lastScreen=view;
  }
  const route={menu,town,leader,map:mapScene,battle,"battle-clear":battleClear,result:results,shop:()=>eventView("shop"),
@@ -563,6 +596,13 @@ function onClick(event){
  case "map":apply(()=>game.go("map"));break;
  case "node":apply(()=>game.selectNode(index));break;
  case "claim":apply(()=>game.claim(index));break;
+ case "summonlist":showCompanionPicker();break;
+ case "summonclose":app.querySelector(".battle-summon-picker")?.remove();break;
+ case "selectsummon":{
+  selectedCompanion=id;selectedAlly=null;selectedCard=-1;
+  app.querySelector(".battle-summon-picker")?.remove();
+  render();break;
+ }
  case "shopinspect":showShopInspect(index);break;
  case "shopcancel":closeShopInspect();break;
  case "shopconfirm":{
@@ -597,9 +637,18 @@ function onClick(event){
   break;
  }
  case "ally":if(selectedAlly===id){inspectUnit(el.closest(".battle-unit"));break;} selectedAlly=id;selectedCard=-1;render();break;
- case "slot":apply(()=>game.move(selectedAlly,index));selectedAlly=null;break;
+ case "slot":{
+  if(selectedCompanion){
+   const id=selectedCompanion;selectedCompanion=null;
+   apply(()=>game.summon(id,index));
+  }else if(selectedAlly){
+   const id=selectedAlly;selectedAlly=null;
+   apply(()=>game.move(id,index));
+  }
+  break;
+ }
  case "playselected":if(selectedCard>=0){const i=selectedCard;selectedCard=-1;apply(()=>game.play(i));}break;
- case "cancel":selectedCard=-1;render();break;
+ case "cancel":selectedCard=-1;selectedCompanion=null;render();break;
  case "deck":apply(()=>game.showDeck());break;
  case "closedeck":apply(()=>game.closeDeck());break;
  case "backtown":apply(()=>game.backTown());break;
@@ -614,6 +663,7 @@ app.addEventListener("click",onClick);
 installCardGestures();
 window.addEventListener("keydown",e=>{
  if(e.key==="Escape"&&app.querySelector(".shop-inspect-backdrop")){closeShopInspect();return;}
+ if(e.key==="Escape"&&app.querySelector(".battle-summon-picker")){app.querySelector(".battle-summon-picker").remove();return;}
  if(e.key==="Escape"&&document.querySelector(".battle-inspect-backdrop")){document.querySelector(".battle-inspect-backdrop").remove();return;}
  if(e.key==="Escape"&&help){help=false;render();return;}
  if(e.key==="Escape"&&selectedCard>=0){selectedCard=-1;render();return;}
