@@ -119,9 +119,9 @@ for(const cfg of scenarios){
   assert(unitBounds.every(u=>u.width>=60&&u.height>=55),"every deployed card remains readable in target viewport");
   const bgOk=await page.evaluate(()=>{
     const scene=getComputedStyle(document.querySelector(".battle-scene"));
-    return scene.backgroundImage.includes("snowbound-battle-forest.svg");
+    return scene.backgroundImage.includes("snowy-forest-reference.webp");
   });
-  assert(bgOk,"battle scene uses the authored forest painting instead of CSS triangles");
+  assert(bgOk,"battle scene uses the committed user-supplied snowy forest image instead of the old SVG placeholder");
   await page.locator('.battle-unit.enemy').first().click();
   assert(await page.locator('.battle-inspect-backdrop').isVisible(),"enemy unit opens readable detail card");
   await page.locator('.battle-inspect-backdrop button').click();
