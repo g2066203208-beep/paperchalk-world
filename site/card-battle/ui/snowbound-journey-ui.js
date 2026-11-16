@@ -565,6 +565,7 @@ function render(){
   app.replaceChildren(template.content);
  }else app.innerHTML=html;
 
+ window.PaperchalkSnowboundCutouts?.hydrate(app);
  document.querySelector(".ambient-snow").style.display=game.state().settings.particles?"":"none";
  document.title=(view==="battle"?"战斗 · ":view==="map"?"地图 · ":"")+"雪境行旅";
 }
