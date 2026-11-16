@@ -13,6 +13,7 @@ on:
       - 'site/card-battle/ui/snowbound-battle-v3.css'
       - 'tests/snowbound-full-run.test.cjs'
       - 'tests/snowbound-semantic-events.test.cjs'
+      - 'tests/snowbound-motion-capture-browser.mjs'
       - 'site/card-battle/motion/snowbound-motion.js'
       - 'site/card-battle/motion/snowbound-motion.css'
       - '.github/workflows/snowbound-journey-qa.yml'
@@ -34,6 +35,7 @@ jobs:
           node --check site/card-battle/ui/snowbound-journey-ui.js
           node --check site/card-battle/motion/snowbound-motion.js
           node --check tests/snowbound-semantic-events.test.cjs
+          node --check tests/snowbound-motion-capture-browser.mjs
           node --check tests/snowbound-journey-browser.mjs
       - name: Verify semantic event sequence and atomic transaction behavior
         run: node tests/snowbound-semantic-events.test.cjs
@@ -53,6 +55,8 @@ jobs:
         run: node tests/snowbound-phase1-interaction-browser.mjs
       - name: Pixel geometry plus full-capacity visual stress benchmark
         run: node tests/snowbound-pixel-geometry-browser.mjs
+      - name: Capture cinematic attack, merchant UI and actual browser videos
+        run: node tests/snowbound-motion-capture-browser.mjs
       - name: Store actual browser screenshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -62,4 +66,5 @@ jobs:
             artifacts/snowbound-journey/
             artifacts/snowbound-phase1/
             artifacts/snowbound-pixel-audit/
+            artifacts/snowbound-motion-v2/
           if-no-files-found: warn
