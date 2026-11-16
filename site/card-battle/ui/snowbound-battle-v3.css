@@ -265,3 +265,19 @@
  .battle-scene .battle-unit{max-height:121px}
  .battle-scene .battle-bottom .hand .paint-card.compact{height:clamp(117px,19dvh,140px)}
 }
+
+
+/* Portrait front-to-front alignment: keep ally logical slot 0/3 at the right,
+ * and mirror enemy horizontal order so its slot 0/3 sits directly underneath.
+ * Visual-only; the simulation's row-major slot IDs remain unchanged. */
+@media (orientation:portrait) and (max-width:700px){
+ .battle-scene .battle-grid .battle-slot:nth-child(4){
+   grid-column:3!important;grid-row:2!important;
+ }
+ .battle-scene .battle-grid .battle-slot:nth-child(5){
+   grid-column:2!important;grid-row:2!important;
+ }
+ .battle-scene .battle-grid .battle-slot:nth-child(6){
+   grid-column:1!important;grid-row:2!important;
+ }
+}
