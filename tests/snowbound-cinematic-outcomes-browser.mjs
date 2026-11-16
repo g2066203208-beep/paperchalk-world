@@ -37,8 +37,20 @@ for(const cfg of [{label:"desktop",width:1920,height:1080},{label:"portrait",wid
   });
   assert(offenseIndex>=0);
   await page.locator('[data-act="hand"][data-i="'+offenseIndex+'"]').click();
+  const selectDiag=await page.evaluate(()=>({
+   selectedCards:document.querySelectorAll('.paint-card.selected').length,
+   targetChoice:!!document.querySelector('.fight-choice'),
+   handLength:window.PaperchalkSnowboundUI.state.run.battle.hand.length,
+   handKeys:[...document.querySelectorAll('.battle-bottom .hand>button')].map(e=>e.dataset.cardKey)
+  }));
   await page.locator('[data-act="enemy"]').first().click();
-  assert.equal(await page.evaluate(()=>window.PaperchalkSnowboundUI.view),"battle-clear");
+  const attackDiag=await page.evaluate(()=>{
+   const ui=window.PaperchalkSnowboundUI,b=ui.state.run.battle;
+   return {view:ui.view,playsLeft:b.playsLeft,foes:b.foes.map(x=>({id:x.uid,hp:x.hp})),
+    lastLog:b.log[0],trace:ui.motion.trace().slice(-5)};
+  });
+  assert.equal(attackDiag.view,"battle-clear",
+   "Tap-to-target should kill the seeded 1-HP enemy. "+JSON.stringify({selectDiag,attackDiag}));
   await page.waitForFunction(()=>window.PaperchalkSnowboundUI.motion.trace().some(e=>e.stage==="death-start"),null,{timeout:13000});
   await page.screenshot({path:OUT+"/"+cfg.label+"-victory-death-frame.png"});
   await page.waitForFunction(()=>!window.PaperchalkSnowboundUI.motion.isBusy(),null,{timeout:14000});
