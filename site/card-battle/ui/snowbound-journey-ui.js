@@ -34,9 +34,13 @@ function sound(kind){
  }catch(e){}
 }
 function apply(action){
+ const before=game.state().logs[0]?.text;
  const result=action();
  if(result&&result.ok===false){flash(result.message);return false}
- save();sound("tap");render();return true;
+ save();sound("tap");render();
+ const after=game.state().logs[0]?.text;
+ if(after&&after!==before&&game.view()==="battle")flash(after);
+ return true;
 }
 function backdrop(village=false){
  const trees=[
@@ -529,6 +533,7 @@ function onClick(event){
 app.addEventListener("click",onClick);
 installCardGestures();
 window.addEventListener("keydown",e=>{
+ if(e.key==="Escape"&&document.querySelector(".battle-inspect-backdrop")){document.querySelector(".battle-inspect-backdrop").remove();return;}
  if(e.key==="Escape"&&help){help=false;render();return;}
  if(e.key==="Escape"&&selectedCard>=0){selectedCard=-1;render();return;}
  if(game.view()==="battle"){
