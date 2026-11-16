@@ -557,3 +557,38 @@
  .battle-scene.stage-actors.stage-crowded .battle-grid[data-row="1"] .battle-slot[data-side="enemy"]{--actor-ground:53%}
  .battle-scene.stage-actors.stage-crowded .battle-grid[data-row="1"] .battle-slot[data-side="friendly"]{--actor-ground:31%}
 }
+
+
+/* Placement calibrated to actual Chromium screenshots, not a mockup.
+   The rear enemy was standing in the *sky* (old rear ground 54%).
+   Keep all actors grounded along the snowy clearing's middle perspective. */
+.battle-scene.stage-actors .battle-grid[data-row="1"] .battle-slot{
+  --actor-ground:22%;
+}
+.battle-scene.stage-actors.stage-sparse .battle-slot[data-side="friendly"][data-slot="0"],
+.battle-scene.stage-actors.stage-sparse .battle-slot[data-side="friendly"][data-slot="3"]{--actor-x:31%}
+.battle-scene.stage-actors.stage-sparse .battle-slot[data-side="enemy"][data-slot="0"]{--actor-x:56%}
+.battle-scene.stage-actors.stage-sparse .battle-slot[data-side="enemy"][data-slot="3"]{--actor-x:72%}
+.battle-scene.stage-actors.stage-sparse .battle-slot[data-side="enemy"][data-slot="4"]{--actor-x:80%}
+.battle-scene.stage-actors.stage-sparse .battle-slot[data-side="enemy"][data-slot="5"]{--actor-x:88%}
+@media (orientation:portrait) and (max-width:700px){
+ .battle-scene.stage-actors.stage-sparse .battle-grid[data-row="0"] .battle-slot[data-side="enemy"]{
+  --actor-ground:7%;
+ }
+ .battle-scene.stage-actors.stage-sparse .battle-grid[data-row="1"] .battle-slot[data-side="enemy"]{
+  --actor-ground:22%;
+ }
+ .battle-scene.stage-actors.stage-sparse .battle-slot[data-side="enemy"][data-slot="3"]{--actor-x:80%}
+ .battle-scene.stage-actors.stage-sparse .battle-slot[data-side="enemy"][data-slot="4"]{--actor-x:88%}
+ .battle-scene.stage-actors.stage-crowded .battle-grid[data-row="1"] .battle-slot[data-side="enemy"]{
+  --actor-ground:28%;
+ }
+ .battle-scene.stage-actors.stage-crowded .battle-grid[data-row="1"] .battle-slot[data-side="friendly"]{
+  --actor-ground:20%;
+ }
+}
+@media (orientation:landscape) and (max-height:520px){
+ .battle-scene.stage-actors .battle-grid[data-row="1"] .battle-slot{
+  --actor-ground:24%;
+ }
+}
