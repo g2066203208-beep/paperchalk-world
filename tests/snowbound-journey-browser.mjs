@@ -27,7 +27,8 @@ for(const cfg of scenarios){
    errors.push("HTTP "+resp.status()+" "+resp.url());
  });
  const screenshot=async name=>{
-  await page.waitForTimeout(180);
+  await page.waitForFunction(()=>!window.PaperchalkSnowboundUI?.motion?.isBusy(),null,{timeout:12000});
+  await page.waitForTimeout(80);
   const label=out+"/"+cfg.id+"-"+name+".png";
   await page.screenshot({path:label,fullPage:true});shots.push(label);
   const m=await page.evaluate(()=>{
@@ -47,6 +48,7 @@ for(const cfg of scenarios){
   const q=page.locator('[data-act="'+act+'"]:visible:not([disabled])');
   assert(await q.count()>index,"visible enabled action "+act+" #"+index);
   await q.nth(index).click();
+  await page.waitForFunction(()=>!window.PaperchalkSnowboundUI?.motion?.isBusy(),null,{timeout:12000});
   await page.waitForTimeout(65);
  };
  try{
@@ -139,9 +141,12 @@ for(const cfg of scenarios){
   const gold=await page.evaluate(()=>window.PaperchalkSnowboundUI.state.run.gold);
   const firstOffer=await page.evaluate(()=>window.PaperchalkSnowboundUI.state.run.offers[0]);
   if(gold>=firstOffer.price){
-   await click("buy");
+   await click("shopinspect");
+   assert(await page.locator(".shop-inspect-backdrop").isVisible(),"first tap opens shop inspection");
+   assert.equal(await page.evaluate(()=>window.PaperchalkSnowboundUI.state.run.gold),gold,"inspection does not spend coins");
+   await click("shopconfirm");
    const afterGold=await page.evaluate(()=>window.PaperchalkSnowboundUI.state.run.gold);
-   assert(afterGold<gold,"coins spent on goods");
+   assert(afterGold<gold,"confirmed purchase spends coins");
   }
   await screenshot("10-shop-after-purchase");
   await click("leave");
