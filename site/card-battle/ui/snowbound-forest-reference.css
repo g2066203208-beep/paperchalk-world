@@ -613,3 +613,13 @@
     --actor-x:52%;
   }
 }
+
+/* Empty world coordinates should never cover painted actors or steal their
+   clicks, even when absolute depth layers overlap on narrow phones.
+   Only the actual summon/drop control may receive a pointer on empty slots. */
+.battle-scene.stage-actors .battle-grid .battle-slot:not(:has(.battle-unit)){
+ pointer-events:none!important;
+}
+.battle-scene.stage-actors .battle-grid .battle-slot .slot-drop{
+ pointer-events:auto!important;
+}
