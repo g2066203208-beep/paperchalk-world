@@ -49,10 +49,10 @@ for(const [name,width,height,minW,minH] of scenarios){
   assert(m.hand.length>=5&&m.hand.every(c=>c.box.x>=-2&&c.box.right<=width+2&&c.box.bottom<=height+2),"initial five-card hand clipped");
   assert(m.overflowX<=3&&m.overflowY<=3,"screen scroll overflow");
   if(height>width&&width<=430){
-    // Do not let every card occupy the rightmost column on portrait phones.
-    const centre=width/2;
-    assert(m.cards.every(c=>Math.abs((c.box.x+c.box.right)/2-centre)<width*.2),
-      "portrait front-row combat units must be centrally visible, not all at the far-right edge: "+JSON.stringify(m.cards));
+    // In a 2.5D story scene, allies stand on the left and foes on the right.
+    const centres=m.cards.map(c=>(c.box.x+c.box.right)/2);
+    assert(centres.some(x=>x<width*.45)&&centres.some(x=>x>width*.55),
+      "portrait actors must occupy both sides of the snowy clearing: "+JSON.stringify(m.cards));
   }
   for(let i=0;i<m.cards.length;i++)for(let j=i+1;j<m.cards.length;j++)
    assert(intersect(m.cards[i].box,m.cards[j].box)<4,"deployed cards overlap");
@@ -61,6 +61,9 @@ for(const [name,width,height,minW,minH] of scenarios){
   const report={name,passed:true,size:[width,height],sourceAspectRatio:704/1024,cardRatio:+(m.cards[0].box.w/m.cards[0].box.h).toFixed(4),portraitDetails:m.portraits,cardWidth:m.cards[0].box.w,cardHeight:m.cards[0].box.h,deckHeightPercent:+(100*m.deck.h/height).toFixed(1),units:m.units,controls:m.controls,slots:m.slots};
   await page.screenshot({path:OUT+"/"+name+"-real-battle.png",fullPage:true});
   await page.evaluate(()=>{
+    // The full-capacity stress test must use the same density switch as an
+    // actual six-versus-six battle, not clone twelve giant sparse-cast actors.
+    document.querySelector(".battle-scene")?.classList.replace("stage-sparse","stage-crowded");
     for(const lane of document.querySelectorAll(".battle-grid")){
       for(const cell of lane.querySelectorAll(".battle-slot")){
         if(cell.querySelector(".battle-unit"))continue;
