@@ -145,7 +145,8 @@
    record(label,"start",cue.kind);
    let from=actor;
    if(cue.type==="itemHit"){
-    from=old.querySelector(".battle-bottom .hand>button")||null;
+    from=(cue.cardKey?old.querySelector('.battle-bottom .hand>button[data-card-key="'+cssEscape(cue.cardKey)+'"]'):null)||old.querySelector(".battle-bottom .hand>button")||null;
+    if(from&&cue.cardKey)record(label,"card-source",cue.cardKey);
    }
    if(from&&from.isConnected){
     const sign=cue.actorSide==="enemy"?-1:1;
@@ -263,8 +264,9 @@
    }
   }
   async function itemSupport(old,cue,run){
-   const card=old?.querySelector(".battle-bottom .hand>button");
+   const card=(cue.cardKey?old?.querySelector('.battle-bottom .hand>button[data-card-key="'+cssEscape(cue.cardKey)+'"]'):null)||old?.querySelector(".battle-bottom .hand>button");
    if(card){
+    if(cue.cardKey)record("itemSupport","card-source",cue.cardKey);
     beep(cue.kind==="heal"?"win":"paper");
     await animate(card,[{transform:"translateY(0) scale(1)"},{transform:"translateY(-25px) scale(1.08)",offset:.42},
       {transform:"translate(0) scale(.92)",opacity:.2}],250,{},run);
