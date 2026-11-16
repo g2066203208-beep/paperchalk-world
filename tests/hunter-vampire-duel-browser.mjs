@@ -27,7 +27,19 @@ for(const x of viewports){
   await page.waitForFunction(()=>!!window.PaperchalkSnowboundUI,{timeout:13000});
   assert.equal(await page.locator('[data-scene="menu-scene"]').count(),1,"new adventure menu is shown");
   await page.screenshot({path:OUT+"/"+x.name+"-new-game-entry.png",fullPage:true});
-  for(const action of ["town","new","leader","node"]){
+  for(const action of ["town","new"]){
+   await page.locator('[data-act="'+action+'"]:visible:not([disabled])').first().click();
+   await page.waitForFunction(()=>!window.PaperchalkSnowboundUI?.motion?.isBusy(),null,{timeout:15000});
+  }
+  const leaderCards=await page.locator('.paint-card[data-kind="leader"]').evaluateAll(cards=>cards.map(card=>{
+   const box=card.getBoundingClientRect(),img=card.querySelector("img");
+   return {ratio:box.width/box.height,fit:img&&getComputedStyle(img).objectFit,source:[img?.naturalWidth,img?.naturalHeight]};
+  }));
+  assert(leaderCards.length>=3,"leader choice has original figure artwork");
+  assert(leaderCards.every(c=>Math.abs(c.ratio-11/16)<.006),"leader cards preserve exact source aspect");
+  assert(leaderCards.every(c=>c.fit==="contain"&&c.source[0]===704&&c.source[1]===1024),"all leader portraits are uncropped originals");
+  await page.screenshot({path:OUT+"/"+x.name+"-original-ratio-leader-choice.png",fullPage:true});
+  for(const action of ["leader","node"]){
    await page.locator('[data-act="'+action+'"]:visible:not([disabled])').first().click();
    await page.waitForFunction(()=>!window.PaperchalkSnowboundUI?.motion?.isBusy(),null,{timeout:15000});
   }
