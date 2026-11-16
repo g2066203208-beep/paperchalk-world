@@ -12,6 +12,16 @@ for(const cfg of [{label:"desktop",width:1920,height:1080},{label:"portrait",wid
  const context=await browser.newContext({viewport:{width:cfg.width,height:cfg.height},
    isMobile:cfg.width<500,hasTouch:cfg.width<500,recordVideo:{dir:OUT+"/videos"}});
  const page=await context.newPage(),errors=[];
+ // The game's beforeunload handler writes the authoritative in-memory save.
+ // Seed synthetic fixtures AFTER beforeunload but BEFORE the next app script
+ // starts, otherwise a seemingly correct localStorage edit is overwritten.
+ await page.addInitScript(()=>{
+  const fixture=sessionStorage.getItem("__snowboundCinemaFixture");
+  if(fixture){
+   localStorage.setItem("paperchalk-snowbound-campaign-v1",fixture);
+   sessionStorage.removeItem("__snowboundCinemaFixture");
+  }
+ });
  page.on("pageerror",e=>errors.push(e.message));
  try{
   await page.goto(url,{waitUntil:"networkidle"});
@@ -26,11 +36,15 @@ for(const cfg of [{label:"desktop",width:1920,height:1080},{label:"portrait",wid
    localStorage.setItem("snowbound-cinema-test-enemy",JSON.stringify(s.run.battle.foes[0]));
    s.run.battle.foes=s.run.battle.foes.slice(0,1);
    s.run.battle.foes[0].hp=1;
-   localStorage.setItem("paperchalk-snowbound-campaign-v1",JSON.stringify({
+   sessionStorage.setItem("__snowboundCinemaFixture",JSON.stringify({
     screen:s.screen,run:s.run,meta:s.meta,settings:s.settings
    }));
   });
   await page.reload({waitUntil:"networkidle"});
+  assert.deepEqual(await page.evaluate(()=>{
+   const foes=window.PaperchalkSnowboundUI.state.run.battle.foes;
+   return foes.map(x=>x.hp);
+  }),[1],"the winning fixture must actually load with a single 1-HP enemy");
   const offenseIndex=await page.evaluate(()=>{
    const ui=window.PaperchalkSnowboundUI,b=ui.state.run.battle;
    return b.hand.findIndex(c=>["hit","pierce","freeze","weaken","all"].includes(ui.engine.ITEMS.find(x=>x.id===c.id)?.kind));
@@ -67,9 +81,11 @@ for(const cfg of [{label:"desktop",width:1920,height:1080},{label:"portrait",wid
    s.run.battle.foes[0].tick=1;s.run.battle.foes[0].hp=Math.max(1,s.run.battle.foes[0].hp);
    const hero=s.run.battle.allies.find(x=>x.leader);
    hero.hp=1;hero.shield=0;s.run.health=1;
-   localStorage.setItem("paperchalk-snowbound-campaign-v1",JSON.stringify({screen:s.screen,run:s.run,meta:s.meta,settings:s.settings}));
+   sessionStorage.setItem("__snowboundCinemaFixture",JSON.stringify({screen:s.screen,run:s.run,meta:s.meta,settings:s.settings}));
   });
   await page.reload({waitUntil:"networkidle"});
+  assert.equal(await page.evaluate(()=>window.PaperchalkSnowboundUI.state.run.battle.allies.find(x=>x.leader).hp),
+   1,"the losing fixture must actually load with the leader at 1 HP");
   await page.locator('[data-act="endturn"]').click();
   assert.equal(await page.evaluate(()=>window.PaperchalkSnowboundUI.view),"result");
   await page.waitForFunction(()=>window.PaperchalkSnowboundUI.motion.trace().some(e=>e.stage==="death-start"),null,{timeout:13000});
