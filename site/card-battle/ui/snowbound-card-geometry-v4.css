@@ -127,3 +127,59 @@
 }
 /* Portrait detail may be enlarged using the separate inspection view;
  * gameplay cards always preserve full-body proportions and source framing. */
+
+/* Character-selection and recruit cards must follow exactly the same source
+   704x1024 geometry as deployed units. Item cards remain a separate type. */
+.paint-card[data-kind="leader"],
+.paint-card[data-kind="companion"]{
+ aspect-ratio:11 / 16!important;
+ height:auto!important;
+ position:relative!important;
+ display:block!important;
+ min-height:0!important;
+}
+.paint-card[data-kind="leader"] .art-box,
+.paint-card[data-kind="companion"] .art-box{
+ position:absolute!important;
+ inset:0!important;
+ height:100%!important;
+ min-height:0!important;
+ width:100%!important;
+}
+.paint-card[data-kind="leader"] .art-box img,
+.paint-card[data-kind="companion"] .art-box img{
+ display:block!important;
+ width:100%!important;
+ height:100%!important;
+ object-fit:contain!important;
+ object-position:center!important;
+ mix-blend-mode:normal!important;
+}
+.paint-card[data-kind="leader"] .title,
+.paint-card[data-kind="companion"] .title{
+ position:absolute!important;
+ left:0!important;
+ right:0!important;
+ bottom:39px!important;
+ margin:0!important;
+ padding:5px 4px 3px!important;
+ z-index:3!important;
+ background:#f7eacbe7!important;
+ border-top:1px solid #ad9387;
+}
+.paint-card[data-kind="leader"] .text,
+.paint-card[data-kind="companion"] .text{
+ position:absolute!important;
+ z-index:3!important;
+ left:0!important;
+ right:0!important;
+ bottom:0!important;
+ height:39px!important;
+ max-height:39px!important;
+ min-height:0!important;
+ overflow:hidden!important;
+ padding:3px 5px!important;
+ background:#f8eccde7!important;
+ font-size:10px!important;
+ line-height:1.2!important;
+}
