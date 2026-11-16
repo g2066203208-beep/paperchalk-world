@@ -62,6 +62,16 @@ function create(initial){
  let s={screen:"menu",meta:{totalRuns:0,wins:0,unlocks:0},run:null,settings:{sound:true,particles:true}};
  let uid=1;let logs=[];
  if(initial&&typeof initial==="object"){s.meta={...s.meta,...initial.meta};s.settings={...s.settings,...initial.settings};if(initial.run&&initial.run.heroId){s.run=clone(initial.run);s.screen=initial.screen||"town";}}
+ // Saved battles already contain issued ally-N / foe-N identities. Never
+ // restart the allocation counter at 1 after a page refresh: summons and
+ // reinforcements would otherwise duplicate live unit IDs and confuse keyed
+ // rendering, targeting and cinematic source/target lookup.
+ if(s.run?.battle){
+  for(const u of [...(s.run.battle.allies||[]),...(s.run.battle.foes||[])]){
+   const match=String(u?.uid||"").match(/^(?:ally|foe)-(\\d+)$/);
+   if(match)uid=Math.max(uid,Number(match[1])+1);
+  }
+ }
  const emit=(text,type="info")=>{logs.unshift({text,type,at:Date.now()});logs=logs.slice(0,28);return text};
  const current=()=>s.run;
  const activeView=()=>s.screen;
