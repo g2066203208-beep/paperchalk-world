@@ -25,7 +25,8 @@ for(const cfg of cases){
   await page.locator('[data-act="new"]').first().click();
   await page.locator('[data-act="leader"]').first().click();
   await page.locator('[data-act="node"]:visible:not([disabled])').first().click();
-  await page.waitForTimeout(550);
+  await page.waitForFunction(()=>!window.PaperchalkSnowboundUI?.motion?.isBusy(),null,{timeout:14000});
+  await page.waitForTimeout(80);
   const state=await page.evaluate(()=>window.PaperchalkSnowboundUI.state.run.battle);
   assert(state.allies.length>=1,"hunter art loaded");
   const rows=await page.locator(".double-board .battle-grid").count();
@@ -35,7 +36,7 @@ for(const cfg of cases){
   const src=page.locator('.battle-unit.friendly[data-id="'+heroBefore.uid+'"]');
   const destination=page.locator('.battle-slot[data-side="friendly"][data-slot="3"]');
   await src.dragTo(destination,{force:true,timeout:15000});
-  await page.waitForTimeout(100);
+  await page.waitForFunction(()=>!window.PaperchalkSnowboundUI?.motion?.isBusy(),null,{timeout:14000});
   const moved=await page.evaluate(()=>window.PaperchalkSnowboundUI.state.run.battle.allies.find(u=>u.leader).slot);
   assert.equal(moved,3,"drag ally across rows from upper front to lower front");
   const handBefore=await page.evaluate(()=>window.PaperchalkSnowboundUI.state.run.battle.hand.length);
@@ -47,7 +48,7 @@ for(const cfg of cases){
   const source=page.locator('.battle-bottom .hand>button').nth(i);
   const target=page.locator('.battle-unit.enemy').first();
   await source.dragTo(target,{force:true,timeout:15000});
-  await page.waitForTimeout(250);
+  await page.waitForFunction(()=>!window.PaperchalkSnowboundUI?.motion?.isBusy(),null,{timeout:14000});
   const after=await page.evaluate(()=>window.PaperchalkSnowboundUI.state.run.battle);
   assert.equal(after.playsLeft,0,"drag-to-foe uses tactical card");
   assert.equal(after.hand.length,handBefore-1,"drag uses one card");
