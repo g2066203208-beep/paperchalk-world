@@ -166,3 +166,87 @@
 .defeat-audit h2{font-size:14px;margin:0 0 5px}
 .defeat-audit p{margin:3px 0 5px}
 .defeat-audit ol{margin:5px 0 0 17px;padding:0;line-height:1.65}
+
+/* Distinct physical event-room compositions, replacing the old universal
+   gradient + three floating cards. Art can later be swapped without moving
+   any functional hit targets or route/state transitions. */
+.event-scene.recruit-scene{
+ background:radial-gradient(ellipse at 53% 55%,#d4eff1 0%,#74afbf 44%,#34667d 100%);
+}
+.recruit-scene .choice-row .paint-card{
+ box-shadow:inset 0 0 0 2px #f0f9f4,0 5px 0 #6b8da3,0 0 16px #d9f5ff7b;
+}
+.recruit-scene .choice-row:before{
+ content:"";position:absolute;inset:0;pointer-events:none;
+ background:radial-gradient(ellipse,#d8f5f442,transparent 72%);
+}
+.event-scene.treasure-scene{
+ background:radial-gradient(ellipse at 48% 37%,#dbecda 0%,#7aa4a9 43%,#425a6d 100%);
+}
+.event-chest{
+ position:absolute;width:clamp(88px,12vw,170px);
+ height:clamp(74px,11vw,145px);
+ left:clamp(8px,4vw,80px);bottom:clamp(45px,10vh,130px);
+ opacity:.75;pointer-events:none;z-index:1;filter:drop-shadow(0 10px 9px #1d3f54b2);
+}
+.event-chest .chest-body{
+ position:absolute;left:4%;right:4%;top:38%;bottom:4%;
+ background:linear-gradient(165deg,#c69a66,#6e4b45 75%);
+ border:5px solid #463c4a;border-radius:5px 5px 12px 12px;
+ box-shadow:inset 0 5px 5px #ffdc9578,inset 0 -12px 8px #322d3a66;
+}
+.event-chest .chest-body:before{
+ content:"";position:absolute;inset:0 22%;border-left:6px solid #c7a37b;border-right:6px solid #c7a37b;opacity:.6;
+}
+.event-chest .chest-lid{
+ position:absolute;left:0;right:0;top:17%;height:38%;
+ border:5px solid #463c4a;border-radius:32px 32px 7px 7px;
+ background:linear-gradient(#e6c38b,#77505a);
+ transform-origin:50% 100%;
+ animation:treasure-open-lid .75s cubic-bezier(.19,.8,.2,1) .18s both;
+}
+.event-chest .chest-lock{
+ position:absolute;left:43%;top:48%;width:28px;height:30px;
+ background:#e9c58e;border:4px solid #8b635c;border-radius:5px;
+ display:grid;place-items:center;color:#715059;font:900 15px Georgia,serif;
+}
+@keyframes treasure-open-lid{
+ 0%{transform:rotateX(0) translateY(0)}
+ 45%{transform:rotateX(-36deg) translateY(-7px)}
+ 100%{transform:rotateX(-54deg) translateY(-12px)}
+}
+.event-scene.charm-scene{
+ background:radial-gradient(ellipse at 54% 40%,#e7d8bc 0%,#9eb4b4 46%,#59627a 100%);
+}
+.charm-scene .choice-row{
+ border-bottom:8px solid #715963;box-shadow:0 9px 15px #324a5982;
+ background:linear-gradient(#f3e9cb27,#897a7344);border-radius:15px;
+}
+.event-scene.forge-scene{
+ background:radial-gradient(ellipse at 50% 35%,#b9c6c3 0%,#5e7b89 57%,#343f52 100%);
+}
+.forge-scene .choice-row{
+ background:repeating-linear-gradient(90deg,#a57e5b22 0 5px,#66585b28 6px 20px),linear-gradient(#b7a69377,#5e5156ba);
+ border:5px solid #685664;border-radius:17px;
+ box-shadow:0 10px 0 #454252,0 20px 19px #30394b8c;
+}
+.event-scene.camp-scene{
+ background:radial-gradient(ellipse at 50% 70%,#e9b980 0%,#8f9ea0 36%,#355774 100%);
+}
+.camp-scene .choice-row{
+ border-radius:15px;background:linear-gradient(#fae0b319,#f8ce9a24);
+}
+.shop-scene .choice-row{
+ position:relative;border:7px solid #7e554f;
+ border-bottom-width:13px;
+ background:repeating-linear-gradient(90deg,#60413c20 0 21px,#8c5e4e18 22px 24px),
+   linear-gradient(165deg,#a77759c4,#60454dcf 84%);
+ border-radius:15px;
+ box-shadow:inset 0 5px 0 #e0b78b44,0 6px 0 #5a4450,0 17px 25px #453d4b8c;
+}
+@media(max-width:700px){
+ .event-chest{left:4px;bottom:42px;opacity:.33;width:78px;height:73px}
+ .shop-scene .choice-row{border-width:3px;border-bottom-width:7px}
+ .forge-scene .choice-row{border-width:3px}
+}
+@media(prefers-reduced-motion:reduce){.event-chest .chest-lid{animation:none;transform:rotateX(-54deg) translateY(-12px)}}
