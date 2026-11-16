@@ -23,6 +23,7 @@ for(const cfg of [{label:"desktop",width:1920,height:1080},{label:"portrait",wid
   // Victory: one enemy with 1 HP, guaranteed offensive hand preserved.
   await page.evaluate(()=>{
    const ui=window.PaperchalkSnowboundUI,s=ui.state;
+   localStorage.setItem("snowbound-cinema-test-enemy",JSON.stringify(s.run.battle.foes[0]));
    s.run.battle.foes=s.run.battle.foes.slice(0,1);
    s.run.battle.foes[0].hp=1;
    localStorage.setItem("paperchalk-snowbound-campaign-v1",JSON.stringify({
@@ -50,7 +51,7 @@ for(const cfg of [{label:"desktop",width:1920,height:1080},{label:"portrait",wid
    const ui=window.PaperchalkSnowboundUI,s=ui.state;
    s.screen="battle";s.run.result=null;
    s.run.battle.finished=false;s.run.battle.victory=false;
-   s.run.battle.playsLeft=1;s.run.battle.foes=[s.run.battle.foes[0]||ui.engine.ENEMIES[0]];
+   s.run.battle.playsLeft=1;s.run.battle.foes=[JSON.parse(localStorage.getItem("snowbound-cinema-test-enemy"))];
    s.run.battle.foes[0].tick=1;s.run.battle.foes[0].hp=Math.max(1,s.run.battle.foes[0].hp);
    const hero=s.run.battle.allies.find(x=>x.leader);
    hero.hp=1;hero.shield=0;s.run.health=1;
