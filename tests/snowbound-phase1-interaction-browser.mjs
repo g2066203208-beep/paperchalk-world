@@ -36,9 +36,31 @@ for(const cfg of cases){
   const heroBefore=state.allies.find(u=>u.leader);
   const src=page.locator('.battle-unit.friendly[data-id="'+heroBefore.uid+'"]');
   const destination=page.locator('.battle-slot[data-side="friendly"][data-slot="3"]');
+  await page.evaluate(()=>{
+    window.__snowboundDragAudit=[];
+    for(const type of ["pointerdown","pointermove","pointerup","pointercancel","click"]){
+      document.addEventListener(type,e=>{
+        if(window.__snowboundDragAudit.length>60)return;
+        window.__snowboundDragAudit.push({type,x:e.clientX,y:e.clientY,id:e.pointerId,
+          origin:e.target?.closest?.(".battle-unit")?.dataset?.id||null,
+          slot:e.target?.closest?.(".battle-slot")?.dataset?.slot||null});
+      },true);
+    }
+  });
   await src.dragTo(destination,{force:true,timeout:15000});
   await page.waitForFunction(()=>!window.PaperchalkSnowboundUI?.motion?.isBusy(),null,{timeout:14000});
   const moved=await page.evaluate(()=>window.PaperchalkSnowboundUI.state.run.battle.allies.find(u=>u.leader).slot);
+  if(moved!==3){
+    const diag=await page.evaluate(()=>({
+      pointerEvents:window.__snowboundDragAudit,
+      toast:document.getElementById("toast")?.textContent,
+      slots:[...document.querySelectorAll(".battle-slot[data-side='friendly']")].map(el=>{
+        const r=el.getBoundingClientRect();
+        return {slot:el.dataset.slot,x:r.x,y:r.y,w:r.width,h:r.height,centerHit:document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.className};
+      })
+    }));
+    console.log("DRAG_DIAG "+cfg.id+" "+JSON.stringify(diag));
+  }
   assert.equal(moved,3,"drag ally across rows from upper front to lower front");
   const handBefore=await page.evaluate(()=>window.PaperchalkSnowboundUI.state.run.battle.hand.length);
   const cards=await page.locator('.battle-bottom .hand>button').all();
