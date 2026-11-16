@@ -12,6 +12,7 @@ on:
       - 'tests/snowbound-pixel-geometry-browser.mjs'
       - 'site/card-battle/ui/snowbound-battle-v3.css'
       - 'site/card-battle/ui/snowbound-card-geometry-v4.css'
+      - 'site/card-battle/ui/snowbound-card-geometry-v4.css'
       - 'tests/snowbound-reference-comparison-report.mjs'
       - 'tests/snowbound-full-run.test.cjs'
       - 'tests/snowbound-semantic-events.test.cjs'
