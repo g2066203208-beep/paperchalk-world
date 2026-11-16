@@ -1,21 +1,195 @@
 /*
- * Snowbound Journey — original user-supplied snowy forest, 1536×1024.
- * The image is committed in the repository as ../assets/snowy-forest-reference.webp.
- * Drawn battle cards and interactive slot elements are kept exactly as coded;
- * neither the art nor the characters were regenerated.
+ * Snowbound Journey / visual reset 2026-11-16.
+ *
+ * The snowy forest is a full original player-supplied 1536x1024 scene.
+ * Give the battle a legible quiet middle ground, without re-generating
+ * the Anima portraits, clipping original 11:16 card bodies, or replacing
+ * real combat elements with a fake illustration.
+ *
+ * This is the FINAL battle-only stylesheet in the HTML cascade. Design
+ * overrides live here rather than accumulating new patch files.
  */
 .battle-scene:not(.ice-zone):not(.summit-zone){
-  background-color:#a0bcb5;
-  background-image:url("../assets/snowy-forest-reference.webp");
-  background-position:center 48%;
-  background-size:cover;
+  background-color:#8aa6a5;
+  background-image:
+    linear-gradient(180deg,rgba(26,48,57,.10) 0%,rgba(215,229,222,.12) 46%,rgba(29,52,67,.18) 100%),
+    url("../assets/snowy-forest-reference.webp");
+  background-position:center,center 49%;
+  background-size:cover,cover;
   background-repeat:no-repeat;
 }
 .battle-scene:not(.ice-zone):not(.summit-zone)::before{
   background:none;
 }
+/* The encounter itself is a soft snow clearing, not another opaque panel.
+   Bloomed mist separates busy high-contrast branches from the cards. */
+.battle-scene .battle-field:before{
+  content:"";
+  position:absolute;
+  inset:3% clamp(55px,12vw,250px) 2%;
+  z-index:0;
+  pointer-events:none;
+  border-radius:48%;
+  background:radial-gradient(
+    ellipse at center,
+    rgba(236,242,238,.63) 0%,
+    rgba(221,234,232,.48) 39%,
+    rgba(208,226,228,.22) 62%,
+    rgba(208,226,228,0) 83%
+  );
+  filter:blur(16px);
+}
+.battle-scene .double-board{
+  position:relative;
+  z-index:1;
+}
+/* Pale, physical paper cards instead of rectangular pure-white stickers.
+   White pixels in portraits take on the pale paper tint via multiply. */
+.battle-scene .battle-grid .battle-unit{
+  padding:3px!important;
+  border:3px solid #3c5a60!important;
+  border-radius:9px!important;
+  background:#dce7db!important;
+  box-shadow:
+    inset 0 0 0 1px #f7f5e6,
+    0 3px 0 #243f49,
+    0 9px 18px #173b4d72!important;
+}
+.battle-scene .battle-grid .battle-unit.enemy{
+  border-color:#725a64!important;
+  background:#e4dcd6!important;
+}
+.battle-scene .battle-grid .battle-unit:before{
+  inset:3px!important;
+  border:1px solid #f0ead9b8;
+  border-radius:5px;
+}
+.battle-scene .battle-grid .battle-unit .unit-art{
+  border-radius:5px!important;
+  background:#dce7db!important;
+  isolation:isolate;
+}
+.battle-scene .battle-grid .battle-unit.enemy .unit-art{
+  background:#e4dcd6!important;
+}
+.battle-scene .battle-grid .battle-unit .unit-art img{
+  mix-blend-mode:multiply!important;
+  filter:saturate(.85) contrast(1.04);
+}
+.battle-scene .battle-unit .unit-name{
+  color:#253e47!important;
+  background:#e5eadbcf!important;
+  border-top:1px solid #6c8b8c!important;
+  font-weight:800!important;
+  text-shadow:0 1px #fff7;
+}
+.battle-scene .battle-unit.enemy .unit-name{
+  color:#523c48!important;
+  background:#eee4dddc!important;
+  border-top-color:#a18b91!important;
+}
+.battle-scene .unit-badges .badge{
+  border:2px solid #f5f0df!important;
+  outline:1px solid #495864!important;
+  box-shadow:0 2px 4px #1d39456b!important;
+}
+/* A slightly concentrated board makes the game pieces the focal point. */
+@media (min-width:1200px) and (min-height:650px){
+  .battle-scene .double-board{
+    width:min(100%,1160px);
+    gap:clamp(8px,1.5vh,18px);
+  }
+  .battle-scene .battle-grid{
+    column-gap:clamp(7px,.75vw,14px);
+  }
+}
+/* The hand is a separate play surface, but should share the icy navy
+   palette and thin snowy tabletop edge instead of a dark mahogany slab. */
+.battle-scene .battle-bottom{
+  border-top:4px solid #cddcda!important;
+  background:
+    linear-gradient(180deg,#b2c8c7 0px,#7d9da3 5px,#405e6d 12px,#2c475a 56%,#273b50 100%)!important;
+  box-shadow:
+    inset 0 2px 0 #edeee4a0,
+    0 -8px 22px #25425237!important;
+}
+.battle-scene .battle-bottom .hand .paint-card.compact{
+  border:3px solid #4b6570!important;
+  border-radius:8px!important;
+  background:linear-gradient(#f3f2e6,#d4dfd6)!important;
+  box-shadow:inset 0 0 0 1px #fffbe8,0 3px 0 #1a3543,0 9px 14px #102d3f8c!important;
+}
+.battle-scene .battle-bottom .hand .paint-card.compact .title{
+  background:#e5eadcd9;
+  color:#264351;
+}
+.battle-scene .battle-bottom .hand .paint-card.compact .text{
+  color:#53616a;
+}
+.battle-scene .battle-bottom .hand-indicator,
+.battle-scene .hand-indicator{
+  color:#e9f5ee!important;
+}
+.battle-scene .battle-hint{
+  color:#d0e4e0!important;
+  text-shadow:0 1px 3px #163345!important;
+}
+/* Leave system layout geometry intact; recentre the actual FRONT position
+   of both factions on mobile. Earlier CSS pinned the logical frontline
+   to the right edge of each 3-slot ribbon; two enemies + leader ended up
+   stacked at x=280 of a 390 px screen with most of the left half blank.
+   Logical IDs and game engine targeting are unchanged. */
 @media (orientation:portrait) and (max-width:700px){
   .battle-scene:not(.ice-zone):not(.summit-zone){
-    background-position:54% center;
+    background-position:center,54% center;
+  }
+  .battle-scene .battle-field:before{
+    inset:4% -14% 0;
+    filter:blur(12px);
+    background:radial-gradient(ellipse at center,
+      #e5eeec8c 0%,#e0e9e65e 48%,#d3e2e000 85%);
+  }
+  .battle-scene .battle-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+  .battle-scene .battle-grid .battle-slot:nth-child(1){
+    grid-column:3!important;grid-row:1!important;
+  }
+  .battle-scene .battle-grid .battle-slot:nth-child(2){
+    grid-column:1!important;grid-row:1!important;
+  }
+  .battle-scene .battle-grid .battle-slot:nth-child(3){
+    grid-column:2!important;grid-row:1!important;
+  }
+  .battle-scene .battle-grid .battle-slot:nth-child(4){
+    grid-column:2!important;grid-row:2!important;
+  }
+  .battle-scene .battle-grid .battle-slot:nth-child(5){
+    grid-column:1!important;grid-row:2!important;
+  }
+  .battle-scene .battle-grid .battle-slot:nth-child(6){
+    grid-column:3!important;grid-row:2!important;
+  }
+  .battle-scene .battle-unit .unit-name{
+    font-size:9px!important;
+  }
+  .battle-scene .battle-bottom{
+    border-top-width:3px!important;
+  }
+  .battle-scene .battle-bottom .hand>button:not(:first-child){
+    margin-left:-8px!important;
+  }
+  .battle-scene .battle-bottom .hand .paint-card.compact{
+    border-width:2px!important;
+  }
+}
+@media (orientation:landscape) and (max-height:520px){
+  .battle-scene .battle-field:before{
+    inset:0 7% -5%;
+    filter:blur(9px);
+  }
+  .battle-scene .battle-grid .battle-unit{
+    padding:2px!important;
+    border-width:2px!important;
   }
 }
