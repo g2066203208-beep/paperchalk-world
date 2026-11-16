@@ -323,6 +323,136 @@ function helpPanel(){
  '<p>所有旅途状态自动保存到当前浏览器。要重头开始，在营地选择新远征。</p>'+
  '</div></div>';
 }
+
+const portraitCache=new Map();
+function prepareBattlePortraits(){
+ for(const img of app.querySelectorAll(".battle-unit .unit-art img")){
+  const src=img.getAttribute("src");
+  if(!src||src.startsWith("data:"))continue;
+  if(portraitCache.has(src)){img.src=portraitCache.get(src);continue;}
+  const process=()=>{
+   if(portraitCache.has(src)){img.src=portraitCache.get(src);return;}
+   try{
+    const nativeW=img.naturalWidth,nativeH=img.naturalHeight;
+    if(!nativeW||!nativeH)return;
+    const scale=Math.min(1,850/Math.max(nativeW,nativeH));
+    const w=Math.max(1,Math.round(nativeW*scale)),h=Math.max(1,Math.round(nativeH*scale));
+    const canvas=document.createElement("canvas");canvas.width=w;canvas.height=h;
+    const ctx=canvas.getContext("2d",{willReadFrequently:true});ctx.drawImage(img,0,0,w,h);
+    const frame=ctx.getImageData(0,0,w,h),pixels=frame.data,seen=new Uint8Array(w*h),queue=new Int32Array(w*h);
+    let start=0,end=0;
+    function add(i){
+     if(seen[i])return;seen[i]=1;
+     const n=i*4,r=pixels[n],g=pixels[n+1],b=pixels[n+2];
+     if(r>232&&g>232&&b>232&&Math.max(r,g,b)-Math.min(r,g,b)<25)queue[end++]=i;
+    }
+    for(let x=0;x<w;x++){add(x);add((h-1)*w+x);}
+    for(let y=0;y<h;y++){add(y*w);add(y*w+w-1);}
+    while(start<end){
+     const n=queue[start++],x=n%w;pixels[n*4+3]=0;
+     if(x>0)add(n-1);if(x<w-1)add(n+1);
+     if(n>=w)add(n-w);if(n<(h-1)*w)add(n+w);
+    }
+    ctx.putImageData(frame,0,0);
+    const result=canvas.toDataURL("image/png");
+    portraitCache.set(src,result);if(img.isConnected)img.src=result;
+   }catch(error){console.warn("Preserving original Anima artwork",error);}
+  };
+  if(img.complete&&img.naturalWidth)process();
+  else img.addEventListener("load",process,{once:true});
+ }
+}
+function traceAttack(source,target){
+ if(!source||!target)return;
+ const a=source.getBoundingClientRect(),b=target.getBoundingClientRect();
+ const x=a.left+a.width/2,y=a.top+a.height*.3,tx=b.left+b.width/2,ty=b.top+b.height/2;
+ const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
+ svg.setAttribute("class","battle-shot-fx");svg.setAttribute("viewBox","0 0 "+innerWidth+" "+innerHeight);
+ const path=document.createElementNS("http://www.w3.org/2000/svg","path");
+ path.setAttribute("d","M"+x+","+y+" Q"+((x+tx)/2)+","+(Math.min(y,ty)-80)+" "+tx+","+ty);
+ svg.append(path);document.querySelector(".game-shell").append(svg);
+ setTimeout(()=>svg.remove(),510);
+}
+function pulseTarget(id){
+ const node=[...app.querySelectorAll(".battle-unit.enemy")].find(e=>e.dataset.id===id);
+ if(node){node.classList.add("damage-pulse");setTimeout(()=>node.classList.remove("damage-pulse"),440);}
+}
+function inspectUnit(node){
+ if(!node)return;
+ document.querySelector(".battle-inspect-backdrop")?.remove();
+ const img=node.querySelector(".unit-art"),name=node.querySelector(".unit-name")?.textContent||"卡牌详情";
+ const hp=node.querySelector(".badge.hp")?.textContent||"0",atk=node.querySelector(".badge.atk")?.textContent||"0",tick=node.querySelector(".badge.tick")?.textContent||"0";
+ const overlay=document.createElement("div");overlay.className="battle-inspect-backdrop";
+ const panel=document.createElement("div");panel.className="inspect-card";
+ const title=document.createElement("h2");title.textContent=name;
+ const art=document.createElement("div");art.className="inspect-picture";
+ if(img)art.append(...[...img.childNodes].map(el=>el.cloneNode(true)));
+ const detail=document.createElement("p");detail.textContent="♥ 生命 "+hp+"　✦ 攻击 "+atk+"　◴ 倒计时 "+tick;
+ const button=document.createElement("button");button.className="pill-button";button.textContent="返回战斗 ×";
+ button.addEventListener("click",()=>overlay.remove());
+ overlay.addEventListener("click",e=>{if(e.target===overlay)overlay.remove();});
+ panel.append(art,title,detail,button);overlay.append(panel);
+ document.querySelector(".game-shell").append(overlay);
+}
+let dragState=null,holdTimer=0,suppressClickUntil=0;
+function installCardGestures(){
+ app.addEventListener("pointerdown",e=>{
+  const origin=e.target.closest(".battle-bottom .hand>button, .battle-unit.friendly");
+  if(!origin||e.button!==0||game.view()!=="battle")return;
+  const isHand=origin.matches(".battle-bottom .hand>button");
+  dragState={origin,isHand,x:e.clientX,y:e.clientY,moved:false,
+   index:Number(origin.dataset.i),uid:origin.dataset.id};
+  clearTimeout(holdTimer);
+  if(!isHand)holdTimer=setTimeout(()=>{
+    if(dragState&&!dragState.moved){
+     inspectUnit(origin);dragState=null;suppressClickUntil=Date.now()+250;
+    }
+  },580);
+ },{passive:true});
+ app.addEventListener("pointermove",e=>{
+  if(!dragState)return;
+  const dx=e.clientX-dragState.x,dy=e.clientY-dragState.y;
+  if(Math.hypot(dx,dy)>13){
+   dragState.moved=true;clearTimeout(holdTimer);
+   const node=dragState.origin;
+   node.style.setProperty("--drag-x",dx+"px");node.style.setProperty("--drag-y",dy+"px");
+   node.classList.add("is-dragging");
+   if(!dragState.isHand){
+    app.querySelectorAll(".battle-slot[data-side=friendly]").forEach(v=>v.classList.add("is-move-target"));
+   }
+  }
+ },{passive:true});
+ app.addEventListener("pointerup",e=>{
+  if(!dragState)return;
+  const info=dragState;dragState=null;clearTimeout(holdTimer);
+  info.origin.style.removeProperty("--drag-x");info.origin.style.removeProperty("--drag-y");
+  info.origin.classList.remove("is-dragging");
+  app.querySelectorAll(".battle-slot.is-move-target").forEach(v=>v.classList.remove("is-move-target"));
+  if(!info.moved)return;
+  suppressClickUntil=Date.now()+260;
+  const slot=document.elementFromPoint(e.clientX,e.clientY)?.closest(".battle-slot");
+  if(!slot)return;
+  if(info.isHand&&slot.dataset.side==="enemy"){
+   const target=slot.querySelector(".battle-unit.enemy");
+   if(!target)return;
+   const c=game.state().run?.battle?.hand[info.index],definition=find(rules.ITEMS,c?.id);
+   if(!definition||!["hit","pierce","freeze","weaken"].includes(definition.kind)){flash("这张道具不能指定敌方目标");return;}
+   const targetId=target.dataset.id;traceAttack(info.origin,target);
+   selectedCard=-1;
+   if(apply(()=>game.play(info.index,targetId)))pulseTarget(targetId);
+  }else if(!info.isHand&&slot.dataset.side==="friendly"){
+   selectedAlly=null;apply(()=>game.move(info.uid,Number(slot.dataset.slot)));
+  }
+ },{passive:true});
+ app.addEventListener("pointercancel",()=>{
+  clearTimeout(holdTimer);
+  if(dragState){
+   dragState.origin.style.removeProperty("--drag-x");dragState.origin.style.removeProperty("--drag-y");
+   dragState.origin.classList.remove("is-dragging");dragState=null;
+  }
+ },{passive:true});
+}
+
 function render(){
  const view=game.view();
  if(view!==lastScreen){
@@ -333,6 +463,7 @@ function render(){
  recruit:()=>eventView("recruit"),treasure:()=>eventView("treasure"),charm:()=>eventView("charm"),
  camp:()=>eventView("camp"),forge:()=>eventView("forge"),deck,townbuilding:townBuilding,settings};
  app.innerHTML=(route[view]||menu)()+(help?helpPanel():"");
+ if(view==='battle')prepareBattlePortraits();
  document.querySelector(".ambient-snow").style.display=game.state().settings.particles?"":"none";
  document.title=(view==="battle"?"战斗 · ":view==="map"?"地图 · ":"")+"雪境行旅";
 }
@@ -342,6 +473,7 @@ function isTargetingCard(){
  return ["hit","pierce","freeze","weaken"].includes(find(rules.ITEMS,b.hand[selectedCard]?.id)?.kind);
 }
 function onClick(event){
+ if(Date.now()<suppressClickUntil)return;
  const el=event.target.closest("[data-act]");if(!el)return;
  const act=el.dataset.act,id=el.dataset.id,index=Number(el.dataset.i||"0");
  if(act==="help"){help=true;render();return;}
@@ -373,14 +505,14 @@ function onClick(event){
  }
  case "enemy":{
   if(selectedCard>=0){
-   const i=selectedCard;selectedCard=-1;apply(()=>game.play(i,id));
-  }else{
-   const enemy=game.state().run?.battle?.foes.find(x=>x.uid===id);
-   if(enemy)flash(enemy.name+" · 攻击"+enemy.atk+" / 倒计时"+enemy.tick);
-  }
+   const source=app.querySelector('.battle-bottom .hand>button:nth-child('+(selectedCard+1)+')');
+   traceAttack(source,el.closest('.battle-unit'));
+   const i=selectedCard;selectedCard=-1;
+   if(apply(()=>game.play(i,id)))pulseTarget(id);
+  }else inspectUnit(el.closest('.battle-unit'));
   break;
  }
- case "ally":selectedAlly=selectedAlly===id?null:id;selectedCard=-1;render();break;
+ case "ally":if(selectedAlly===id){inspectUnit(el.closest(".battle-unit"));break;} selectedAlly=id;selectedCard=-1;render();break;
  case "slot":apply(()=>game.move(selectedAlly,index));selectedAlly=null;break;
  case "playselected":if(selectedCard>=0){const i=selectedCard;selectedCard=-1;apply(()=>game.play(i));}break;
  case "cancel":selectedCard=-1;render();break;
@@ -395,6 +527,7 @@ function onClick(event){
  }
 }
 app.addEventListener("click",onClick);
+installCardGestures();
 window.addEventListener("keydown",e=>{
  if(e.key==="Escape"&&help){help=false;render();return;}
  if(e.key==="Escape"&&selectedCard>=0){selectedCard=-1;render();return;}
@@ -412,7 +545,7 @@ window.PaperchalkSnowboundUI=Object.freeze({
  selectNode:branch=>apply(()=>game.selectNode(branch)),
  action:(index,target)=>apply(()=>game.play(index,target)),
  go:view=>apply(()=>game.go(view)),
- version:"1.0.0"
+ version:"1.1.0-battle-ux"
 });
 render();
 })();
