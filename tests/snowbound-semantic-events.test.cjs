@@ -6,7 +6,7 @@ const newGame=(hero="marksman")=>{const g=context.window.PaperchalkSnowbound.cre
 const g=newGame(),initial=g.selectNode(0);
 assert.equal(g.view(),"battle");
 assert(initial.visualEvents.some(e=>e.type==="battleIntro"),"battle intro has semantic entry event");
-assert.equal(initial.visualEvents[0].hand.length,5,"initial five-card draw is captured");
+assert.equal(initial.visualEvents.find(e=>e.type==="battleIntro").hand.length,5,"initial five-card draw is captured");
 const b=g.state().run.battle;
 const target=b.foes[0],beforeHP=target.hp;
 const offense=["hit","pierce","freeze","weaken","all"];
