@@ -546,6 +546,22 @@ function render(){
    if(oldPortrait&&freshPortrait&&priorImage)oldPortrait.src=priorImage;
    fresh.replaceWith(existing);
   }
+  // Preserve physical hand-card nodes as well as deployed units. A mere
+  // selection highlight or countdown update must never throw away the
+  // player's paper cards, decoded artwork, focus or animation identity.
+  const handNodes=new Map([...app.querySelectorAll('.battle-bottom .hand>button[data-card-key]')]
+    .map(el=>[el.dataset.cardKey,el]));
+  for(const fresh of [...template.content.querySelectorAll('.battle-bottom .hand>button[data-card-key]')]){
+   const existing=handNodes.get(fresh.dataset.cardKey);
+   if(!existing)continue;
+   existing.className=fresh.className;
+   existing.disabled=fresh.disabled;
+   existing.setAttribute("aria-label",fresh.getAttribute("aria-label")||"");
+   const oldPaint=existing.querySelector(".paint-card");
+   const nextPaint=fresh.querySelector(".paint-card");
+   if(oldPaint&&nextPaint)oldPaint.className=nextPaint.className;
+   fresh.replaceWith(existing);
+  }
   app.replaceChildren(template.content);
  }else app.innerHTML=html;
 
