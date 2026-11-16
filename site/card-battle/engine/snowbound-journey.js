@@ -318,6 +318,8 @@ function create(initial){
   b.finished=true;b.victory=victory;
   if(!victory){emit("长夜吞没了远征队","defeat");return resolveRun(false);}
   r.battlesWon++;
+  const recovered=Math.max(3,Math.ceil((r.maxHealth-r.health)*.75));
+  r.health=Math.min(r.maxHealth,r.health+recovered);
   const amount=(b.boss?65:30)+r.zone*12+(r.charms.includes("coin")?15:0);
   r.gold+=amount;b.goldWon=amount;
   emit("获胜！取得"+amount+"枚古金币","victory");
