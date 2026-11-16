@@ -35,6 +35,18 @@ for(const cfg of scenarios){
   assert.equal((await game()).screen,"battle");
   const traceIntro=await page.evaluate(()=>window.PaperchalkSnowboundUI.motion.trace());
   assert(traceIntro.some(t=>t.event==="transaction"&&t.stage==="begin"&&t.detail.includes("battleIntro")));
+  // Physically click the SECOND hand card, then verify its own art is used
+  // as the cinematic source. The old implementation incorrectly used card 0.
+  const secondHand=page.locator('.battle-bottom .hand>button').nth(1);
+  const playedKey=await secondHand.getAttribute("data-card-key");
+  assert(playedKey,"hand cards must expose stable semantic identity");
+  await secondHand.click({force:true});
+  await page.locator('.battle-bottom .hand>button').nth(1).click({force:true});
+  await idle();
+  const tracePlayed=await page.evaluate(()=>window.PaperchalkSnowboundUI.motion.trace());
+  assert(tracePlayed.some(t=>t.stage==="card-source"&&t.detail===playedKey),
+   "item animation must originate at the exact second hand card played");
+  await page.screenshot({path:OUT+"/"+cfg.name+"-second-card-accurate-source.png"});
   let attack=false,count=0;
   for(;count<5;count++){
    if((await game()).screen!=="battle")break;
