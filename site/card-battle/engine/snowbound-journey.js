@@ -194,20 +194,29 @@ function create(initial){
   return {actual,blocked:shield};
  }
  function alive(arr){return arr.filter(u=>u.hp>0);}
- function frontTarget(units){
-  const up=alive(units).sort((a,b)=>a.slot-b.slot);
-  return up.find(v=>v.slot<3)||up[0]||null;
+ // Slots are row-major: 0..2 upper lane, 3..5 lower lane.
+ // Within both camps index 0/3 is the front rank nearest the centre.
+ function ordered(units){
+  return alive(units).sort((a,b)=>(a.slot%3)-(b.slot%3) || Math.floor(a.slot/3)-Math.floor(b.slot/3));
+ }
+ function frontTarget(units,attackerSlot){
+  const row=Math.floor((attackerSlot??0)/3);
+  const targets=ordered(units);
+  return targets.find(u=>Math.floor(u.slot/3)===row) || targets[0] || null;
+ }
+ function hasDefeatedBoss(b){
+  return b.boss&&!b.foes.some(u=>u.hp>0&&u.template===ZONES[s.run.zone].boss);
  }
  function takeTurn(){
   const r=s.run,b=r?.battle;if(!b||b.finished)return {ok:false,message:"没有正在进行的战斗"};
   b.turn++;r.turns++;b.playsLeft=1;b.redrawCharge=Math.min(4,b.redrawCharge+1);
   const log=[];
   // First tick enemy countdowns, then ally countdowns, deterministic target selection.
-  for(const unit of alive(b.foes)){
+  for(const unit of ordered(b.foes)){
    if(unit.stunned>0){unit.stunned--;log.push(unit.name+"被冰霜困住");continue;}
    unit.tick--;
    if(unit.tick<=0){
-    const target=frontTarget(b.allies);
+    const target=frontTarget(b.allies,unit.slot);
     if(target){
      const amount=Math.max(1,unit.atk-unit.weak);const out=applyDamage(target,amount);
      log.push(unit.name+"攻击"+target.name+" · "+out.actual+"伤害");
@@ -217,11 +226,11 @@ function create(initial){
    }
   }
   if(r.health<=0)return resolveBattle(false,log);
-  for(const unit of alive(b.allies)){
+  for(const unit of ordered(b.allies)){
    if(unit.stunned>0){unit.stunned--;continue;}
    unit.tick--;
    if(unit.tick<=0){
-    const target=frontTarget(b.foes);
+    const target=frontTarget(b.foes,unit.slot);
     if(target){
      const amount=unit.atk+Math.max(0,target.mark);
      const hit=applyDamage(target,amount);
@@ -237,7 +246,7 @@ function create(initial){
    }
   }
   b.foes=b.foes.filter(x=>{if(x.hp<=0){r.kills++;return false;}return true;});
-  if(!b.foes.length)return resolveBattle(true,log);
+  if(!b.foes.length||hasDefeatedBoss(b))return resolveBattle(true,log);
   if(b.turn>=b.reinforcement&&!b.boss&&b.wavesSpawned<1&&b.foes.length<4){
    const occupied=new Set(b.foes.map(x=>x.slot));
    const spot=[1,2,4,5].find(x=>!occupied.has(x));
@@ -251,7 +260,7 @@ function create(initial){
  function checkBattleAlive(log=[]){
   const r=s.run,b=r.battle;
   b.foes=b.foes.filter(x=>{if(x.hp<=0){r.kills++;return false;}return true;});
-  if(!b.foes.length)return resolveBattle(true,log);
+  if(!b.foes.length||hasDefeatedBoss(b))return resolveBattle(true,log);
   const hero=b.allies.find(x=>x.leader);
   if(!hero||hero.hp<=0)return resolveBattle(false,log);
   return null;
@@ -262,7 +271,7 @@ function create(initial){
   if(!Number.isInteger(index)||index<0||index>=b.hand.length)return {ok:false,message:"请先选择手牌"};
   const card=b.hand[index],def=dict(ITEMS,card.id);
   if(!def)return {ok:false,message:"缺少卡牌配置"};
-  const enemy=alive(b.foes).find(x=>x.uid===targetUid)||frontTarget(b.foes);
+  const enemy=alive(b.foes).find(x=>x.uid===targetUid)||frontTarget(b.foes,3);
   const needsEnemy=["hit","pierce","freeze","weaken"].includes(def.kind);
   if(needsEnemy&&!enemy)return {ok:false,message:"没有可攻击的目标"};
   b.hand.splice(index,1);b.discard.push(card);b.playsLeft=0;
@@ -275,7 +284,7 @@ function create(initial){
    r.damageDealt+=out.actual;
    message=def.name+" → "+enemy.name+" · "+out.actual+"伤害";
   }else if(def.kind==="all"){
-   for(const unit of alive(b.foes).filter(x=>x.slot<3)){
+   for(const unit of [frontTarget(b.foes,0),frontTarget(b.foes,3)].filter((u,i,a)=>u&&a.indexOf(u)===i)){
     const hit=applyDamage(unit,def.power);r.damageDealt+=hit.actual;
    }
    message="连环铳横扫敌人前排";
@@ -344,7 +353,7 @@ function create(initial){
   state:present,view:activeView,go:setScreen,startFresh,town,selectHero,choices,
   selectNode,claim,buy,leaveEvent,finishNode,afterBattle,play,move,redraw,endTurn,
   startBattle,backTown,showDeck,closeDeck,settings,heroWithCharm,
-  version:"1.0.0-original-snow-campaign"
+  version:"1.1.0-two-row-side-by-side"
  });
 }
 root.PaperchalkSnowbound=Object.freeze({create,HEROES,FRIENDS,ENEMIES,ITEMS,CHARMS,ZONES,EVENT_ROUTES});
