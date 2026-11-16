@@ -1,0 +1,267 @@
+/*
+ Snowbound Journey - visual refinement v3
+ Calibrated from 1920x1080 and 390x844 Chromium captures.
+ Left/right 2x6 on landscape; two corresponding 3+3 tactical ribbons
+ for portrait only, without changing the rules engine's lane/slot semantics.
+ Original Anima source art remains untouched; battle frames show cropped
+ facial/upper-body detail and inspection remains available for full art.
+*/
+.battle-scene{
+  --battle-deck-height:clamp(178px,23dvh,248px);
+  --battle-header-height:44px;
+}
+.battle-scene .battle-field{
+  padding:20px clamp(74px,6vw,126px) 14px;
+}
+.battle-scene .double-board{
+  width:min(100%,1536px);
+  max-width:1536px;
+  height:min(100%,670px);
+  gap:clamp(8px,1.5dvh,22px);
+}
+.battle-scene .battle-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr)) minmax(26px,3vw) repeat(3,minmax(0,1fr));
+  column-gap:clamp(7px,.65vw,13px);
+}
+.battle-scene .battle-grid .battle-slot{
+  max-width:218px;
+  max-height:258px;
+}
+.battle-scene .battle-unit{
+  max-width:218px;
+  max-height:258px;
+  border-radius:11px 11px 8px 8px;
+}
+.battle-scene .battle-unit .unit-art{
+  background:linear-gradient(180deg,#f4f8e8,#a6cbd1 76%,#789ba9)!important;
+}
+.battle-scene .battle-unit.enemy .unit-art{
+  background:linear-gradient(180deg,#e8d7de,#b89fb3 75%,#76788f)!important;
+}
+.battle-scene .battle-unit .unit-art img{
+  object-fit:cover!important;
+  object-position:center 20%!important;
+}
+.battle-scene .battle-unit .unit-art svg{
+  object-fit:cover!important;
+}
+.battle-scene .battle-unit .unit-name{
+  font-size:clamp(10px,.95vw,15px);
+  line-height:1.7;
+}
+.battle-scene .battle-unit .unit-trait{
+  font-size:clamp(8px,.7vw,12px);
+  line-height:1.55;
+}
+.battle-scene .battle-grid .battle-slot::before{
+  width:75%;
+  height:12%;
+  bottom:3%;
+}
+.battle-scene .battle-caption{
+  top:4px;
+  left:clamp(92px,8vw,146px);
+  right:clamp(92px,8vw,146px);
+  opacity:.88;
+}
+.battle-scene .battle-bottom{
+  border-top:7px solid #986b56;
+}
+.battle-scene .battle-bottom .hand{
+  gap:clamp(6px,.8vw,15px);
+}
+.battle-scene .battle-bottom .hand .paint-card.compact{
+  height:clamp(153px,18dvh,195px);
+  width:clamp(105px,7.8vw,148px);
+}
+.battle-scene .battle-bottom .hand .paint-card.compact .title{
+  font-size:clamp(10px,.8vw,13px);
+}
+.battle-scene .battle-bottom .hand .paint-card.compact .text{
+  font-size:clamp(9px,.69vw,11px);
+}
+.battle-scene .battle-side .battle-bell,
+.battle-scene .battle-side .reinforcement-bell{
+  max-width:110px;
+}
+.battle-scene .battle-hint{
+  font-size:10px;
+  bottom:4px;
+}
+.battle-scene .battle-bottom .hand>button{
+  min-width:0;
+}
+.battle-scene .battle-bottom .hand>button.is-dragging{
+  z-index:70;
+  transform:translate(var(--drag-x,0),var(--drag-y,0)) rotate(2deg) scale(1.06);
+}
+@media(min-width:1200px) and (min-height:650px){
+  .battle-scene .battle-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr)) minmax(35px,3.1vw) repeat(3,minmax(0,1fr));
+    column-gap:clamp(9px,.7vw,16px);
+  }
+  .battle-scene .battle-field{
+    padding-left:clamp(92px,6.8vw,144px);
+    padding-right:clamp(92px,6.8vw,144px);
+  }
+}
+@media (orientation:landscape) and (max-height:520px){
+  .battle-scene{
+    --battle-header-height:36px;
+    --battle-deck-height:clamp(113px,32dvh,144px);
+  }
+  .battle-scene .battle-field{
+    padding:13px 67px 4px;
+  }
+  .battle-scene .double-board{
+    height:100%;
+    max-width:100%;
+    gap:4px;
+  }
+  .battle-scene .battle-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr)) minmax(14px,2vw) repeat(3,minmax(0,1fr));
+    column-gap:4px;
+  }
+  .battle-scene .battle-grid .battle-slot{
+    max-width:94px;max-height:109px;
+  }
+  .battle-scene .battle-unit{
+    max-width:94px;max-height:109px;
+  }
+  .battle-scene .battle-unit .unit-name{font-size:8px;line-height:1.25}
+  .battle-scene .battle-unit .unit-trait{display:none}
+  .battle-scene .battle-unit .unit-art img{object-position:center 15%!important}
+  .battle-scene .battle-bottom .hand .paint-card.compact{
+    width:clamp(67px,9.5vw,89px);
+    height:clamp(93px,26dvh,120px);
+  }
+  .battle-scene .battle-side{width:58px}
+  .battle-scene .battle-side.left{left:4px}
+  .battle-scene .battle-side.right{right:4px}
+  .battle-scene .battle-caption{left:66px;right:66px}
+}
+@media(min-width:701px) and (max-width:1199px) and (min-height:540px){
+  .battle-scene .battle-field{padding-left:75px;padding-right:75px}
+  .battle-scene .double-board{height:min(100%,620px)}
+  .battle-scene .battle-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr)) 24px repeat(3,minmax(0,1fr));
+    column-gap:6px;
+  }
+  .battle-scene .battle-grid .battle-slot,
+  .battle-scene .battle-unit{
+    max-width:170px;
+    max-height:226px;
+  }
+}
+@media(orientation:portrait) and (max-width:700px){
+  .battle-scene{
+    --battle-header-height:41px;
+    --battle-deck-height:clamp(194px,25.5dvh,244px);
+  }
+  .battle-scene .battle-field{
+    min-height:0;
+    padding:21px 8px 44px;
+    overflow:hidden;
+  }
+  .battle-scene .double-board{
+    width:100%;
+    max-width:none;
+    height:100%;
+    max-height:100%;
+    gap:clamp(5px,.75dvh,11px);
+  }
+  /* Each of the two logical lanes unfolds vertically. Three ally positions
+     and three foe positions remain in their original tactical slot order.
+     This intentionally prioritizes legible cards over squeezing six columns. */
+  .battle-scene .battle-grid{
+    position:relative;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    grid-template-rows:repeat(2,minmax(0,1fr))!important;
+    gap:7px 9px!important;
+    justify-items:center;
+    align-items:center;
+    padding:0 3px;
+  }
+  .battle-scene .battle-grid .battle-slot{
+    grid-column:auto;
+    max-width:110px;
+    max-height:140px;
+    height:100%;
+    width:100%;
+  }
+  .battle-scene .battle-grid .battle-slot:nth-child(4){
+    grid-column:1!important;
+    grid-row:2;
+  }
+  .battle-scene .battle-unit{
+    max-width:110px;
+    max-height:140px;
+    width:100%;
+    height:100%;
+    padding:1px;
+    border:2px solid #59717b;
+    border-radius:6px;
+  }
+  .battle-scene .battle-unit.enemy{border-color:#76556a}
+  .battle-scene .battle-unit .unit-art{min-height:20px}
+  .battle-scene .battle-unit .unit-art img{
+    object-fit:cover!important;
+    object-position:center 14%!important;
+  }
+  .battle-scene .battle-unit .unit-name{
+    font-size:clamp(9px,2.6vw,11px);
+    padding:2px 1px;
+    line-height:1.4;
+  }
+  .battle-scene .battle-unit .unit-trait{
+    display:none;
+  }
+  .battle-scene .unit-badges .badge{
+    min-width:22px;height:22px;
+    font-size:11px;
+    border:2px solid #fff1d1;
+    outline:none;
+  }
+  .battle-scene .unit-badges .hp{left:-7px;top:-7px}
+  .battle-scene .unit-badges .atk{right:-7px;top:-7px}
+  .battle-scene .unit-badges .tick{bottom:-10px;min-width:29px;height:23px}
+  .battle-scene .unit-badges .hp:before,
+  .battle-scene .unit-badges .atk:before{display:none}
+  .battle-scene .battle-grid .battle-slot:before{
+    width:70%;height:15%;bottom:1%;
+  }
+  .battle-scene .battle-caption{
+    left:10px;right:10px;top:4px;font-size:10px;
+  }
+  .battle-scene .battle-caption span:nth-child(2){display:block;font-size:8px}
+  .battle-scene .battle-log{
+    bottom:34px;max-width:95%;font-size:9px;
+  }
+  .battle-scene .battle-side{
+    bottom:1px;
+    top:auto;
+    height:38px;
+  }
+  .battle-scene .battle-side.left{left:6px}
+  .battle-scene .battle-side.right{right:6px}
+  .battle-scene .battle-bottom .hand{padding:6px 35px 21px;gap:0}
+  .battle-scene .battle-bottom .hand .paint-card.compact{
+    width:clamp(65px,18vw,77px);
+    height:clamp(131px,18.5dvh,157px);
+    border-width:2px;
+  }
+  .battle-scene .battle-bottom .hand>button{margin-left:-14px}
+  .battle-scene .battle-bottom .hand>button:first-child{margin-left:0}
+  .battle-scene .battle-bottom .hand .paint-card.compact .title{font-size:10px}
+  .battle-scene .battle-bottom .hand .paint-card.compact .text{font-size:9px}
+  .battle-scene .battle-bottom .endturn{width:50px}
+  .battle-scene .battle-bottom .deck-count button{width:36px}
+}
+@media (orientation:portrait) and (max-height:730px){
+ .battle-scene{--battle-deck-height:clamp(168px,24dvh,198px)}
+ .battle-scene .battle-field{padding-top:17px;padding-bottom:42px}
+ .battle-scene .battle-grid{gap:4px 8px!important}
+ .battle-scene .battle-grid .battle-slot,
+ .battle-scene .battle-unit{max-height:121px}
+ .battle-scene .battle-bottom .hand .paint-card.compact{height:clamp(117px,19dvh,140px)}
+}
