@@ -597,7 +597,7 @@ function onClick(event){
  const act=el.dataset.act,id=el.dataset.id,index=Number(el.dataset.i||"0");
  if(motion?.isBusy()){
   motion.skipToSafeCheckpoint();
-  if(["endturn","redraw","shopconfirm","claim","node","leader","continuebattle","leave"].includes(act))return;
+  if(["endturn","redraw","shopconfirm","claim","continuebattle","leave"].includes(act))return;
  }
  if(act==="help"){help=true;render();return;}
  if(act==="helpclose"){help=false;render();return;}
