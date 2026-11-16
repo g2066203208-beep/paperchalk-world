@@ -63,4 +63,25 @@ assert.equal(shop.state().run.gold,cashBefore-item.price,"second purchase cannot
 const insufficient=shop.buy(1);
 assert.equal(insufficient.ok,false);
 console.log("PASS atomic buy, one-time item addition, duplicate and insufficient funds");
+const party=newGame();
+party.selectNode(0);party.finishNode();
+party.selectNode(0);party.claim(0);
+const recruited=party.state().run.companions[0];
+party.selectNode(0);party.leaveEvent();
+party.selectNode(0);
+assert.equal(party.view(),"battle");
+const ally=party.state().run.battle.allies.find(x=>!x.leader);
+assert(ally&&ally.template===recruited,"rescued human companion enters battlefield");
+const recalled=party.recall(ally.uid);
+assert(recalled.ok&&recalled.visualEvents[0].type==="recall");
+assert(!party.state().run.battle.allies.some(x=>x.uid===ally.uid));
+const summoned=party.summon(recruited,3);
+assert(summoned.ok&&summoned.visualEvents[0].type==="summon");
+const deployed=party.state().run.battle.allies.find(x=>x.template===recruited);
+assert(deployed&&deployed.uid!==ally.uid&&deployed.slot===3);
+assert.equal(party.state().run.battle.playsLeft,0,"summon spends this turn's action");
+assert.equal(party.summon(recruited,4).ok,false,"already deployed companion cannot duplicate");
+assert.equal(party.recall(party.state().run.battle.allies.find(x=>x.leader).uid).ok,false,"leader cannot be recalled");
+console.log("PASS companion recall, legal summon, duplicate guard, turn cost and leader immunity");
+
 console.log("PASS ALL SEMANTIC EVENT RULES");
