@@ -16,9 +16,9 @@ const FRIENDS=[
  {id:"scout",name:"斧刃斥候",hp:17,atk:3,cd:2,art:"../assets/characters/monster-hunters/07-axe-scout.png",trait:"卫护",desc:"每次攻击为首领提供1护盾"}
 ];
 const ENEMIES=[
- {id:"moth",name:"雪蛾",hp:8,atk:2,cd:3,icon:"❄",desc:"慢速飞行的雪夜生物"},
- {id:"wolf",name:"雾狼",hp:12,atk:3,cd:2,icon:"◆",desc:"迅捷且危险的寒雾猎手"},
- {id:"shade",name:"灰影",hp:14,atk:4,cd:3,icon:"☾",desc:"藏在山路阴影中的侵袭者"},
+ {id:"moth",name:"夜巡信使",hp:8,atk:2,cd:3,icon:"❄",art:"../assets/characters/crimson-vampires/minions/01-vampire-messenger.png",desc:"在雪松林传递密信的血族信使"},
+ {id:"wolf",name:"提灯侍从",hp:12,atk:3,cd:2,icon:"◆",art:"../assets/characters/crimson-vampires/minions/02-vampire-lantern-bearer.png",desc:"为夜行血族照亮雪路的侍从"},
+ {id:"shade",name:"夜幕随从",hp:14,atk:4,cd:3,icon:"☾",art:"../assets/characters/crimson-vampires/minions/03-vampire-retainer.png",desc:"隐藏在大雪中的血族随从"},
  {id:"sentry",name:"冰甲守卫",hp:18,atk:3,cd:3,icon:"◇",desc:"寒霜盔甲保护他的躯体"},
  {id:"witch",name:"霜魇术士",hp:24,atk:4,cd:3,icon:"✷",desc:"施加刺骨寒意"},
  {id:"beast",name:"山脊凶兽",hp:28,atk:6,cd:3,icon:"✦",desc:"轰鸣的山野巨兽"},
