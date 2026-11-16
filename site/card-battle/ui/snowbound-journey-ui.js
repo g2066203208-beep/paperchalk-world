@@ -484,10 +484,15 @@ function installCardGestures(){
   suppressClickUntil=Date.now()+260;
   // A moving card can visually cover the destination while its transform eases back.
   // Exclude the dragged card from hit-testing before resolving the actual slot.
-  const originalPointerEvents=info.origin.style.pointerEvents;
-  info.origin.style.pointerEvents="none";
-  const slot=document.elementFromPoint(e.clientX,e.clientY)?.closest(".battle-slot");
-  info.origin.style.pointerEvents=originalPointerEvents;
+  // 2.5D stage sprites visually overlap their depth plane; resolve the
+  // intended tactical drop by world-slot rectangles, not by topmost painted
+  // alpha pixel or the overlay which happens to receive pointer events.
+  const groundSlots=[...app.querySelectorAll(".battle-slot")].map(node=>{
+   const b=node.getBoundingClientRect();
+   const inside=e.clientX>=b.left&&e.clientX<=b.right&&e.clientY>=b.top&&e.clientY<=b.bottom;
+   return {node,inside,d:Math.hypot(e.clientX-(b.left+b.width/2),e.clientY-(b.top+b.height/2))};
+  }).filter(v=>v.inside).sort((a,b)=>a.d-b.d);
+  const slot=groundSlots[0]?.node||null;
   if(!slot)return;
   if(info.isHand&&slot.dataset.side==="enemy"){
    const target=slot.querySelector(".battle-unit.enemy");
