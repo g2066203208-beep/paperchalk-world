@@ -1,0 +1,21 @@
+/*
+ * Snowbound Journey — original user-supplied snowy forest, 1536×1024.
+ * The image is committed in the repository as ../assets/snowy-forest-reference.webp.
+ * Drawn battle cards and interactive slot elements are kept exactly as coded;
+ * neither the art nor the characters were regenerated.
+ */
+.battle-scene:not(.ice-zone):not(.summit-zone){
+  background-color:#a0bcb5;
+  background-image:url("../assets/snowy-forest-reference.webp");
+  background-position:center 48%;
+  background-size:cover;
+  background-repeat:no-repeat;
+}
+.battle-scene:not(.ice-zone):not(.summit-zone)::before{
+  background:none;
+}
+@media (orientation:portrait) and (max-width:700px){
+  .battle-scene:not(.ice-zone):not(.summit-zone){
+    background-position:54% center;
+  }
+}

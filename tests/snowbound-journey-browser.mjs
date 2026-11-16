@@ -68,6 +68,22 @@ for(const cfg of scenarios){
   assert.equal(await page.locator(".battle-grid").count(),2);
   assert(await page.locator(".battle-unit").count()>=3);
 
+  // The user-provided forest MUST be a real binary asset, not CSS placeholder art.
+  const forestScene=await page.evaluate(async()=>{
+    const el=document.querySelector('.battle-scene');
+    const bg=getComputedStyle(el).backgroundImage;
+    const css=document.querySelector('link[href*="snowbound-forest-reference.css"]');
+    const img=new Image();
+    img.src=new URL('../assets/snowy-forest-reference.webp',css.href).href;
+    await img.decode();
+    return {background:bg,image:img.src,width:img.naturalWidth,height:img.naturalHeight};
+  });
+  assert(forestScene.background.includes('snowy-forest-reference.webp'),
+    'real user forest image must be applied to the battle scene');
+  assert.equal(forestScene.width,1536,'forest source aspect must retain full width');
+  assert.equal(forestScene.height,1024,'forest source aspect must retain full height');
+
+
   const board=await page.evaluate(()=>{
    const lanes=[...document.querySelectorAll('.double-board>.battle-grid')];
    return lanes.map((lane,index)=>({
