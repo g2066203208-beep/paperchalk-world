@@ -207,21 +207,25 @@ function battleUnit(unit,side){
  const creature=find(rules.ENEMIES,unit.template);
  const portrait=unit.art?'<img loading="eager" src="'+esc(unit.art)+'" alt="'+esc(unit.name)+'角色插画">':enemyIllustration(unit.template);
  return '<button class="battle-unit '+(side==="enemy"?"enemy":"friendly")+(unit.uid===selectedAlly?' is-selected':'')+'" data-act="'+(side==="enemy"?"enemy":"ally")+'" data-id="'+esc(unit.uid)+'" type="button" aria-label="'+esc(unit.name)+' 生命'+unit.hp+' 攻击'+unit.atk+' 倒计时'+unit.tick+'">'+
-  '<span class="unit-art">'+portrait+'</span><span class="unit-name">'+esc(unit.name)+'</span>'+
+  '<span class="unit-art">'+portrait+'</span><span class="unit-name">'+esc(unit.name)+'</span><span class="unit-trait">'+esc(unit.leader?'队长':unit.template==='medic'?'治愈':unit.template==='engineer'?'破甲':unit.template==='scout'?'卫护':'自动攻击')+'</span>'+
   '<span class="unit-badges"><span class="badge hp">'+unit.hp+'</span><span class="badge atk">'+unit.atk+'</span><span class="badge tick">'+unit.tick+'</span>'+
   (unit.shield?'<span class="badge shield">'+unit.shield+'</span>':'')+
   (unit.stunned?'<span class="badge stun">'+unit.stunned+'</span>':'')+'</span></button>';
 }
-function combatSlots(units,side){
- let res="";
- for(let slot=0;slot<6;slot++){
-  const u=units.find(x=>x.slot===slot&&x.hp>0);
-  const target=side==="enemy"&&selectedCard>=0;
-  const movable=side==="friendly"&&selectedAlly&&!u;
-  res+='<div class="battle-slot '+(target?'is-active-target ':'')+(movable?'is-move-target':'')+'" data-side="'+side+'" data-slot="'+slot+'">'+
-   (u?battleUnit(u,side):movable?'<button class="side-btn" type="button" data-act="slot" data-i="'+slot+'">移至此处</button>':'')+'</div>';
- }
- return '<div class="battle-grid">'+res+'</div>';
+function combatCell(units,side,slot){
+ const unit=units.find(x=>x.slot===slot&&x.hp>0);
+ const target=side==="enemy"&&selectedCard>=0;
+ const movable=side==="friendly"&&selectedAlly&&!unit;
+ return '<div class="battle-slot '+(target?'is-active-target ':'')+(movable?'is-move-target':'')+'" data-side="'+side+'" data-slot="'+slot+'" data-row="'+Math.floor(slot/3)+'" role="group" aria-label="'+
+  (side==="friendly"?'我方':'敌方')+(Math.floor(slot/3)===0?'上':'下')+'排第'+(slot%3+1)+'号位">'+
+  (unit?battleUnit(unit,side):movable?'<button class="slot-drop" type="button" data-act="slot" data-i="'+slot+'" aria-label="移动到空格">＋</button>':'')+'</div>';
+}
+function combatRow(allies,foes,row){
+ const friendSlots=row===0?[2,1,0]:[5,4,3];
+ const enemySlots=row===0?[0,1,2]:[3,4,5];
+ return '<div class="battle-grid battle-lane" data-row="'+row+'">'+
+  friendSlots.map(slot=>combatCell(allies,"friendly",slot)).join("")+
+  enemySlots.map(slot=>combatCell(foes,"enemy",slot)).join("")+'</div>';
 }
 function battle(){
  const s=game.state(),r=s.run,b=r.battle,z=rules.ZONES[r.zone];
@@ -234,14 +238,10 @@ function battle(){
  const selected=selectedCard>=0?find(rules.ITEMS,b.hand[selectedCard]?.id):null;
  return wrap("battle-scene "+(r.zone===1?"ice-zone":r.zone===2?"summit-zone":""),commonHead(z.name+" · "+(b.boss?"首领战":"遭遇战"),{back:"map",className:"battle-header",subtitle:"ROUND "+b.turn})+
  '<div class="battle-core"><div class="battle-field">'+
- '<div class="battle-log" aria-live="polite">'+esc(latest)+'</div>'+
- '<div class="battle-side left"><div class="side-dial"><b>'+b.foes.length+'</b><small>敌人剩余</small></div>'+
- '<button class="side-btn" data-act="deck" type="button">牌组 ▤</button>'+
- '<div class="wave-note">每回合自动结算倒计时</div></div>'+
- '<div class="double-board">'+combatSlots(b.foes,"enemy")+'<div class="board-separator"></div>'+combatSlots(b.allies,"friendly")+'</div>'+
- '<div class="battle-side right"><div class="side-dial"><b>'+b.turn+'</b><small>当前回合</small></div>'+
- '<button class="side-btn" data-act="redraw" type="button">重抽钟<br>'+b.redrawCharge+'/4</button>'+
- '<div class="wave-note">'+(b.playsLeft?"可出牌":"已出牌")+'</div></div></div>'+
+ '<div class="battle-log" aria-live="polite">'+esc(latest)+'</div><div class="battle-caption"><span>己方</span><span>双排战线</span><span>敌方</span></div>'+
+ '<div class="battle-side left"><button class="battle-bell" data-act="redraw" type="button" title="重抽钟"><span class="bell-glyph">♧</span><b>重抽 '+b.redrawCharge+'/4</b></button><button class="side-btn" data-act="deck" type="button">牌组 ▤</button></div>'+
+ '<div class="double-board" aria-label="双方各三列上下两排，共12阵位">'+combatRow(b.allies,b.foes,0)+combatRow(b.allies,b.foes,1)+'</div>'+
+ '<div class="battle-side right"><div class="reinforcement-bell" aria-label="敌方增援倒计时"><span>♜</span><b>'+(b.boss?"首领":b.wavesSpawned?"已增援":Math.max(0,b.reinforcement-b.turn)+"回合")+'</b><small>敌方援军</small></div><div class="wave-note">回合 '+b.turn+'</div></div></div>'+
  '<div class="battle-bottom"><div class="hand-indicator">手牌 '+b.hand.length+' · '+(b.playsLeft?'可出一张':'本回合已出牌')+'</div>'+
  '<div class="deck-count"><button type="button" data-act="redraw" title="点击重抽手牌">↻ '+b.draw.length+'</button><span>剩余牌堆</span></div>'+
  '<div class="hand">'+cardButtons+'</div>'+
