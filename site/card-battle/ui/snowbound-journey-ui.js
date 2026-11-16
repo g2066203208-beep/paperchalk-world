@@ -480,11 +480,12 @@ let dragState=null,holdTimer=0,suppressClickUntil=0;
 function installCardGestures(){
  app.addEventListener("pointerdown",e=>{
   const origin=e.target.closest(".battle-bottom .hand>button, .battle-unit.friendly");
-  if(!origin||e.button!==0||game.view()!=="battle")return;
+  if(!origin||e.button!==0||game.view()!=="battle"||dragState)return;
   if(motion?.isBusy()){motion.skipToSafeCheckpoint();return;}
   const isHand=origin.matches(".battle-bottom .hand>button");
-  dragState={origin,isHand,x:e.clientX,y:e.clientY,moved:false,
+  dragState={origin,isHand,pointerId:e.pointerId,x:e.clientX,y:e.clientY,moved:false,
    index:Number(origin.dataset.i),uid:origin.dataset.id};
+  try{origin.setPointerCapture(e.pointerId)}catch(error){}
   clearTimeout(holdTimer);
   if(!isHand)holdTimer=setTimeout(()=>{
     if(dragState&&!dragState.moved){
@@ -493,7 +494,7 @@ function installCardGestures(){
   },580);
  },{passive:true});
  app.addEventListener("pointermove",e=>{
-  if(!dragState)return;
+  if(!dragState||e.pointerId!==dragState.pointerId)return;
   const dx=e.clientX-dragState.x,dy=e.clientY-dragState.y;
   if(Math.hypot(dx,dy)>13){
    dragState.moved=true;clearTimeout(holdTimer);
@@ -506,8 +507,9 @@ function installCardGestures(){
   }
  },{passive:true});
  app.addEventListener("pointerup",e=>{
-  if(!dragState)return;
+  if(!dragState||e.pointerId!==dragState.pointerId)return;
   const info=dragState;dragState=null;clearTimeout(holdTimer);
+  try{info.origin.releasePointerCapture(e.pointerId)}catch(error){}
   info.origin.style.removeProperty("--drag-x");info.origin.style.removeProperty("--drag-y");
   info.origin.classList.remove("is-dragging");
   app.querySelectorAll(".battle-slot.is-move-target").forEach(v=>v.classList.remove("is-move-target"));
@@ -535,6 +537,7 @@ function installCardGestures(){
  app.addEventListener("pointercancel",()=>{
   clearTimeout(holdTimer);
   if(dragState){
+   try{dragState.origin.releasePointerCapture(dragState.pointerId)}catch(error){}
    dragState.origin.style.removeProperty("--drag-x");dragState.origin.style.removeProperty("--drag-y");
    dragState.origin.classList.remove("is-dragging");dragState=null;
   }
