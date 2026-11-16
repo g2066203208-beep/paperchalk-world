@@ -23,6 +23,7 @@ for(const [name,width,height,minW,minH] of scenarios){
    await page.waitForFunction(()=>!window.PaperchalkSnowboundUI?.motion?.isBusy(),null,{timeout:14000});
   }
   await page.waitForFunction(()=>!window.PaperchalkSnowboundUI?.motion?.isBusy(),null,{timeout:14000});
+  await page.waitForFunction(()=>[...document.querySelectorAll(".stage-actor .unit-art img")].every(i=>i.dataset.cutoutReady==="1"),null,{timeout:12000});
   await page.waitForTimeout(90);
   const enemyPortraits=await page.locator(".battle-unit.enemy img").evaluateAll(imgs=>imgs.map(img=>({src:img.getAttribute("src"),loaded:img.complete&&img.naturalWidth>0})));
   assert.equal(enemyPortraits.length,2,"forest encounter uses two original Anima enemy character illustrations");
