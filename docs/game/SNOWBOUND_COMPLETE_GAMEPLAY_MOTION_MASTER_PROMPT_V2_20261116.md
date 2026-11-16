@@ -551,3 +551,314 @@ BACKGROUND（雪林） < GROUND（地面） < SLOT_MARK（空格） < UNIT_CARD�
 - 返回营地的动画与继续旅程数据逻辑分开，任何按钮只触发一次事务。
 
 失败镜头要有安静的收尾，不是直接黑屏，也不是无关的华丽颁奖。胜利镜头清晰、有温度、简洁，不要彩虹特效冲掉卡牌主题。
+
+
+---
+
+# 16. 音效系统、材料触感与可替换音画资源
+
+**音效不是最后有空才加的装饰**。参考 Wildfrost 音效设计师公开的真实纸牌拟音工作方式：洗牌、摸牌、落牌、铃铛、冰晶碎裂、木头质感和轻微玩具音，使所有卡牌对象在操作中有重量。不可直接复制 Wildfrost 的音频或音乐文件。
+
+AudioCue 至少定义以下事件：
+MENU_HOVER, MENU_PRESS, PAPER_PICK, PAPER_DRAG, PAPER_LAND, DECK_SHUFFLE, DRAW_ONE, DRAW_BATCH, BELL_READY, BELL_REDRAW, WAVE_WARNING, ENEMY_ENTER, ALLY_ENTER, MOVE_SWAP, CARD_RETURN, ATTACK_WINDUP, ATTACK_MELEE, ATTACK_GUN, HIT_LIGHT, HIT_HEAVY, CRITICAL, SHIELD_BLOCK, SHIELD_BREAK, FREEZE_APPLY, FREEZE_SHATTER, HEAL, POISON_TICK, SUMMON, UNIT_DEATH, BOSS_ENTER, BOSS_PHASE, GOLD_EARN, SHOP_INSPECT, SHOP_PURCHASE, SHOP_INSUFFICIENT, CHEST_OPEN, CHARM_ATTACH, VICTORY, DEFEAT, SCENE_WIND_TRANSITION。
+
+每个音效资产由 SoundDirector 统一管理：触发 ID、文件 manifest、音量、音调随机变化区间、最大同类重叠数量、混音优先级、音效延迟补偿。关键命中声应锚定实际 AttackHit 帧，不是用户点击时立即播放。
+
+暂缺正式声音时允许先用**自有简单拟音**测试结构，且必须标记待升级，不得把一个单频电子嘟声当正式音效。用户手势尚未授权 WebAudio 时无声降级，不抛异常。不准让连续攻击 15 个同类声音同时最大音量播放导致失真。
+
+音画同步初始目标：命中声与命中画面误差 p95 不超过 50ms（须通过录屏/录音实际计算），样本帧率和 WebAudio 输出缓冲不同要记录。移动端可选择关闭音效、只保留关键提示，支持 Reduced Motion。
+
+触觉反馈仅在浏览器/系统支持且用户明确打开时启用，关键确认可轻震 10–25ms，不能每次鼠标滑过触发。
+
+---
+
+# 17. VFX、镜头与图层：动效要有主次、不能堆满屏
+
+清晰的渲染层顺序：
+1. 场景背景（远山、林木、天气）；
+2. 地面/战场接地阴影；
+3. 空阵位轻标记与合法目标；
+4. 牌后特效（召唤、治疗光环）；
+5. 角色卡与手牌；
+6. 牌前特效（枪击轨迹、斩击、冰霜、冲击波、纸屑）；
+7. DamageFloat 数字和状态徽章；
+8. HUD（币、钟、返回、牌组）；
+9. 卡牌详情/商店确认/结算；
+10. 拖拽最上层，但不得盖住 modal 的确认按钮；
+11. 系统级危险操作确认。
+
+**严禁整个游戏每层都用 z-index:9999**。每层具体统一的 z-index 取值，并为 DOM/Canvas 的坐标变换提供转换函数。
+
+FXManager 负责：对象池、生命周期、粒子物理、可重复随机种子、停顿/速度、遮挡、场景退出回收。桌面同时建议最多 100–140 个简单粒子，手机 35–65，实际以目标硬件 FPS 再调。绝不对全屏 1920×1080 常驻使用昂贵 blur 滤镜。
+
+雪粒永远是背景层级；攻击粒子只有在命中帧出现，不能整场不停喷洒。特效图像即使临时几何也应有准确的施法源、弹道方向、目标卡坐标、消散方向与范围。
+
+相机摇晃建议：
+- 普通命中 0–2px；
+- 破盾 1–3px；
+- 重击 3–5px；
+- Boss 阶段事件可瞬间 5–7px，但自动收敛；
+- 多次攻击抖动应限幅，不能越来越偏；
+- 降低动态效果只保留 0–1px 或完全取消摇晃，用卡框/数值来替代。
+
+镜头不得自由旋转/夸张 3D 透视。保持正面 2D 卡牌战场，不让图像失真；有深度的感受来自纸张厚度、光影、运动和声音。
+
+---
+
+# 18. 手机、平板、电脑端交互细节
+
+统一 9 组视口：
+1920×1080、1366×768、844×390、390×844、1024×768、360×740、430×932、1280×720、2560×1440。
+
+**移动端不能直接把整套桌面 UI 缩小**。游戏允许横屏左右两军并列，竖屏把同一条战线的我方三格和敌方三格分段展示，但逻辑 ID、前排与攻击判定不变化。长按卡放大后要能稳定阅读。
+
+触摸操作至少处理：
+- pointerId 与 setPointerCapture；
+- 触摸离开窗口、pointercancel、页面滚动与双指操作；
+- 拖动阈值推荐 8–14px；
+- 长按 350–550ms 与移动检测协调，不能拖动被误判为详情；
+- 释放无效目标时回弹，不消耗牌；
+- 浏览器安全区、底部 Home Indicator、工具条高度变化；
+- 重要 hit target ≥44×44 CSS px，可用透明命中区域扩张，但卡牌显示不一定等宽；
+- 5 张起始手牌全部能选择，牌重叠时上层选择策略明确；
+- 手指覆盖目标时有轻微指向线/目标发光，不能看不见要放的位置。
+
+桌面端需要键盘：
+ESC=关闭详情/取消拖动，1–7=手牌预选，R=重抽（如本作规则），Tab=焦点遍历，Enter/Space=确认，动画正常播放时空格可跳至安全检查点。游戏手柄可作为增强，不应在没有接入时宣称支持。
+
+1440P/4K 不能无止境放大角色卡并破坏布局，应使用版心最大宽和背景呼吸空间；同屏 12 张牌、手牌、钟、HUD 均保持可读且不拥挤。
+
+---
+
+# 19. 毫秒参数表：所有系统读同一配置，不允许散落写死
+
+建议新增 config/motion-tokens.json，初始值如下。**这些是项目提出的目标值，未经 Wildfrost 实机测量，不可标为原作参数**。
+
+~~~json
+{
+  "baselineFps": 60,
+  "pointerFeedbackMs": 50,
+  "pointerVisualP95Ms": 80,
+  "cardHoverMs": 130,
+  "cardPickMs": 70,
+  "cardInvalidReleaseMs": 155,
+  "cardDeployMs": 280,
+  "cardSwapMs": 240,
+  "cardInspectOpenMs": 190,
+  "cardInspectCloseMs": 145,
+  "attackWindupMs": 105,
+  "attackTravelMs": 120,
+  "attackHitstopMs": 65,
+  "hurtPulseMs": 110,
+  "damageFloatMs": 520,
+  "attackRecoverMs": 160,
+  "multiHitGapMs": 100,
+  "shieldBreakMs": 235,
+  "freezeApplyMs": 260,
+  "freezeExpireMs": 300,
+  "healTravelMs": 325,
+  "summonMs": 495,
+  "reinforceEnterMs": 460,
+  "unitDeathMs": 600,
+  "leaderDefeatHoldMs": 360,
+  "victorySequenceMs": 870,
+  "defeatSequenceMs": 1470,
+  "redrawSequenceMs": 620,
+  "shopInspectMs": 190,
+  "shopPurchaseMs": 760,
+  "shopInsufficientMs": 240,
+  "recruitRevealMs": 1150,
+  "chestOpenMs": 660,
+  "mapTravelMs": 500,
+  "zoneTransitionMs": 615,
+  "sceneTransitionMs": 440,
+  "fastMotionFactor": 0.65,
+  "reducedMotionFactor": 0.35
+}
+~~~
+
+参数表中的动作可以交叠，不能简单全部相加。例如 attackTravel 的终点必须触发 hit，然后同时发生 hurtPulse 与 damageFloat，规则事件次序不变。
+
+性能目标：普通 60fps、帧预算约 16.67ms；90Hz/120Hz 只增加视觉采样，不加速引擎。目标输入反馈 p95≤80ms，单个语义事件的结算帧误差≤2帧，单次输入不能导致无故卡死超过 100ms 主线程。低端手机可以减少粒子和非必要背景特效，但不能减少 HP/技能/伤害因果提示。
+
+---
+
+# 20. 自动化与真正的审美验收：必须自己截图、录像、逐帧测量
+
+先记录原版本 R0，然后按轮次修复，每次都保留：
+- 完整 Commit SHA；
+- 浏览器和设备配置；
+- 同一个 seed 的游戏当前状态；
+- 实机截图、屏幕录制或 Playwright video；
+- 真实 bbox、布局标尺、时间戳；
+- 受击/死亡/购买等逐帧状态；
+- 测试报告、与参考视觉规格的偏差；
+- 本轮还有什么未达标。
+
+至少五轮，不是“一次 CI 绿灯就交差”：
+
+R0：全部现有界面源码与截图存档，列出未完成；
+R1：持久化动画对象/事件队列/输入反馈、双排布局；
+R2：完整战斗开场、发牌、移动、重抽、自动攻击、命中；
+R3：状态技能、死亡、召唤、援军、首领、胜利失败审理；
+R4：商店交易、招募、宝箱、护符、工坊、地图、结算；
+R5：性能、移动端触摸、音画同步、边界条件、复玩与审美。
+
+### 自动化覆盖场景
+
+要按真实交互执行，不允许跳过按钮使用 engine 内部快捷方法伪装“真实流程全部通过”：
+
+A. 菜单开局→选领队→进地图→战斗登场→第一张手牌；
+B. 连续拖 5 张牌的合法/非法目标；
+C. 伙伴跨上/下排移动，再攻击，目标和动画正确；
+D. 计时归零、敌方/友方自动攻击和状态分层；
+E. 免费重抽/消耗回合重抽，牌数和视觉位置都正确；
+F. 触发冰冻、治疗、破盾、暴击、范围攻击；
+G. 使敌方普通单位死亡，验证死亡 Ghost 和卡位释放；
+H. 召唤新单位以及援军钟触发，确认不会占两个相同格；
+I. 领队阵亡，完整败北过场到真正结算；
+J. 击杀首领，战后奖励→地图，金币/道具一次性记录；
+K. 商店查看→取消不扣币→确认购买→售罄→离开；
+L. 金币不足/连续双击/买卖期间刷新，账本不错误；
+M. 冰冻旅人/宝箱/护符/工坊/篝火流程；
+N. 三区走到最终结算、回村和重新开局；
+O. 12 张卡满场、7 张手牌、狭长视口、多指拖动与旋转屏幕；
+P. 1倍速/2倍速/Reduced Motion 同 seed 的最终状态一致。
+
+### 逐帧采样要求
+
+每个关键 animation clip 截取：
+起始帧、25%、50%、命中/数值更新、75%、末帧，至少 6 张，保留毫秒戳。特殊死亡、商店交易、卡牌滑动还应录完整视频。可运行 trace 记录 requestAnimationFrame 与实际 frame presentation，不用纯超时等待冒充录屏证据。
+
+归一化视觉指标：卡牌中心坐标、尺寸、旋转角、透明度、文本 bbox、卡牌堆叠顺序、状态徽章是否遮脸、移动路径与目标中心、道具从商店货架到库存的轨迹。对自己的上一轮已批准截图可做图像差异/SSIM；对 Wildfrost 的参考图比较**布局和交互表现特征**，不做受版权保护画作的 RGB 逐像素相等判定。
+
+对动画设定用约束而非只有截图像素：攻击轨迹必须起于正确 actor、终止于正确 target；伤害数字不得早于命中；死亡释放不得早于 FatalHit；商店扣款不得早于确认；援军入场不得超出合法 SlotAnchor；重复输入事务只能执行一次。
+
+---
+
+# 21. 状态空间穷举与特殊情况下的行为
+
+必须建立自动生成用例库而非手工只挑简单例子：
+
+- 手牌 0、1、5、7 张，重抽充满/未充满，牌库空，弃牌堆回洗；
+- 对空槽、友军、敌军、被冰冻目标、死亡目标、护盾目标施放；
+- 多张同名卡同时在场，使用 UID 而非 name 计算；
+- 多次连击使同一敌人死亡，后续攻击是否重定向或停止遵循固定规则；
+- 同一回合双方同归于尽，胜负优先级明确；
+- 护盾恰好挡尽、部分挡住、毒伤绕过护盾等是否有对应视觉；
+- 冻结到期与攻击倒计时同时归零；
+- 连击引发反击、毒、治疗、召唤的嵌套事件，设置事件递归深度上限；
+- 援军触发时所有格满、首领阶段已经结束、地图变更中出现延迟演出；
+- 同伴回收时敌方攻击已宣告、但命中尚未发生；
+- 点击商店商品、双击、长按、同时点击购买/离开、余额刚好/不足、刷新恢复；
+- 失败期间操作其他牌、重开过程中有尚未完成的粒子/音效；
+- 画面从竖屏旋转到横屏时正有一张手牌在拖动；
+- 标签页切后台 60秒后回来，不能一次性无规则地补播整场动画；
+- 快速模式、低帧率、不同随机种子/设备尺寸不改变最终游戏状态。
+
+对每个边界输出：input_event_sequence、before_state、expected_rules_after_state、expected_animation_order、observed_after_state、pass_or_fail、trace_link。
+
+---
+
+# 22. GitHub 实施步骤与文件计划
+
+保护已有入口和原画，优先增量重构。
+
+现有关键文件：
+- site/card-battle/snowbound-journey.html
+- site/card-battle/engine/snowbound-journey.js
+- site/card-battle/ui/snowbound-journey-ui.js
+- site/card-battle/ui/snowbound-journey.css
+- site/card-battle/ui/snowbound-battle-v3.css
+- site/card-battle/ui/snowbound-battle-forest.svg
+- site/assets/characters/
+- tests/snowbound-journey-browser.mjs
+- tests/snowbound-phase1-interaction-browser.mjs
+- tests/snowbound-pixel-geometry-browser.mjs
+- tests/snowbound-full-run.test.cjs
+- .github/workflows/snowbound-journey-qa.yml
+
+建议新建（**均为将来文件，不可说目前已存在**）：
+- site/card-battle/engine/game-events.js
+- site/card-battle/engine/event-replay.js
+- site/card-battle/motion/game-clock.js
+- site/card-battle/motion/timeline-director.js
+- site/card-battle/motion/card-motion.js
+- site/card-battle/motion/attack-motion.js
+- site/card-battle/motion/status-fx.js
+- site/card-battle/motion/death-motion.js
+- site/card-battle/motion/summon-motion.js
+- site/card-battle/motion/shop-motion.js
+- site/card-battle/motion/scene-transition.js
+- site/card-battle/motion/audio-director.js
+- site/card-battle/motion/particles.js
+- site/card-battle/config/motion-tokens.json
+- site/card-battle/config/asset-manifest.json
+- tests/snowbound-event-order.test.mjs
+- tests/snowbound-attack-timeline.test.mjs
+- tests/snowbound-shop-atomicity.test.mjs
+- tests/snowbound-resume-transaction.test.mjs
+- tests/snowbound-animation-visual.test.mjs
+- tests/snowbound-full-movie-browser.mjs
+- docs/game/SNOWBOUND_NOT_DONE_YET.md
+- docs/research/WILDFROST_REFERENCE_CAPTURE_MATRIX.md
+
+### 提交顺序与依赖
+
+P0：源码审计、完整游戏状态事件格式、渲染持久化、保存兼容；
+P1：动画导演、输入系统、纸牌拾取/拖动/换位/召回/重抽；
+P2：战斗进场、发牌、钟、普通攻击命中和伤害飘字；
+P3：技能、冰冻、盾、治疗、连段、死亡、召唤、增援；
+P4：首领阶段、最后击杀、败北审理、胜利、战后金币；
+P5：商店、宝箱、招募、护符、工坊、营地全部事件；
+P6：村庄、地图、跨地区、终局完整转场；
+P7：真实音效 API、音画同步、移动端交互、性能；
+P8：连续 5+ 轮实际 Chromium 审美/帧级对照、速度与存档回归；
+**P9 最后：Anima 原画/场景/卡框/图标替换**。素材 ID 不变，不重做 P0–P8 的工程行为。
+
+每一阶段真正完成必须包含：
+实际 Commit SHA、修改文件、行为截图/录屏、参数曲线、运行结果、失败样本、未完成清单。不能把屏幕截图链接指向一个不存在的文件，也不能仅在文字里说“测了”。
+
+---
+
+# 23. 拒绝验收的具体条件
+
+只要发生其中任意一项就不能标记“完成”：
+
+- 开局没有真正进场与发牌，只直接渲染阵容；
+- 攻击起手后牌突然瞬移，打击轨迹断开；
+- 伤害数字早于击中，敌人挨打与扣 HP 不同步；
+- 敌人死亡从数组删除后直接消失，没有死亡过场；
+- 我方领队死亡直接展示结算屏而无致死/失败导演；
+- 召唤就是 push 一张新卡，援军没有钟预告/落位；
+- 技能只有数值变动，没有独特可读反馈；
+- 免费重抽与耗回合重抽只有不同文字、无连续手牌运动；
+- 店铺第一次点商品就扣金币，或取消详情仍扣钱；
+- 连续点击购买能重复扣金币或多领取商品；
+- 战斗获胜金币直接改变文字，不进入库存；
+- 进入新地图直接跳页面，没有场景连贯运动；
+- 音效是同一种哔声，打击/纸张/金属/雪冰没有材质差异；
+- 手机横屏/竖屏存在被遮挡的角色或无法点击的手牌；
+- 12 张牌满场相互穿模/前排显示错误/目标线指错人；
+- 动画加速改变了战斗结局；
+- 无法从正常开局完整走到战败或三地区结局；
+- 页面刷新时重复发牌、购买或领奖；
+- 仍在等待 Anima 才肯实现战斗结构；
+- 声称原作像素级还原却没有真实原作参考样本、时间码和截图测量；
+- 只提供绿色单测而没有真正的视觉录像、逐帧审稿。
+
+---
+
+# 24. 直接给执行代理的最后指令（可以单独复制）
+
+**现在直接打开 GitHub 仓库 g2066203208-beep/paperchalk-world，按照本文件实施，不要继续写 Anima Prompt，也不要新画人物或森林。先真正采集官方 Wildfrost 视频/截图，逐项确认原作战斗、发牌、移动、铃声、攻击、伤害、死亡、商店、转场、结算等镜头，全部登记来源、视频时间、关键帧和不确定性。然后基于现有雪境行旅代码首先修复 apply 成功后直接重建 DOM、takeTurn 一次性结算、buy 单击扣款、死亡和胜负直接跳屏等根本问题。建立稳定卡牌身份、确定性规则事件、可加速/暂停/跳过的 AnimationDirector、音效与粒子层，再逐阶段实装完整的主菜单→选领队→地图→战斗开局→攻击/受伤/技能/召唤/援军/死亡→胜利/失败审理→商店/招募/宝箱/工坊/护符→最终结算的所有真实交互。**
+
+**每个动作必须有毫秒级时间轴、准确的因果状态、起止位置、缓动、命中帧、数值变化时刻、临时替代演出与音效钩子。不要假称通过了视觉测试：使用实际运行的 Chromium 截图与录屏在九种设备尺寸验证，逐帧分析，失败就修，至少经历五轮审稿。提交全部代码、真实参考目录、来源记录、可验证结果到 GitHub。只有 P0–P8 实际完成并经过本人审美验收后，才进入最后的 Anima 换贴图阶段。**
+
+---
+
+# 25. 状态声明
+
+截至写出本文件时：当前仓库存在若干可玩的菜单、地图、基础战斗、商店规则和几何测试；**没有证据支持“所有战斗动画、完整失败过场、交易确认、技能演出、召唤/增援镜头、全场景开场退出、全部视频逐帧采样已经完成”**。本文件是工程施工要求，不是已交付系统的功能清单。
+
+**必须区分：PROMPT WRITTEN ≠ FUNCTION IMPLEMENTED ≠ VIDEO CAPTURED ≠ SOURCE MEASURED ≠ VISUAL APPROVED。**
