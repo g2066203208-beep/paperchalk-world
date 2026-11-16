@@ -22,6 +22,20 @@
 }
 .motion-float.is-blocked{color:#c5f4f9;text-shadow:0 2px #365778,0 5px 6px #284b65}
 .motion-float.is-heal{color:#e6ffd4;text-shadow:0 2px #47705a,0 5px 6px #284b65}
+/* The physical card that was actually consumed leaves the hand and
+   travels toward its target inside the noninteractive cinematic overlay. */
+.motion-played-card{
+ display:block!important;box-sizing:border-box!important;
+ margin:0!important;padding:0!important;border:0!important;
+ background:transparent!important;box-shadow:none!important;
+ overflow:visible!important;transform-origin:center center;
+ pointer-events:none!important;
+}
+.motion-played-card .paint-card.compact{
+ display:block!important;box-sizing:border-box!important;
+ width:100%!important;height:100%!important;
+ transform:none!important;transition:none!important;
+}
 .motion-projectile{
   position:fixed;z-index:5;height:4px;
   transform-origin:left center;border-radius:8px;
