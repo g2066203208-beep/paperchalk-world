@@ -148,6 +148,7 @@ function mapScene(){
  '<path d="M110 226 C192 263 254 345 370 349S565 269 645 279S805 302 915 235"/>'+
  '<path d="M370 118Q490 217 645 279M370 349Q490 225 645 208"/></svg>';
  const nodes=all.flatMap((events,i)=>events.map((kind,b)=>{
+  if((i===0||i===3)&&b===1)return '';
   const x=[12,36,65,89][i],y=(kind==="boss"||i===0)?53:b===0?34:70,done=i<r.step,now=i===r.step;
   return '<button type="button" class="map-node '+(done?"is-complete":now?"is-current":"is-future")+'"'+(!now?' disabled':'')+
    ' style="--nx:'+x+'%;--ny:'+y+'%" data-act="node" data-i="'+b+'" aria-label="'+esc(names[kind]||kind)+'">'+
@@ -155,7 +156,7 @@ function mapScene(){
  })).join("");
  const mobile=all.map((events,i)=>'<div class="map-mobile-row '+(i===r.step?"is-current":"")+'">'+
   '<span class="mobile-row-title">第 '+(i+1)+' 站</span>'+
- events.map((kind,b)=>'<button type="button" data-act="node" data-i="'+b+'" '+(i!==r.step?"disabled":"")+'>'+
+ events.map((kind,b)=>(i===0||i===3)&&b===1?'':'<button type="button" data-act="node" data-i="'+b+'" '+(i!==r.step?"disabled":"")+'>'+
   '<span class="mini-glyph">'+(glyphs[kind]||"◇")+'</span>'+esc(names[kind]||kind)+'</button>').join("")+'</div>').join("");
  return wrap("map-scene",commonHead("远征地图 · "+z.name,{back:"town",subtitle:"ROUTE / "+(r.zone+1)+"/3"})+
  '<div class="map-surface"><div class="map-head"><b>'+esc(z.name)+'</b><small>'+esc(z.desc)+' · 第 '+(r.step+1)+'/4 站</small></div>'+
