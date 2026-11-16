@@ -269,7 +269,7 @@ function showCompanionPicker(){
 
 function battleUnit(unit,side){
  const creature=find(rules.ENEMIES,unit.template);
- const portrait=unit.art?'<img loading="eager" src="'+esc(unit.art)+'" alt="'+esc(unit.name)+'角色插画">':enemyIllustration(unit.template);
+ const portrait=unit.art?'<img draggable="false" loading="eager" src="'+esc(unit.art)+'" alt="'+esc(unit.name)+'角色插画">':enemyIllustration(unit.template);
  return '<button class="battle-unit stage-actor '+(side==="enemy"?"enemy":"friendly")+(unit.uid===selectedAlly?' is-selected':'')+'" data-act="'+(side==="enemy"?"enemy":"ally")+'" data-id="'+esc(unit.uid)+'" type="button" aria-label="'+esc(unit.name)+' 生命'+unit.hp+' 攻击'+unit.atk+' 倒计时'+unit.tick+'">'+
   '<span class="unit-art">'+portrait+'</span><span class="unit-name">'+esc(unit.name)+'</span><span class="unit-trait">'+esc(unit.leader?'队长':unit.template==='medic'?'治愈':unit.template==='engineer'?'破甲':unit.template==='scout'?'卫护':'自动攻击')+'</span>'+
   '<span class="unit-badges"><span class="badge hp">'+unit.hp+'</span><span class="badge atk">'+unit.atk+'</span><span class="badge tick">'+unit.tick+'</span>'+
