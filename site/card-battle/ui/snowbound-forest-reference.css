@@ -203,7 +203,7 @@
  */
 .battle-scene.stage-actors{
   --stage-actor-near:clamp(120px,10.8vw,174px);
-  --stage-actor-far:clamp(105px,9vw,151px);
+  --stage-actor-far:clamp(140px,9.5vw,164px);
 }
 .battle-scene.stage-actors .battle-field{
   isolation:isolate;
@@ -286,7 +286,7 @@
   z-index:3;
 }
 .battle-scene.stage-actors .battle-grid[data-row="1"] .battle-slot{
-  --actor-ground:41%;
+  --actor-ground:46%;
   --actor-size:var(--stage-actor-far);
   z-index:2;
 }
@@ -492,7 +492,7 @@
     --stage-actor-far:clamp(51px,7vw,82px);
   }
   .battle-scene.stage-actors .battle-grid[data-row="0"] .battle-slot{--actor-ground:4%}
-  .battle-scene.stage-actors .battle-grid[data-row="1"] .battle-slot{--actor-ground:45%}
+  .battle-scene.stage-actors .battle-grid[data-row="1"] .battle-slot{--actor-ground:53%}
   .battle-scene.stage-actors .battle-unit .unit-name{font-size:9px!important;bottom:-17px!important}
   .battle-scene.stage-actors .unit-badges .badge{
     min-width:18px!important;height:18px!important;font-size:10px!important;
