@@ -1,0 +1,112 @@
+/* Original paper-card cinematic layer. No Anima asset dependency. */
+.motion-cinema{
+  position:fixed;inset:0;pointer-events:none;overflow:hidden;
+  z-index:190;isolation:isolate;contain:layout paint;
+}
+.motion-cinema .motion-snapshot{
+  overflow:hidden;pointer-events:none;
+  z-index:1;transform:none;max-width:none;
+  will-change:opacity;
+}
+.motion-cinema .motion-snapshot button{
+  pointer-events:none!important;
+}
+.motion-cinema .motion-snapshot .ambient-snow{display:none!important}
+.motion-entering{opacity:0!important}
+.motion-float{
+  position:fixed;z-index:8;transform:translateX(-50%);
+  pointer-events:none;white-space:nowrap;
+  color:#fff0ce;font:1000 clamp(20px,3.2vw,36px)/1 Georgia,"Noto Sans SC",sans-serif;
+  text-shadow:0 2px 0 #532f41,1px 4px 4px #351c36,0 0 8px #af6172;
+  filter:drop-shadow(0 1px 0 #2c2230);
+}
+.motion-float.is-blocked{color:#c5f4f9;text-shadow:0 2px #365778,0 5px 6px #284b65}
+.motion-float.is-heal{color:#e6ffd4;text-shadow:0 2px #47705a,0 5px 6px #284b65}
+.motion-projectile{
+  position:fixed;z-index:5;height:4px;
+  transform-origin:left center;border-radius:8px;
+  background:linear-gradient(90deg,transparent,#fff5c8 42%,#fff8e6 80%,transparent);
+  box-shadow:0 0 7px #fff6b3,0 0 1px #b98e64;opacity:0;
+  pointer-events:none;
+}
+.motion-projectile.is-strike{
+  height:6px;background:linear-gradient(90deg,transparent,#f4fdff 30%,#abdbe6 63%,transparent);
+  box-shadow:0 0 8px #a5f3f2;
+}
+.motion-coins{
+  animation:motion-coins-glint .3s ease-out 1;
+}
+@keyframes motion-coins-glint{
+  0%{filter:brightness(1);transform:scale(1)}
+  45%{filter:brightness(1.7);transform:scale(1.06)}
+  100%{filter:brightness(1);transform:scale(1)}
+}
+.motion-new-entrant{
+  pointer-events:none;z-index:7;max-width:none!important;max-height:none!important;
+}
+.motion-outcome{
+  position:fixed;left:50%;top:39%;z-index:20;
+  transform:translate(-50%,-50%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:6px;padding:22px 40px;
+  color:#fff6d3;border-radius:14px;
+  background:linear-gradient(145deg,#35546bdb,#24425aeb);
+  border:3px solid #c4d1bc;box-shadow:0 14px 40px #16314699,inset 0 1px #fff9;
+  text-shadow:0 2px 0 #253849;white-space:nowrap;
+}
+.motion-outcome.is-victory{border-color:#f0d49c;box-shadow:0 14px 40px #16314699,inset 0 1px #fff9,0 0 35px #f9e9b466}
+.motion-outcome.is-defeat{border-color:#b4abc0;background:linear-gradient(155deg,#353b50ea,#202e46ef)}
+.motion-outcome b{font:900 clamp(24px,4vw,58px)/1.1 Georgia,"Noto Sans SC",serif;letter-spacing:.2em}
+.motion-outcome small{font:750 clamp(10px,1.1vw,15px) "Noto Sans SC",sans-serif;letter-spacing:.2em}
+.shop-inspect-backdrop{
+  position:fixed;inset:0;z-index:180;display:flex;align-items:center;justify-content:center;
+  background:#122e42b0;backdrop-filter:blur(4px);
+  padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));
+}
+.shop-inspect{
+  position:relative;width:min(550px,94vw);max-height:calc(100dvh - 35px);
+  display:grid;grid-template-columns:minmax(130px,43%) minmax(130px,1fr);
+  gap:clamp(8px,1.7vw,19px);
+  background:linear-gradient(160deg,#fcf2d8,#dfceb0);
+  border:7px solid #755569;border-radius:15px;
+  box-shadow:inset 0 0 0 2px #fcf7e5,0 14px 60px #142636bb;
+  padding:clamp(10px,2vw,22px);
+  color:#4e3e49;
+}
+.shop-inspect .shop-card-preview{
+  align-self:center;justify-self:center;max-width:100%;height:min(38dvh,320px);
+  width:min(100%,208px);display:flex;align-items:center;justify-content:center;
+}
+.shop-card-preview .paint-card{height:100%;width:100%;box-shadow:0 8px 18px #493b4578}
+.shop-inspect .shop-details{display:flex;flex-direction:column;justify-content:center;gap:10px;min-width:0}
+.shop-inspect h2{margin:0;font:900 clamp(18px,2.3vw,29px)/1.2 "Noto Sans SC",sans-serif}
+.shop-inspect p{margin:0;font-size:clamp(11px,1.3vw,14px);line-height:1.65}
+.shop-inspect .shop-price{font-weight:900;font-size:22px;color:#835039;white-space:nowrap}
+.shop-inspect .shop-balance{font-weight:750;font-size:13px}
+.shop-inspect .shop-status{font-weight:750;font-size:12px;color:#91664c}
+.shop-inspect .shop-buttons{display:flex;gap:8px;flex-wrap:wrap}
+.shop-inspect .shop-buttons button{flex:1;min-height:46px}
+.shop-inspect .shop-close{
+  position:absolute;right:4px;top:3px;
+  width:30px;height:30px;min-height:30px;
+  padding:0;line-height:1;font-size:20px;border:none;
+  background:transparent;color:#634b55;box-shadow:none;
+}
+.shop-inspect button:focus-visible{outline:3px solid #e3b56c}
+.shop-inspect-backdrop[hidden]{display:none!important}
+@media(max-width:470px){
+ .shop-inspect{
+  width:min(348px,92vw);grid-template-columns:43% 1fr;gap:8px;padding:10px;border-width:5px;
+ }
+ .shop-inspect .shop-card-preview{height:min(33dvh,244px)}
+ .shop-inspect h2{font-size:16px}
+ .shop-inspect p{font-size:10px;line-height:1.35}
+ .shop-inspect .shop-price{font-size:19px}
+ .shop-inspect .shop-balance,.shop-inspect .shop-status{font-size:10px}
+ .shop-inspect .shop-buttons button{min-height:43px;font-size:11px;padding:6px}
+}
+@media(prefers-reduced-motion:reduce){
+ .motion-cinema *, .shop-inspect-backdrop *{transition-duration:0s!important}
+ .motion-projectile{display:none}
+ .motion-float{filter:none}
+}
