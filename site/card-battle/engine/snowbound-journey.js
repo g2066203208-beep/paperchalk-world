@@ -82,7 +82,7 @@ function create(initial){
   s.run={heroId:id,health:dict(HEROES,id).hp,maxHealth:dict(HEROES,id).hp,gold:45,zone:0,step:0,
    deck:["bolt","bolt","silver","snow","guard","herb","flare","bolt"],companions:[],charms:[],
    visited:[],battlesWon:0,kills:0,damageDealt:0,turns:0,offers:[],battle:null,event:null,result:null};
-  emit("雪境探险队出发了","narrative");return {ok:true,state:go("map")};
+  emit("雪境探险队出发了","narrative");return {ok:true,state:go("map"),visualEvents:[{type:"depart",heroId:id}]};
  }
  function choices(){
   if(!s.run)return [];
@@ -103,13 +103,16 @@ function create(initial){
   const c=choices()[branch];if(!c)return {ok:false,message:"该路线不可选择"};
   s.run.event={kind:c.kind,branch,zone:s.run.zone,step:s.run.step,done:false};
   emit("抵达「"+c.name+"」","travel");
-  if(c.kind==="battle"||c.kind==="boss")return startBattle(c.kind==="boss");
+  if(c.kind==="battle"||c.kind==="boss"){
+   const result=startBattle(c.kind==="boss");
+   return {...result,visualEvents:[{type:"mapTravel",kind:c.kind,branch},...(result.visualEvents||[])]};
+  }
   if(c.kind==="recruit")s.run.offers=seededList(FRIENDS.filter(x=>!s.run.companions.includes(x.id)),3,1);
   if(c.kind==="treasure")s.run.offers=seededList(ITEMS.filter(x=>!s.run.deck.includes(x.id)),3,2);
   if(c.kind==="charm")s.run.offers=seededList(CHARMS.filter(x=>!s.run.charms.includes(x.id)),3,3);
   if(c.kind==="shop")s.run.offers=seededList(ITEMS,4,4).map((x,i)=>({...x,price:[35,48,52,62][i],sold:false}));
   if(c.kind==="forge")s.run.offers=seededList(ITEMS,3,5);
-  return {ok:true,state:go(c.kind)};
+  return {ok:true,state:go(c.kind),visualEvents:[{type:"mapTravel",kind:c.kind,branch}]};
  }
  function finishNode(){
   const r=s.run;if(!r)return {ok:false,message:"暂无冒险"};
@@ -121,14 +124,19 @@ function create(initial){
   if(r.zone>=ZONES.length)return resolveRun(true);
   return {ok:true,state:go("map")};
  }
+ function awardAndFinish(kind,offer,index){
+  const cue={type:"reward",kind,index,name:offer?.name||"",cardId:offer?.id||null};
+  const finished=finishNode();
+  return {...finished,visualEvents:[cue]};
+ }
  function claim(index){
   const r=s.run;if(!r||!r.event)return {ok:false,message:"没有待领取奖励"};
   const kind=r.event.kind,offer=r.offers[index];
-  if(kind==="camp"){if(index===0){r.health=range(r.health+9,0,r.maxHealth);emit("在篝火边恢复9点生命","heal");}else{r.gold+=25;emit("搜寻到25枚古金币","coin");}return finishNode();}
-  if(kind==="forge"){if(index===0){r.deck.push("pierce");emit("工匠锻造了一张破晓钉","reward");}else if(index===1){const i=r.deck.indexOf("bolt");if(i>=0)r.deck.splice(i,1);r.deck.push("silver");emit("一张猎人快枪升级为银制子弹","reward");}else{r.gold+=20;emit("工坊支付了20枚材料金币","coin");}return finishNode();}
-  if(kind==="treasure"){if(!offer)return {ok:false,message:"请选择一张宝物牌"};r.deck.push(offer.id);emit("宝箱取得「"+offer.name+"」","reward");return finishNode();}
-  if(kind==="recruit"){if(!offer)return {ok:false,message:"请选择一名同伴"};r.companions.push(offer.id);emit("「"+offer.name+"」加入了队伍","reward");return finishNode();}
-  if(kind==="charm"){if(!offer)return {ok:false,message:"请选择一枚护符"};r.charms.push(offer.id);const h=heroWithCharm(r.heroId,r);if(offer.kind==="hp"){r.maxHealth=h.hp;r.health+=5;}emit("装备「"+offer.name+"」","reward");return finishNode();}
+  if(kind==="camp"){if(index===0){r.health=range(r.health+9,0,r.maxHealth);emit("在篝火边恢复9点生命","heal");}else{r.gold+=25;emit("搜寻到25枚古金币","coin");}return awardAndFinish("camp",null,index);}
+  if(kind==="forge"){if(index===0){r.deck.push("pierce");emit("工匠锻造了一张破晓钉","reward");}else if(index===1){const i=r.deck.indexOf("bolt");if(i>=0)r.deck.splice(i,1);r.deck.push("silver");emit("一张猎人快枪升级为银制子弹","reward");}else{r.gold+=20;emit("工坊支付了20枚材料金币","coin");}return awardAndFinish("forge",offer,index);}
+  if(kind==="treasure"){if(!offer)return {ok:false,message:"请选择一张宝物牌"};r.deck.push(offer.id);emit("宝箱取得「"+offer.name+"」","reward");return awardAndFinish("treasure",offer,index);}
+  if(kind==="recruit"){if(!offer)return {ok:false,message:"请选择一名同伴"};r.companions.push(offer.id);emit("「"+offer.name+"」加入了队伍","reward");return awardAndFinish("recruit",offer,index);}
+  if(kind==="charm"){if(!offer)return {ok:false,message:"请选择一枚护符"};r.charms.push(offer.id);const h=heroWithCharm(r.heroId,r);if(offer.kind==="hp"){r.maxHealth=h.hp;r.health+=5;}emit("装备「"+offer.name+"」","reward");return awardAndFinish("charm",offer,index);}
   return {ok:false,message:"当前事件不支持该操作"};
  }
  function buy(index){
@@ -143,7 +151,7 @@ function create(initial){
   if(!s.run||!s.run.event)return {ok:false,message:"暂无事件"};
   if(s.run.event.kind==="battle"||s.run.event.kind==="boss")return {ok:false,message:"请先结束战斗"};
   if(s.run.event.kind==="recruit")return {ok:false,message:"请先选择一名旅人"};
-  return finishNode();
+  const returned=finishNode();return {...returned,visualEvents:[{type:"mapReturn"}]};
  }
  function foeFrom(id,slot,level){
   const t=dict(ENEMIES,id)||ENEMIES[0];
@@ -365,7 +373,7 @@ function create(initial){
  function resolveBattle(victory,log=[],visuals=[]){
   const r=s.run,b=r.battle;
   b.finished=true;b.victory=victory;
-  if(!victory){emit("长夜吞没了远征队","defeat");const result=resolveRun(false);return {...result,visualEvents:[...visuals,{type:"defeat",cause:log.at(-1)||"领队倒下"}]};}
+  if(!victory){emit("长夜吞没了远征队","defeat");const result=resolveRun(false,log.at(-1)||"领队倒下");return {...result,visualEvents:[...visuals,{type:"defeat",cause:log.at(-1)||"领队倒下"}]};}
   r.battlesWon++;
   const recovered=Math.max(3,Math.ceil((r.maxHealth-r.health)*.75));
   r.health=Math.min(r.maxHealth,r.health+recovered);
@@ -374,12 +382,12 @@ function create(initial){
   emit("获胜！取得"+amount+"枚古金币","victory");
   return {ok:true,events:log,state:go("battle-clear"),visualEvents:[...visuals,{type:"victory",gold:amount}]};
  }
- function afterBattle(){if(s.screen!=="battle-clear")return {ok:false,message:"请完成本场战斗"};return finishNode();}
- function resolveRun(won){
+ function afterBattle(){if(s.screen!=="battle-clear")return {ok:false,message:"请完成本场战斗"};const r=finishNode();return {...r,visualEvents:[{type:"battleExit"}]};}
+ function resolveRun(won,cause=""){
   const r=s.run;if(!r)return {ok:false,message:"没有冒险记录"};
   r.result={won,heroName:dict(HEROES,r.heroId)?.name||"",battlesWon:r.battlesWon,
    coins:r.gold,kills:r.kills,turns:r.turns,damage:r.damageDealt,
-   charms:r.charms.length,companions:r.companions.length};
+   charms:r.charms.length,companions:r.companions.length,cause};
   if(won){s.meta.wins=(s.meta.wins||0)+1;s.meta.unlocks=Math.max(s.meta.unlocks||0,1);}
   return {ok:true,state:go("result")};
  }
@@ -393,7 +401,7 @@ function create(initial){
   state:present,view:activeView,go:setScreen,startFresh,town,selectHero,choices,
   selectNode,claim,buy,leaveEvent,finishNode,afterBattle,play,move,redraw,endTurn,
   startBattle,summon,recall,backTown,showDeck,closeDeck,settings,heroWithCharm,
-  version:"2.1.0-summon-recall-events"
+  version:"2.2.0-route-reward-and-defeat-events"
  });
 }
 root.PaperchalkSnowbound=Object.freeze({create,HEROES,FRIENDS,ENEMIES,ITEMS,CHARMS,ZONES,EVENT_ROUTES});
