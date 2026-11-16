@@ -296,7 +296,7 @@ function battle(){
  const latest=b.log[0]||"留意敌人倒计时，每回合只能使用一张道具牌";
  const cardButtons=b.hand.map((card,index)=>{
   const item=find(rules.ITEMS,card.id);if(!item)return '';
-  return '<button data-act="hand" data-i="'+index+'" type="button" '+(!b.playsLeft?'disabled':'')+
+  return '<button data-act="hand" data-i="'+index+'" data-card-key="'+esc(card.key)+'" type="button" '+(!b.playsLeft?'disabled':'')+
    ' aria-label="使用 '+esc(item.name)+'">'+paperCard(item,{kind:"item",compact:true,selectable:true,selected:selectedCard===index})+'</button>';
  }).join("");
  const selected=selectedCard>=0?find(rules.ITEMS,b.hand[selectedCard]?.id):null;
