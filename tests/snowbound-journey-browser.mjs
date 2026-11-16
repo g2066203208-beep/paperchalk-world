@@ -81,13 +81,23 @@ for(const cfg of scenarios){
   assert.deepEqual(board[1].slots.map(x=>x.side),["friendly","friendly","friendly","enemy","enemy","enemy"]);
   assert.deepEqual(board[0].slots.map(x=>x.logicalSlot),[2,1,0,0,1,2]);
   assert.deepEqual(board[1].slots.map(x=>x.logicalSlot),[5,4,3,3,4,5]);
-  assert(board.every(l=>l.slots.every((x,i)=>i===0||x.x>l.slots[i-1].x)),"columns progress left to right");
+  const portrait=cfg.viewport.height>cfg.viewport.width;
+  if(portrait){
+   // Portrait layout intentionally unfolds each logical lane into two 3-card
+   // strips instead of illegible 6 columns at 390 CSS pixels.
+   assert(board.every(l=>l.slots.slice(0,3).every((x,i)=>i===0||x.x>l.slots[i-1].x)),"ally positions advance left to right");
+   assert(board.every(l=>l.slots.slice(3).every((x,i)=>i===0||x.x>l.slots[i+2].x)),"enemy positions advance left to right");
+   assert(board.every(l=>l.slots[3].y>l.slots[0].y+15),"foe half visible below ally half within same tactical lane");
+   assert(board.every(l=>l.slots[0].width>=70),"portrait cards must not shrink to icon sizes");
+  }else{
+   assert(board.every(l=>l.slots.every((x,i)=>i===0||x.x>l.slots[i-1].x)),"columns progress left to right");
+  }
   assert(board[1].slots[0].y>board[0].slots[0].y+10,"lower tactical lane truly below upper lane");
   assert(board.every(l=>l.slots.every(c=>c.x>=-1&&c.right<=cfg.viewport.width+1&&c.y>=0&&c.bottom<=cfg.viewport.height+1)),"all twelve slots fully onscreen");
   const unitBounds=await page.locator(".battle-unit").evaluateAll(nodes=>nodes.map(e=>{
    const b=e.getBoundingClientRect();return {width:b.width,height:b.height,x:b.x,right:b.right};
   }));
-  assert(unitBounds.every(u=>u.width>=40&&u.height>=55),"every deployed card remains visible in target viewport");
+  assert(unitBounds.every(u=>u.width>=60&&u.height>=55),"every deployed card remains readable in target viewport");
   const bgOk=await page.evaluate(()=>{
     const scene=getComputedStyle(document.querySelector(".battle-scene"));
     return scene.backgroundImage.includes("snowbound-battle-forest.svg");
