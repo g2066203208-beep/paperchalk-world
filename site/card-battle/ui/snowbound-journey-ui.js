@@ -477,6 +477,7 @@ function installCardGestures(){
  app.addEventListener("pointerdown",e=>{
   const origin=e.target.closest(".battle-bottom .hand>button, .battle-unit.friendly");
   if(!origin||e.button!==0||game.view()!=="battle")return;
+  if(motion?.isBusy()){motion.skipToSafeCheckpoint();return;}
   const isHand=origin.matches(".battle-bottom .hand>button");
   dragState={origin,isHand,x:e.clientX,y:e.clientY,moved:false,
    index:Number(origin.dataset.i),uid:origin.dataset.id};
@@ -586,6 +587,10 @@ function onClick(event){
  if(Date.now()<suppressClickUntil)return;
  const el=event.target.closest("[data-act]");if(!el)return;
  const act=el.dataset.act,id=el.dataset.id,index=Number(el.dataset.i||"0");
+ if(motion?.isBusy()){
+  motion.skipToSafeCheckpoint();
+  if(["endturn","redraw","shopconfirm","claim","node","leader","continuebattle","leave"].includes(act))return;
+ }
  if(act==="help"){help=true;render();return;}
  if(act==="helpclose"){help=false;render();return;}
  if(help)return;
@@ -666,6 +671,7 @@ app.addEventListener("click",onClick);
 installCardGestures();
 window.addEventListener("keydown",e=>{
  if(e.code==="Space"&&motion?.isBusy()){e.preventDefault();motion.skipToSafeCheckpoint();return;}
+ if(motion?.isBusy()&&["e","r"].includes(e.key.toLowerCase())){e.preventDefault();motion.skipToSafeCheckpoint();return;}
  if(e.key==="Escape"&&app.querySelector(".shop-inspect-backdrop")){closeShopInspect();return;}
  if(e.key==="Escape"&&app.querySelector(".battle-summon-picker")){app.querySelector(".battle-summon-picker").remove();return;}
  if(e.key==="Escape"&&document.querySelector(".battle-inspect-backdrop")){document.querySelector(".battle-inspect-backdrop").remove();return;}
