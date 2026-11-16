@@ -60,7 +60,7 @@
 @media (orientation:landscape) and (max-height:520px){
  .battle-scene{--battle-unit-width-cap:110px}
  .battle-scene .battle-grid .battle-slot{
-  width:min(100%,61cqh,var(--battle-unit-width-cap)) !important;
+  width:min(100%,67cqh,var(--battle-unit-width-cap)) !important;
  }
 }
 @media (min-width:701px) and (max-width:1199px) and (min-height:540px){
