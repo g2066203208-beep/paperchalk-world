@@ -19,7 +19,10 @@ for(const [name,width,height,minW,minH] of scenarios){
  try{
   await page.goto("http://127.0.0.1:4173/card-battle/snowbound-journey.html",{waitUntil:"networkidle"});
   for(const action of ["town","new","leader","node"])await page.locator('[data-act="'+action+'"]:visible:not([disabled])').first().click();
-  await page.waitForTimeout(220);
+  await page.waitForTimeout(350);
+  const enemyPortraits=await page.locator(".battle-unit.enemy img").evaluateAll(imgs=>imgs.map(img=>({src:img.getAttribute("src"),loaded:img.complete&&img.naturalWidth>0})));
+  assert.equal(enemyPortraits.length,2,"forest encounter uses two original Anima enemy character illustrations");
+  assert(enemyPortraits.every(i=>i.loaded),"both original vampire minion portraits must load");
   const m=await page.evaluate(()=>{
     const box=e=>{const r=e.getBoundingClientRect();return{x:+r.x.toFixed(1),y:+r.y.toFixed(1),w:+r.width.toFixed(1),h:+r.height.toFixed(1),right:+r.right.toFixed(1),bottom:+r.bottom.toFixed(1)}};
     const q=s=>[...document.querySelectorAll(s)].map(e=>({name:e.getAttribute("aria-label")||e.textContent.trim().slice(0,14),box:box(e)}));
