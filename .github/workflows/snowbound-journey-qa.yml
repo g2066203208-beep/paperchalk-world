@@ -12,6 +12,9 @@ on:
       - 'tests/snowbound-pixel-geometry-browser.mjs'
       - 'site/card-battle/ui/snowbound-battle-v3.css'
       - 'tests/snowbound-full-run.test.cjs'
+      - 'tests/snowbound-semantic-events.test.cjs'
+      - 'site/card-battle/motion/snowbound-motion.js'
+      - 'site/card-battle/motion/snowbound-motion.css'
       - '.github/workflows/snowbound-journey-qa.yml'
   workflow_dispatch:
 permissions:
@@ -29,7 +32,11 @@ jobs:
         run: |
           node --check site/card-battle/engine/snowbound-journey.js
           node --check site/card-battle/ui/snowbound-journey-ui.js
+          node --check site/card-battle/motion/snowbound-motion.js
+          node --check tests/snowbound-semantic-events.test.cjs
           node --check tests/snowbound-journey-browser.mjs
+      - name: Verify semantic event sequence and atomic transaction behavior
+        run: node tests/snowbound-semantic-events.test.cjs
       - name: Verify whole three-act campaign rule engine
         run: node tests/snowbound-full-run.test.cjs
       - name: Install Playwright Chromium
