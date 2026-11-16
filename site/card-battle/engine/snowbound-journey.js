@@ -183,7 +183,7 @@ function create(initial){
   if(r.companions.length)allies.push(allyFrom(r.companions[0],3));
   r.battle={turn:1,playsLeft:1,redrawCharge:4,boss,foes,allies,
    draw:shuffle(newCards(r),21+r.zone*9+r.step*23),hand:[],discard:[],
-   log:[],finished:false,victory:false,goldWon:0,reinforcement:9,wavesSpawned:0,selected:null};
+   log:[],finished:false,victory:false,goldWon:0,reinforcement:9,wavesSpawned:0,selected:null,fallenCompanions:[]};
   deal(r.battle,5);
   emit(boss?"首领出现在雪路尽头！":"遇到了雪境巡游者","battle");
   return {ok:true,state:go("battle"),visualEvents:[{type:"battleIntro",foes:foes.map(x=>x.uid),allies:allies.map(x=>x.uid),hand:r.battle.hand.map(x=>x.key)}]};
@@ -227,6 +227,10 @@ function create(initial){
     unit.tick=unit.cd;
    }
   }
+  for(const fallen of b.allies.filter(x=>!x.leader&&x.hp<=0)){
+   if(!b.fallenCompanions.includes(fallen.template))b.fallenCompanions.push(fallen.template);
+  }
+  b.allies=b.allies.filter(x=>x.leader||x.hp>0);
   if(r.health<=0)return resolveBattle(false,log,visuals);
   for(const unit of ordered(b.allies)){
    if(unit.stunned>0){unit.stunned--;continue;}
@@ -318,6 +322,33 @@ function create(initial){
   emit("调整了"+unit.name+"的位置","move");
   return {ok:true,state:present(),visualEvents:[{type:"move",actorId:uid,fromSlot:previousSlot,toSlot:slot}]};
  }
+ // Companions may be called from the reserve during the player action phase.
+ // No beast restriction: the summoned identity is the actual recruited team member.
+ function summon(template,slot){
+  const b=s.run?.battle,r=s.run;
+  if(!b||b.finished)return {ok:false,message:"不在战斗中"};
+  if(!r.companions.includes(template))return {ok:false,message:"这名同伴不在远征队"};
+  if(b.fallenCompanions?.includes(template))return {ok:false,message:"阵亡同伴本场不可再召唤"};
+  if(b.allies.some(x=>x.hp>0&&x.template===template))return {ok:false,message:"这名同伴已经在场"};
+  if(!b.playsLeft)return {ok:false,message:"本回合行动次数已用完"};
+  if(!Number.isInteger(slot)||slot<0||slot>5)return {ok:false,message:"没有合法的召唤位置"};
+  if(b.allies.some(x=>x.hp>0&&x.slot===slot))return {ok:false,message:"目标位置已有队友"};
+  const unit=allyFrom(template,slot,false);
+  if(!unit)return {ok:false,message:"缺少同伴角色资料"};
+  b.allies.push(unit);b.playsLeft=0;
+  emit("召唤「"+unit.name+"」加入战斗","summon");
+  return {ok:true,state:present(),visualEvents:[{type:"summon",actorId:unit.uid,template,slot,side:"friendly"}]};
+ }
+ // Recall is explicitly not death. Recalled units can be played again next turn.
+ function recall(uid){
+  const b=s.run?.battle;
+  if(!b||b.finished)return {ok:false,message:"不在战斗中"};
+  const unit=b.allies.find(x=>x.uid===uid&&x.hp>0);
+  if(!unit||unit.leader)return {ok:false,message:"领队不可召回"};
+  b.allies=b.allies.filter(x=>x.uid!==uid);
+  emit("「"+unit.name+"」返回队伍后备席","recall");
+  return {ok:true,state:present(),visualEvents:[{type:"recall",actorId:uid,slot:unit.slot,template:unit.template}]};
+ }
  function redraw(){
   const b=s.run?.battle;if(!b||b.finished)return {ok:false,message:"目前无法重抽"};
   b.discard.push(...b.hand);b.hand=[];
@@ -361,8 +392,8 @@ function create(initial){
   HEROES,FRIENDS,ENEMIES,ITEMS,CHARMS,ZONES,EVENT_ROUTES,
   state:present,view:activeView,go:setScreen,startFresh,town,selectHero,choices,
   selectNode,claim,buy,leaveEvent,finishNode,afterBattle,play,move,redraw,endTurn,
-  startBattle,backTown,showDeck,closeDeck,settings,heroWithCharm,
-  version:"2.0.0-semantic-events"
+  startBattle,summon,recall,backTown,showDeck,closeDeck,settings,heroWithCharm,
+  version:"2.1.0-summon-recall-events"
  });
 }
 root.PaperchalkSnowbound=Object.freeze({create,HEROES,FRIENDS,ENEMIES,ITEMS,CHARMS,ZONES,EVENT_ROUTES});
