@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+<title>雪境行旅 · 原创冬季森林战场绘景</title>
+<defs>
+ <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#376b87"/><stop offset=".46" stop-color="#7fb5be"/><stop offset="1" stop-color="#b4d0cc"/></linearGradient>
+ <radialGradient id="sun" cx=".48" cy=".32" r=".53"><stop stop-color="#eaf9e7" stop-opacity=".96"/><stop offset=".21" stop-color="#f8f4d8" stop-opacity=".44"/><stop offset="1" stop-color="#f6eadb" stop-opacity="0"/></radialGradient>
+ <linearGradient id="ridge" x2=".5" y2="1"><stop stop-color="#e0eeec"/><stop offset=".4" stop-color="#adcdd2"/><stop offset="1" stop-color="#75a1ae"/></linearGradient>
+ <linearGradient id="snow" x2=".18" y2="1"><stop stop-color="#faffec"/><stop offset=".44" stop-color="#def2e6"/><stop offset="1" stop-color="#8ebbc0"/></linearGradient>
+ <linearGradient id="deepSnow" x2="0" y2="1"><stop stop-color="#e8f9e9"/><stop offset="1" stop-color="#99c0c8"/></linearGradient>
+ <linearGradient id="pine" x2=".9" y2=".9"><stop stop-color="#5c9c9e"/><stop offset=".48" stop-color="#356d80"/><stop offset="1" stop-color="#24536d"/></linearGradient>
+ <linearGradient id="frontPine" x2="0" y2="1"><stop stop-color="#396b78"/><stop offset=".52" stop-color="#225567"/><stop offset="1" stop-color="#1c465d"/></linearGradient>
+ <linearGradient id="bark" x2="1" y2=".15"><stop stop-color="#334d58"/><stop offset=".45" stop-color="#61787c"/><stop offset="1" stop-color="#283f51"/></linearGradient>
+ <linearGradient id="stone" x2=".3" y2="1"><stop stop-color="#b8d4cb"/><stop offset=".48" stop-color="#769ba6"/><stop offset="1" stop-color="#4b7583"/></linearGradient>
+ <radialGradient id="haze"><stop stop-color="#eaf7e8" stop-opacity=".55"/><stop offset="1" stop-color="#cde6e5" stop-opacity="0"/></radialGradient>
+ <filter id="fog"><feGaussianBlur stdDeviation="19"/></filter>
+ <symbol id="fir" viewBox="0 0 240 510">
+  <path d="M109 490Q118 343 116 59" fill="none" stroke="#4c6771" stroke-width="20" stroke-linecap="round"/>
+  <path d="M113 33Q96 87 64 125Q72 128 83 126Q59 172 36 188Q49 194 67 190Q36 250 17 262Q34 271 59 264Q34 314 7 355Q39 356 70 348Q50 393 20 433Q80 435 115 412Q160 440 215 433Q176 386 164 350Q204 361 234 354Q199 305 173 263Q200 272 216 261Q179 213 157 191Q177 197 187 187Q148 130 135 125Q146 125 155 120Q123 73 113 33Z" fill="url(#pine)" stroke="#2d697b" stroke-width="4"/>
+  <path d="M114 37Q89 89 62 129Q79 125 89 124Q60 170 42 185Q58 192 71 184Q39 245 23 264Q40 262 68 257Q39 303 15 351Q42 343 69 341Q49 399 27 429" fill="none" stroke="#a0c7c4" stroke-width="6" stroke-opacity=".55"/>
+  <path d="M111 75Q130 107 155 129Q134 126 125 122Q158 160 181 187Q160 180 147 178Q183 231 212 262Q181 254 171 250Q208 315 229 354Q195 347 172 340Q190 396 213 426" fill="none" stroke="#d9ece1" stroke-width="4" stroke-opacity=".38"/>
+  <path d="M110 36Q105 65 94 84Q104 83 109 81Q112 100 121 91Q128 89 128 82Z" fill="#eef9e6"/>
+  <path d="M57 124Q83 139 102 125M34 189Q72 206 97 189M15 263Q68 285 110 264M7 353Q64 372 114 355M20 432Q67 451 112 432" fill="none" stroke="#e9f7e8" stroke-width="7" stroke-linecap="round" stroke-opacity=".86"/>
+  <path d="M170 126Q144 138 130 128M189 191Q157 207 132 191M222 260Q165 282 119 260M233 354Q183 375 125 353M213 433Q169 448 123 433" fill="none" stroke="#b9dcda" stroke-width="5" stroke-linecap="round" stroke-opacity=".77"/>
+ </symbol>
+ <symbol id="sprig" viewBox="0 0 155 100">
+  <path d="M22 95Q54 40 80 4M22 95Q43 44 23 10M20 93Q66 68 138 35" fill="none" stroke="#477d80" stroke-width="7" stroke-linecap="round"/>
+  <path d="M40 52l-26-9 21 23m25-41l26 4-20 12m35 17l29-22-11 26M51 79l-19-10 13 19" fill="#628d90" stroke="#395a65" stroke-width="2"/>
+ </symbol>
+ <pattern id="paper" width="67" height="64" patternUnits="userSpaceOnUse"><path d="M7 12l10-3M42 15l5 4M30 45l13-2" stroke="#fafdf1" stroke-width="1" stroke-opacity=".14"/></pattern>
+</defs>
+<rect width="1920" height="1080" fill="url(#sky)"/>
+<ellipse cx="910" cy="195" rx="780" ry="550" fill="url(#sun)"/>
+<g fill="#e2f2e4" opacity=".8"><circle cx="94" cy="86" r="3"/><circle cx="285" cy="175" r="2"/><circle cx="615" cy="112" r="3"/><circle cx="991" cy="75" r="2"/><circle cx="1417" cy="115" r="2"/><circle cx="1698" cy="182" r="3"/><circle cx="1846" cy="112" r="2"/></g>
+<!-- Landscape forms use organic Bézier paths, not placeholder geometry -->
+<path d="M0 475Q170 414 299 459Q405 370 506 399Q658 313 805 407Q951 342 1066 391Q1197 334 1355 397Q1521 290 1659 405Q1770 370 1920 410V1080H0Z" fill="#a6c9d1" opacity=".62"/>
+<path d="M0 502Q112 475 211 495Q350 388 469 420Q558 381 710 458Q846 396 934 412Q1051 365 1211 439Q1344 407 1442 434Q1587 353 1726 418Q1844 380 1920 421V1080H0Z" fill="url(#ridge)" opacity=".88"/>
+<path d="M160 480Q335 385 467 424Q563 394 650 458Q514 449 436 471Q287 452 160 480ZM1222 454Q1493 359 1591 390Q1691 385 1843 415Q1695 407 1590 440Z" fill="#f3f9e8" opacity=".85"/>
+<!-- Distant pine forest -->
+<g opacity=".32">
+ <use href="#fir" x="10" y="312" width="176" height="392"/><use href="#fir" x="151" y="333" width="169" height="392"/><use href="#fir" x="282" y="320" width="159" height="379"/>
+ <use href="#fir" x="447" y="360" width="135" height="318"/><use href="#fir" x="583" y="347" width="142" height="337"/>
+ <use href="#fir" x="770" y="359" width="135" height="342"/><use href="#fir" x="910" y="344" width="164" height="374"/>
+ <use href="#fir" x="1073" y="362" width="123" height="314"/><use href="#fir" x="1204" y="335" width="151" height="361"/>
+ <use href="#fir" x="1342" y="359" width="137" height="340"/><use href="#fir" x="1479" y="334" width="153" height="366"/>
+ <use href="#fir" x="1613" y="317" width="179" height="400"/><use href="#fir" x="1755" y="316" width="195" height="414"/>
+</g>
+<path d="M0 615Q137 583 268 612Q420 562 555 606Q700 587 837 624Q995 587 1121 614Q1259 582 1400 618Q1622 563 1920 621V1080H0Z" fill="#92bac0" opacity=".71"/>
+<g opacity=".72">
+ <use href="#fir" x="-86" y="242" width="283" height="587"/>
+ <use href="#fir" x="104" y="286" width="225" height="500"/>
+ <use href="#fir" x="375" y="306" width="175" height="420"/>
+ <use href="#fir" x="1429" y="296" width="190" height="440"/>
+ <use href="#fir" x="1636" y="273" width="234" height="519"/>
+ <use href="#fir" x="1774" y="218" width="289" height="634"/>
+</g>
+<!-- Open walkable lane area: contrast controlled for card readability -->
+<ellipse cx="958" cy="648" rx="910" ry="145" fill="url(#haze)" filter="url(#fog)" opacity=".9"/>
+<path d="M0 701Q167 655 391 676Q667 652 912 671Q1172 635 1383 670Q1631 635 1920 683V1080H0Z" fill="url(#deepSnow)"/>
+<path d="M0 762Q191 736 438 749Q747 733 958 748Q1251 730 1491 751Q1726 731 1920 756V1080H0Z" fill="url(#snow)"/>
+<path d="M0 817Q231 779 438 790Q704 768 925 788Q1197 756 1414 788Q1672 754 1920 795" fill="none" stroke="#f9fff1" stroke-opacity=".73" stroke-width="12"/>
+<path d="M0 953Q280 924 461 949Q704 920 998 951Q1256 912 1535 948Q1703 929 1920 950" fill="none" stroke="#e9f9ed" stroke-width="18" opacity=".69"/>
+<!-- Footprints subtly trail between tactical rows -->
+<g fill="#739ea9" opacity=".26">
+ <ellipse cx="499" cy="738" rx="18" ry="7" transform="rotate(-12 499 738)"/><ellipse cx="543" cy="744" rx="17" ry="6" transform="rotate(13 543 744)"/>
+ <ellipse cx="612" cy="736" rx="17" ry="6" transform="rotate(-11 612 736)"/><ellipse cx="653" cy="741" rx="17" ry="6" transform="rotate(11 653 741)"/>
+ <ellipse cx="1132" cy="818" rx="18" ry="7" transform="rotate(-8 1132 818)"/><ellipse cx="1188" cy="827" rx="18" ry="7" transform="rotate(10 1188 827)"/>
+ <ellipse cx="1270" cy="808" rx="18" ry="7" transform="rotate(-11 1270 808)"/>
+</g>
+<!-- Snow stones and drift edges -->
+<g stroke="#5f8996" stroke-width="4">
+ <path d="M119 841q43-39 88-18l24 32-41 21-75-12z" fill="url(#stone)"/><path d="M114 840q31-41 94-23l20 20q-48-13-114 3z" fill="#e9fae7" stroke="none"/>
+ <path d="M1724 837q66-42 115-5l21 40-96 13-41-18z" fill="url(#stone)"/><path d="M1718 837q72-50 120-9l20 21q-65-25-140-12z" fill="#f7fff1" stroke="none"/>
+ <path d="M294 1018q38-27 93-10l21 35-67 23-53-17z" fill="url(#stone)"/><path d="M286 1016q54-34 101-9l9 15q-46-12-110-6z" fill="#fffde8" stroke="none"/>
+ <path d="M1583 1004q55-39 109-10l29 48-107 20-43-30z" fill="url(#stone)"/><path d="M1574 1006q72-51 119-15l17 22q-66-20-136-7z" fill="#f4fbea" stroke="none"/>
+</g>
+<g opacity=".76">
+ <use href="#sprig" x="35" y="817" width="160" height="105"/>
+ <use href="#sprig" x="207" y="959" width="125" height="85"/>
+ <use href="#sprig" x="1598" y="900" width="151" height="96" transform="translate(3340 0) scale(-1 1)"/>
+ <use href="#sprig" x="1743" y="786" width="144" height="91" transform="translate(3630 0) scale(-1 1)"/>
+</g>
+<!-- Forest foregounds frame both ends without trespassing on combat rows -->
+<g opacity=".88"><use href="#fir" x="-242" y="170" width="400" height="860"/><use href="#fir" x="1758" y="162" width="416" height="888"/></g>
+<g opacity=".8">
+ <path d="M0 962Q112 922 194 974Q240 1011 314 994Q372 982 440 1025V1080H0Z" fill="#8db7b7"/>
+ <path d="M1920 965Q1794 920 1712 976Q1610 961 1522 1021V1080H1920Z" fill="#91babb"/>
+ <path d="M0 954Q103 928 190 965M1920 966Q1786 928 1707 964" stroke="#f4fff1" stroke-width="12" fill="none"/>
+</g>
+<rect width="1920" height="1080" fill="url(#paper)" opacity=".43"/>
+</svg>
