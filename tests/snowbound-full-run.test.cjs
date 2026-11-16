@@ -57,7 +57,7 @@ function fullRun(heroId){
  assert.equal(battles,6,'each zone has battle and boss fight');
  assert.equal(regions.size,3,'visits all zones');
  assert.equal(recruits,1,'recruitment event occurs');
- assert.equal(shops,1,'store visit occurs');
+ assert.equal(shops,2,'two distinct shops occur');
  assert(final.run.companions.length>=1,'companion joins permanently');
  assert(final.run.charms.length>=1,'charm joins permanently');
  return {heroId,battles,shops,recruits,turns:final.run.turns,damage:final.run.damageDealt};
