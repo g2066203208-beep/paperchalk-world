@@ -20,7 +20,7 @@ const ENEMIES=[
  {id:"wolf",name:"提灯侍从",hp:12,atk:3,cd:2,icon:"◆",art:"../assets/characters/crimson-vampires/minions/02-vampire-lantern-bearer.png",desc:"为夜行血族照亮雪路的侍从"},
  {id:"shade",name:"夜幕随从",hp:14,atk:4,cd:3,icon:"☾",art:"../assets/characters/crimson-vampires/minions/03-vampire-retainer.png",desc:"隐藏在大雪中的血族随从"},
  {id:"sentry",name:"冰甲守卫",hp:18,atk:3,cd:3,icon:"◇",desc:"寒霜盔甲保护他的躯体"},
- {id:"witch",name:"霜魇术士",hp:24,atk:4,cd:3,icon:"✷",desc:"施加刺骨寒意"},
+ {id:"witch",name:"霜魇术士",hp:24,atk:4,cd:3,icon:"✷",art:"../assets/characters/witch-workshop/curse-witch.png",desc:"施加刺骨寒意"},
  {id:"beast",name:"山脊凶兽",hp:28,atk:6,cd:3,icon:"✦",desc:"轰鸣的山野巨兽"},
  {id:"prince",name:"暮雪领主",hp:38,atk:6,cd:3,icon:"♜",desc:"第二幕守门人"},
  {id:"queen",name:"永夜公主",hp:48,atk:7,cd:3,icon:"♛",desc:"长夜尽头的最终首领",art:"../assets/characters/crimson-vampires/vampire-princess.png"}
