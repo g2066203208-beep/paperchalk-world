@@ -445,3 +445,33 @@ button:not(:disabled):hover{filter:brightness(1.05)}
  .shop-scene .choice-row{gap:5px}
  .shop-scene .choice-row .paint-card{height:clamp(111px,37dvh,155px)}
 }
+
+/* Larger, visually connected card board for desktop and laptop;
+   do not reduce cards to scattered miniatures in a mostly empty viewport. */
+@media(min-width:901px) and (min-height:601px){
+ .double-board{
+  width:min(58vw,760px);
+  max-width:760px;
+ }
+ .battle-grid{column-gap:clamp(9px,1.2vw,20px)}
+ .battle-slot{
+  width:min(100%,168px);
+  max-width:168px;
+  max-height:173px;
+ }
+ .battle-unit{max-width:168px}
+ .unit-badges .badge{
+  min-width:26px;height:26px;
+  font-size:13px;border-width:2px;
+ }
+ .battle-unit .unit-name{font-size:13px;line-height:1.5}
+ .battle-unit .unit-art{
+  background:radial-gradient(circle at 50% 33%,#f3faf0,#9dc8c9 65%,#688a9e);
+ }
+ .battle-side{width:clamp(105px,11vw,170px)}
+}
+@media(min-width:651px) and (max-width:900px) and (min-height:540px){
+ .battle-slot{width:min(100%,137px);max-width:137px;max-height:155px}
+ .battle-unit{max-width:137px}
+ .battle-unit .unit-name{font-size:11px}
+}
