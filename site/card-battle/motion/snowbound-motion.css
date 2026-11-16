@@ -150,3 +150,10 @@
  .summon-roster button{min-height:113px}
  .summon-portrait{width:58px;height:55px}
 }
+
+.motion-flying-coin{
+ position:fixed;z-index:16;
+ font:900 28px Georgia,serif;color:#ffe1a1;
+ text-shadow:0 2px 1px #7e5a49,0 0 7px #ffc985;
+ pointer-events:none;will-change:transform,opacity;
+}
