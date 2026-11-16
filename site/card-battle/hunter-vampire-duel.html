@@ -3,129 +3,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#1b2028">
-<title>银月夜路｜赏金枪手 VS 血族小公主 · 卡牌战斗</title>
-<meta name="description" content="黑森林第一关：原版 Anima 猎人枪手与吸血鬼立绘，真正的扇形手牌、能量、牌库、回合制和敌方意图。">
-<link rel="stylesheet" href="./ui/hunter-vampire-duel.css?v=sts-v6">
-<script src="./engine/hunter-vampire-duel.js?v=sts-v6" defer></script>
-<script src="./ui/duel-card-art.js?v=sts-v6" defer></script>
-<script src="./ui/hunter-vampire-duel.js?v=sts-v6" defer></script>
+<meta name="theme-color" content="#223b4b">
+<meta name="robots" content="noindex">
+<meta http-equiv="refresh" content="0;url=./snowbound-journey.html">
+<title>雪境行旅｜进入完整卡牌冒险</title>
+<script>
+/* Preserve the public Hunter vs Vampire URL, but replace its actual game
+ * with Snowbound Journey. Keep search/fragment for shared QR/deep links. */
+window.location.replace('./snowbound-journey.html'+window.location.search+window.location.hash);
+</script>
+<style>
+html,body{margin:0;min-height:100%;background:#203949;color:#f3e7d0;font:16px/1.6 system-ui,sans-serif}
+main{min-height:100dvh;display:grid;place-content:center;text-align:center;padding:24px}
+a{color:#fbdeb0}
+</style>
 </head>
 <body>
-<div class="game" id="game">
- <div class="world" aria-hidden="true">
-  <div class="night-sky"></div><div class="moon-glow"></div><div class="moon"></div>
-  <div class="distant-pines"></div><div class="tree-left"></div><div class="tree-right"></div>
-  <div class="stone-path"></div><div class="ground-fog"></div><div class="vignette"></div>
- </div>
- <header class="topbar" aria-label="战斗关卡信息">
-  <a class="back" href="./forest-level-01.html" aria-label="返回森林关卡">‹ <span>返回</span></a>
-  <div class="top-hero"><span class="crest">✦</span> 赏金枪手 <b id="header-hp">30/30</b></div>
-  <div class="chapter"><small>CHAPTER I · BLACK FOREST</small><strong>银月夜路</strong></div>
-  <div class="turn-counter">第 <strong id="turn-count">01</strong> 回合</div>
-  <div class="menu-tools"><button type="button" id="sound" aria-pressed="false" aria-label="切换音效">♫</button><button type="button" id="open-help" aria-label="查看规则">?</button><button type="button" id="restart-top" aria-label="重新开始">↻</button></div>
- </header>
- <main id="arena" class="arena" aria-label="卡牌战斗主场景">
-  <div class="battle-platform" aria-hidden="true"></div>
-  <section id="fighter-hunter" class="fighter fighter-hunter" aria-label="我方赏金枪手">
-   <div class="portrait-wrap" id="hero-wrap">
-    <img id="hero-original" src="../assets/characters/monster-hunters/04-bounty-markswoman.png" alt="猎人赏金枪手原始 Anima 人物插画">
-    <canvas id="hero-cutout" width="704" height="1024" aria-hidden="true"></canvas>
-   </div>
-   <div class="ground-shadow"></div>
-   <div class="nameplate">
-    <div class="character-title">赏金枪手 <small>THE HUNTER</small></div>
-    <div class="hp-line"><span class="bar"><span id="hero-hpbar"></span></span><b id="hero-hp">30/30</b></div>
-    <div class="mini-status"><span id="hero-shield" hidden></span><span id="hero-focus" hidden></span></div>
-   </div>
-   <div id="hero-effect" class="sprite-status" aria-hidden="true"></div>
-  </section>
-  <section id="fighter-vampire" class="fighter fighter-vampire" aria-label="敌方血族小公主">
-   <div class="portrait-wrap" id="vampire-wrap">
-    <img id="vampire-original" src="../assets/characters/crimson-vampires/vampire-princess.png" alt="吸血鬼血族小公主原始 Anima 人物插画">
-    <canvas id="vampire-cutout" width="704" height="1024" aria-hidden="true"></canvas>
-   </div>
-   <div class="ground-shadow"></div>
-   <div class="nameplate">
-    <div class="character-title">血族小公主 <small>VAMPIRE PRINCESS</small></div>
-    <div class="hp-line"><span class="bar"><span id="boss-hpbar"></span></span><b id="boss-hp">46/46</b></div>
-    <div class="mini-status"><span id="boss-shield" hidden></span><span id="boss-seal" hidden></span></div>
-   </div>
-   <div id="vampire-effect" class="sprite-status" aria-hidden="true"></div>
-  </section>
-  <div id="intent-panel" class="enemy-intent" role="status" aria-live="polite">
-   <div class="intent-symbol" id="intent-icon">✕</div>
-   <div class="intent-data"><b id="intent-value">7</b><span id="intent-name">血爪 · 猎杀</span></div>
-   <p class="intent-desc" id="intent-desc">锁定猎人路线</p>
-  </div>
-  <div class="lane-strip" role="group" aria-label="猎人站位调整">
-   <span class="lane-caption">站位</span>
-   <div id="lane-buttons" class="lane-buttons">
-    <button data-lane="0" type="button" aria-label="移动到左翼"><span>左</span><small></small></button>
-    <button data-lane="1" type="button" aria-label="移动到中路"><span>中</span><small></small></button>
-    <button data-lane="2" type="button" aria-label="移动到右翼"><span>右</span><small></small></button>
-   </div>
-  </div>
-  <div id="shots" class="shots" aria-hidden="true"></div>
-  <div class="battle-message" role="status" aria-live="polite"><span id="battle-toast">先观察敌人的意图，再打出战术牌</span></div>
- </main>
- <footer class="action-dock" aria-label="卡牌操作区">
-  <div class="deck-zone deck-zone-left">
-   <div class="energy-orb" aria-label="当前行动力">
-    <span class="energy-flame">✦</span><strong id="energy-number">3</strong><small>/3</small>
-   </div>
-   <div class="ammo-count"><span>子弹</span><div id="ammo-pips" class="ammo-pips"></div></div>
-   <div id="ap-pips" class="ap-pips" aria-hidden="true"></div>
-   <button id="draw-cards" class="draw-stack" type="button" aria-label="从牌库手动摸一张牌">
-    <span class="card-back" aria-hidden="true"><i>✦</i></span><span class="stack-title">摸牌</span><b id="draw-count">19</b>
-   </button>
-  </div>
-  <div id="hand-region" class="hand-region">
-   <div class="hand-label" id="deck-status">手牌 5 / 7</div>
-   <div id="hand" class="hand" role="group" aria-label="手牌，点按预览，再次点按使用"></div>
-   <div id="selected-preview" class="selected-preview" hidden aria-live="polite">
-    <span id="selected-text">请选择战术牌</span>
-    <button id="play-selected" type="button">打出此牌</button>
-    <button id="cancel-selected" type="button" aria-label="取消选牌">×</button>
-   </div>
-  </div>
-  <div class="deck-zone deck-zone-right">
-   <div class="discard-stack" id="discard-pile" role="status" aria-label="弃牌堆">
-    <span class="card-back discard-back" aria-hidden="true"><i>☾</i></span><span class="stack-title">弃牌</span><b id="discard-count">0</b>
-   </div>
-   <button type="button" class="end-turn" id="end-turn">结束回合 <span>❯</span></button>
-  </div>
-  <div class="bottom-legend"><span id="hint">点按卡牌预览，再点一次打出；也可点敌人攻击</span><span>银弹穿盾 · 站位闪避</span></div>
- </footer>
- <dialog id="intro" class="battle-dialog">
-  <div class="dialog-crest">☾</div>
-  <div class="dialog-hero"><small>CHAPTER I · A HUNTER'S NIGHT</small><h1>银月夜路</h1>
-   <p>月光越过黑森林，照见一位独行的赏金枪手。对面的血族小公主已等候多时。</p></div>
-  <div class="dialog-rules">
-   <p><b>看意图</b> 敌方攻击与伤害量显示在敌人头顶。</p>
-   <p><b>打卡牌</b> 每回合有 3 点行动力，点卡牌选中，再点一次打出。</p>
-   <p><b>摸牌堆</b> 初始 5 张手牌。新回合需要从左下牌堆手动领取。</p>
-   <p><b>站位</b> 左中右三条路线可以移动，花费 1 行动力。</p>
-  </div>
-  <button id="start-game" class="dialog-primary" type="button">开始战斗 <span>❯</span></button>
- </dialog>
- <dialog id="results" class="battle-dialog">
-  <div class="dialog-crest">✦</div><div class="dialog-hero"><small>BATTLE CONCLUDED</small><h1 id="result-title"></h1><p id="result-subtitle"></p></div>
-  <div class="result-stats"><div><small>回合</small><b id="result-round"></b></div><div><small>使用卡牌</small><b id="result-cards"></b></div><div><small>闪避</small><b id="result-dodges"></b></div></div>
-  <button id="retry-game" class="dialog-primary" type="button">重新挑战 <span>↻</span></button>
-  <a class="dialog-secondary" href="./forest-level-01.html">返回森林关卡</a>
- </dialog>
- <dialog id="help" class="battle-dialog">
-  <div class="dialog-crest">✧</div><div class="dialog-hero"><small>HUNTER'S HANDBOOK</small><h1>狩猎手册</h1></div>
-  <div class="dialog-rules">
-   <p>打出卡牌消耗行动力，射击消耗弹药，快速装填可以补充弹药。</p>
-   <p>同路线射击额外 +2，不同路线 −2。银弹穿透护盾，暂时阻止汲血恢复。</p>
-   <p>敌人头顶预告下一步行动。指定路线的攻击可以靠换位闪避，范围伤害需格挡。</p>
-   <p>初始有五张卡牌，之后每回合可从左下牌堆手动摸五张。</p>
-   <p>电脑：单击选牌，再单击出牌；也可选攻击牌后点击敌人。手机：点按同样操作。</p>
-  </div>
-  <button id="close-help" class="dialog-primary" type="button">返回战斗</button>
- </dialog>
-</div>
+<main><h1>雪境行旅</h1><p>正在进入完整卡牌冒险……</p>
+<p><a href="./snowbound-journey.html">点击进入游戏</a></p></main>
 </body>
 </html>
