@@ -31,13 +31,18 @@ for(const [name,width,height,minW,minH] of scenarios){
     const box=e=>{const r=e.getBoundingClientRect();return{x:+r.x.toFixed(1),y:+r.y.toFixed(1),w:+r.width.toFixed(1),h:+r.height.toFixed(1),right:+r.right.toFixed(1),bottom:+r.bottom.toFixed(1)}};
     const q=s=>[...document.querySelectorAll(s)].map(e=>({name:e.getAttribute("aria-label")||e.textContent.trim().slice(0,14),box:box(e)}));
     const units=[...document.querySelectorAll(".battle-unit")].map(e=>({name:e.querySelector(".unit-name").textContent,font:parseFloat(getComputedStyle(e.querySelector(".unit-name")).fontSize),box:box(e)}));
-    return {units,slots:q(".battle-grid .battle-slot"),cards:q(".battle-unit"),hand:q(".battle-bottom .hand .paint-card"),controls:q(".battle-field .battle-bell,.battle-field .reinforcement-bell,.battle-field .side-btn"),deck:box(document.querySelector(".battle-bottom")),field:box(document.querySelector(".battle-field")),overflowX:document.documentElement.scrollWidth-innerWidth,overflowY:document.documentElement.scrollHeight-innerHeight};
+    const portraits=[...document.querySelectorAll(".battle-unit img")].map(img=>({naturalW:img.naturalWidth,naturalH:img.naturalHeight,fit:getComputedStyle(img).objectFit,img:box(img),card:box(img.closest(".battle-unit"))}));
+    return {units,portraits,slots:q(".battle-grid .battle-slot"),cards:q(".battle-unit"),hand:q(".battle-bottom .hand .paint-card"),controls:q(".battle-field .battle-bell,.battle-field .reinforcement-bell,.battle-field .side-btn"),deck:box(document.querySelector(".battle-bottom")),field:box(document.querySelector(".battle-field")),overflowX:document.documentElement.scrollWidth-innerWidth,overflowY:document.documentElement.scrollHeight-innerHeight};
   });
   const intersect=(a,b)=>Math.max(0,Math.min(a.right,b.right)-Math.max(a.x,b.x))*Math.max(0,Math.min(a.bottom,b.bottom)-Math.max(a.y,b.y));
   assert.equal(m.slots.length,12,"all 12 slots present");
   assert(m.cards.length>=3,"initial encounter visible");
   assert(m.cards.every(c=>c.box.w+2>=minW&&c.box.h+2>=minH),"cards too small: "+JSON.stringify(m.cards));
-  assert(m.cards.every(c=>Math.abs(c.box.w/c.box.h-.7)<.025),"every deployed card must preserve the 7:10 portrait ratio; no aspect-ratio stretching: "+JSON.stringify(m.cards));
+  assert(m.cards.every(c=>Math.abs(c.box.w/c.box.h-704/1024)<.006),"every deployed card must preserve original 704x1024 (11:16) artwork ratio: "+JSON.stringify(m.cards));
+  assert(m.portraits.length===m.cards.length,"each deployed character must show its existing original PNG");
+  assert(m.portraits.every(p=>p.naturalW===704&&p.naturalH===1024),"original hero and vampire portrait source pixels must be exactly 704x1024");
+  assert(m.portraits.every(p=>p.fit==="contain"),"original full-body art must never use cover crop");
+  assert(m.portraits.every(p=>p.img.h>=p.card.h*.90),"art layer should occupy the full source-ratio card canvas");
   assert(m.cards.every(c=>c.box.x>=-2&&c.box.right<=width+2&&c.box.y>=0&&c.box.bottom<=m.deck.y+2),"cards overlap tabletop or leave screen");
   assert(m.units.every(u=>u.font>=8),"character name smaller than 8 CSS pixels");
   assert(m.hand.length>=5&&m.hand.every(c=>c.box.x>=-2&&c.box.right<=width+2&&c.box.bottom<=height+2),"initial five-card hand clipped");
@@ -46,7 +51,7 @@ for(const [name,width,height,minW,minH] of scenarios){
    assert(intersect(m.cards[i].box,m.cards[j].box)<4,"deployed cards overlap");
   for(const c of m.cards)for(const ctl of m.controls)
    assert(intersect(c.box,ctl.box)<c.box.w*c.box.h*.04,"UI control covers player card");
-  const report={name,passed:true,size:[width,height],cardRatio:+(m.cards[0].box.w/m.cards[0].box.h).toFixed(4),cardWidth:m.cards[0].box.w,cardHeight:m.cards[0].box.h,deckHeightPercent:+(100*m.deck.h/height).toFixed(1),units:m.units,controls:m.controls,slots:m.slots};
+  const report={name,passed:true,size:[width,height],sourceAspectRatio:704/1024,cardRatio:+(m.cards[0].box.w/m.cards[0].box.h).toFixed(4),portraitDetails:m.portraits,cardWidth:m.cards[0].box.w,cardHeight:m.cards[0].box.h,deckHeightPercent:+(100*m.deck.h/height).toFixed(1),units:m.units,controls:m.controls,slots:m.slots};
   await page.screenshot({path:OUT+"/"+name+"-real-battle.png",fullPage:true});
   await page.evaluate(()=>{
     for(const lane of document.querySelectorAll(".battle-grid")){
