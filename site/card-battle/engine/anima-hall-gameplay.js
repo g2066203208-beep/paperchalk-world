@@ -94,9 +94,15 @@ export function createFadingHallGame({
  const wall=materials.wall,floor=materials.floor,wood=materials.wood;
  cb(0,-.30,-1,8.5,.7,16.0,floor);
  cb(-4.3,3.4,-1,.7,7.4,16.4,wall);
- cb(4.3,3.4,-1,.7,7.4,16.4,wall);
+ // Camera-side wall intentionally absent. This is a physically modeled
+ // CUTAWAY DIORAMA: right-side wall blocks the orthographic-looking game
+ // camera and hides the player. Nav bounds still keep walking within walls.
+ // Its base ledge keeps the visible lower boundary physically grounded.
+ cb(4.24,.17,-1,.29,.36,16.4,wall);
  cb(0,3.6,-8.76,8.4,7.5,.55,wall);
- cb(0,3.6,6.75,8.4,7.5,.55,wall);
+ // Camera-side entrance is an open arch, NOT a giant opaque facade hiding
+ // the entire playable room from the view angle (+X,+Z).
+ cb(0,.25,6.46,8.4,.50,.48,wall);
  // Alternating pilasters, frames, layered glowing sconces and receding arches.
  for(const z of [4.20,.40,-3.40,-6.45]){
   for(const x of [-3.8,3.8]){
@@ -121,12 +127,18 @@ export function createFadingHallGame({
   }
  }
  function compactPower(){return matchMedia("(max-width:900px)").matches?3.5:5.5}
+ // The camera looks into the diorama through the missing near wall.
+ // Use genuine local warm light to separate the Anima actor from the stone.
+ const corridorFill=new THREE.PointLight("#dfad7c",11,13,2);
+ corridorFill.position.set(2.6,4.8,1.7);corridor.add(corridorFill);
  // A raised pedestal and small real objects rather than an image of a room.
  cb(1.8,.42,-2.95,.84,.85,.82,wall);
  addCorridor(new THREE.CylinderGeometry(.24,.29,.37,12),materials.gold,1.8,1.04,-2.95);
  addCorridor(new THREE.SphereGeometry(.14,12,8),materials.gold,1.8,1.27,-2.95);
  // Entry door is a real 3D framed volume with its own return action.
- cb(0,2.64,6.36,3.15,5.14,.29,wood);
+ // Passage is already open after the hall's physical double door animation.
+ // Keep only threshold and frame, not an opaque door across the camera ray.
+ cb(0,.14,6.35,3.15,.24,.44,wood);
  cb(-1.87,2.5,6.14,.32,5.4,.53,wall);
  cb(1.87,2.5,6.14,.32,5.4,.53,wall);
  cb(0,5.24,6.13,4.1,.40,.50,wall);
