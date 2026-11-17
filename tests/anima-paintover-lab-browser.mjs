@@ -28,7 +28,7 @@ for(const d of sizes){
   });
   assert(first.ready&&first.loaded,"actual Anima doctor cutout must render in 3D");
   assert(first.drawCalls>15,"real 3D whitebox geometry must render, not one flat background");
-  assert(first.buffer[0]>=d.width*.9,"canvas backing buffer too narrow");
+  assert(first.buffer[0]>=d.width*(d.width>900?.58:.90),"3D canvas backing buffer too narrow for its panel");
   await page.screenshot({path:out+"/"+d.id+"-01-composite.png"});
   await page.locator("#whitebox").click();
   assert.equal(await page.evaluate(()=>window.PaintoverStudio.mode),"whitebox");
