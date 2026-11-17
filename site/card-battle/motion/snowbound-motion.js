@@ -97,13 +97,13 @@
    try{await a.finished}catch(e){}
    const i=active.indexOf(a);if(i>=0)active.splice(i,1);
   }
-  function beep(type){
+  function beep(type,delayMs=0){
    if(!getSoundEnabled())return;
    try{
     const AC=root.AudioContext||root.webkitAudioContext;if(!AC)return;
     if(!audio)audio=new AC();
     if(audio.state==="suspended")audio.resume().catch(()=>{});
-    const t=audio.currentTime,osc=audio.createOscillator(),gain=audio.createGain();
+    const t=audio.currentTime+duration(delayMs)/1000,osc=audio.createOscillator(),gain=audio.createGain();
     const spec={paper:[260,180,.018,.055],gun:[120,65,.07,.10],hit:[180,90,.065,.09],
      shatter:[460,100,.045,.15],bell:[790,560,.025,.18],buy:[640,920,.024,.16],
      win:[620,960,.02,.23],lose:[180,74,.025,.25]}[type]||[370,210,.017,.055];
@@ -162,7 +162,7 @@
       {transform:"translate(-50%,-13px) scale(1.18)",opacity:1,offset:.22},
       {transform:"translate(-50%,-41px) scale(1)",opacity:0}],TOKENS.damageFloat,{},run).then(()=>span.remove());
   }
-  function line(from,to,kind="gun",run=token){
+  function line(from,to,kind="gun",run=token,delay=0){
    if(!from||!to||!overlay)return;
    const a=midpoint(from.getBoundingClientRect()),b=midpoint(to.getBoundingClientRect());
    const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy);
@@ -172,7 +172,7 @@
    overlay.append(bullet);
    animate(bullet,[{clipPath:"inset(0 100% 0 0)",opacity:0},
     {clipPath:"inset(0 0% 0 0)",opacity:1,offset:.68},
-    {clipPath:"inset(0 0% 0 0)",opacity:0}],TOKENS.travel,{easing:"ease-out"},run).then(()=>bullet.remove());
+    {clipPath:"inset(0 0% 0 0)",opacity:0}],TOKENS.travel,{easing:"ease-out",delay},run).then(()=>bullet.remove());
   }
   function launchPlayedCard(source,target,run,cue){
    if(!source||!target||!overlay)return;
@@ -199,7 +199,7 @@
    ],frameTime(REFERENCE_CLOCK.slotsAttack,4),{easing:"cubic-bezier(.17,.03,.25,1)"},run)
     .then(()=>ghost.remove());
   }
-  function materialTransient(kind){
+  function materialTransient(kind,delayMs=0){
    if(!getSoundEnabled())return;
    // Short original synthesized transient: the strike receives a crisp
    // attack and decaying noisy body rather than an unpitched browser beep.
@@ -207,7 +207,7 @@
     const AC=root.AudioContext||root.webkitAudioContext;if(!AC)return;
     if(!audio)audio=new AC();
     if(audio.state==="suspended")audio.resume().catch(()=>{});
-    const t=audio.currentTime,sr=audio.sampleRate;
+    const t=audio.currentTime+duration(delayMs)/1000,sr=audio.sampleRate;
     const sec=kind==="gun" ? 0.135 : kind==="hit" ? 0.095 : 0.12;
     const len=Math.ceil(sr*sec),buff=audio.createBuffer(1,len,sr),d=buff.getChannelData(0);
     let n=17;
@@ -243,7 +243,7 @@
      },run).then(()=>lamp.remove());
    }
   }
-  function strikeFlash(target,run,cue){
+  function strikeFlash(target,run,cue,delay=0){
    if(!target||!overlay)return;
    const r=target.getBoundingClientRect(),p=midpoint(r);
    const glint=document.createElement("div");glint.className="motion-strike-flash";
@@ -253,7 +253,7 @@
       {opacity:1,transform:"translate(-50%,-50%) scale(1.05)",offset:.30},
       {opacity:.7,transform:"translate(-50%,-50%) scale(1.35)",offset:.65},
       {opacity:0,transform:"translate(-50%,-50%) scale(1.55)"}],
-     frameTime(REFERENCE_CLOCK.slotsAttack,4),{easing:"linear"},run).then(()=>glint.remove());
+     frameTime(REFERENCE_CLOCK.slotsAttack,4),{easing:"linear",delay},run).then(()=>glint.remove());
    const slash=document.createElement("div");slash.className="motion-strike-slash";
    slash.style.left=p.x+"px";slash.style.top=p.y+"px";
    slash.style.setProperty("--slash-angle",cue.kind==="gun"?"-13deg":"-39deg");
@@ -262,7 +262,7 @@
       {opacity:1,transform:"translate(-50%,-50%) rotate(var(--slash-angle)) scaleX(1.08)",offset:.26},
       {opacity:1,transform:"translate(-40%,-40%) rotate(var(--slash-angle)) scaleX(1)",offset:.70},
       {opacity:0,transform:"translate(-25%,-23%) rotate(var(--slash-angle)) scaleX(.45)"}],
-     frameTime(REFERENCE_CLOCK.slotsAttack,10),{easing:"linear"},run).then(()=>slash.remove());
+     frameTime(REFERENCE_CLOCK.slotsAttack,10),{easing:"linear",delay},run).then(()=>slash.remove());
   }
   function impactSparks(target,run){
    if(!target||!overlay)return;
@@ -297,6 +297,18 @@
     if(from&&cue.cardKey)record(label,"card-source",cue.cardKey);
    }
    strikeLampCue(target,run,cue);
+   // Important: start native compositor effects and the WebAudio envelopes
+   // at t0 with SOURCE-RELATIVE DELAYS, not from a later JS callback.
+   // On a loaded mobile browser, the JS "F06" marker can be ~30ms late while
+   // these already-scheduled optical/audio peaks still occur at source F06.
+   const flashDelay=frameTime(profile,profile.flashFirst);
+   const hitDelay=frameTime(profile,profile.impactFrame);
+   strikeFlash(target,run,cue,flashDelay);
+   line(from||target,target,cue.kind,run,flashDelay);
+   beep(cue.kind==="gun"?"gun":"paper",flashDelay);
+   materialTransient(cue.kind==="gun"?"gun":"slash",flashDelay);
+   beep(cue.blocked>0&&!cue.damage?"paper":"hit",hitDelay);
+   materialTransient("hit",hitDelay);
    if(from&&from.isConnected){
     const sign=cue.actorSide==="enemy"?-1:1;
     animate(from,[{transform:"translateX(0) scale(1)"},
@@ -313,14 +325,10 @@
     from.dataset.motionLaunched="1";
     launchPlayedCard(from,target,run,cue);
    }
-   beep(cue.kind==="gun"?"gun":"paper");materialTransient(cue.kind==="gun"?"gun":"slash");
-   strikeFlash(target,run,cue);
-   line(from||target,target,cue.kind,run);
    await waitClock(frameTime(profile,profile.impactFrame),clockStart,run);
    if(skipped||run!==token)return;
    record("reference-attack","F10-impact",label);
    record(label,"impact");
-   beep(cue.blocked>0&&!cue.damage?"paper":"hit");materialTransient("hit");
    const hp=target.querySelector(".badge.hp"),shield=target.querySelector(".badge.shield");
    if(hp&&cue.hpAfter!==undefined)hp.textContent=String(cue.hpAfter);
    if(shield&&cue.shieldAfter!==undefined)shield.textContent=String(cue.shieldAfter);
