@@ -70,7 +70,18 @@ for(const cfg of cfgs){
   }
   for(const speed of [1,2]){
    const hand=runScene("hand",speed);
-   await page.waitForFunction(()=>!!document.querySelector(".motion-draw-card"),null,{timeout:4000});
+   await page.waitForFunction(()=>!!document.querySelector(".motion-draw-card .motion-draw-back"),null,{timeout:4000});
+   const handWAAPI=await page.evaluate(()=>{
+    const card=document.querySelector(".motion-draw-card");
+    const back=card?.querySelector(".motion-draw-back");
+    return {deal:card?.getAnimations()?.[0]?.effect?.getTiming(),
+      flip:back?.getAnimations()?.[0]?.effect?.getTiming()};
+   });
+   assert(handWAAPI.deal&&handWAAPI.flip,"real card and card-back compositor keyframe animations are required");
+   assert(Math.abs(handWAAPI.deal.delay-1040/speed)<=2,
+    "source F13 first deal must begin at actual 1040ms at 1x");
+   assert(Math.abs(handWAAPI.flip.delay-2160/speed)<=2,
+    "source F27 face reveal must begin at actual 2160ms at 1x");
    await page.waitForTimeout(Math.round(1430/speed));
    const ghostCount=await page.locator(".motion-cinema .motion-draw-card").count();
    assert(ghostCount>=2,"new hand must animate its real game card artwork");
@@ -79,18 +90,36 @@ for(const cfg of cfgs){
    const handTrace=requireClock(h.trace,"reference-hand",[
     ["F00-start",0],["F04-exit",320],["F13-draw",1040],
     ["F27-flip",2160],["F35-end",2800]],speed,185);
-   const attack=await runScene("attack",speed);
+   const attackJob=runScene("attack",speed);
+   await page.waitForFunction(()=>!!document.querySelector(".motion-strike-slash"),null,{timeout:4000});
+   const slashWAAPI=await page.evaluate(()=>document.querySelector(".motion-strike-slash")
+    .getAnimations()[0]?.effect?.getTiming());
+   assert(slashWAAPI,"real attack slash must have a compositor animation");
+   assert(Math.abs(slashWAAPI.delay-100/speed)<=2,
+    "visual flash must start at source video frame F06, including 2x");
+   assert(Math.abs(slashWAAPI.duration-(10*FRAME)/speed)<=2,
+    "actual 60fps slash tween must last ten original source frames");
+   const attack=await attackJob;
    assert.equal(attack.lastError,null);
    const attackTrace=requireClock(attack.trace,"reference-attack",[
     ["F00-light",0],["F06-flash",6*FRAME],
     ["F10-impact",10*FRAME],["F16-tail-end",16*FRAME]],speed,72);
-   const score=await runScene("score",speed);
+   const scoreJob=runScene("score",speed);
+   await page.waitForFunction(()=>!!document.querySelector(".motion-score-surge"),null,{timeout:4000});
+   const scoreWAAPI=await page.evaluate(()=>document.querySelector(".motion-score-surge")
+    .getAnimations()[0]?.effect?.getTiming());
+   assert(scoreWAAPI&&Math.abs(scoreWAAPI.duration-700/speed)<=2,
+    "native compositor score burst must match seven 100ms GIF frames");
+   const score=await scoreJob;
    assert.equal(score.lastError,null);
    const scoreTrace=requireClock(score.trace,"reference-score",[
     ["F46-burst-start",0],["F53-burst-end",700]],speed,75);
    results.push({viewport:cfg.name,speed,passed:true,
     sourceHandMs:2800,sourceAttackCoreMs:16*FRAME,sourceScoreBurstMs:700,ghostCount,
-    measuredHand:handTrace,measuredAttack:attackTrace,measuredScore:scoreTrace});
+    measuredHand:handTrace,measuredAttack:attackTrace,measuredScore:scoreTrace,
+    compositor:{dealDelayMs:handWAAPI.deal.delay,flipDelayMs:handWAAPI.flip.delay,
+      slashDelayMs:slashWAAPI.delay,slashDurationMs:slashWAAPI.duration,
+      scoreDurationMs:scoreWAAPI.duration}});
    console.log("PASS "+cfg.name+" "+speed+"x; real hand, impact and score original source-clock stages",
     handTrace,attackTrace,scoreTrace);
   }
