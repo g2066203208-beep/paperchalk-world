@@ -58,6 +58,20 @@
     },
     {
       "game": "Wildfrost",
+      "type": "official Steam publisher trailer MP4",
+      "title": "Wildfrost Official Steam Release Date Trailer",
+      "url": "https://video.akamai.steamstatic.com/store_trailers/256938631/movie480.mp4",
+      "sourcePage": "https://www.wildfrostgame.com/presskit/",
+      "sha256": "e78c9ac62fabbb1ec25d49865e3d6285fb06f2ed3144be83df60c7076c6630a6",
+      "fps": "60 native",
+      "sourceDurationSec": 81.705,
+      "extractedPreview": "first 24s at 8fps plus three targeted native60 windows scheduled",
+      "analyzed": true,
+      "analysisScope": "Source trailer frames, not in-game input-response timing",
+      "application": "snow-scene transitions, entry/exit transitions, ice burst cadence; do not copy its sprites"
+    },
+    {
+      "game": "Wildfrost",
       "type": "official publisher trailer",
       "title": "Release Date Announcement Trailer",
       "url": "https://www.youtube.com/watch?v=Fh1roF9RBh8",
