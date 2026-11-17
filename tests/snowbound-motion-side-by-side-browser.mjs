@@ -100,6 +100,7 @@ for(const cfg of cfgs){
     expectedSourceDurationMs:expectedDurationMs,
     sampleFrames:collection.frames.length,
     sourceClockMarks:newest.map(x=>({stage:x.stage,tMs:x.t-start.t})),
+    visibleEffectSamples:kind==="attack"?(extra.visualSamples||[]):[],
     frames:collection.frames
    };
    fs.writeFileSync(dir+"/capture.json",JSON.stringify(meta,null,2));
@@ -129,6 +130,23 @@ for(const cfg of cfgs){
     d.setSpeed(1);
     const snap=d.capture(),clockOriginMs=performance.timeOrigin;
     window.__comparisonDirector=d;
+    window.__comparisonVisualSamples=[];
+    const start=performance.now();
+    const inspector=setInterval(()=>{
+      const elements=[...document.querySelectorAll(".motion-source-lamp, .motion-strike-flash, .motion-strike-slash, .motion-impact-spark")];
+      const sample={
+        t:Math.round(performance.now()-start),
+        elements:elements.map(el=>{
+          const rect=el.getBoundingClientRect(),cs=getComputedStyle(el);
+          return {class:el.className,x:Math.round(rect.x),y:Math.round(rect.y),
+            w:Math.round(rect.width),h:Math.round(rect.height),
+            opacity:cs.opacity,visible:(rect.right>0&&rect.x<innerWidth&&rect.bottom>0&&rect.y<innerHeight),
+            animation:el.getAnimations().map(a=>({state:a.playState,currentTime:Math.round(a.currentTime||0)}))}
+        })
+      };
+      window.__comparisonVisualSamples.push(sample);
+      if(performance.now()-start>430)clearInterval(inspector);
+    },16);
     window.__comparisonPending=d.play(snap,{
       visualEvents:[{type:"attack",actorId:source.uid,targetId:target.uid,
         actorSide:"friendly",kind:"gun",damage:1,hpAfter:target.hp-1,lethal:false}]
@@ -137,7 +155,8 @@ for(const cfg of cfgs){
    });
    await page.evaluate(()=>window.__comparisonPending);
    const trace=await page.evaluate(()=>window.__comparisonDirector.trace());
-   return {...info,trace};
+   const visualSamples=await page.evaluate(()=>window.__comparisonVisualSamples||[]);
+   return {...info,trace,visualSamples};
   },"reference-attack",1000/60*16);
   await cdp.send("Page.stopScreencast");
   await page.screenshot({path:OUT+"/"+cfg.id+"-live-battle-after-attack.png"});
