@@ -7,6 +7,7 @@ on:
       - 'site/card-battle/**'
       - 'tests/snowbound-motion-side-by-side-browser.mjs'
       - 'tests/snowbound-motion-side-by-side-audit.py'
+      - 'tests/snowbound_motion_video_alignment.py'
       - 'site/card-battle/engine/snowbound-journey.js'
       - 'site/card-battle/ui/snowbound-journey.css'
       - 'site/card-battle/ui/snowbound-journey-ui.js'
@@ -50,6 +51,7 @@ jobs:
           node --check tests/snowbound-motion-capture-browser.mjs
           node --check tests/snowbound-motion-side-by-side-browser.mjs
           python3 -m py_compile tests/snowbound-motion-side-by-side-audit.py
+          python3 -m py_compile tests/snowbound_motion_video_alignment.py
           node --check tests/snowbound-tactile-browser.mjs
           node --check site/card-battle/motion/snowbound-tactile.js
           node --check tests/snowbound-reference-clock-browser.mjs
