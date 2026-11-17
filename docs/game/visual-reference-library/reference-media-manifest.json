@@ -1,6 +1,6 @@
 {
-  "version": "2026-11-17",
-  "title": "Game visual research assets — external source index",
+  "version": "2026-11-17-v2-7games",
+  "title": "Game visual research assets — seven reference games (original source links only)",
   "policy": "LINK_ONLY: external copyright-protected images/video/GIF are referenced by URL and not copied into this repository. The QA screenshots we own remain in GitHub Actions artifacts.",
   "verificationStates": {
     "source-page-verified": "公开页面已找到",
@@ -536,6 +536,355 @@
           "image-search-verified"
         ]
       ]
+    },
+    {
+      "id": "dungeonborne",
+      "name": "Dungeonborne",
+      "studio": "Mithril Interactive",
+      "focus": [
+        "真实哥特 3D 地牢、石块和尖拱柱头",
+        "火把、烛火与冷色夜空的物理光比",
+        "潮湿地面粗糙度/反射与 AO 接地",
+        "体积雾、战斗火花、角色/魔法反光",
+        "场景细节与第一人称相机纵深"
+      ],
+      "media": [
+        [
+          "website",
+          "Dungeonborne 官方 Steam 商店与影片、截图",
+          "https://store.steampowered.com/app/2448970/Dungeonborne/",
+          "官方原版实机截图与视频入口",
+          "official",
+          "source-page-verified"
+        ],
+        [
+          "website",
+          "Steam 官方媒体与玩家截图区",
+          "https://steamcommunity.com/app/2448970",
+          "角色装备、真实场景摄影与视频",
+          "official-community",
+          "source-page-verified"
+        ],
+        [
+          "website",
+          "SteamDB 高清官方截图索引",
+          "https://steamdb.info/app/2448970/screenshots/",
+          "官方发布素材的历史视图和媒体版本",
+          "third-party-index",
+          "source-page-verified"
+        ],
+        [
+          "article",
+          "2024 开发者发行公告：哥特城堡环境",
+          "https://www.mynewsdesk.com/uk/swipe-right/pressreleases/infiltrate-gothic-castles-in-dungeonborne-an-upcoming-extraction-dungeon-crawler-by-mithril-interactive-3299922",
+          "哥特尖塔、地牢、环境叙事，开发者新闻通稿",
+          "developer-publisher",
+          "source-page-verified"
+        ],
+        [
+          "article",
+          "2024 EA 上线官方通稿",
+          "https://www.mynewsdesk.com/uk/swipe-right/pressreleases/plunder-and-risk-it-all-in-medieval-extraction-rpg-dungeonborne-out-now-on-pc-in-early-access-3335056",
+          "2024 版本基准与公开平台",
+          "developer-publisher",
+          "source-page-verified"
+        ],
+        [
+          "video",
+          "官方 Gameplay Trailer（IGN 发布）",
+          "https://www.youtube.com/watch?v=ICtnthxM4Cs",
+          "城堡地牢探索、敌人近战、法术打击的时序",
+          "official-distributed-via-IGN",
+          "video-page-verified"
+        ],
+        [
+          "video",
+          "官方 Announcement Trailer（IGN 发布）",
+          "https://www.youtube.com/watch?v=SSFPd7nWws0",
+          "镜头构图、哥特室内外场景和魔法光",
+          "official-distributed-via-IGN",
+          "video-page-verified"
+        ],
+        [
+          "video",
+          "正式 EA Gameplay Trailer（GameSpot）",
+          "https://www.gamespot.com/videos/dungeonborne-official-steam-early-access-announcement-gameplay-trailer/2300-6464585/",
+          "EA 期实机镜头、动作与城堡走廊",
+          "developer-trailer-via-press",
+          "video-page-verified"
+        ],
+        [
+          "website",
+          "官方 YouTube 频道",
+          "https://www.youtube.com/@Dungeonborne",
+          "更多 gameplay 和人物职业短片入口，尚未逐帧索引",
+          "official-channel",
+          "source-page-verified"
+        ],
+        [
+          "image",
+          "石拱火把红毯走廊——官方 Steam 图",
+          "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2448970/ss_e0d91dd197ddf469ea87645d61e1e168ee4a65a9.jpg?t=1740709894",
+          "红棕火光对高浮雕石柱、深黑走廊、金属骑士反射的影响",
+          "official",
+          "image-search-verified"
+        ],
+        [
+          "image",
+          "潮湿地下囚笼与蓝色法术——官方 Steam 图",
+          "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2448970/ss_68115c0bf50ccbb54b395110cdadc51c17d61c52.1920x1080.jpg?t=1720019542",
+          "小范围金蓝反差和湿石反射",
+          "official",
+          "image-search-verified"
+        ],
+        [
+          "image",
+          "营地篝火与人物道具 UI——官方 Steam 图",
+          "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2448970/ss_c17e10459d32963b5ca3c63d2f5c7904ca937969.jpg?t=1740709894",
+          "近地火焰、装备堆放、人物接地、前中后景",
+          "official",
+          "image-search-verified"
+        ],
+        [
+          "image",
+          "蓝色夜空与哥特城堡塔顶",
+          "https://i.playground.ru/i/screenshot/233781/dungeonborne.jpg",
+          "夜空/尖塔暗部大形/蓝魔法光/暖灯点光",
+          "third-party-capture",
+          "image-search-verified"
+        ],
+        [
+          "image",
+          "雾夜庭院火把与枯树",
+          "https://gaming-cdn.com/images/products/15899/screenshot/dungeonborne-pc-spel-steam-wallpaper-4.jpg?v=1721373080",
+          "空间层次、室外散射雾、前景黑树与暖火",
+          "third-party-capture",
+          "image-search-verified"
+        ],
+        [
+          "image",
+          "王座厅巨像与烛光",
+          "https://storage.googleapis.com/wtfast-images-prod/dungeonborne-f7a01145-2776-48b0-a46e-d6b3532a7a2f.jpg",
+          "复杂中景建筑、局部烛火、体积深度遮挡",
+          "third-party-capture",
+          "image-search-verified"
+        ],
+        [
+          "image",
+          "熔焰飞散与红毯石拱战斗",
+          "https://cdn.cloudflare.steamstatic.com/steam/apps/2448970/ss_14d50be3b4049cfaac7cc62101750f80adddbf0d.jpg",
+          "远处爆焰光影响近处石柱、红地毯与阴影",
+          "official",
+          "image-search-verified"
+        ],
+        [
+          "article",
+          "玩法与场景实测采访（Fami通 2024）",
+          "https://www.famitsu.com/article/202408/12177",
+          "BOSS 大厅灯光、装备技能和真实战斗反馈",
+          "editorial",
+          "source-page-verified"
+        ]
+      ]
+    },
+    {
+      "id": "grimkeep",
+      "name": "格林堡 / GrimKeep",
+      "studio": "Resolution Games",
+      "focus": [
+        "纯手绘黑暗童话 2D 场景，不应错判为真实 3D",
+        "超大角色立绘和中远景古街衬景",
+        "边缘剪影、刮擦笔触/墨线与极低饱和配色",
+        "骰子结算与伤害数字、UI 高对比层级",
+        "绘本式商店/事件/坩埚独立场景与局部火焰"
+      ],
+      "media": [
+        [
+          "website",
+          "格林堡 GrimKeep 开发组官方网站",
+          "https://grimkeepgame.com/",
+          "手绘怪物、地图、事件、角色和物品美术",
+          "official",
+          "source-page-verified"
+        ],
+        [
+          "website",
+          "Resolution Games 官方游戏页",
+          "https://www.resolutiongames.com/grimkeep",
+          "预告片、高清实机截图、战斗/商店/地图场景",
+          "official",
+          "source-page-verified"
+        ],
+        [
+          "website",
+          "Resolution Games 官方 Media Kit",
+          "https://www.resolutiongames.com/media-kit-grimkeep",
+          "高清截图、官方艺术设定、Gameplay Preview",
+          "official",
+          "source-page-verified"
+        ],
+        [
+          "website",
+          "Steam 官方商店（中文《格林堡》）",
+          "https://store.steampowered.com/app/3509380/GrimKeep/",
+          "原版战斗/UI/骰子投掷视频及截图",
+          "official",
+          "source-page-verified"
+        ],
+        [
+          "website",
+          "Steam Demo 试玩页",
+          "https://store.steampowered.com/app/5275700/GrimKeep_Demo/",
+          "2026 年 10 月试玩版实机参考入口",
+          "official",
+          "source-page-verified"
+        ],
+        [
+          "video",
+          "GrimKeep 官方 Gameplay Preview（Media Kit）",
+          "https://www.youtube.com/watch?v=Y5VVE-NAwJU",
+          "怪物攻击与骰子结算、卡牌/金币 UI、移动镜头",
+          "official",
+          "video-page-verified"
+        ],
+        [
+          "video",
+          "GrimKeep Gameplay 视频（press kit 嵌入）",
+          "https://www.youtube.com/watch?v=KcMx1Pl5qDw",
+          "独立 2D 绘本视觉表现、完整演出节奏",
+          "press-kit",
+          "video-page-verified"
+        ],
+        [
+          "website",
+          "Steam 工作室美术/动画短片与更新区",
+          "https://steamcommunity.com/app/3509380/allnews/",
+          "官方短片：Taurus蓄力、角色/商人演出、devlog",
+          "official",
+          "source-page-verified"
+        ],
+        [
+          "article",
+          "官方 Devlog #02：Developing the art of GrimKeep",
+          "https://steamraw.com/app/3509380/",
+          "2025-05-12 早期概念与视觉风格演进，SteamRaw 原公告索引",
+          "official-indexed",
+          "source-page-verified"
+        ],
+        [
+          "article",
+          "官方 Devlog 5：Style and inspiration（2025-11-03）",
+          "https://steamcommunity.com/ogg/3509380/announcements/detail/619934083293642852",
+          "开发者讲漫画书与美术启发；Steam 帖子地址来自新闻跳转，未重放整页",
+          "official",
+          "previously-collected-not-reprobed"
+        ],
+        [
+          "article",
+          "官方 Devlog #03：角色草稿与成稿",
+          "https://store.steampowered.com/news/posts/?enddate=1748878599&feed=steam_community_announcements",
+          "草稿到最终角色肖像的开发者示例",
+          "official",
+          "source-page-verified"
+        ],
+        [
+          "article",
+          "官方 Devlog #7：死神美术迭代与叙事场景",
+          "https://changelog.gg/games/grimkeep-3509380/updates/2026-07-23-7-july-devlog-what-happens-when-you-die-018797a4a61e6195",
+          "不同设计稿到最终海上死神场景的取舍",
+          "developer-post-mirrored",
+          "source-page-verified"
+        ],
+        [
+          "article",
+          "美术总监访谈：手绘 2D 黑暗童话",
+          "https://www.gamespress.com/en-US/No-Happily-Ever-After-Resolution-Games-Announces-GrimKeep-a-Dark-Fanta",
+          "开发者确认：手绘场景不仅服务骰子玩法",
+          "official-press",
+          "source-page-verified"
+        ],
+        [
+          "image",
+          "雨夜战斗两名怪物——官方高清图",
+          "https://www.resolutiongames.com/_astro/grimkeep-screenshot-fight2-clean-large.Bm482oc8_1WlI7f.webp",
+          "人物轮廓与幽暗古街的景深分离、雨线、墨黑边缘",
+          "official",
+          "image-search-verified"
+        ],
+        [
+          "image",
+          "神秘商人贩售物品——官方高清图",
+          "https://www.resolutiongames.com/_astro/grimkeep-screenshot-thepeddler-clean-large.Dr1nVLPQ_1yeTqg.webp",
+          "人物占左侧近半屏、黑笔 UI、对话中的材质与道具",
+          "official",
+          "image-search-verified"
+        ],
+        [
+          "image",
+          "神秘仪式 UI——官方高清图",
+          "https://www.resolutiongames.com/_astro/grimkeep-screenshot-themystic-clean-large.DxZVmgYV_149MEk.webp",
+          "角色挤近前景；灰褐卡列，背景简洁有秩序",
+          "official",
+          "image-search-verified"
+        ],
+        [
+          "image",
+          "黑暗城市节点大地图——官方高清图",
+          "https://www.resolutiongames.com/_astro/grimkeep-screenshot-map-clean-large.BODTEApH_Z1nPmn8.webp",
+          "底层街道灰图与白/金节点线的明暗分离",
+          "official",
+          "image-search-verified"
+        ],
+        [
+          "image",
+          "炽热坩埚与火焰——官方高清图",
+          "https://www.resolutiongames.com/_astro/grimkeep-screenshot-crucible-clean-large.BVtwbROY_Zy12Bz.webp",
+          "主体暖橙光源、黑污线、破边渐隐与热金属液体",
+          "official",
+          "image-search-verified"
+        ],
+        [
+          "image",
+          "猎人/野兽等角色选择画面——官方高清图",
+          "https://www.resolutiongames.com/_astro/grimkeep-screenshot-characterselection-large.B8C712iY_ZlLvq6.webp",
+          "人物大立绘黑影、卡面透光、字体与材质层",
+          "official",
+          "image-search-verified"
+        ],
+        [
+          "image",
+          "格林堡原始 Steam 菜单/巨月截图",
+          "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/3509380/a0cdedd75835a8bf6765e037da63d189867b83c2/ss_a0cdedd75835a8bf6765e037da63d189867b83c2.1920x1080.jpg?t=1772467233",
+          "巨大剪影和低饱和月光的负空间",
+          "official",
+          "image-search-verified"
+        ],
+        [
+          "image",
+          "地狱马战斗画面（PlayStation 图）",
+          "https://image.api.playstation.com/vulcan/ap/rnd/202511/1913/3f615fbcfd9ccb91cfe9b61635742c3f95985c446eb4c4c1.jpg",
+          "放大怪物线稿、中距离街道背景、黑色前景枝条",
+          "official-platform",
+          "image-search-verified"
+        ],
+        [
+          "video-embedded",
+          "官方 Steam 新闻：Taurus 蓄力动态角色演示",
+          "https://steamcommunity.com/app/3509380/allnews/",
+          "2025-10-20 动态角色小视频；尚未确认可独立下载的 GIF",
+          "official-dev-embedded",
+          "embedded-only"
+        ],
+        [
+          "video-embedded",
+          "官方 Steam 新闻：商人艺术与互动",
+          "https://steamcommunity.com/app/3509380/allnews/",
+          "2025-10-08 商人短片，角色出场与 UI 切换，非独立 GIF",
+          "official-dev-embedded",
+          "embedded-only"
+        ]
+      ]
     }
-  ]
+  ],
+  "researchNotes": "Two new games (Dungeonborne, GrimKeep) appended 2026-11-17; dynamic original videos are indexed as video or video-embedded, NOT falsely labeled as downloadable GIFs. User Anima image diagnostics live in separate repository doc."
 }
