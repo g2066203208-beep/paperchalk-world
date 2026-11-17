@@ -1,54 +1,110 @@
-import {chromium} from "playwright";
+/* Root menu integration QA: user-approved deletion of Silver Moon duel and
+   official main-menu entry for the real Anima 3D paintover scene.
+   Verify live DOM, real WebGL and screenshot + video; report hosted deployment
+   separately from deterministic checked-out local source. */
+import assert from "node:assert/strict";
 import fs from "node:fs";
+import {chromium} from "playwright";
+
 const out="artifacts/hosted-main-menu-proof";
-fs.mkdirSync(out,{recursive:true});
-const browser=await chromium.launch({headless:true,args:["--no-sandbox","--enable-webgl","--use-gl=angle","--use-angle=swiftshader","--enable-unsafe-swiftshader"]});
-const pages=[
-{name:"desktop-1920x1080",width:1920,height:1080},
-{name:"laptop-1366x768",width:1366,height:768}
+fs.mkdirSync(out+"/video",{recursive:true});
+const browser=await chromium.launch({headless:true,args:[
+ "--no-sandbox","--enable-webgl","--use-gl=angle","--use-angle=swiftshader","--enable-unsafe-swiftshader"
+]});
+const viewports=[
+ {name:"desktop-1920x1080",width:1920,height:1080,mobile:false},
+ {name:"phone-390x844",width:390,height:844,mobile:true}
 ];
-const report=[];
-for(const vp of pages){
- const ctx=await browser.newContext({viewport:vp,deviceScaleFactor:1,colorScheme:"dark",recordVideo:{dir:out+"/video",size:{width:vp.width,height:vp.height}}});
- const page=await ctx.newPage(),errors=[];
- page.on("pageerror",e=>errors.push(e.message));
- const candidates=[
-  {kind:"actual-GitHub-Pages",url:"https://g2066203208-beep.github.io/paperchalk-world/"},
-  {kind:"current-checked-out-source",url:"http://127.0.0.1:4173/index.html"}
- ];
- let origin=null;
- try{
-  for(const dest of candidates){
-   try{
-    const resp=await page.goto(dest.url,{waitUntil:"domcontentloaded",timeout:30000});
-    if(resp?.status()===200&&await page.locator("#scene-menu-main").count()){origin=dest;break;}
-   }catch(e){console.log("Menu candidate unavailable",dest.url,String(e).slice(0,180));}
-  }
-  if(!origin)throw Error("Unable to load either hosted menu or checked-out main menu");
-  await page.waitForFunction(()=>document.getElementById("source")?.naturalWidth>0 && document.getElementById("scene")?.dataset.scene==="menu",null,{timeout:22000});
-  await page.waitForTimeout(1800);
-  // Record what is truly in the DOM, and whether the new Anima demo has an actual hosted entry.
-  const list=await page.locator("#scene-menu-main button").evaluateAll(bs=>bs.map(b=>{
-   const r=b.getBoundingClientRect(),s=getComputedStyle(b);
-   return {id:b.id,label:b.textContent.trim(),disabled:b.disabled,visible:r.width>0&&r.height>0&&s.visibility!=="hidden",rect:[Math.round(r.x),Math.round(r.y),Math.round(r.width),Math.round(r.height)]};
-  }));
-  const screenshot=out+"/"+vp.name+"-01-current-main-menu.png";
-  await page.screenshot({path:screenshot,fullPage:false,animations:"disabled"});
-  // Scroll the native menu container so truncated lower entries can also be inspected.
-  const nav=page.locator("#scene-menu-main");
-  await nav.evaluate(el=>{el.scrollTop=el.scrollHeight});
-  await page.waitForTimeout(240);
-  await page.screenshot({path:out+"/"+vp.name+"-02-menu-bottom.png",fullPage:false,animations:"disabled"});
-  const doc=await page.evaluate(()=>({
-   pageTitle:document.title,scene:document.querySelector("#scene")?.dataset.scene,
-   sceneMenu:document.querySelector("#scene-menu-main")?.getBoundingClientRect().toJSON(),
-   anDemoButton:!!document.querySelector("#menu-anima-paintover")
-  }));
-  report.push({viewport:vp.name,origin,menu:list,doc,pageErrors:errors,screenshots:[screenshot]});
-  console.log("CAPTURED HOSTED MAIN MENU",vp.name,origin.kind,JSON.stringify(list.map(x=>x.label)));
- }catch(e){report.push({viewport:vp.name,error:String(e),origin,pageErrors:errors});console.error(e);}
- finally{await ctx.close();}
+const report={test:"Replace Silver Moon Duel with 3D Anima Hall",local:[],hosted:null,deleted:[]};
+const retired=[
+ "site/card-battle/hunter-vampire-duel.html",
+ "site/card-battle/engine/hunter-vampire-duel.js",
+ "site/card-battle/ui/hunter-vampire-duel.css",
+ "site/card-battle/ui/hunter-vampire-duel.js",
+ "site/card-battle/ui/duel-card-art.js",
+ "site/card-battle/ui/duel-night-forest.svg",
+ "tests/hunter-vampire-duel-browser.mjs",
+ ".github/workflows/hunter-vampire-duel-qa.yml"
+];
+for(const file of retired){
+ report.deleted.push({file,removed:!fs.existsSync(file)});
+ assert(!fs.existsSync(file),"Old duel-only file remains: "+file);
 }
+const root=fs.readFileSync("site/index.html","utf8");
+assert(!root.includes("menu-hunter-vampire"),"Old Silver Moon root menu button remains");
+assert(!root.includes("hunter-vampire-duel.html"),"Retired duel URL remains linked in main menu");
+assert(root.includes('id="menu-anima-paintover"'),"Missing Anima hall entry in root menu");
+assert(root.includes("./card-battle/anima-paintover-lab.html"),"Missing working Anima hall route");
+
+for(const vp of viewports){
+ const context=await browser.newContext({
+  viewport:{width:vp.width,height:vp.height},isMobile:vp.mobile,hasTouch:vp.mobile,
+  deviceScaleFactor:1,recordVideo:{dir:out+"/video",size:{width:vp.width,height:vp.height}}
+ });
+ const page=await context.newPage();
+ const errors=[];
+ page.on("pageerror",e=>errors.push(String(e)));
+ try{
+  const response=await page.goto("http://127.0.0.1:4173/index.html",{waitUntil:"domcontentloaded",timeout:30000});
+  assert.equal(response.status(),200);
+  await page.waitForFunction(()=>document.getElementById("source")?.naturalWidth>0 &&
+    document.getElementById("scene")?.dataset.scene==="menu",null,{timeout:20000});
+  await page.waitForTimeout(900);
+  const labels=await page.locator("#scene-menu-main button").allTextContents();
+  assert(labels.some(t=>t.includes("褪色的会客厅")),"New scene entry must appear in main menu");
+  assert(labels.every(t=>!t.includes("银月夜路")&&!t.includes("影月夜路")),"Legacy duel still in main menu");
+  assert.equal(await page.locator("#menu-anima-paintover").count(),1);
+  await page.screenshot({path:out+"/"+vp.name+"-01-new-main-menu.png",animations:"disabled"});
+  await page.locator("#scene-menu-main").evaluate(el=>el.scrollTop=el.scrollHeight);
+  await page.screenshot({path:out+"/"+vp.name+"-02-main-menu-bottom.png",animations:"disabled"});
+  await page.locator("#menu-anima-paintover").click();
+  await page.waitForURL("**/card-battle/anima-paintover-lab.html",{timeout:15000});
+  await page.waitForFunction(()=>window.PaintoverStudio?.frameCount>6 &&
+    window.PaintoverStudio.drawCalls>15 && window.PaintoverStudio.loadedActor,
+    null,{timeout:25000});
+  await page.waitForTimeout(360);
+  const lab=await page.evaluate(()=>({
+   mode:window.PaintoverStudio.mode,
+   frameCount:window.PaintoverStudio.frameCount,
+   drawCalls:window.PaintoverStudio.drawCalls,
+   actorLoaded:window.PaintoverStudio.loadedActor,
+   hasCanvas:!!document.querySelector("canvas#world"),
+   textureControls:document.querySelectorAll(".setting input[type=range]").length
+  }));
+  assert(lab.mode==="composite"&&lab.actorLoaded&&lab.drawCalls>15&&lab.textureControls===5,
+   "Cannot enter working real 3D Anima scene via main menu: "+JSON.stringify(lab));
+  await page.screenshot({path:out+"/"+vp.name+"-03-anima-3d-composite.png",animations:"disabled"});
+  await page.locator("#whitebox").click();
+  assert.equal(await page.evaluate(()=>window.PaintoverStudio.mode),"whitebox");
+  await page.screenshot({path:out+"/"+vp.name+"-04-anima-3d-whitebox.png",animations:"disabled"});
+  assert.deepEqual(errors,[],"Browser runtime errors on main menu/3D scene");
+  report.local.push({viewport:vp.name,pass:true,labels,lab,errors});
+  console.log("PASS local actual root menu -> 3D hall",vp.name,JSON.stringify(lab));
+ }catch(e){
+  report.local.push({viewport:vp.name,pass:false,error:String(e.stack||e),errors});
+  console.error("FAIL local actual root menu",vp.name,e);
+  await page.screenshot({path:out+"/"+vp.name+"-ERROR.png"}).catch(()=>{});
+ }finally{await context.close()}
+}
+// Do not mislabel the source build as published GitHub Pages.
+// Capture externally deployed main menu and explicitly report its status.
+const ctx=await browser.newContext({viewport:{width:1920,height:1080},deviceScaleFactor:1});
+const page=await ctx.newPage();
+try{
+ const response=await page.goto("https://g2066203208-beep.github.io/paperchalk-world/",{
+  waitUntil:"domcontentloaded",timeout:30000});
+ await page.waitForFunction(()=>document.querySelector("#scene-menu-main")!==null,null,{timeout:12000});
+ await page.waitForTimeout(500);
+ const menu=await page.locator("#scene-menu-main button").allTextContents();
+ const hasNew=menu.some(x=>x.includes("褪色的会客厅"));
+ const hasOld=menu.some(x=>x.includes("银月夜路"));
+ const snapshot=out+"/desktop-1920x1080-05-hosted-main-menu.png";
+ await page.screenshot({path:snapshot,animations:"disabled"});
+ report.hosted={http:response?.status(),hasNew,hasOld,menu,url:page.url(),screenshot:snapshot,
+  state:hasNew&&!hasOld?"live-updated":"deploy-pending"};
+ console.log("HOSTED PAGE",JSON.stringify(report.hosted));
+}catch(e){report.hosted={state:"unavailable",error:String(e)};console.log("Hosted unavailable",String(e));}
+finally{await ctx.close()}
 await browser.close();
 fs.writeFileSync(out+"/results.json",JSON.stringify(report,null,2));
-if(!report.some(r=>r.menu?.length))process.exitCode=1;
+assert(report.local.every(r=>r.pass),"Updated root menu and Anima 3D scene must pass Chromium");
