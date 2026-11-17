@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101c20">
+<title>PAINTOVER STUDIO — 3D × Anima 分层场景</title>
+<link rel="stylesheet" href="./ui/anima-paintover-lab.css?v=20261117-01">
+</head>
+<body>
+<main class="studio">
+<header class="top">
+ <div><p class="eyebrow">PAPERCHALK / REAL-TIME MATERIAL STUDY 01</p>
+ <h1>3D 白膜 <span>×</span> Anima 分层合成</h1></div>
+ <div class="top-right"><span id="status">初始化三维空间…</span><a href="./index.html" title="返回游戏">返回游戏</a></div>
+</header>
+<section class="work">
+ <div class="stage">
+  <canvas id="world" aria-label="可旋转查看的真实三维绘画场景"></canvas>
+  <div class="scene-title"><span class="scene-num">01 / 01</span><div>褪色的会客厅<small>THE FADING HALL</small></div></div>
+  <div class="camera-hint">拖动旋转镜头 · 滚轮缩放 · 双击恢复构图</div>
+  <div class="stage-hud"><span id="mode-state">合成视图</span><span id="fps-state">实时 3D</span></div>
+ </div>
+ <aside class="controls" aria-label="材质合成控制面板">
+  <section class="control-section">
+   <p class="subheading">01 — 场景结构</p>
+   <div class="pair"><button id="finished" class="mode current" aria-pressed="true">最终合成</button><button id="whitebox" class="mode" aria-pressed="false">仅看 3D 白膜</button></div>
+   <p class="minor">墙、地面、台阶、石柱均为真实三维几何体。画笔、污渍与苔藓通过可调权重蒙版混合到几何表面。</p>
+  </section>
+  <section class="control-section">
+   <p class="subheading">02 — 材质权重蒙版</p>
+   <label class="setting"><span>底色手绘层 <output id="base-value">100%</output></span><input id="base" type="range" min="0" max="100" value="100"></label>
+   <label class="setting"><span>岁月污渍 <output id="grime-value">70%</output></span><input id="grime" type="range" min="0" max="100" value="70"></label>
+   <label class="setting"><span>墙脚潮湿 <output id="wet-value">55%</output></span><input id="wet" type="range" min="0" max="100" value="55"></label>
+   <label class="setting"><span>苔藓色斑 <output id="growth-value">65%</output></span><input id="growth" type="range" min="0" max="100" value="65"></label>
+   <label class="setting"><span>干笔触 / 边缘 <output id="ink-value">64%</output></span><input id="ink" type="range" min="0" max="100" value="64"></label>
+  </section>
+  <section class="control-section">
+   <p class="subheading">03 — 3D 与 2D 混合</p>
+   <label class="switch"><input type="checkbox" id="actor" checked><span>仓库 Anima 猎人医生立绘</span></label>
+   <label class="switch"><input type="checkbox" id="foreground" checked><span>独立近景树叶与悬挂布</span></label>
+   <label class="switch"><input type="checkbox" id="decals" checked><span>独立墙面贴花 / 绘画片</span></label>
+   <label class="switch"><input type="checkbox" id="shadows" checked><span>角色接地阴影 / 场景阴影</span></label>
+  </section>
+  <section class="control-section">
+   <p class="subheading">04 — 动态光照</p>
+   <div class="pair"><button id="night" class="mode current" aria-pressed="true">暖灯 / 夜</button><button id="day" class="mode" aria-pressed="false">自然光 / 昼</button></div>
+   <p class="minor">高低处、转角与人物均占据真实场景坐标；移动镜头可以验证遮挡而不靠平面卡片冒充空间。</p>
+  </section>
+  <section class="control-section media-section">
+   <p class="subheading">05 — 单元素素材槽</p>
+   <div class="slots"><span>石材底色</span><span>污渍蒙版</span><span>苔藓蒙版</span><span>干笔边缘</span><span>Anima 角色</span><span>前景剪片</span></div>
+   <p class="minor">目前已有 Anima 原始角色。其余环境画笔采用可替换的程序占位纹理；后续将 Anima 绘制的单元素 PNG 逐槽替换，而非重画整张背景。</p>
+  </section>
+  <button id="reset" class="reset">恢复全部合成参数</button>
+ </aside>
+</section>
+<footer>真实 THREE.JS 网格 / ShadowMap / UV 贴图 / 多层权重蒙版 / Alpha Cutout / Depth Test / 实时光照 · 原有角色资产未修改</footer>
+</main>
+<script type="module" src="./engine/anima-paintover-lab.js?v=20261117-01"></script>
+</body>
+</html>
