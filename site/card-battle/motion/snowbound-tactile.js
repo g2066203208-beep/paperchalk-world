@@ -22,6 +22,15 @@
       active:false,moving:false,velocity:0,lastX:0,lastY:0,updates:0};
    states.set(el,s);
   }
+  // Do not hijack the original card's ::before engraved frame: a separate
+  // material foil lives inside it, preserving the carefully drawn rim.
+  const paint=el.querySelector(".paint-card.compact");
+  if(paint&&!paint.querySelector(".tactile-foil")){
+    const foil=document.createElement("span");
+    foil.className="tactile-foil";
+    foil.setAttribute("aria-hidden","true");
+    paint.append(foil);
+  }
   return s;
  }
  function approach(current,target,alpha){return current+(target-current)*alpha}
