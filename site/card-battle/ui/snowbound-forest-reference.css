@@ -679,3 +679,26 @@
    font-size:22px!important;
  }
 }
+
+/* Independent, low-contrast drifting forest atmosphere beneath the actors.
+   This is an additive lighting layer over the user's original painting,
+   not a substitute for individually painted transparent trees. */
+.battle-scene.stage-actors .battle-field::after{
+  content:"";position:absolute;z-index:0;pointer-events:none;
+  inset:6% -11% 4%;border-radius:45%;
+  background:
+   radial-gradient(ellipse at 30% 82%,#d9f0f13d 0%,transparent 46%),
+   radial-gradient(ellipse at 74% 70%,#e9f6e530 0%,transparent 52%);
+  opacity:.35;filter:blur(20px);
+  animation:snowbound-forest-mist-breath 13.2s ease-in-out infinite alternate;
+  will-change:transform,opacity;
+}
+@keyframes snowbound-forest-mist-breath{
+  from{transform:translate3d(-2.8%,0,0);opacity:.24}
+  to{transform:translate3d(2.3%,-.8%,0);opacity:.50}
+}
+@media(prefers-reduced-motion:reduce){
+ .battle-scene.stage-actors .battle-field::after{
+  animation:none;transform:none;opacity:.32;will-change:auto;
+ }
+}
