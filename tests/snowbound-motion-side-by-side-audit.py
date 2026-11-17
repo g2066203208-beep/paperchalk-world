@@ -11,6 +11,7 @@ machine verdict that different artistic styles look equally beautiful.
 import json, math, os, sys, subprocess, hashlib
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageOps, ImageStat, ImageEnhance
+from snowbound_motion_video_alignment import actual_attack_frames
 OUT=Path("artifacts/snowbound-motion-side-by-side")
 SOURCE=Path("motion-source")
 OUT.mkdir(parents=True,exist_ok=True)
@@ -142,6 +143,13 @@ def all_source_frame_measurements(device,kind,sources,frames):
 
 def audit_one(device,kind,sources):
     cfg=CLOCKS[kind];capture,frames=strict_load_capture(device,kind)
+    alignment=None
+    if kind=="attack":
+        # Long hand redraw contains enough CDP screenshots to pixel-align
+        # full 25fps WebM. That real video has ~7 distinct attack frames,
+        # whereas 1920x1080 CPU-limited CDP screencast may have only 2.
+        # No source frames or imaginary inbetweens are pasted over our video.
+        frames,alignment,video_scratch=actual_attack_frames(OUT,device)
     panels=[];observations=[];times=[]
     # Account for the REAL temporal density of the screencast. A 1920x1080
     # runner may deliver only ~6 genuine frames per second while the separate
@@ -218,6 +226,8 @@ def audit_one(device,kind,sources):
       "allSourceFramesCompared":full["referenceFramesMeasured"],
       "allFrameMeasurementFile":str(full_path.relative_to(OUT)),
       "allFrameTemporalCoveragePercent":full["coveragePercent"],
+      "actualVideoSynchronization":alignment,
+      "actualFrameCaptureSource":("WebM 25fps pixel-aligned to the real hand click" if alignment else "CDP live screencast"),
       "browserScreenshotSamplingToleranceMs":round(nearest_frame_tolerance_ms,2),
       "sampledSourceAndGame":observations,
       "sourceTimelineGif":str(gifpath.relative_to(OUT)),
@@ -225,6 +235,8 @@ def audit_one(device,kind,sources):
       "realLiveVideo":str(video.relative_to(OUT)),
       "firstLiveBattleScreenshot":str(screenshot_file.relative_to(OUT))
     }
+    if alignment is not None:
+        video_scratch.cleanup()
     return measured
 report={
  "name":"Snowbound every-commit original-versus-game dynamic QA",
