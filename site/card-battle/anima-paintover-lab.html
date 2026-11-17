@@ -4,19 +4,39 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#101c20">
-<title>褪色的会客厅 · 3D × Anima 场景</title>
+<title>褪色的会客厅 · 第一章</title>
 <link rel="stylesheet" href="./ui/anima-paintover-lab.css?v=20261118-mobile-v2">
+<link rel="stylesheet" href="./ui/anima-hall-gameplay.css?v=20261118-game-v1">
 </head>
 <body>
 <main class="studio">
 <header class="top">
- <div><p class="eyebrow">PAPERCHALK / REAL-TIME MATERIAL STUDY 01</p>
- <h1>3D 白膜 <span>×</span> Anima 分层合成</h1></div>
+ <div><p class="eyebrow">第一章 / THE FADING HALL</p>
+ <h1>褪色的会客厅</h1></div>
  <div class="top-right"><span id="status">初始化三维空间…</span><a href="../index.html" title="返回主菜单">← 主菜单</a></div>
 </header>
 <section class="work">
  <div class="stage">
-  <canvas id="world" aria-label="可旋转查看的真实三维绘画场景"></canvas>
+  <canvas id="world" aria-label="可点击地面行走和探索的三维游戏场景"></canvas>
+  <div class="game-hud" id="game-hud" aria-label="游戏任务与交互提示">
+    <div class="game-mission">
+      <span class="game-chapter">CHAPTER I · 古堡</span>
+      <strong id="game-location">褪色的会客厅</strong>
+      <span id="game-objective">调查桌面与彩窗，找到离开的线索。</span>
+      <span id="game-progress">线索 0 / 2</span>
+    </div>
+    <div class="game-hint" id="game-hint">点击地面行走 · 点击发光标记调查</div>
+  </div>
+  <div class="game-hotspots" id="game-hotspots" aria-label="场景中的可交互物品"></div>
+  <div class="game-walk-mark" id="game-walk-mark" aria-hidden="true"></div>
+  <section class="game-dialogue" id="game-dialogue" role="dialog" aria-modal="false" aria-labelledby="game-speaker" hidden>
+    <div class="game-dialogue-inner">
+      <span id="game-speaker">记事</span>
+      <p id="game-message"></p>
+      <button type="button" id="game-dialogue-next">继续 <span aria-hidden="true">›</span></button>
+    </div>
+  </section>
+  <div class="game-transition" id="game-transition" aria-hidden="true"></div>
   <div class="scene-title"><span class="scene-num">01 / 01</span><div>褪色的会客厅<small>THE FADING HALL</small></div></div>
   <div class="camera-hint"><span class="desktop-hint">拖动旋转镜头 · 滚轮缩放 · 双击恢复构图</span><span class="touch-hint">单指旋转 · 双指缩放 · 双击复位</span></div>
   <div class="stage-hud"><span id="mode-state">合成视图</span><span id="fps-state">实时 3D</span></div>
@@ -63,8 +83,8 @@
   <button id="reset" class="reset">恢复全部合成参数</button>
  </aside>
 </section>
-<footer>真实 THREE.JS 网格 / ShadowMap / UV 贴图 / 多层权重蒙版 / Alpha Cutout / Depth Test / 实时光照 · 原有角色资产未修改</footer>
+<footer>开发视图：真实 THREE.JS 网格 / ShadowMap / 多层材质权重与 Anima 角色</footer>
 </main>
-<script type="module" src="./engine/anima-paintover-lab.js?v=20261118-mobile-v2"></script>
+<script type="module" src="./engine/anima-paintover-lab.js?v=20261118-game-v1"></script>
 </body>
 </html>
