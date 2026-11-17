@@ -1,0 +1,47 @@
+name: Fading Hall Chapter 1 - Real Playable Game QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/card-battle/anima-paintover-lab.html'
+      - 'site/card-battle/engine/anima-hall-gameplay.js'
+      - 'site/card-battle/engine/anima-paintover-lab.js'
+      - 'site/card-battle/ui/anima-hall-gameplay.css'
+      - 'site/card-battle/ui/anima-paintover-lab.css'
+      - 'tests/anima-hall-gameplay-browser.mjs'
+      - '.github/workflows/anima-hall-gameplay-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real-chapter:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate scene and game JavaScript
+        run: |
+          node --check site/card-battle/engine/anima-hall-gameplay.js
+          node --check site/card-battle/engine/anima-paintover-lab.js
+          node --check tests/anima-hall-gameplay-browser.mjs
+      - name: Install actual headless Chromium
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve actual source-built game
+        run: |
+          nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/fading-hall-game-http.log 2>&1 &
+          sleep 2
+      - name: Play first chapter in desktop, portrait and landscape
+        run: node tests/anima-hall-gameplay-browser.mjs
+      - name: Upload real game screenshots + videos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fading-hall-real-playable-chapter-three-device-qa
+          path: artifacts/fading-hall-playable-chapter/
+          retention-days: 14
+          if-no-files-found: warn
