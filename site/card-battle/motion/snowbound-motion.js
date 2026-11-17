@@ -580,18 +580,16 @@
     const otherFoes=[...(stage?.querySelectorAll(".battle-unit.enemy")||[])].filter(el=>el.style.visibility!=="hidden");
     otherFoes.forEach((n,i)=>animate(n,[{transform:"translateX(0) scale(1)",opacity:1},
      {transform:"translateX(60px) rotate(8deg) scale(.86)",opacity:0}],280+i*45,{},run));
-    const gold=stage?.querySelector(".header .stat:last-of-type");
-    if(gold){
-     const dest=midpoint(gold.getBoundingClientRect()),base={x:innerWidth*.52,y:innerHeight*.42};
-     for(let i=0;i<Math.min(5,Math.max(2,Math.ceil((cue.gold||30)/20)));i++){
-      const coin=document.createElement("span");coin.className="motion-flying-coin";
-      coin.textContent="◈";coin.style.left=base.x+"px";coin.style.top=base.y+"px";overlay.append(coin);
-      const dx=dest.x-base.x,dy=dest.y-base.y;
-      animate(coin,[{opacity:0,transform:"translate(0,0) scale(.8)"},
-       {opacity:1,transform:"translate("+(dx*.48)+"px,"+(dy*.48-35)+"px) scale(1.13)",offset:.5},
-       {opacity:0,transform:"translate("+dx+"px,"+dy+"px) scale(.25)"}],550+i*70,{},run).then(()=>coin.remove());
-     }
-    }
+    // Real extruded coins replace the five flat ◈ glyphs.
+    // Keep the underlying rule-engine money change authoritative.
+    const field=stage?.querySelector(".battle-field")?.getBoundingClientRect();
+    const x=field?field.left+field.width*.49:innerWidth*.48;
+    const y=field?field.top+field.height*.26:innerHeight*.34;
+    window.PaperchalkCoinCascade?.burst({
+      x,y,floorY:field?field.bottom-17:innerHeight*.72,
+      count:Math.min(55,Math.max(22,Math.round((Number(cue.gold)||30)*.67))),
+      sound:true
+    });
    }else if(stage)animate(stage,[{filter:"saturate(1) brightness(1)"},
     {filter:"saturate(.55) brightness(.74)"}],400,{},run);
    // Animation completion callbacks may be delayed if Chromium paints
