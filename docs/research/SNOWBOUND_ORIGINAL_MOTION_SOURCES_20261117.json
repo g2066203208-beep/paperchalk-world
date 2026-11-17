@@ -1,0 +1,78 @@
+{
+  "title": "Snowbound original-motion comparison sources",
+  "purpose": "Reproduce measured perceptual rhythms with original Snowbound assets; do not copy source game art or claim pixel identity",
+  "created": "2026-11-17",
+  "local_analysis": "tests/reference-motion-study.py",
+  "workflow": ".github/workflows/reference-motion-frame-study.yml",
+  "artifacts": "https://github.com/g2066203208-beep/paperchalk-world/actions/runs/44058231055",
+  "primary_sources": [
+    {
+      "game": "Balatro",
+      "type": "official press kit GIF",
+      "title": "Balatro_gif_1.gif",
+      "url": "https://www.playbalatro.com/press-kit/Gifs/Balatro_gif_1%20.gif",
+      "sha256": "e3deb972e3fe249b18244334db61537f775e6b49ea1714f65569305eb1a0b9f4",
+      "fps": "12.5 native",
+      "frames": 35,
+      "durationMs": 2800,
+      "analyzed": true,
+      "application": "hand fan/exit/deal/flip measured editorial GIF segments"
+    },
+    {
+      "game": "Balatro",
+      "type": "official press kit GIF",
+      "title": "Balatro_gif_2.gif",
+      "url": "https://www.playbalatro.com/press-kit/Gifs/Balatro_gif_2%20.gif",
+      "sha256": "139a3fa230b082a6566448a80b08fa6d5a8b4b31e8c34110933a715f6c0fa4d6",
+      "fps": "10 native",
+      "frames": 55,
+      "durationMs": 5500,
+      "analyzed": true,
+      "application": "score surge F46–F53 only; editorial cut excluded"
+    },
+    {
+      "game": "Slots & Daggers",
+      "type": "official Steam trailer MP4",
+      "title": "Game explainer",
+      "url": "https://video.akamai.steamstatic.com/store_trailers/257204109/movie480.mp4",
+      "sha256": "a72eb2fd70b1e8997ecbf71c0870d6a14537efed3b466df794262a8ec02278a4",
+      "fps": "60 native",
+      "sourceDurationSec": 70.74,
+      "extractedFrames": 16,
+      "extractedStartSec": 10.38,
+      "analyzed": true,
+      "application": "attack lamp/flash/impact/tail native 60fps"
+    },
+    {
+      "game": "Slots & Daggers",
+      "type": "official Steam trailer MP4",
+      "title": "Reveal trailer",
+      "url": "https://video.akamai.steamstatic.com/store_trailers/257195046/movie480.mp4",
+      "sha256": "c72a42434c20419da8c7f3056e5000bcef64dce9ccfb2e40a424dca8c994940b",
+      "fps": "60 native",
+      "sourceDurationSec": 65.024,
+      "extractedFrames": 16,
+      "extractedStartSec": 21.88,
+      "analyzed": true,
+      "application": "secondary evidence of ordered flash/weapon/light falloff"
+    },
+    {
+      "game": "Wildfrost",
+      "type": "official publisher trailer",
+      "title": "Release Date Announcement Trailer",
+      "url": "https://www.youtube.com/watch?v=Fh1roF9RBh8",
+      "sourcePage": "https://www.wildfrostgame.com/presskit/",
+      "analyzed": false,
+      "application": "future battle-unit staggering and world-space camera comparison; DO NOT cite unmeasured timing as measured"
+    },
+    {
+      "game": "Balatro",
+      "type": "third-party reconstruction tutorial",
+      "title": "Balatro juice effects tutorial (not source game footage)",
+      "url": "https://www.youtube.com/watch?v=Alwy-TH0WzE",
+      "analyzed": false,
+      "application": "separate implementation inspiration for 3D hover, shadow and parallax—not source-verified timing"
+    }
+  ],
+  "distribution_policy": "Keep full publisher videos/GIFs transient in CI runner; commit this source registry, derived timing data and original Snowbound implementations, not complete third-party recordings."
+}
