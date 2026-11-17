@@ -301,7 +301,12 @@ function battle(){
  }).join("");
  const selected=selectedCard>=0?find(rules.ITEMS,b.hand[selectedCard]?.id):null;
  const reserve=r.companions.filter(id=>!b.fallenCompanions?.includes(id)&&!b.allies.some(a=>a.hp>0&&a.template===id));
- const stageDensity=b.allies.filter(u=>u.hp>0).length+b.foes.filter(u=>u.hp>0).length>3?"stage-crowded":"stage-sparse";
+ const friendlyCount=b.allies.filter(u=>u.hp>0).length;
+ const enemyCount=b.foes.filter(u=>u.hp>0).length;
+ // A second allied Anima cutout must never be hidden below the first one's
+ // large click rectangle on a 390px portrait. Switch to the compact,
+ // 12-spot-safe snow formation by ACTUAL live actor density, not just total.
+ const stageDensity=(friendlyCount>=2||friendlyCount+enemyCount>3)?"stage-crowded":"stage-sparse";
  return wrap("battle-scene stage-actors "+stageDensity+" "+(r.zone===1?"ice-zone":r.zone===2?"summit-zone":""),commonHead(z.name+" · "+(b.boss?"首领战":"遭遇战"),{back:"map",className:"battle-header",subtitle:"ROUND "+b.turn})+
  '<div class="battle-core"><div class="battle-field">'+
  '<div class="battle-log" aria-live="polite">'+esc(latest)+'</div><div class="battle-caption"><span>己方</span><span>双排战线</span><span>敌方</span></div>'+
