@@ -14,6 +14,7 @@ on:
       - 'tests/snowbound-journey-browser.mjs'
       - 'tests/snowbound-phase1-interaction-browser.mjs'
       - 'tests/snowbound-pixel-geometry-browser.mjs'
+      - 'tests/snowbound-world-integration-browser.mjs'
       - 'site/card-battle/ui/snowbound-battle-v3.css'
       - 'site/card-battle/ui/snowbound-forest-reference.css'
       - 'site/card-battle/assets/snowy-forest-reference.webp'
@@ -55,6 +56,7 @@ jobs:
           node --check tests/snowbound-tactile-browser.mjs
           node --check site/card-battle/motion/snowbound-tactile.js
           node --check tests/snowbound-reference-clock-browser.mjs
+          node --check tests/snowbound-world-integration-browser.mjs
           node --check tests/snowbound-cinematic-outcomes-browser.mjs
           node --check tests/snowbound-journey-browser.mjs
           node --check tests/snowbound-reference-comparison-report.mjs
@@ -76,6 +78,8 @@ jobs:
         run: node tests/snowbound-phase1-interaction-browser.mjs
       - name: Pixel geometry plus full-capacity visual stress benchmark
         run: node tests/snowbound-pixel-geometry-browser.mjs
+      - name: Ground original Anima character feet on snow and capture real PC/mobile world screenshot + videos
+        run: node tests/snowbound-world-integration-browser.mjs
       - name: Capture cinematic attack, merchant UI and actual browser videos
         run: node tests/snowbound-motion-capture-browser.mjs
       - name: Verify actual 1x and 2x original-GIF/video frame clocks in real game recordings
@@ -135,6 +139,7 @@ jobs:
             artifacts/snowbound-pixel-audit/
             artifacts/snowbound-motion-v2/
             artifacts/snowbound-motion-reference-clocks/
+            artifacts/snowbound-world-integration/
             artifacts/snowbound-motion-side-by-side/
             artifacts/snowbound-tactile-proof/
             artifacts/snowbound-outcome-cinema/
