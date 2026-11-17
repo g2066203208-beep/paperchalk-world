@@ -52,7 +52,8 @@
 }
 @media (orientation:portrait) and (max-width:700px){
   .battle-scene.stage-actors .snowforest-ink-foreground{
-    background-position:54% center;
+    background-size:auto 120%;
+    background-position:54% bottom;
     opacity:.44;
   }
 }
@@ -377,11 +378,17 @@
 
 /* ─── 7. Portrait stage: physically same left/right snow strip ─── */
 @media (orientation:portrait) and (max-width:700px){
+  /* Portrait camera: zoom the SAME 1536x1024 scene toward the actual
+     snow clearing, not the empty upper sky. Source pixels stay original.
+     Projection scale/position is IDENTICAL for background, edge branches
+     and extracted reed foreground, so occlusion lines never drift. */
   .battle-scene:not(.ice-zone):not(.summit-zone){
-    background-position:center,54% center;
+    background-size:cover,auto 120%;
+    background-position:center,54% bottom;
   }
   .battle-scene.stage-actors::after{
-    background-position:54% center;
+    background-size:auto 120%;
+    background-position:54% bottom;
     -webkit-mask-image:linear-gradient(90deg,#000 0%,transparent 10%,
       transparent 90%,#000 100%);
     mask-image:linear-gradient(90deg,#000 0%,transparent 10%,
