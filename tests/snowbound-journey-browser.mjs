@@ -125,16 +125,21 @@ for(const cfg of scenarios){
      'enemy support slots follow left-to-right actual terrain positions');
    assert(board[1].slots[3].x>board[0].slots[3].x+22,
      'rear vampire must occupy a separate visible clearing position, not hide behind the front enemy');
-   assert(board[0].slots[0].right<board[0].slots[3].x+6,
-     'the actual deployed hunter and near enemy occupy distinct snow locations');
+   assert(board[0].slots[2].right<board[0].slots[3].x+6,
+     'the actual deployed hunter at friendly slot 0 and foe at enemy slot 0 stand on separate snow');
    assert(board.every(l=>l.slots[0].width>=60),'portrait actors visible');
    // The rear actor is smaller, so its TOP can be below the taller
    // front actor's head while its FEET stand farther uphill in the snow.
    assert(board[1].slots[0].bottom<board[0].slots[0].bottom-7,
      'second row painted feet stand farther back uphill on the snow');
   }else{
-   assert(board.every(l=>l.slots.every((x,i)=>i===0||x.x>l.slots[i-1].x)),
-     'landscape stage actors follow left-side allies and right-side enemies');
+   // Character x-order is tactical left/right; far-background slot 3 is
+   // intentionally offset into a separate tree clearing so two vampires
+   // cannot hide behind one another. It need not be in column-3 sequence.
+   assert(board.every(l=>l.slots[0].x<l.slots[1].x &&
+     l.slots[1].x<l.slots[2].x && l.slots[2].right<l.slots[3].x+6 &&
+     l.slots[4].x<l.slots[5].x),
+     'landscape stage must keep real left-side allies and right-side enemies readable');
    assert(board[1].slots[0].bottom<board[0].slots[0].bottom-7,
      'second lane footsteps stand farther back on the snow, not in empty sky');
   }
