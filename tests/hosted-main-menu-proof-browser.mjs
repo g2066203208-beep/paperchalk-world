@@ -74,12 +74,13 @@ for(const vp of viewports){
   assert(lab.mode==="composite"&&lab.actorLoaded&&lab.drawCalls>15&&lab.textureControls===5,
    "Cannot enter working real 3D Anima scene via main menu: "+JSON.stringify(lab));
   await page.screenshot({path:out+"/"+vp.name+"-03-anima-3d-composite.png",animations:"disabled"});
-  // Phone controls moved into the compact game HUD. Old hidden desktop
-  // control must not be clicked in a mobile integration test.
-  if(vp.mobile)await page.locator("#mobile-view").click();
-  else await page.locator("#whitebox").click();
-  assert.equal(await page.evaluate(()=>window.PaintoverStudio.mode),"whitebox");
-  await page.screenshot({path:out+"/"+vp.name+"-04-anima-3d-whitebox.png",animations:"disabled"});
+  // Regular player route is a GAME, not the material editor. Check
+  // gameplay UI and one route interaction; inspector remains ?dev=1 only.
+  assert(await page.locator("#game-hud").isVisible());
+  assert(await page.locator('[data-hotspot="table"]').count()===1);
+  assert.equal(await page.evaluate(()=>window.PaintoverStudio.gameplay),true);
+  assert(!await page.locator("#whitebox").isVisible(),"development material editor must be hidden from players");
+  await page.screenshot({path:out+"/"+vp.name+"-04-real-game-hud.png",animations:"disabled"});
   assert.deepEqual(errors,[],"Browser runtime errors on main menu/3D scene");
   report.local.push({viewport:vp.name,pass:true,labels,lab,errors});
   console.log("PASS local actual root menu -> 3D hall",vp.name,JSON.stringify(lab));
