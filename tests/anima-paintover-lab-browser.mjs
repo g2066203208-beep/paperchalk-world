@@ -58,6 +58,7 @@ for(const d of sizes){
     drawerOpen:s.drawerOpen};
   });
   assert(first.loaded&&first.drawCalls>15,"scene must be real WebGL with original Anima actor");
+  assert(first.drawCalls<=55,"static scene lost opaque geometry batching: "+first.drawCalls+" draw calls");
   assert(first.overflowX<=2,"no horizontal clipping or page overflow");
   if(d.mobile){
    assert(first.viewportMode!=="desktop","touch-size viewport must be framed independently");
