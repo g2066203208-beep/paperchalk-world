@@ -281,6 +281,33 @@
      },run).then(()=>particle.remove());
    }
   }
+  function stageRecoilAndSnow(old,target,run){
+   if(!target||!overlay)return;
+   const stage=old?.querySelector(".battle-field");
+   const small=root.innerWidth<700;
+   const dx=small?1.35:2.8;
+   if(stage){
+    animate(stage,[{transform:"translate3d(0,0,0)",filter:"brightness(1)"},
+      {transform:"translate3d("+dx+"px,-1px,0)",filter:"brightness(1.075)",offset:1/6},
+      {transform:"translate3d("+(-dx*.7)+"px,1px,0)",filter:"brightness(1.04)",offset:2/6},
+      {transform:"translate3d("+dx*.2+"px,0,0)",filter:"brightness(1)",offset:4/6},
+      {transform:"translate3d(0,0,0)",filter:"brightness(1)"}],
+      frameTime(REFERENCE_CLOCK.slotsAttack,6),{easing:"linear"},run);
+   }
+   const b=target.getBoundingClientRect();
+   const cx=b.left+b.width*.5,cy=b.bottom-8;
+   for(let i=0;i<7;i++){
+    const n=document.createElement("i");n.className="motion-snow-impact";
+    n.style.left=cx+"px";n.style.top=cy+"px";overlay.append(n);
+    const u=(i-3)/3,dist=13+8*(i%3);
+    animate(n,[{opacity:.92,transform:"translate(-50%,-50%) scale(.54)"},
+      {opacity:.65,transform:"translate("+u*dist*.7+"px,-"+(8+Math.abs(u)*4)+"px) scale(1.1)",offset:.46},
+      {opacity:0,transform:"translate("+u*dist+"px,-"+(14+Math.abs(u)*8)+"px) scale(1.55)"}],
+      frameTime(REFERENCE_CLOCK.slotsAttack,8),{easing:"ease-out"},run)
+      .then(()=>n.remove());
+   }
+   record("original-stage","F10-ground-recoil","6 video frames; no added attack latency");
+  }
   async function attack(old,cue,run){
    if(skipped||run!==token)return;
    const actor=cue.actorId?unit(old,cue.actorId):null;
@@ -335,6 +362,7 @@
    if(cue.blocked)flashFloat(target,cue.blocked,"blocked",run);
    if(cue.damage)flashFloat(target,cue.damage,"damage",run);
    impactSparks(target,run);
+   stageRecoilAndSnow(old,target,run);
    animate(target,[{transform:"translateX(0) rotate(0)",filter:"brightness(1)"},
       {transform:"translateX(7px) rotate(1.8deg) scale(.96)",filter:"brightness(1.6)",offset:.19},
       {transform:"translateX(-3px) rotate(-.8deg) scale(1.01)",filter:"brightness(1.05)",offset:.55},
