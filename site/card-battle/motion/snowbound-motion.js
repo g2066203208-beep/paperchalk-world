@@ -410,6 +410,12 @@
    const newHand=[...app.querySelectorAll(".battle-bottom .hand>button")];
    const clockStart=now();
    record("reference-hand","F00-start","35×80ms; 1x=2800ms");
+   // The published GIF is silent; these are our OWN papery material sounds.
+   // Schedule every click at its animation's absolute reference-frame onset,
+   // rather than waiting for JS promises between events. Speed scales both.
+   beep("paper",frameTime(ref,ref.exitFirst));
+   newHand.slice(0,8).forEach((_,i)=>beep("paper",frameTime(ref,ref.drawFirst+i)));
+   beep("bell",frameTime(ref,ref.faceFirst));
    // Old cards leave in the original GIF's F04..F07 window (320..560ms).
    oldHand.forEach((card,i)=>{
     const spread=oldHand.length>1?i/(oldHand.length-1):0;
@@ -455,18 +461,15 @@
     // it at the same world-space rectangle without a visible position jump.
     wait(ref.totalMs+frameTime(ref,4),run).then(()=>ghost.remove());
    });
-   beep("paper");
    await waitClock(frameTime(ref,ref.exitFirst),clockStart,run);
    if(skipped||run!==token)return;
    record("reference-hand","F04-exit");
    await waitClock(frameTime(ref,ref.drawFirst),clockStart,run);
    if(skipped||run!==token)return;
    record("reference-hand","F13-draw");
-   beep("paper");
    await waitClock(frameTime(ref,ref.faceFirst),clockStart,run);
    if(skipped||run!==token)return;
    record("reference-hand","F27-flip");
-   beep("bell");
    await waitClock(frameTime(ref,ref.frames),clockStart,run);
    if(skipped||run!==token)return;
    record("reference-hand","F35-end");
