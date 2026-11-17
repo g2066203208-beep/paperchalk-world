@@ -4,12 +4,21 @@ import * as THREE from "../vendor/three.module.js";
    Remaining surface textures are deliberately labelled PROCEDURAL PLACEHOLDERS,
    constructed as separate editable paint/mask/decals. No full-scene AI image. */
 const $=id=>document.getElementById(id), canvas=$("world");
+const mobileMatch=window.matchMedia("(max-width:900px)");
+const compact=mobileMatch.matches;
+let drawerOpen=false;
+let cameraTouched=false;
+const isPortrait=()=>canvas.clientWidth<canvas.clientHeight*.86;
+const clockNow=()=>performance.now();
 const state={whitebox:false,day:false,actor:true,foreground:true,decals:true,shadows:true,weights:{base:1,grime:.70,wet:.55,growth:.65,ink:.64}};
 const scene=new THREE.Scene();
 scene.background=new THREE.Color("#172932");
 scene.fog=new THREE.FogExp2("#263e42",.018);
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:"high-performance"});
-renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));
+// Fast touch default: reduce real fill-rate and shadow-map cost instead
+// of shrinking the whole playable canvas to half the screen.
+const mobileRatio=compact?.88:1.35;
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,mobileRatio));
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure=1.18;
@@ -17,7 +26,31 @@ renderer.shadowMap.enabled=true;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 const camera=new THREE.PerspectiveCamera(40,1,.1,100);
 const target=new THREE.Vector3(0,2,-.5);
-let yaw=.57,pitch=1.03,distance=22,dragging=false,previous=null;
+let yaw=.57,pitch=1.03,distance=22;
+let cameraPreset="desktop";
+let resetCounter=0;
+function setCameraPreset(force=false){
+ if(cameraTouched&&!force)return;
+ const stageRect=canvas.getBoundingClientRect();
+ const portrait=stageRect.width<stageRect.height*.86;
+ if(compact&&portrait){
+  // Strong vertical hero-and-architecture framing, with real X/Z depth.
+  // We intentionally favor the character, doors, and stained-glass window.
+  target.set(.12,2.63,-2.05);
+  yaw=.40;pitch=1.01;distance=25.5;camera.fov=55;
+  cameraPreset="portrait";
+ }else if(compact){
+  target.set(.2,2.42,-1.25);
+  yaw=.54;pitch=1.02;distance=17.4;camera.fov=42;
+  cameraPreset="landscape";
+ }else{
+  target.set(0,2,-.5);
+  yaw=.57;pitch=1.03;distance=22;camera.fov=40;
+  cameraPreset="desktop";
+ }
+ cameraTouched=false;
+ cameraUpdate();
+}
 function cameraUpdate(){
  const r=Math.sin(pitch)*distance;
  camera.position.set(target.x+r*Math.sin(yaw),target.y+Math.cos(pitch)*distance,target.z+r*Math.cos(yaw));
@@ -27,7 +60,7 @@ cameraUpdate();
 const ambient=new THREE.HemisphereLight("#a1c5cb","#493b32",1.12);scene.add(ambient);
 const sun=new THREE.DirectionalLight("#aac5c5",1.8);
 sun.position.set(-3,11,9);sun.castShadow=true;
-sun.shadow.mapSize.set(2048,2048);
+sun.shadow.mapSize.set(compact?512:1024,compact?512:1024);
 sun.shadow.camera.left=-17;sun.shadow.camera.right=17;sun.shadow.camera.top=17;sun.shadow.camera.bottom=-17;
 sun.shadow.camera.near=.3;sun.shadow.camera.far=50;sun.shadow.bias=-.00026;
 sun.shadow.normalBias=.027;scene.add(sun,sun.target);
@@ -364,7 +397,7 @@ img.onload=()=>{
 img.onerror=()=>{$("status").textContent="人物原图加载失败，三维场景仍可用";};
 img.src=actorPath;
 // Floating dust stays in 3D space, with subtly animated positions.
-const dustN=180,dustPos=new Float32Array(dustN*3),dustOrigin=new Float32Array(dustN*3);
+const dustN=compact?75:180,dustPos=new Float32Array(dustN*3),dustOrigin=new Float32Array(dustN*3);
 rng=752;
 for(let i=0;i<dustN;i++){
  dustOrigin[3*i]=dustPos[3*i]=range(-7,7);
@@ -388,7 +421,6 @@ function relight(){
  for(const id of ["day","night"]){$(id).classList.toggle("current",id===(state.day?"day":"night"));$(id).setAttribute("aria-pressed",String(id===(state.day?"day":"night")));}
 }
 function sync(){
- for(const b of surfaceBundles)b.rebuild();
  for(const item of architecture)item.mesh.material=state.whitebox?item.white:item.original;
  for(const ob of foreground)ob.visible=state.foreground&&!state.whitebox;
  for(const ob of masks)ob.visible=state.decals&&!state.whitebox;
@@ -401,38 +433,125 @@ function sync(){
   $(id).classList.toggle("current",v);$(id).setAttribute("aria-pressed",String(v));
  }
  $("mode-state").textContent=state.whitebox?"真实白膜 / 深度":"多层权重合成";
+ $("mobile-view").setAttribute("aria-pressed",String(state.whitebox));
+ $("mobile-view-label").textContent=state.whitebox?"合成":"白膜";
+ $("mobile-light").setAttribute("aria-pressed",String(state.day));
+ $("mobile-light-label").textContent=state.day?"夜景":"昼光";
+}
+let materialFrame=0;
+function requestMaterialRebuild(){
+ if(materialFrame)return;
+ materialFrame=requestAnimationFrame(()=>{
+  materialFrame=0;for(const b of surfaceBundles)b.rebuild();
+ });
 }
 for(const name of ["base","grime","wet","growth","ink"]){
- $(name).addEventListener("input",ev=>{state.weights[name]=Number(ev.target.value)/100;$(name+"-value").value=ev.target.value+"%";for(const b of surfaceBundles)b.rebuild()});
+ $(name).addEventListener("input",ev=>{
+  state.weights[name]=Number(ev.target.value)/100;
+  $(name+"-value").value=ev.target.value+"%";
+  requestMaterialRebuild();
+ });
 }
 for(const id of ["actor","foreground","decals","shadows"])$(id).addEventListener("change",ev=>{state[id]=ev.target.checked;sync()});
 $("whitebox").addEventListener("click",()=>{state.whitebox=true;sync()});
 $("finished").addEventListener("click",()=>{state.whitebox=false;sync()});
-$("day").addEventListener("click",()=>{state.day=true;relight()});
-$("night").addEventListener("click",()=>{state.day=false;relight()});
+$("day").addEventListener("click",()=>{state.day=true;relight();sync()});
+$("night").addEventListener("click",()=>{state.day=false;relight();sync()});
+function setDrawer(open){
+ drawerOpen=compact&&!!open;
+ document.documentElement.classList.toggle("panel-open",drawerOpen);
+ $("mobile-panel").setAttribute("aria-expanded",String(drawerOpen));
+ $("material-controls").setAttribute("aria-hidden",String(compact&&!drawerOpen));
+ $("panel-backdrop").tabIndex=drawerOpen?0:-1;
+ if(drawerOpen)$("mobile-close").focus({preventScroll:true});
+ else $("mobile-panel").focus({preventScroll:true});
+}
+$("mobile-panel").addEventListener("click",()=>setDrawer(!drawerOpen));
+$("mobile-close").addEventListener("click",()=>setDrawer(false));
+$("panel-backdrop").addEventListener("click",()=>setDrawer(false));
+document.addEventListener("keydown",e=>{
+ if(e.key==="Escape"&&drawerOpen){e.preventDefault();setDrawer(false)}
+});
+mobileMatch.addEventListener?.("change",()=>{
+ // A breakpoint change needs a fresh projection and disclosure state.
+ if(!compact){document.documentElement.classList.remove("panel-open")}
+});
+$("mobile-view").addEventListener("click",()=>{state.whitebox=!state.whitebox;sync()});
+$("mobile-light").addEventListener("click",()=>{state.day=!state.day;relight();sync()});
+$("mobile-fit").addEventListener("click",()=>{setCameraPreset(true);resetCounter++});
+$("material-controls").setAttribute("aria-hidden",String(compact));
 $("reset").addEventListener("click",()=>{
  state.whitebox=false;state.day=false;state.actor=true;state.foreground=true;state.decals=true;state.shadows=true;
  state.weights={base:1,grime:.7,wet:.55,growth:.65,ink:.64};
  for(const [k,v] of Object.entries(state.weights)){$(k).value=String(v*100);$(k+"-value").value=Math.round(v*100)+"%"}
  for(const k of ["actor","foreground","decals","shadows"])$(k).checked=true;
- yaw=.57;pitch=1.03;distance=22;cameraUpdate();relight();sync();
+ setCameraPreset(true);resetCounter++;requestMaterialRebuild();relight();sync();
 });
-canvas.addEventListener("pointerdown",e=>{dragging=true;previous={x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId)});
-canvas.addEventListener("pointerup",()=>{dragging=false;previous=null});
-canvas.addEventListener("pointercancel",()=>{dragging=false;previous=null});
+// Genuine two-finger zoom; single-finger orbit. No page scrolling while
+// interacting with the world. Both mouse and touch use Pointer Events.
+const touches=new Map();
+let dragPrevious=null,pinchPrevious=0,touchMoved=false,lastTouchUp=0;
+const pointerDistance=()=>{
+ const a=[...touches.values()];return a.length<2?0:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);
+};
+function fitDistance(v){return Math.max(compact&&isPortrait()?18:12.5,Math.min(compact&&isPortrait()?39:32,v))}
+canvas.addEventListener("pointerdown",e=>{
+ e.preventDefault();
+ canvas.setPointerCapture(e.pointerId);
+ touches.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ touchMoved=false;
+ dragPrevious={x:e.clientX,y:e.clientY};
+ if(touches.size===2)pinchPrevious=pointerDistance();
+});
 canvas.addEventListener("pointermove",e=>{
- if(!dragging||!previous)return;
- yaw=Math.max(-.22,Math.min(1.34,yaw+(e.clientX-previous.x)*.005));
- pitch=Math.max(.65,Math.min(1.34,pitch+(e.clientY-previous.y)*.004));
- previous={x:e.clientX,y:e.clientY};cameraUpdate();
+ if(!touches.has(e.pointerId))return;
+ e.preventDefault();
+ const prev=touches.get(e.pointerId);
+ touches.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ const motion=Math.hypot(e.clientX-prev.x,e.clientY-prev.y);
+ if(motion>1.3)touchMoved=true;
+ if(touches.size>=2){
+  const current=pointerDistance();
+  if(pinchPrevious>3&&current>3){
+   const change=Math.max(.80,Math.min(1.20,pinchPrevious/current));
+   distance=fitDistance(distance*change);cameraTouched=true;cameraUpdate();
+  }
+  pinchPrevious=current;
+ }else if(dragPrevious){
+  const rect=canvas.getBoundingClientRect();
+  const speed=rect.width<550?.0042:.005;
+  yaw=Math.max(-.30,Math.min(1.40,yaw+(e.clientX-dragPrevious.x)*speed));
+  pitch=Math.max(.66,Math.min(1.39,pitch+(e.clientY-dragPrevious.y)*.0034));
+  cameraTouched=true;cameraUpdate();
+ }
+ dragPrevious={x:e.clientX,y:e.clientY};
 });
-canvas.addEventListener("wheel",e=>{e.preventDefault();distance=Math.max(14,Math.min(29,distance+e.deltaY*.017));cameraUpdate()},{passive:false});
-canvas.addEventListener("dblclick",()=>{yaw=.57;pitch=1.03;distance=22;cameraUpdate()});
+function releasePointer(e){
+ if(!touches.has(e.pointerId))return;
+ touches.delete(e.pointerId);
+ if(touches.size<2)pinchPrevious=0;
+ dragPrevious=touches.size?[...touches.values()][0]:null;
+ if(e.type==="pointerup"&&e.pointerType==="touch"&&!touchMoved&&!touches.size){
+  const now=clockNow();
+  if(now-lastTouchUp<300){setCameraPreset(true);resetCounter++;}
+  lastTouchUp=now;
+ }
+}
+canvas.addEventListener("pointerup",releasePointer);
+canvas.addEventListener("pointercancel",releasePointer);
+canvas.addEventListener("lostpointercapture",releasePointer);
+canvas.addEventListener("wheel",e=>{
+ e.preventDefault();distance=fitDistance(distance+e.deltaY*.014);
+ cameraTouched=true;cameraUpdate();
+},{passive:false});
+canvas.addEventListener("dblclick",()=>{setCameraPreset(true);resetCounter++});
+let lastPresetKind="";
 function resize(){
  const {width,height}=canvas.getBoundingClientRect();
  if(width<2||height<2)return;
+ const kind=compact?(width<height*.86?"portrait":"landscape"):"desktop";
  camera.aspect=width/height;
- camera.fov=width<500?52:40;
+ if(kind!==lastPresetKind){cameraTouched=false;setCameraPreset(true);lastPresetKind=kind;}
  camera.updateProjectionMatrix();
  renderer.setSize(width,height,false);
 }
@@ -440,6 +559,10 @@ const ro=new ResizeObserver(resize);ro.observe(canvas);resize();
 let last=performance.now(),frames=0,framesAt=last;
 function animate(t){
  requestAnimationFrame(animate);
+ if(document.hidden){last=t;return;}
+ // Low-powered phones need a stable frame budget, not futile 60-fps draws
+ // that compete with touch handlers and browser compositing.
+ if(compact&&t-last<33)return;
  const delta=Math.min(.05,(t-last)/1000||0);last=t;
  lamp.intensity=(state.day?3.8:33)*(1+Math.sin(t*.004)*.035+Math.sin(t*.017)*.018);
  cloth.rotation.y=.17+Math.sin(t*.00082)*.085;
@@ -463,10 +586,16 @@ window.PaintoverStudio={
  get mode(){return state.whitebox?"whitebox":"composite"},
  get layerWeights(){return {...state.weights}},
  get drawCalls(){return renderer.info.render.calls},
+ get viewportMode(){return cameraPreset},
+ get drawerOpen(){return drawerOpen},
+ get cameraDistance(){return distance},
+ get cameraFov(){return camera.fov},
+ get renderRatio(){return renderer.getPixelRatio()},
+ get resetCount(){return resetCounter},
  frameCount:0,
  setWhitebox(v){state.whitebox=Boolean(v);sync()},
  setLayer(name,w){if(name in state.weights){state.weights[name]=Math.max(0,Math.min(1,Number(w)));$(name).value=Math.round(state.weights[name]*100);$(name+"-value").value=Math.round(state.weights[name]*100)+"%";for(const b of surfaceBundles)b.rebuild()}},
  screenshot(){return canvas.toDataURL("image/png")}
 };
-relight();sync();$("status").textContent="正在加载 Anima 人物原图";
+relight();sync();setCameraPreset(true);$("status").textContent="正在加载 Anima 人物原图";
 requestAnimationFrame(animate);
