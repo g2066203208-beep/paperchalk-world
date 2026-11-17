@@ -346,6 +346,56 @@ const lampHalo=add(new THREE.SpriteMaterial({color:"#ffd08a",transparent:true,op
  new THREE.MeshBasicMaterial({color:"#ffd39c",transparent:true,opacity:.12,depthWrite:false,side:THREE.DoubleSide}),
  3.45,6.48,-3.85,{arch:false,cast:false,receive:false});
 lampHalo.scale.set(2.5,2.5,1);
+/* One-time static geometry batching: dozens of separate bricks/pillars are
+ * still real triangles with original world depth, normals and UVs, but use
+ * ONE draw call per opaque material. Transparent and animated world-space
+ * cutouts stay independent and depth-correct. Whitebox remains reversible. */
+function batchStaticWorld(){
+ const buckets=new Map();
+ for(const item of architecture){
+  const mesh=item.mesh,material=item.original;
+  if(!(mesh?.isMesh)||material.transparent||mesh.isSkinnedMesh)continue;
+  const k=material.uuid+":"+mesh.castShadow+":"+mesh.receiveShadow;
+  if(!buckets.has(k))buckets.set(k,{items:[],material,white:item.white,cast:mesh.castShadow,receive:mesh.receiveShadow});
+  buckets.get(k).items.push(item);
+ }
+ const mergedItems=new Set();
+ for(const group of buckets.values()){
+  if(group.items.length<2)continue;
+  const position=[],normal=[],uv=[];
+  for(const item of group.items){
+   const mesh=item.mesh;
+   mesh.updateMatrix();
+   const orig=mesh.geometry;
+   const geom=orig.index?orig.toNonIndexed():orig.clone();
+   geom.applyMatrix4(mesh.matrix);
+   const a=geom.getAttribute("position"),b=geom.getAttribute("normal"),c=geom.getAttribute("uv");
+   if(!a||!b||!c){geom.dispose();throw Error("Static 3D geometry missing position/normal/uv");}
+   for(let i=0;i<a.count;i++){
+    position.push(a.getX(i),a.getY(i),a.getZ(i));
+    normal.push(b.getX(i),b.getY(i),b.getZ(i));
+    uv.push(c.getX(i),c.getY(i));
+   }
+   geom.dispose();root.remove(mesh);orig.dispose();
+   mergedItems.add(item);
+  }
+  const geometry=new THREE.BufferGeometry();
+  geometry.setAttribute("position",new THREE.Float32BufferAttribute(position,3));
+  geometry.setAttribute("normal",new THREE.Float32BufferAttribute(normal,3));
+  geometry.setAttribute("uv",new THREE.Float32BufferAttribute(uv,2));
+  geometry.computeBoundingSphere();
+  const mesh=new THREE.Mesh(geometry,group.material);
+  mesh.castShadow=group.cast;mesh.receiveShadow=group.receive;
+  root.add(mesh);
+  group.replacement={mesh,original:group.material,white:group.white};
+ }
+ const retained=architecture.filter(item=>!mergedItems.has(item));
+ for(const g of buckets.values())if(g.replacement)retained.push(g.replacement);
+ architecture.length=0;architecture.push(...retained);
+ renderer.shadowMap.needsUpdate=true;
+}
+batchStaticWorld();
+
 // Soft shadow physically located below character.
 function circleShadow(x,z){
  const c=canv(128,128),g=c.getContext("2d"),rad=g.createRadialGradient(64,64,0,64,64,62);
