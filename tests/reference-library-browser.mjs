@@ -7,9 +7,9 @@ import {chromium} from "playwright";
 const source=JSON.parse(fs.readFileSync("site/card-battle/reference-media-manifest.json","utf8"));
 const docs=JSON.parse(fs.readFileSync("docs/game/visual-reference-library/reference-media-manifest.json","utf8"));
 assert.deepEqual(source,docs,"hosted media catalog and GitHub docs must stay identical");
-assert.equal(source.games.length,5,"five requested core references");
+assert.equal(source.games.length,7,"seven core visual references including Dungeonborne and GrimKeep");
 const list=source.games.flatMap(game=>game.media.map(media=>({game:game.id,media})));
-assert.equal(list.length,57,"all 57 references must remain catalogued");
+assert.equal(list.length,97,"all 97 references must remain catalogued");
 assert.equal(list.filter(x=>x.media[0]==="gif").length,6,"all publisher GIF references still recorded");
 for(const {game,media} of list){
  assert.equal(media.length,6,"every asset must have source type, title, URL, purpose, provider, verification status");
@@ -26,8 +26,8 @@ for(const v of [{id:"desktop-1440",w:1440,h:900},{id:"phone-390",w:390,h:844}]){
  page.on("pageerror",e=>errors.push(e.message));
  try{
   await page.goto("http://127.0.0.1:4173/card-battle/reference-library.html",{waitUntil:"domcontentloaded",timeout:30000});
-  await page.waitForFunction(()=>window.document.querySelectorAll("#grid article.tile").length===57,null,{timeout:15000});
-  const total=await page.locator("#grid article.tile").count();assert.equal(total,57);
+  await page.waitForFunction(()=>window.document.querySelectorAll("#grid article.tile").length===list.length,null,{timeout:15000});
+  const total=await page.locator("#grid article.tile").count();assert.equal(total,list.length);
   await page.screenshot({path:"artifacts/game-reference-library/"+v.id+"-01-all-sources.png"});
   await page.getByRole("button",{name:"Forgive Me Father 2",exact:true}).click();
   assert.equal(await page.locator("#grid article.tile").count(),19,"FMF2 individual media sources");
@@ -39,8 +39,15 @@ for(const v of [{id:"desktop-1440",w:1440,h:900},{id:"phone-390",w:390,h:844}]){
   await page.getByRole("button",{name:"全部类型",exact:true}).click();
   await page.locator("#search").fill("金币");
   const filtered=await page.locator("#grid article.tile").count();
-  assert(filtered>0&&filtered<57,"search must filter targets by gold keyword");
+  assert(filtered>0&&filtered<list.length,"search must filter targets by gold keyword");
   await page.screenshot({path:"artifacts/game-reference-library/"+v.id+"-04-coin-query.png"});
+  await page.locator("#search").fill("");
+  await page.getByRole("button",{name:"Dungeonborne",exact:true}).click();
+  assert.equal(await page.locator("#grid article.tile").count(),17,"Dungeonborne must contain 17 source-linked entries");
+  await page.screenshot({path:"artifacts/game-reference-library/"+v.id+"-05-dungeonborne.png"});
+  await page.getByRole("button",{name:/格林堡 \/ GrimKeep/}).click();
+  assert.equal(await page.locator("#grid article.tile").count(),23,"GrimKeep must contain 23 source-linked entries");
+  await page.screenshot({path:"artifacts/game-reference-library/"+v.id+"-06-grimkeep.png"});
   await page.locator("#search").fill("");
   await page.getByRole("button",{name:/幻象游园剧/}).click();
   assert.equal(await page.locator("#grid article.tile").count(),9,"Illusion Carnival creator PV + screenshots");
@@ -49,7 +56,7 @@ for(const v of [{id:"desktop-1440",w:1440,h:900},{id:"phone-390",w:390,h:844}]){
   assert(links.every(x=>x.href.startsWith("https://")&&x.rel.includes("noopener")&&x.target==="_blank"));
   assert.deepEqual(errors,[],"browser reference gallery runtime errors");
   results.push({viewport:v.id,pass:true,all:total,gifs:6,goldSearch:filtered,illusion:9});
-  console.log("PASS",v.id,"57 original media links, GIF filter, game filter, search and source links");
+  console.log("PASS",v.id,"97 original media links, GIF filter, game filter, search and source links");
  }catch(err){
   results.push({viewport:v.id,pass:false,error:String(err.stack||err),errors});
   console.error("FAIL",v.id,err);
