@@ -377,8 +377,10 @@ function settings(){
  '<div class="panel-header"><h2>系统选项</h2></div><div class="choice-footer">'+
  '<button data-act="togglesound" class="outline-button" type="button">音效：'+(s.sound?'开启':'关闭')+'</button>'+
  '<button data-act="toggleparticles" class="outline-button" type="button">飘雪：'+(s.particles?'开启':'关闭')+'</button>'+
- '<button data-act="motionspeed" data-speed="1" class="outline-button" type="button">正常 1×</button>'+
- '<button data-act="motionspeed" data-speed="2" class="outline-button" type="button">快速 2×</button></div>'+
+ '<button data-act="motionspeed" data-speed="0.5" class="outline-button" aria-pressed="'+(motion?.speed()===.5)+'" type="button">慢放 0.5×</button>'+
+ '<button data-act="motionspeed" data-speed="1" class="outline-button" aria-pressed="'+(motion?.speed()===1)+'" type="button">参考原速 1×</button>'+
+ '<button data-act="motionspeed" data-speed="2" class="outline-button" aria-pressed="'+(motion?.speed()===2)+'" type="button">快速 2×</button></div>'+
+ '<p style="font:12px/1.6 sans-serif;color:#465869">1×：换牌采用官方 GIF 35 帧 / 2.8 秒；攻击核心遵循所选视频 16 帧 / 266.7 毫秒。其他动作遵循原创时间轴。</p>'+
  '<div style="font:12px/2.1 sans-serif;margin-top:15px"><p>① 村庄选领队 → 地图选路线 → 战斗 / 商店 / 事件 → 地区首领 → 结算。</p>'+
  '<p>② 每回合只出一张战术道具牌。倒计时归零的敌我单位自动攻击。</p>'+
  '<p>③ 点击我方卡再点击空格调整站位；伙伴详情可召回同伴，召唤按钮用于派遣后备伙伴。</p>'+
