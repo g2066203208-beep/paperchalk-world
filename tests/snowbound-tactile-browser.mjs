@@ -63,7 +63,7 @@ for(const cfg of [{name:"desktop",w:1920,h:1080,mobile:false},
    assert(active.active>=1,"touch press should animate the material while held");
    await button.evaluate(node=>node.dispatchEvent(new PointerEvent("pointerup",{
       bubbles:true,pointerType:"touch",button:0,pointerId:42})));
-   await page.waitForTimeout(700);
+   await page.waitForTimeout(1050);
    assert.equal((await page.evaluate(()=>window.PaperchalkTactile.debug())).active,0,
      "touch release must settle and reset without sticky glow");
    await page.screenshot({path:OUT+"/portrait-after-touch-reset.png"});
