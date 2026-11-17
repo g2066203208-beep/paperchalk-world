@@ -34,12 +34,12 @@ for(const d of sizes){
   assert.equal(await page.evaluate(()=>window.PaintoverStudio.mode),"whitebox");
   await page.screenshot({path:out+"/"+d.id+"-02-whitebox.png"});
   await page.locator("#finished").click();
-  await page.locator("#grime").fill("0");
-  await page.locator("#growth").fill("0");
+  await page.locator("#grime").evaluate(el=>{el.value="0";el.dispatchEvent(new Event("input",{bubbles:true}))});
+  await page.locator("#growth").evaluate(el=>{el.value="0";el.dispatchEvent(new Event("input",{bubbles:true}))});
   assert.deepEqual(await page.evaluate(()=>[window.PaintoverStudio.layerWeights.grime,window.PaintoverStudio.layerWeights.growth]),[0,0]);
   await page.screenshot({path:out+"/"+d.id+"-03-clean-paint.png"});
-  await page.locator("#grime").fill("100");
-  await page.locator("#growth").fill("100");
+  await page.locator("#grime").evaluate(el=>{el.value="100";el.dispatchEvent(new Event("input",{bubbles:true}))});
+  await page.locator("#growth").evaluate(el=>{el.value="100";el.dispatchEvent(new Event("input",{bubbles:true}))});
   await page.screenshot({path:out+"/"+d.id+"-04-heavy-masks.png"});
   await page.locator("#day").click();
   await page.screenshot({path:out+"/"+d.id+"-05-daylight.png"});
