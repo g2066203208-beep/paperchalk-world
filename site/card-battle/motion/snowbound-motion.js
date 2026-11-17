@@ -6,10 +6,21 @@
  */
 (function(root){
  "use strict";
+ // Durations in the reference modes come from actual decoded source frames,
+ // never estimates from promotional screenshots. Video cuts are NOT mapped.
+ const REFERENCE_CLOCK=Object.freeze({
+  balatroHand:Object.freeze({fps:12.5,frames:35,totalMs:2800,
+    exitFirst:4,exitLast:7,drawFirst:13,drawLast:20,faceFirst:27,faceLast:34}),
+  balatroScore:Object.freeze({fps:10,frames:55,totalMs:5500,
+    boostFirst:46,boostLast:53}),
+  slotsAttack:Object.freeze({fps:60,frames:16,totalMs:16*1000/60,
+    lightFirst:0,flashFirst:6,impactFrame:10,tailLast:15})
+ });
+ const frameTime=(profile,frame)=>1000*frame/profile.fps;
  const TOKENS=Object.freeze({
-  scene:330,intro:860,charge:105,travel:135,hitstop:65,
+  scene:330,intro:860,charge:100,travel:1000/60*4,hitstop:1000/60*2,
   hurt:160,attackRecover:150,damageFloat:520,death:440,
-  summon:440,redraw:590,cardSwap:245,shopPurchase:720,
+  summon:440,redraw:REFERENCE_CLOCK.balatroHand.totalMs,cardSwap:245,shopPurchase:720,
   result:850,fastScale:.65,reducedScale:.15
  });
  const now=()=>performance.now();
@@ -53,12 +64,14 @@
     requestAnimationFrame(tick);
    });
   }
-  async function animate(element,keyframes,ms,{easing="cubic-bezier(.19,.8,.3,1)",fill="forwards"}={},run=token){
+  async function animate(element,keyframes,ms,{easing="cubic-bezier(.19,.8,.3,1)",fill="forwards",delay=0}={},run=token){
    if(!element||!element.isConnected||skipped||run!==token)return;
-   let d=duration(ms);
+   const d=duration(ms);
    if(!d){Object.assign(element.style,{opacity:keyframes.at(-1)?.opacity??""});return}
-   if(!element.animate){await wait(ms,run);return}
-   const a=element.animate(keyframes,{duration:d,easing,fill});
+   if(!element.animate){await wait(ms+delay,run);return}
+   // Delays, durations and checkpoint waits all share the same source-clock
+   // speed factor. CSS-only unscaled delays caused cue/audio desynchrony.
+   const a=element.animate(keyframes,{duration:d,delay:duration(delay),easing,fill});
    active.push(a);
    try{await a.finished}catch(e){}
    const i=active.indexOf(a);if(i>=0)active.splice(i,1);
@@ -422,9 +435,11 @@
   return Object.freeze({
    capture,play,skipToSafeCheckpoint:skip,isBusy:()=>busy,
    setSpeed:v=>{if([.5,1,1.5,2].includes(v))speed=v;return speed},
-   speed:()=>speed,tokens:TOKENS,trace:()=>marks.slice(),lastError:()=>lastError,
+   speed:()=>speed,tokens:TOKENS,referenceClock:REFERENCE_CLOCK,
+   referenceFrameTime:(which,frame)=>frameTime(REFERENCE_CLOCK[which],frame),
+   trace:()=>marks.slice(),lastError:()=>lastError,
    reduced:prefersReduced,beep
   });
  }
- root.PaperchalkMotion=Object.freeze({create,TOKENS});
+ root.PaperchalkMotion=Object.freeze({create,TOKENS,REFERENCE_CLOCK,frameTime});
 })(window);
