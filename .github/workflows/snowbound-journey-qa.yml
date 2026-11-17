@@ -19,6 +19,7 @@ on:
       - 'tests/snowbound-full-run.test.cjs'
       - 'tests/snowbound-semantic-events.test.cjs'
       - 'tests/snowbound-motion-capture-browser.mjs'
+      - 'tests/snowbound-reference-clock-browser.mjs'
       - 'tests/snowbound-cinematic-outcomes-browser.mjs'
       - 'site/card-battle/motion/snowbound-motion.js'
       - 'site/card-battle/motion/snowbound-motion.css'
@@ -42,6 +43,7 @@ jobs:
           node --check site/card-battle/motion/snowbound-motion.js
           node --check tests/snowbound-semantic-events.test.cjs
           node --check tests/snowbound-motion-capture-browser.mjs
+          node --check tests/snowbound-reference-clock-browser.mjs
           node --check tests/snowbound-cinematic-outcomes-browser.mjs
           node --check tests/snowbound-journey-browser.mjs
           node --check tests/snowbound-reference-comparison-report.mjs
@@ -65,6 +67,8 @@ jobs:
         run: node tests/snowbound-pixel-geometry-browser.mjs
       - name: Capture cinematic attack, merchant UI and actual browser videos
         run: node tests/snowbound-motion-capture-browser.mjs
+      - name: Verify actual 1x and 2x original-GIF/video frame clocks in real game recordings
+        run: node tests/snowbound-reference-clock-browser.mjs
       - name: Validate fatal-hit death and full victory-defeat cinematic branch
         run: node tests/snowbound-cinematic-outcomes-browser.mjs
       - name: Publish side-by-side official reference and actual game screenshots
@@ -80,6 +84,7 @@ jobs:
             artifacts/snowbound-phase1/
             artifacts/snowbound-pixel-audit/
             artifacts/snowbound-motion-v2/
+            artifacts/snowbound-motion-reference-clocks/
             artifacts/snowbound-outcome-cinema/
             artifacts/snowbound-reference-comparison/
           if-no-files-found: warn
