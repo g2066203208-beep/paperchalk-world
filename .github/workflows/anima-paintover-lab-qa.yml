@@ -1,0 +1,44 @@
+name: Anima 3D Paintover Scene - Actual Browser Screens and Video
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/card-battle/anima-paintover-lab.html'
+      - 'site/card-battle/engine/anima-paintover-lab.js'
+      - 'site/card-battle/ui/anima-paintover-lab.css'
+      - 'tests/anima-paintover-lab-browser.mjs'
+      - '.github/workflows/anima-paintover-lab-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  three-real-scene:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check Three.js layer code and visual test syntax
+        run: |
+          node --check site/card-battle/engine/anima-paintover-lab.js
+          node --check tests/anima-paintover-lab-browser.mjs
+      - name: Install real Chromium
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve playable game repo
+        run: |
+          nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/paintover-http.log 2>&1 &
+          sleep 2
+      - name: 3 viewports x 7 actual material screenshots + browser video
+        run: node tests/anima-paintover-lab-browser.mjs
+      - name: Upload browser frames and recordings
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anima-paintover-real-3d-scenes-and-video
+          path: artifacts/anima-paintover-lab/
+          if-no-files-found: warn
+          retention-days: 14
