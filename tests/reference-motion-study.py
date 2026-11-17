@@ -97,6 +97,30 @@ def sheet(name,frames,times,start,rate,kind):
     sheet.save(p,quality=86,optimize=True)
     return str(p)
 
+
+def native_60fps_burst(path,name,start):
+    """16 consecutive ORIGINAL 60fps video frames = ~267 ms, ~16.67ms apart."""
+    with tempfile.TemporaryDirectory() as tmp:
+        target=Path(tmp)/"native_%05d.png"
+        subprocess.run(["ffmpeg","-hide_banner","-loglevel","error","-y",
+                        "-i",str(path),"-ss",str(start),
+                        "-frames:v","16","-vf","scale=340:-2:flags=lanczos",
+                        "-vsync","0",str(target)],check=True)
+        imgs=[Image.open(x).convert("RGB") for x in sorted(Path(tmp).glob("native_*.png"))]
+    if len(imgs)!=16:raise RuntimeError("expected 16 native frames, got "+str(len(imgs)))
+    w,h=370,250
+    canvas=Image.new("RGB",(w*4,h*4+38),(14,23,30))
+    draw=ImageDraw.Draw(canvas)
+    draw.text((10,9),f"{name} - 16 NATIVE 60fps FRAMES - source t {start:.3f}s to {start+15/60:.3f}s",(235,239,228))
+    for i,im in enumerate(imgs):
+        im.thumbnail((w-12,h-34))
+        x=(i%4)*w+6;y=(i//4)*h+38
+        canvas.paste(im,(x+(w-12-im.width)//2,y+(h-34-im.height)//2))
+        draw.text((x+4,y+h-27),f"F{i:02d}   t={start+i/60:.4f}s",(240,235,215))
+    p=OUT/f"{name}_native60_{str(start).replace('.','p')}.jpg"
+    canvas.save(p,quality=86,optimize=True)
+    return str(p)
+
 reports=[]
 for path in sorted(SRC.iterdir()):
     if path.suffix.lower() not in (".gif",".mp4",".webm"):continue
@@ -109,7 +133,12 @@ for path in sorted(SRC.iterdir()):
         if not images:raise RuntimeError("no decoded frames")
         diff=[0.0]+[delta(images[i-1],images[i]) for i in range(1,len(images))]
         windows=choose_windows(times,diff)
+        if path.suffix==".gif":
+            windows=sorted(set([0,max(0,(len(times)-N)//2),max(0,len(times)-N)]))
         previews=[sheet(name,images,times,idx,RATE,"GIF native frames" if path.suffix==".gif" else "8fps sampling") for idx in windows]
+        if path.suffix.lower()==".mp4" and name in ("slots_game_explainer","slots_reveal_trailer"):
+            start=10.38 if name=="slots_game_explainer" else 21.88
+            previews.append(native_60fps_burst(path,name,start))
         metrics=[{"index":i,"time_s":round(t,4),"mean_luma_change":round(diff[i],3)} for i,t in enumerate(times)]
         (OUT/f"{name}_frame_metrics.json").write_text(json.dumps(metrics,indent=2))
         reports.append({"name":name,"file_sha256":filehash,"byte_size":path.stat().st_size,
