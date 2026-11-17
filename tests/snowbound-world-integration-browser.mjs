@@ -83,7 +83,7 @@ for(const cfg of devices){
     const el=document.querySelector(".snowforest-ink-foreground");
     if(!el)return {exists:false};
     const style=getComputedStyle(el);
-    const source=style.backgroundImage.match(/url\\(["']?(.*?)["']?\\)/)?.[1];
+    const source=style.backgroundImage.match(/url\(["']?(.*?)["']?\)/)?.[1];
     if(!source)return {exists:true,decoded:false,background:style.backgroundImage};
     const im=new Image();im.src=source;await im.decode();
     const canvas=document.createElement("canvas");canvas.width=96;canvas.height=64;
