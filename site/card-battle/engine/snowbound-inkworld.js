@@ -273,15 +273,15 @@ function run(canvas){
 }
 function sync(){
  const c=APP.querySelector(".battle-scene .fmf2-world-canvas");
- if(c!==scene){
+ if(c!==scene||(enabled&&!active)||(!enabled&&active)){
   if(active)active.stop();active=null;scene=c;
-  if(c)active=run(c);
+  if(c&&enabled)active=run(c);
  }
  if(c){
   const root=c.closest(".battle-scene");
   root.classList.toggle("fmf2-world-active",enabled&&c.dataset.inkStatus!=="error"&&c.dataset.inkStatus!=="unavailable");
   const toggle=root.querySelector(".fmf2-world-toggle");
-  if(toggle){toggle.textContent=enabled?"原画场景":"漫画3D场景";toggle.setAttribute("aria-pressed",String(enabled));}
+  if(toggle){const label=enabled?"原画场景":"漫画3D场景";if(toggle.textContent!==label)toggle.textContent=label;toggle.setAttribute("aria-pressed",String(enabled));}
  }
 }
 APP.addEventListener("click",e=>{
