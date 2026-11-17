@@ -153,6 +153,12 @@ for(const cfg of cfgs){
     },"battle");
     return {clockOriginMs};
    });
+   // Force an actual Chromium PNG capture DURING the 60fps source's
+   // attack window, not only asynchronous CDP/WebM streams. This reveals
+   // whether compositor effects are visible at the expected moment.
+   await page.waitForTimeout(165);
+   await page.screenshot({path:OUT+"/"+cfg.id+"-attack-impact-live-page.png",
+     animations:"allow",timeout:10000});
    await page.evaluate(()=>window.__comparisonPending);
    const trace=await page.evaluate(()=>window.__comparisonDirector.trace());
    const visualSamples=await page.evaluate(()=>window.__comparisonVisualSamples||[]);
