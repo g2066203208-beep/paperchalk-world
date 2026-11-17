@@ -3,6 +3,7 @@ on:
   push:
     branches: [main]
     paths:
+      - 'site/card-battle/**'
       - 'tests/snowbound-motion-side-by-side-browser.mjs'
       - 'tests/snowbound-motion-side-by-side-audit.py'
       - 'tests/snowbound_motion_video_alignment.py'
