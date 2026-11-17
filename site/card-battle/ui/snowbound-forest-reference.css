@@ -37,6 +37,26 @@
     transparent 84%,#000 95%,#000 100%);
   opacity:1;
 }
+
+/* A genuine foreground matt, programmatically EXTRACTED from the user's
+   exact snowy-forest painting. It contains real dark ink and ochre twigs
+   with transparent background — no newly generated scene imagery.
+   Anima actor can now pass *behind* individual reed strokes. */
+.battle-scene.stage-actors .snowforest-ink-foreground{
+  position:absolute;inset:0;z-index:5;pointer-events:none;
+  background-image:url("../assets/forest-foreground-reeds-from-user.webp");
+  background-size:cover;
+  background-position:center 49%;
+  background-repeat:no-repeat;
+  opacity:.92;
+}
+@media (orientation:portrait) and (max-width:700px){
+  .battle-scene.stage-actors .snowforest-ink-foreground{
+    background-position:54% center;
+    opacity:.86;
+  }
+}
+
 /* Sky-to-snow lighting is localized, not an opaque overlay on the characters. */
 .battle-scene.stage-actors .battle-field{
   position:relative;
