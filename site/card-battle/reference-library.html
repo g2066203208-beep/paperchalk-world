@@ -51,8 +51,8 @@ footer{padding:17px;text-align:center;font-size:11px;color:#809795;border-top:1p
 <header>
 <p class="overline">PAPERCHALK WORLD · GAME VISUAL REFERENCE ARCHIVE · 2026-11-17</p>
 <h1>场景 · 动态 · 特效参考图库</h1>
-<p class="lead">五款游戏、57 条带出处的截图、GIF、视频、开发日志。按视觉需求研究，不把截图当作可直接拷贝的游戏资源。图片加载来自原网站；如果原站限制外链，使用「打开原出处」查看。</p>
-<div class="meta"><span>5 个重点游戏</span><span>图片 / 视频 / GIF / 技术文章</span><span>有来源状态、复现目标与技术文档</span></div>
+<p class="lead">七款游戏、97 条带出处的截图、GIF、视频与开发日志（无独立 GIF 的游戏以原版视频代替）。按视觉需求研究，不把截图当作可直接拷贝的游戏资源。图片加载来自原网站；如果原站限制外链，使用「打开原出处」查看。</p>
+<div class="meta"><span>7 个重点游戏</span><span>图片 / 视频 / GIF / 技术文章</span><span>有来源状态、复现目标与技术文档</span></div>
 <nav><a href="./anima-paintover-lab.html">3D × Anima 分层场景演示</a><a href="./coin-fx-lab.html">金币实验室</a><a href="./snowbound-journey.html">当前游戏</a><a href="https://github.com/g2066203208-beep/paperchalk-world/tree/main/docs/game/visual-reference-library" target="_blank" rel="noopener noreferrer">GitHub 完整技术拆解</a></nav>
 </header>
 <main>
@@ -71,7 +71,7 @@ footer{padding:17px;text-align:center;font-size:11px;color:#809795;border-top:1p
 <script>
 (()=>{"use strict";
 const $=id=>document.getElementById(id);
-let data=[],activeGame="all",activeType="all",term="";
+let data=[],activeGame="all",activeType="all",term="",sourceTotal=0;
 const cn={image:"图片",gif:"GIF",video:"视频",article:"技术文章",website:"官网/图库","video-embedded":"嵌入视频"};
 const safe=(url)=>{try{const u=new URL(url);return u.protocol==="https:"?u.href:"#"}catch(_){return"#"}};
 function button(label,active,click){
@@ -126,13 +126,13 @@ function present(){
    box.append(card(g,m));total++;
   }
  }
- $("count").textContent=total+" / 57 条";
+ $("count").textContent=total+" / "+sourceTotal+" 条";
  $("empty").hidden=total!==0;
 }
 $("search").oninput=e=>{term=e.target.value.trim().toLowerCase();present()};
 $("verified").onchange=present;
 fetch("./reference-media-manifest.json",{cache:"no-cache"}).then(r=>{if(!r.ok)throw Error("HTTP "+r.status);return r.json()}).then(d=>{
- data=d.games;presentGames();presentTypes();present();document.title="57 reference media — Paperchalk";
+ data=d.games;sourceTotal=data.reduce((n,g)=>n+g.media.length,0);presentGames();presentTypes();present();document.title=sourceTotal+" reference media — Paperchalk";
 }).catch(err=>{$("count").textContent="读取失败："+err.message;$("empty").hidden=false;$("empty").textContent="无法加载参考资料，请刷新页面或打开 GitHub JSON。"});
 })();
 </script>
