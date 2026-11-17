@@ -24,13 +24,15 @@ for(const d of devices){
   await page.goto("http://127.0.0.1:4173/card-battle/coin-fx-lab.html",{waitUntil:"networkidle"});
   assert(await page.locator("#payout").isVisible());
   await page.screenshot({path:out+"/"+d.name+"-00-rest.png"});
+  const launchAt=Date.now();
   await page.locator("#payout").click();
   await page.waitForFunction(()=>window.PaperchalkCoinCascade?.status==="playing"&&
     Number(document.querySelector(".paperchalk-coin-webgl")?.dataset.coinFrame)>2,null,{timeout:8000});
-  let last=0;
   const shots=[];
-  for(const [ms,label] of [[120,"01-launch"],[340,"02-metal-flip"],[650,"03-first-bounce"],[980,"04-scattering"],[1500,"05-resting"],[2200,"06-collect"]]){
-   await page.waitForTimeout(ms-last);last=ms;
+  for(const [ms,label] of [[150,"01-launch"],[430,"02-metal-flip"],[850,"03-first-bounce"],[1550,"04-scattering"],[2400,"05-resting"],[3550,"06-collect"]]){
+   // Wall clock, not incremental wait: screenshot/compositor cost must not
+   // shift later samples out of the whole payout animation.
+   await page.waitForTimeout(Math.max(0,ms-(Date.now()-launchAt)));
    const name=out+"/"+d.name+"-"+label+".png";
    await page.screenshot({path:name});shots.push(name);
   }
