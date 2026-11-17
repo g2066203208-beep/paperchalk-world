@@ -4,6 +4,9 @@ on:
     branches: [main]
     paths:
       - 'site/card-battle/snowbound-journey.html'
+      - 'site/card-battle/**'
+      - 'tests/snowbound-motion-side-by-side-browser.mjs'
+      - 'tests/snowbound-motion-side-by-side-audit.py'
       - 'site/card-battle/engine/snowbound-journey.js'
       - 'site/card-battle/ui/snowbound-journey.css'
       - 'site/card-battle/ui/snowbound-journey-ui.js'
@@ -45,6 +48,8 @@ jobs:
           node --check site/card-battle/motion/snowbound-motion.js
           node --check tests/snowbound-semantic-events.test.cjs
           node --check tests/snowbound-motion-capture-browser.mjs
+          node --check tests/snowbound-motion-side-by-side-browser.mjs
+          python3 -m py_compile tests/snowbound-motion-side-by-side-audit.py
           node --check tests/snowbound-tactile-browser.mjs
           node --check site/card-battle/motion/snowbound-tactile.js
           node --check tests/snowbound-reference-clock-browser.mjs
@@ -77,6 +82,43 @@ jobs:
         run: node tests/snowbound-tactile-browser.mjs
       - name: Validate fatal-hit death and full victory-defeat cinematic branch
         run: node tests/snowbound-cinematic-outcomes-browser.mjs
+      - name: Capture REAL game input, timestamped cinematic frames and native Chromium video (desktop + phone)
+        if: always()
+        run: node tests/snowbound-motion-side-by-side-browser.mjs
+      - name: Download official source GIF and 60fps trailer anew for side-by-side reference on EACH game update
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p motion-source
+          fetch_reference() {
+            local dest="$1"; shift
+            for url in "$@"; do
+              echo "Original publisher clip: $url"
+              if curl -fLSs --retry 3 --connect-timeout 12 --max-time 110 -A 'Mozilla/5.0' "$url" -o "motion-source/$dest"; then
+                if [[ -s "motion-source/$dest" ]]; then
+                  file "motion-source/$dest"
+                  return 0
+                fi
+              fi
+              rm -f "motion-source/$dest"
+            done
+            echo "::error::Could not download required original motion reference $dest"
+            return 1
+          }
+          fetch_reference balatro_official_1.gif 'https://www.playbalatro.com/press-kit/Gifs/Balatro_gif_1%20.gif'
+          fetch_reference slots_game_explainer.mp4 'https://video.akamai.steamstatic.com/store_trailers/257204109/movie480.mp4' 'https://cdn.akamai.steamstatic.com/steam/apps/257204109/movie480.mp4'
+      - name: Install original-frame comparison and video decoding
+        if: always()
+        run: |
+          if ! command -v ffmpeg >/dev/null || ! python3 -c 'from PIL import Image' >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y ffmpeg python3-pil
+          fi
+          ffmpeg -version | head -n 1
+          python3 -c 'import PIL; print("Pillow",PIL.__version__)'
+      - name: Compare REAL publisher GIF/video frames and exact source playback speed against game PC/mobile screenshots and WebM
+        if: always()
+        run: python3 tests/snowbound-motion-side-by-side-audit.py
       - name: Publish side-by-side official reference and actual game screenshots
         if: always()
         run: node tests/snowbound-reference-comparison-report.mjs
@@ -91,6 +133,7 @@ jobs:
             artifacts/snowbound-pixel-audit/
             artifacts/snowbound-motion-v2/
             artifacts/snowbound-motion-reference-clocks/
+            artifacts/snowbound-motion-side-by-side/
             artifacts/snowbound-tactile-proof/
             artifacts/snowbound-outcome-cinema/
             artifacts/snowbound-reference-comparison/
