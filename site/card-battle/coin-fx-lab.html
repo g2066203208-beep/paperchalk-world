@@ -65,7 +65,8 @@ const $=id=>document.getElementById(id);
 function run(n){
  const ch=$("chute").getBoundingClientRect(),tray=$("tray").getBoundingClientRect();
  fx.burst({count:n,x:ch.left+ch.width*.67,y:ch.top+ch.height*.64,
-  floorY:tray.top+tray.height*.47,sound});
+  floorY:tray.top+tray.height*.47,
+  minX:tray.left+22,maxX:tray.right-22,sound});
 }
 $("payout").onclick=()=>run(48);$("few").onclick=()=>run(12);$("many").onclick=()=>run(76);
 $("sound").onclick=()=>{sound=!sound;fx.setSoundEnabled(()=>sound);$("sound").textContent="音效："+(sound?"开启":"关闭");};
