@@ -112,6 +112,19 @@
   const el=select(event.target);
   if(el)move(el,event);
  },{passive:true});
+ // A fast pointer move can skip the button's pointerout dispatch in
+ // Chromium while an overlay/drag snapshot is being promoted. Monitor at
+ // the window edge too, so card-tilt cannot remain permanently active.
+ root.addEventListener("pointermove",event=>{
+  if(event.pointerType==="touch")return;
+  const hovered=select(event.target);
+  for(const [el,s] of states){
+   if(s.active&&el!==hovered)reset(el);
+  }
+ },{passive:true});
+ root.addEventListener("pointerleave",()=>{
+  for(const [el,s] of states)if(s.active)reset(el);
+ },{passive:true});
  app.addEventListener("pointerout",event=>{
   const from=select(event.target),to=select(event.relatedTarget);
   if(from&&from!==to)reset(from);
