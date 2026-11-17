@@ -18,6 +18,8 @@ jobs:
           python-version: '3.11'
       - name: Install open media decoding dependencies
         run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
           ffmpeg -version | head -n 1
           python -m pip install --disable-pip-version-check numpy pillow
       - name: Fetch actual publisher GIF and official Steam promo footage
