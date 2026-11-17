@@ -15,6 +15,9 @@
 
 - [**机器可读总表 JSON**](reference-media-manifest.json)：57 条媒体，保存媒体类型、来源、URL、目标画面和已核实状态。
 - [**场景合成执行规范**](RENDER_AND_ANIMA_PIPELINE.md)：3D 白膜 → 单元素 Anima → 图层权重 → 深度遮挡 → 灯光 → 逐帧对比。
+- [**Anima 独立素材完整提示词库：18 张素材，尺寸、正负提示词、分层与验收规则**](ANIMA_ENVIRONMENT_PROMPTS_LIBRARY.md)。
+- [**Anima 场景素材机器可读生产清单（JSON）**](anima-fading-hall-prompt-catalog.json)；状态为 `prompt-only-not-generated`，防止把规划误判为已入库的素材。
+
 - [原有 Slots & Daggers 金币实现研究](../SLOTS_DAGGERS_COIN_REFERENCE_AND_IMPLEMENTATION_20261117.md)。
 - [原有雪地场景原版 vs 游戏实机 QA](../SNOWBOUND_REQUIRED_REAL_REFERENCE_VISUAL_QA.md)。
 
