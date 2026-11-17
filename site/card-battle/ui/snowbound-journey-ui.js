@@ -11,6 +11,7 @@ const STORE="paperchalk-snowbound-campaign-v1",app=document.getElementById("app"
 const saved=(()=>{try{return JSON.parse(localStorage.getItem(STORE)||"null");}catch{return null}})();
 const game=rules.create(saved);
 const motion=window.PaperchalkMotion?.create({app,getSoundEnabled:()=>game.state().settings.sound})||null;
+window.PaperchalkCoinCascade?.setSoundEnabled(()=>!!game.state().settings.sound);
 let shopInspectIndex=-1;
 
 let selectedCard=-1,selectedAlly=null,selectedCompanion=null,help=false,infoMessage="",lastScreen="",toastTimer=null,layoutMode="",soundCtx=null;
@@ -41,10 +42,23 @@ function apply(action){
  // checkpoint. Rapid player inputs never execute against a stale view.
  if(motion?.isBusy())motion.skipToSafeCheckpoint();
  const before=motion?.capture();
+ const previousGold=Number(game.state().run?.gold||0);
  const result=action();
  if(result&&result.ok===false){flash(result.message);return false}
  save();
  render();
+ const gain=Number(game.state().run?.gold||0)-previousGold;
+ const hasVictory=(result?.visualEvents||[]).some(event=>event.type==="victory");
+ if(gain>0&&!hasVictory){
+   const stage=app.querySelector(".scene");
+   const area=stage?.getBoundingClientRect();
+   window.PaperchalkCoinCascade?.burst({
+     x:area?area.left+area.width*.44:innerWidth*.46,
+     y:area?area.top+area.height*.33:innerHeight*.34,
+     floorY:innerHeight*.73,
+     count:Math.min(56,Math.max(18,Math.round(gain*.85)))
+   });
+ }
  if(motion){
   motion.play(before,result,game.view()).catch(err=>console.error("Cinematic fallback",err));
  }else sound("tap");
