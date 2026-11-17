@@ -53,6 +53,24 @@ export function createFadingHallGame({
  ];
  const hotspotMap=new Map(hotspotInfo.map(h=>[h.id,h]));
  const markers=new Map();
+ // Screen-space fallback is a true game navigation shortcut. Every action
+ // still walks the Anima actor to its 3D target using the same A* system.
+ const quickBar=document.createElement("nav");
+ quickBar.className="game-quick-actions";quickBar.id="game-quick-actions";
+ quickBar.setAttribute("aria-label","可调查地点");
+ const quickButtons=new Map();
+ for(const h of hotspotInfo){
+  const item=document.createElement("button");item.type="button";
+  item.dataset.quickAction=h.id;item.className="game-quick-action";
+  item.textContent=h.icon+" "+(h.id==="table"?"手札":h.id==="window"?"彩窗":
+   h.id==="door"?"古门":h.id==="companion"?"同伴":h.id==="return"?"返回":
+   h.id==="bell"?"钟铃":"石门");
+  item.title="移动至"+h.name+"并调查";
+  item.setAttribute("aria-label","前往调查："+h.name);
+  item.addEventListener("click",()=>interact(h.id));
+  quickBar.append(item);quickButtons.set(h.id,item);
+ }
+ stage.append(quickBar);
  for(const h of hotspotInfo){
   const btn=document.createElement("button");
   btn.type="button";btn.className="game-hotspot";btn.dataset.hotspot=h.id;
@@ -264,8 +282,13 @@ export function createFadingHallGame({
    "探索古堡长廊，查看钟铃与尽头的石门。";
   roomText.textContent=room==="hall"?"褪色的会客厅":"古堡长廊";
   byId("game-location").textContent=room==="hall"?"褪色的会客厅":"古堡长廊";
-  for(const h of hotspotInfo)markers.get(h.id).classList.toggle("is-done",
-    (h.id==="table"&&clues.paper)||(h.id==="window"&&clues.symbol));
+  for(const h of hotspotInfo){
+   const done=(h.id==="table"&&clues.paper)||(h.id==="window"&&clues.symbol);
+   markers.get(h.id).classList.toggle("is-done",done);
+   const button=quickButtons.get(h.id);
+   button.hidden=debug||h.room!==room;
+   button.classList.toggle("is-done",done);
+  }
  }
  updateQuest();
  function arrive(h){
@@ -361,9 +384,9 @@ export function createFadingHallGame({
    if(h.room!==room||transitioning||dialogueOpen){b.hidden=true;continue}
    const pt=temporary.set(...h.world).project(camera);
    const x=(pt.x*.5+.5)*rect.width,y=(-pt.y*.5+.5)*rect.height;
-   const onstage=pt.z<1&&pt.z>-1&&x>28&&x<rect.width-28&&y>60&&y<rect.height-27;
+   const onstage=pt.z<1&&pt.z>-1&&x>28&&x<rect.width-28&&y>60&&y<rect.height-72;
    b.hidden=!onstage;
-   if(onstage){b.style.left=x+"px";b.style.top=y+"px"}
+   if(onstage){b.style.left=Math.round(x/3)*3+"px";b.style.top=Math.round(y/3)*3+"px"}
   }
  }
  function update(dt){
