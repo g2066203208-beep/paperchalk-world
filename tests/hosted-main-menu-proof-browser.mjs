@@ -74,7 +74,10 @@ for(const vp of viewports){
   assert(lab.mode==="composite"&&lab.actorLoaded&&lab.drawCalls>15&&lab.textureControls===5,
    "Cannot enter working real 3D Anima scene via main menu: "+JSON.stringify(lab));
   await page.screenshot({path:out+"/"+vp.name+"-03-anima-3d-composite.png",animations:"disabled"});
-  await page.locator("#whitebox").click();
+  // Phone controls moved into the compact game HUD. Old hidden desktop
+  // control must not be clicked in a mobile integration test.
+  if(vp.mobile)await page.locator("#mobile-view").click();
+  else await page.locator("#whitebox").click();
   assert.equal(await page.evaluate(()=>window.PaintoverStudio.mode),"whitebox");
   await page.screenshot({path:out+"/"+vp.name+"-04-anima-3d-whitebox.png",animations:"disabled"});
   assert.deepEqual(errors,[],"Browser runtime errors on main menu/3D scene");
@@ -105,6 +108,35 @@ try{
  console.log("HOSTED PAGE",JSON.stringify(report.hosted));
 }catch(e){report.hosted={state:"unavailable",error:String(e)};console.log("Hosted unavailable",String(e));}
 finally{await ctx.close()}
+// Verify the public deployed 3D scene independently; a passed local source
+// test is not evidence that GitHub Pages has published this exact revision.
+const hostedMobile=await browser.newContext({
+ viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true
+});
+const livePage=await hostedMobile.newPage();
+try{
+ const response=await livePage.goto(
+  "https://g2066203208-beep.github.io/paperchalk-world/card-battle/anima-paintover-lab.html",
+  {waitUntil:"domcontentloaded",timeout:30000});
+ await livePage.waitForFunction(()=>window.PaintoverStudio?.frameCount>4,null,{timeout:20000});
+ const live=await livePage.evaluate(()=>{
+  const stage=document.querySelector(".stage").getBoundingClientRect();
+  const mobile=document.querySelector(".mobile-toolbar");
+  return {hudVisible:getComputedStyle(mobile).display!=="none",
+    stageHeight:stage.height,viewportHeight:innerHeight,
+    shadowCache:window.PaintoverStudio.renderRatio<=1,
+    viewportMode:window.PaintoverStudio.viewportMode};
+ });
+ report.hostedMobile={
+  http:response?.status(),...live,
+  updated:live.hudVisible&&live.stageHeight>=live.viewportHeight*.73&&
+    live.viewportMode==="portrait"
+ };
+ await livePage.screenshot({path:out+"/phone-390x844-06-hosted-anima-scene.png"});
+ console.log("HOSTED MOBILE 3D",JSON.stringify(report.hostedMobile));
+}catch(e){report.hostedMobile={updated:false,error:String(e)};
+ console.log("Hosted 3D deployment not verified",String(e));}
+finally{await hostedMobile.close()}
 await browser.close();
 fs.writeFileSync(out+"/results.json",JSON.stringify(report,null,2));
 assert(report.local.every(r=>r.pass),"Updated root menu and Anima 3D scene must pass Chromium");
