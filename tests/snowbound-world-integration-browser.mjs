@@ -77,6 +77,27 @@ for(const cfg of devices){
   });
   assert(measure.background.includes("snowy-forest-reference.webp"),
     "actual source forest must remain behind the actors");
+  // Validate the physically separate front-plane is the SAME original
+  // painting's cropped ink, not a synthetic replacement scene image.
+  const branches=await page.evaluate(async()=>{
+    const el=document.querySelector(".snowforest-ink-foreground");
+    if(!el)return {exists:false};
+    const style=getComputedStyle(el);
+    const source=style.backgroundImage.match(/url\\(["']?(.*?)["']?\\)/)?.[1];
+    if(!source)return {exists:true,decoded:false,background:style.backgroundImage};
+    const im=new Image();im.src=source;await im.decode();
+    const canvas=document.createElement("canvas");canvas.width=96;canvas.height=64;
+    const cx=canvas.getContext("2d",{willReadFrequently:true});
+    cx.drawImage(im,0,0,96,64);
+    const a=cx.getImageData(0,0,96,64).data;let marked=0,blank=0;
+    for(let i=3;i<a.length;i+=4){if(a[i]>20)marked++;else blank++}
+    return {exists:true,decoded:true,width:im.naturalWidth,height:im.naturalHeight,
+      marked,blank,background:style.backgroundImage};
+  });
+  assert(branches.exists&&branches.decoded&&branches.width===1536&&branches.height===1024,
+    "separate original-ink reed foreground must decode at matching source resolution: "+JSON.stringify(branches));
+  assert(branches.marked>20&&branches.blank>3000,
+    "front-plane must have thin painted branches and mostly real transparency, not a new opaque image");
   assert.equal(measure.nodes.length,3,"opening encounter must display three original characters");
   for(const unit of measure.nodes){
     const feet=unit.feet.y;
