@@ -187,7 +187,7 @@
     if(!audio)audio=new AC();
     if(audio.state==="suspended")audio.resume().catch(()=>{});
     const t=audio.currentTime,sr=audio.sampleRate;
-    const sec=kind==="gun"?.135:kind==="hit"?.095:.12;
+    const sec=kind==="gun" ? 0.135 : kind==="hit" ? 0.095 : 0.12;
     const len=Math.ceil(sr*sec),buff=audio.createBuffer(1,len,sr),d=buff.getChannelData(0);
     let n=17;
     for(let i=0;i<len;i++){
@@ -198,7 +198,7 @@
     const source=audio.createBufferSource();source.buffer=buff;
     const filter=audio.createBiquadFilter();filter.type=kind==="gun"?"bandpass":"highpass";
     filter.frequency.value=kind==="gun"?620:kind==="hit"?900:1600;
-    const gain=audio.createGain();gain.gain.value=kind==="gun"?.065:.043;
+    const gain=audio.createGain();gain.gain.value=kind==="gun" ? 0.065 : 0.043;
     source.connect(filter).connect(gain).connect(audio.destination);
     source.start(t);source.stop(t+sec);
    }catch(e){/* blocked audio does not block cinematic */ }
@@ -394,7 +394,7 @@
       .then(()=>back.remove());
     // Ghost survives until the 2800ms source end, then the live card replaces
     // it at the same world-space rectangle without a visible position jump.
-    wait(ref.totalMs+frameTime(ref,1),run).then(()=>ghost.remove());
+    wait(ref.totalMs+frameTime(ref,4),run).then(()=>ghost.remove());
    });
    beep("paper");
    await wait(frameTime(ref,ref.exitFirst),run);
