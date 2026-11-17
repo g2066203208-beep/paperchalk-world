@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Game Visual Reference Library · Paperchalk</title>
+<style>
+:root{color-scheme:dark;font-family:Inter,"Noto Sans SC",system-ui,sans-serif;background:#0c1419;color:#e8e6dc}
+*{box-sizing:border-box}body{margin:0}
+a{color:#d3b788}a:hover{color:#f6d59f}
+header{padding:30px clamp(15px,4vw,64px) 26px;background:radial-gradient(ellipse at 70% 0%,#33454a 0%,#1b2c32 42%,#0e191f 86%);border-bottom:1px solid #34454a}
+.overline{font:11px monospace;letter-spacing:.22em;color:#be9d69;margin:0 0 9px}
+h1{font:600 clamp(26px,4vw,51px) Georgia,"Noto Serif SC",serif;margin:0 0 9px;letter-spacing:.025em}
+.lead{max-width:790px;font-size:13px;line-height:1.7;color:#becac8;margin:7px 0}
+.meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:15px;font:11px monospace;color:#b6bfbb}
+.meta span{padding:5px 9px;background:#35414972;border:1px solid #68746a5a;border-radius:4px}
+header nav{display:flex;gap:16px;flex-wrap:wrap;margin-top:17px;font-size:12px}
+main{max-width:1700px;margin:0 auto;padding:22px clamp(15px,3vw,48px) 70px}
+.filters{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:7px 0 20px}
+button,input,select{font:12px system-ui,"Noto Sans SC",sans-serif}
+button{border:1px solid #617273;color:#dbe2dc;background:#243239;padding:10px 11px;border-radius:5px;cursor:pointer}
+button:hover{border-color:#ab946d}
+button[aria-pressed="true"]{background:#665039;color:#fff0d1;border-color:#b99d71}
+input{border:1px solid #647579;background:#111d24;border-radius:5px;color:#e5e0d6;padding:10px;min-width:min(300px,100%);flex:1}
+select{border:1px solid #5b6c70;border-radius:5px;background:#142128;color:#ddd;padding:10px}
+#count{color:#b1c1b9;font:11px monospace}
+.collections{display:flex;gap:7px;overflow-x:auto;padding-bottom:10px;margin-bottom:13px;scrollbar-color:#5f7478 transparent}
+.collections button{white-space:nowrap}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,255px),1fr));gap:13px}
+.tile{border:1px solid #3a4b4e;border-radius:8px;background:#19282e;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.tile:hover{border-color:#b69b6e}
+.preview{aspect-ratio:16/9;background:radial-gradient(ellipse at 50% 42%,#43505a,#101f25);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.preview img{width:100%;height:100%;object-fit:cover;display:block}
+.preview .glyph{color:#a5bdb8;font:600 16px Georgia,serif;letter-spacing:.1em;padding:22px;text-align:center;opacity:.8}
+.tag{position:absolute;top:9px;left:9px;font:10px monospace;letter-spacing:.08em;background:#102027de;border:1px solid #81909288;border-radius:4px;padding:4px 6px}
+.tile-body{padding:12px;display:flex;flex:1;flex-direction:column;gap:8px}
+.tile h2{font-size:13px;line-height:1.4;margin:0;color:#f1e8d2}
+.tile p{margin:0;font:11px/1.6 system-ui,sans-serif;color:#b7c5bd;flex:1}
+.tile small{font:10px/1.6 monospace;color:#91aaa8;overflow-wrap:anywhere}
+.actions{display:flex;flex-wrap:wrap;gap:7px}
+.actions a{font-size:11px;color:#e6c492;background:#3a3431;text-decoration:none;padding:7px 9px;border-radius:4px;border:1px solid #8b765268}
+.actions a:hover{background:#665039}
+.info{font-size:11px;color:#a8b1ae;line-height:1.7;margin:18px 0}
+#empty{padding:60px 20px;text-align:center;color:#aab6b1;border:1px dashed #596d6b}
+footer{padding:17px;text-align:center;font-size:11px;color:#809795;border-top:1px solid #273b42}
+@media(max-width:580px){header{padding:23px 15px}h1{font-size:30px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.tile-body{padding:9px}.tile h2{font-size:12px}.preview{aspect-ratio:5/4}.filters input{min-width:100%}.tile p{font-size:10px}}
+@media(max-width:390px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+<p class="overline">PAPERCHALK WORLD · GAME VISUAL REFERENCE ARCHIVE · 2026-11-17</p>
+<h1>场景 · 动态 · 特效参考图库</h1>
+<p class="lead">五款游戏、57 条带出处的截图、GIF、视频、开发日志。按视觉需求研究，不把截图当作可直接拷贝的游戏资源。图片加载来自原网站；如果原站限制外链，使用「打开原出处」查看。</p>
+<div class="meta"><span>5 个重点游戏</span><span>图片 / 视频 / GIF / 技术文章</span><span>有来源状态、复现目标与技术文档</span></div>
+<nav><a href="./anima-paintover-lab.html">3D × Anima 分层场景演示</a><a href="./coin-fx-lab.html">金币实验室</a><a href="./snowbound-journey.html">当前游戏</a><a href="https://github.com/g2066203208-beep/paperchalk-world/tree/main/docs/game/visual-reference-library" target="_blank" rel="noopener noreferrer">GitHub 完整技术拆解</a></nav>
+</header>
+<main>
+<div class="collections" id="games" aria-label="游戏分类"></div>
+<div class="filters">
+<input id="search" type="search" aria-label="搜索游戏、场景、特效" placeholder="搜索：金币 / 八方向 / 蒙版 / 动画 / PV ..." />
+<div id="types" aria-label="类型过滤"></div>
+<select id="verified" aria-label="核验状态"><option value="all">所有来源状态</option><option value="source">已检索来源</option><option value="pending">待复查或未逐帧</option></select>
+<span id="count" aria-live="polite"></span>
+</div>
+<div class="grid" id="grid" aria-label="媒体条目"></div>
+<p id="empty" hidden>没有符合条件的参考资源。</p>
+<p class="info">版权提示：图库只链接或预览原站图片及视频。GIF 可能因为来源站访问策略无法直接预览，原始地址保留且标注了状态。原创游戏素材、录屏截图与参考截图应分别标注，不允许混淆。</p>
+</main>
+<footer>Visual-reference manifest backed by GitHub · 白膜 → Anima 单元素 → 权重蒙版 → 光照与遮挡 → 帧级 QA</footer>
+<script>
+(()=>{"use strict";
+const $=id=>document.getElementById(id);
+let data=[],activeGame="all",activeType="all",term="";
+const cn={image:"图片",gif:"GIF",video:"视频",article:"技术文章",website:"官网/图库","video-embedded":"嵌入视频"};
+const safe=(url)=>{try{const u=new URL(url);return u.protocol==="https:"?u.href:"#"}catch(_){return"#"}};
+function button(label,active,click){
+ const b=document.createElement("button");b.type="button";b.textContent=label;b.setAttribute("aria-pressed",String(active));b.onclick=click;return b;
+}
+function presentTypes(){
+ const row=$("types");row.replaceChildren();
+ for(const t of ["all","image","gif","video","video-embedded","article","website"]){
+  const b=button(t==="all"?"全部类型":cn[t],t===activeType,()=>{activeType=t;presentTypes();present()});
+  row.append(b);
+ }
+}
+function presentGames(){
+ const row=$("games");row.replaceChildren();
+ row.append(button("全部游戏",activeGame==="all",()=>{activeGame="all";presentGames();present()}));
+ for(const g of data){row.append(button(g.name,activeGame===g.id,()=>{activeGame=g.id;presentGames();present()}))}
+}
+function card(game,m){
+ const [type,title,url,description,source,status]=m;
+ const article=document.createElement("article");article.className="tile";
+ const preview=document.createElement("div");preview.className="preview";
+ if(type==="image"||type==="gif"){
+  const im=new Image();im.loading="lazy";im.decoding="async";im.alt=title;
+  im.referrerPolicy="no-referrer";im.src=safe(url);
+  im.onerror=()=>{im.remove();const glyph=document.createElement("div");glyph.className="glyph";glyph.textContent="图片请打开原出处";preview.append(glyph)};
+  preview.append(im);
+ }else{const glyph=document.createElement("div");glyph.className="glyph";glyph.textContent=type==="video"||type==="video-embedded"?"▶ 原版实机视频":type==="article"?"技术制作解析":"官方图库";preview.append(glyph)}
+ const tag=document.createElement("span");tag.className="tag";tag.textContent=cn[type]||type;preview.append(tag);article.append(preview);
+ const body=document.createElement("div");body.className="tile-body";
+ const h=document.createElement("h2");h.textContent=title;
+ const p=document.createElement("p");p.textContent=description;
+ const meta=document.createElement("small");meta.textContent=game.name+" · "+source+" · "+status;
+ const actions=document.createElement("div");actions.className="actions";
+ const a=document.createElement("a");a.href=safe(url);a.target="_blank";a.rel="noopener noreferrer";a.textContent="打开原出处";
+ const d=document.createElement("a");d.href="https://github.com/g2066203208-beep/paperchalk-world/blob/main/docs/game/visual-reference-library/"+game.id+".md";d.target="_blank";d.rel="noopener noreferrer";d.textContent="技术拆解";
+ actions.append(a,d);body.append(h,p,meta,actions);article.append(body);return article;
+}
+function present(){
+ const box=$("grid");box.replaceChildren();let total=0;
+ const verify=$("verified").value;
+ for(const g of data){
+  if(activeGame!=="all"&&activeGame!==g.id)continue;
+  for(const m of g.media){
+   const type=m[0],status=m[5];
+   if(activeType!=="all"&&activeType!==type)continue;
+   if(verify==="source"&&!["source-page-verified","image-search-verified","video-page-verified"].includes(status))continue;
+   if(verify==="pending"&&["source-page-verified","image-search-verified","video-page-verified"].includes(status))continue;
+   if(term&&!([g.name,...g.focus,...m].join(" ").toLowerCase().includes(term)))continue;
+   box.append(card(g,m));total++;
+  }
+ }
+ $("count").textContent=total+" / 57 条";
+ $("empty").hidden=total!==0;
+}
+$("search").oninput=e=>{term=e.target.value.trim().toLowerCase();present()};
+$("verified").onchange=present;
+fetch("./reference-media-manifest.json",{cache:"no-cache"}).then(r=>{if(!r.ok)throw Error("HTTP "+r.status);return r.json()}).then(d=>{
+ data=d.games;presentGames();presentTypes();present();document.title="57 reference media — Paperchalk";
+}).catch(err=>{$("count").textContent="读取失败："+err.message;$("empty").hidden=false;$("empty").textContent="无法加载参考资料，请刷新页面或打开 GitHub JSON。"});
+})();
+</script>
+</body>
+</html>
