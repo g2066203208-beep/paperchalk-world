@@ -175,47 +175,147 @@
     {transform:"translate(0px,0px) rotate(0deg) scale(1)",opacity:1},
     {transform:"translate("+dx*.28+"px,"+(dy*.24-44)+"px) rotate(-9deg) scale(1.10)",opacity:1,offset:.38},
     {transform:"translate("+dx+"px,"+dy+"px) rotate(12deg) scale(.24)",opacity:0}
-   ],TOKENS.travel+TOKENS.charge,{easing:"cubic-bezier(.28,.02,.3,1)"},run)
+   ],frameTime(REFERENCE_CLOCK.slotsAttack,4),{easing:"cubic-bezier(.17,.03,.25,1)"},run)
     .then(()=>ghost.remove());
+  }
+  function materialTransient(kind){
+   if(!getSoundEnabled())return;
+   // Short original synthesized transient: the strike receives a crisp
+   // attack and decaying noisy body rather than an unpitched browser beep.
+   try{
+    const AC=root.AudioContext||root.webkitAudioContext;if(!AC)return;
+    if(!audio)audio=new AC();
+    if(audio.state==="suspended")audio.resume().catch(()=>{});
+    const t=audio.currentTime,sr=audio.sampleRate;
+    const sec=kind==="gun"?.135:kind==="hit"?.095:.12;
+    const len=Math.ceil(sr*sec),buff=audio.createBuffer(1,len,sr),d=buff.getChannelData(0);
+    let n=17;
+    for(let i=0;i<len;i++){
+     n=(n*16807)%2147483647;
+     const envelope=Math.pow(1-i/len,kind==="gun"?1.3:2.1);
+     d[i]=((n/2147483647)*2-1)*envelope;
+    }
+    const source=audio.createBufferSource();source.buffer=buff;
+    const filter=audio.createBiquadFilter();filter.type=kind==="gun"?"bandpass":"highpass";
+    filter.frequency.value=kind==="gun"?620:kind==="hit"?900:1600;
+    const gain=audio.createGain();gain.gain.value=kind==="gun"?.065:.043;
+    source.connect(filter).connect(gain).connect(audio.destination);
+    source.start(t);source.stop(t+sec);
+   }catch(e){/* blocked audio does not block cinematic */ }
+  }
+  function strikeLampCue(target,run,cue){
+   if(!target||!overlay)return;
+   const b=target.getBoundingClientRect(),col=cue.actorSide==="enemy"?"#c6d5f3":"#ffe0a0";
+   for(let i=0;i<6;i++){
+    const lamp=document.createElement("i");lamp.className="motion-source-lamp";
+    lamp.style.setProperty("--glow-color",col);
+    lamp.style.left=(b.left+b.width*(.12+i*.15))+"px";
+    lamp.style.top=(b.top+b.height*.22-15)+"px";
+    overlay.append(lamp);
+    // 16.667ms staggering maps sequential edge lights to native video frames.
+    animate(lamp,[{opacity:0,transform:"translate(-50%,-50%) scale(.3)"},
+     {opacity:.9,transform:"translate(-50%,-50%) scale(1.25)",offset:.40},
+     {opacity:.55,transform:"translate(-50%,-50%) scale(.85)",offset:.73},
+     {opacity:0,transform:"translate(-50%,-50%) scale(.6)"}],
+     frameTime(REFERENCE_CLOCK.slotsAttack,9),{
+      easing:"linear",delay:frameTime(REFERENCE_CLOCK.slotsAttack,i)
+     },run).then(()=>lamp.remove());
+   }
+  }
+  function strikeFlash(target,run,cue){
+   if(!target||!overlay)return;
+   const r=target.getBoundingClientRect(),p=midpoint(r);
+   const glint=document.createElement("div");glint.className="motion-strike-flash";
+   glint.style.left=p.x+"px";glint.style.top=p.y+"px";
+   overlay.append(glint);
+   animate(glint,[{opacity:0,transform:"translate(-50%,-50%) scale(.28)"},
+      {opacity:1,transform:"translate(-50%,-50%) scale(1.05)",offset:.30},
+      {opacity:.7,transform:"translate(-50%,-50%) scale(1.35)",offset:.65},
+      {opacity:0,transform:"translate(-50%,-50%) scale(1.55)"}],
+     frameTime(REFERENCE_CLOCK.slotsAttack,4),{easing:"linear"},run).then(()=>glint.remove());
+   const slash=document.createElement("div");slash.className="motion-strike-slash";
+   slash.style.left=p.x+"px";slash.style.top=p.y+"px";
+   slash.style.setProperty("--slash-angle",cue.kind==="gun"?"-13deg":"-39deg");
+   overlay.append(slash);
+   animate(slash,[{opacity:0,transform:"translate(-60%,-50%) rotate(var(--slash-angle)) scaleX(.1)"},
+      {opacity:1,transform:"translate(-50%,-50%) rotate(var(--slash-angle)) scaleX(1.08)",offset:.26},
+      {opacity:1,transform:"translate(-40%,-40%) rotate(var(--slash-angle)) scaleX(1)",offset:.70},
+      {opacity:0,transform:"translate(-25%,-23%) rotate(var(--slash-angle)) scaleX(.45)"}],
+     frameTime(REFERENCE_CLOCK.slotsAttack,10),{easing:"linear"},run).then(()=>slash.remove());
+  }
+  function impactSparks(target,run){
+   if(!target||!overlay)return;
+   const r=target.getBoundingClientRect(),p=midpoint(r),count=9;
+   for(let i=0;i<count;i++){
+    const a=(i/count)*Math.PI*2;
+    const d=Math.min(90,Math.max(38,r.width*.53))*(.82+i%3*.14);
+    const particle=document.createElement("i");particle.className="motion-impact-spark";
+    particle.style.left=p.x+"px";particle.style.top=p.y+"px";
+    overlay.append(particle);
+    animate(particle,[{opacity:1,transform:"translate(-50%,-50%) scale(1.2)"},
+     {opacity:.9,transform:"translate("+Math.cos(a)*d*.52+"px,"+Math.sin(a)*d*.5+"px) scale(.95)",offset:.42},
+     {opacity:0,transform:"translate("+Math.cos(a)*d+"px,"+(Math.sin(a)*d*.85+14)+"px) scale(.15)"}],
+     frameTime(REFERENCE_CLOCK.slotsAttack,11),{
+      easing:"cubic-bezier(.17,.68,.2,1)",delay:frameTime(REFERENCE_CLOCK.slotsAttack,i%3)
+     },run).then(()=>particle.remove());
+   }
   }
   async function attack(old,cue,run){
    if(skipped||run!==token)return;
    const actor=cue.actorId?unit(old,cue.actorId):null;
    const target=cue.targetId?unit(old,cue.targetId):null;
    if(!target)return;
+   const profile=REFERENCE_CLOCK.slotsAttack;
    const label=cue.type+" "+(cue.actorId||cue.cardId||"item")+" → "+cue.targetId;
    record(label,"start",cue.kind);
+   record("reference-attack","F00-light",label);
    let from=actor;
    if(cue.type==="itemHit"){
     from=(cue.cardKey?old.querySelector('.battle-bottom .hand>button[data-card-key="'+cssEscape(cue.cardKey)+'"]'):null)||old.querySelector(".battle-bottom .hand>button")||null;
     if(from&&cue.cardKey)record(label,"card-source",cue.cardKey);
    }
+   strikeLampCue(target,run,cue);
    if(from&&from.isConnected){
     const sign=cue.actorSide==="enemy"?-1:1;
-    animate(from,[{transform:"translateX(0) scale(1)"},{transform:"translateX("+(-sign*5)+"px) scale(.98)",offset:.33},
-      {transform:"translateX("+(sign*13)+"px) scale(1.035)",offset:.72},
-      {transform:"translateX(0) scale(1)"}],TOKENS.charge+TOKENS.attackRecover,{},run);
+    animate(from,[{transform:"translateX(0) scale(1)"},
+       {transform:"translateX("+(-sign*7)+"px) scale(.965)",offset:.31},
+       {transform:"translateX("+(sign*17)+"px) scale(1.07)",offset:.53},
+       {transform:"translateX(0) scale(1)"}],
+      frameTime(profile,16),{easing:"cubic-bezier(.16,.75,.25,1)"},run);
    }
-   beep(cue.kind==="gun"?"gun":"paper");
-   await wait(TOKENS.charge,run);
+   // Source clip F06 (~100ms) is the FIRST weapon flash, not the impact.
+   await wait(frameTime(profile,profile.flashFirst),run);
+   if(skipped||run!==token)return;
+   record("reference-attack","F06-flash",label);
    if(cue.type==="itemHit"&&from&&from.dataset.motionLaunched!=="1"){
     from.dataset.motionLaunched="1";
     launchPlayedCard(from,target,run,cue);
    }
+   beep(cue.kind==="gun"?"gun":"paper");materialTransient(cue.kind==="gun"?"gun":"slash");
+   strikeFlash(target,run,cue);
    line(from||target,target,cue.kind,run);
-   await wait(TOKENS.travel,run);
+   await wait(frameTime(profile,profile.impactFrame-profile.flashFirst),run);
+   if(skipped||run!==token)return;
+   record("reference-attack","F10-impact",label);
    record(label,"impact");
-   beep(cue.blocked>0&&!cue.damage?"paper":"hit");
+   beep(cue.blocked>0&&!cue.damage?"paper":"hit");materialTransient("hit");
    const hp=target.querySelector(".badge.hp"),shield=target.querySelector(".badge.shield");
    if(hp&&cue.hpAfter!==undefined)hp.textContent=String(cue.hpAfter);
    if(shield&&cue.shieldAfter!==undefined)shield.textContent=String(cue.shieldAfter);
    if(cue.blocked)flashFloat(target,cue.blocked,"blocked",run);
    if(cue.damage)flashFloat(target,cue.damage,"damage",run);
+   impactSparks(target,run);
    animate(target,[{transform:"translateX(0) rotate(0)",filter:"brightness(1)"},
-     {transform:"translateX(5px) rotate(1.5deg) scale(.97)",filter:"brightness(1.5)",offset:.30},
-     {transform:"translateX(-2px) rotate(-.6deg) scale(1.01)",filter:"brightness(1.05)",offset:.6},
-     {transform:"translateX(0) rotate(0)",filter:"brightness(1)"}],TOKENS.hurt,{},run);
-   await wait(TOKENS.hitstop+TOKENS.hurt,run);
+      {transform:"translateX(7px) rotate(1.8deg) scale(.96)",filter:"brightness(1.6)",offset:.19},
+      {transform:"translateX(-3px) rotate(-.8deg) scale(1.01)",filter:"brightness(1.05)",offset:.55},
+      {transform:"translateX(0) rotate(0)",filter:"brightness(1)"}],
+      TOKENS.hurt,{easing:"cubic-bezier(.18,.85,.3,1)"},run);
+   await wait(frameTime(profile,profile.frames-profile.impactFrame),run);
+   if(skipped||run!==token)return;
+   record("reference-attack","F16-tail-end",label);
+   // The first 16 source frames take 266.67ms at 1x; the remaining ~60ms
+   // is ORIGINAL gameplay recovery, not represented in the source footage.
+   await wait(Math.max(0,TOKENS.hurt-frameTime(profile,profile.frames-profile.impactFrame)),run);
    if(cue.kind==="freeze"){
     const badge=document.createElement("span");badge.className="motion-float is-blocked";
     badge.textContent="冰封";const box=target.getBoundingClientRect(),p=midpoint(box);
