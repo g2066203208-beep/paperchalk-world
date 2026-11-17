@@ -139,6 +139,12 @@ for path in sorted(SRC.iterdir()):
         if path.suffix.lower()==".mp4" and name in ("slots_game_explainer","slots_reveal_trailer"):
             start=10.38 if name=="slots_game_explainer" else 21.88
             previews.append(native_60fps_burst(path,name,start))
+        if name=="wildfrost_release_trailer":
+            # This source is an 81.7s publisher promo with several montage
+            # cuts. Do not mislabel cuts as an in-game battle animation.
+            # Sample three separated 16-frame continuous source sequences.
+            for start in (12.0,32.0,54.0):
+                previews.append(native_60fps_burst(path,name,start))
         metrics=[{"index":i,"time_s":round(t,4),"mean_luma_change":round(diff[i],3)} for i,t in enumerate(times)]
         (OUT/f"{name}_frame_metrics.json").write_text(json.dumps(metrics,indent=2))
         reports.append({"name":name,"file_sha256":filehash,"byte_size":path.stat().st_size,
