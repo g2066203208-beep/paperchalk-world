@@ -114,3 +114,40 @@ html.dev-mode .game-transition{display:none!important}
  .game-hotspot .hotspot-icon{width:31px;height:31px}
 }
 @media(prefers-reduced-motion:reduce){.game-transition,.game-hotspot{transition:none}.game-walk-mark.is-active{animation-duration:.1s}}
+
+/* Compact always-reachable in-game actions, required because cinematic
+   camera following can put a true world-space prop outside the viewport. */
+.game-quick-actions{position:absolute;z-index:12;bottom:calc(18px + env(safe-area-inset-bottom));
+ left:50%;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;
+ gap:8px;padding:7px 8px;background:#0a191ec9;border:1px solid #c3a36e7a;
+ box-shadow:0 5px 34px #010709b3,inset 0 1px #fae9b324;
+ border-radius:13px;max-width:calc(100% - 18px);
+ backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.game-quick-actions[hidden]{display:none!important}
+.game-quick-action{font:600 12px system-ui,"Noto Sans SC",sans-serif;
+ border:1px solid #ac996e78;border-radius:9px;background:#283d3a9c;
+ color:#f1e6c8;min-width:66px;min-height:43px;cursor:pointer;padding:8px 11px;
+ white-space:nowrap;transition:background .13s,border-color .13s;
+ -webkit-tap-highlight-color:transparent}
+.game-quick-action:hover,.game-quick-action:focus-visible{background:#514b35;color:#ffe4ae}
+.game-quick-action:active{transform:scale(.96)}
+.game-quick-action.is-done{color:#b7d0b3;border-color:#608c698a}
+.game-quick-action[hidden]{display:none!important}
+.stage:has(.game-dialogue:not([hidden])) .game-quick-actions,
+.stage:has(.game-transition.active) .game-quick-actions{opacity:0;pointer-events:none}
+html.dev-mode .game-quick-actions{display:none!important}
+html:not(.dev-mode) .top h1{display:none}
+html:not(.dev-mode) .game-hud{top:calc(40px + env(safe-area-inset-top))}
+@media(max-width:900px){
+ .game-quick-actions{bottom:calc(9px + env(safe-area-inset-bottom));gap:5px;padding:5px 6px;border-radius:12px}
+ .game-quick-action{min-width:0;min-height:43px;padding:8px 9px;font-size:11px}
+ html:not(.dev-mode) .game-hud{top:calc(32px + env(safe-area-inset-top))}
+}
+@media(max-width:900px) and (orientation:landscape) and (max-height:520px){
+ .game-quick-actions{left:auto;right:9px;transform:none;bottom:8px;gap:4px}
+ .game-quick-action{min-height:39px;padding:6px 8px;font-size:10px}
+ html:not(.dev-mode) .game-hud{top:37px}
+}
+@media(max-width:370px){
+ .game-quick-action{padding:7px 6px;font-size:10px}
+}
