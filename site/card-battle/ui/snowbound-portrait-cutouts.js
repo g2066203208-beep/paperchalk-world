@@ -73,6 +73,14 @@ function hydrate(root){
     const transparent=await cutout(src,img);
     if(!img.isConnected)return;
     if(transparent!==src){img.src=transparent;await img.decode();}
+    // The very same extracted alpha becomes a silhouette mask for original
+    // snow bounce light + cool forest ambient shading. Do not put a tinted
+    // rectangular CSS panel behind the actor or modify the source Anima PNG.
+    const art=img.closest(".unit-art");
+    if(art){
+      art.style.setProperty("--actor-alpha-mask",'url("'+transparent.replace(/"/g,"%22")+'")');
+      art.dataset.maskReady="1";
+    }
     img.dataset.cutoutReady="1";
    }catch(err){
     console.warn("Anima transparent portrait fallback",err);
