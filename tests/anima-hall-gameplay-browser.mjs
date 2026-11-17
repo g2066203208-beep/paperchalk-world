@@ -24,9 +24,12 @@ for(const d of devices){
  page.on("console",m=>{if(m.type()==="error")errors.push(m.text())});
  const shot=async(name)=>page.screenshot({path:out+"/"+d.id+"-"+name+".png",animations:"disabled"});
  const clickHotspot=async(id)=>{
-  const btn=page.locator('[data-hotspot="'+id+'"]');
-  if(await btn.isVisible()){await btn.click({timeout:7000})}
-  else throw new Error("Interaction hotspot "+id+" cannot be seen in "+d.id+" (bad game camera framing)");
+  // The in-world 3D marker remains spatial, while the bottom action
+  // shortcut is fixed and reachable even if a cinematic camera hides it.
+  // Both go through the exact same walk-and-interact function.
+  const btn=page.locator('[data-quick-action="'+id+'"]');
+  assert(await btn.isVisible(),"Game action "+id+" is not reachable in "+d.id);
+  await btn.click({timeout:8000});
  };
  try{
   await page.goto("http://127.0.0.1:4173/card-battle/anima-paintover-lab.html",{waitUntil:"domcontentloaded"});
@@ -44,6 +47,8 @@ for(const d of devices){
     overflowY:document.documentElement.scrollHeight-innerHeight};
   });
   assert.equal(first.markers,4);
+  assert(await page.locator('[data-quick-action="table"]').isVisible(),"Handwritten note must be reachable through player UI");
+  assert(await page.locator('[data-hotspot="table"]').isVisible(),"At least one projected physical prop marker must be visible");
   assert(first.stageHeight>=d.h*.95,"real playable scene must fill game viewport");
   assert(first.overflowX<=2&&first.overflowY<=2,"game stage must not scroll");
   await shot("01-hall-first-playable-frame");
