@@ -24,6 +24,10 @@ renderer.toneMapping=THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure=1.18;
 renderer.shadowMap.enabled=true;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+// All sun shadow casters are static except the Anima actor on user input.
+// A full shadow pass every frame doubles scene draw cost on mobile GPUs.
+renderer.shadowMap.autoUpdate=false;
+renderer.shadowMap.needsUpdate=true;
 const camera=new THREE.PerspectiveCamera(40,1,.1,100);
 const target=new THREE.Vector3(0,2,-.5);
 let yaw=.57,pitch=1.03,distance=22;
@@ -36,12 +40,12 @@ function setCameraPreset(force=false){
  if(compact&&portrait){
   // Strong vertical hero-and-architecture framing, with real X/Z depth.
   // We intentionally favor the character, doors, and stained-glass window.
-  target.set(.12,2.63,-2.05);
-  yaw=.40;pitch=1.01;distance=25.5;camera.fov=55;
+  target.set(.12,2.23,-2.05);
+  yaw=.40;pitch=1.01;distance=24.0;camera.fov=55;
   cameraPreset="portrait";
  }else if(compact){
   target.set(.2,2.42,-1.25);
-  yaw=.54;pitch=1.02;distance=17.4;camera.fov=42;
+  yaw=.54;pitch=1.02;distance=16.2;camera.fov=42;
   cameraPreset="landscape";
  }else{
   target.set(0,2,-.5);
@@ -55,6 +59,7 @@ function cameraUpdate(){
  const r=Math.sin(pitch)*distance;
  camera.position.set(target.x+r*Math.sin(yaw),target.y+Math.cos(pitch)*distance,target.z+r*Math.cos(yaw));
  camera.lookAt(target);
+ renderer.shadowMap.needsUpdate=true;
 }
 cameraUpdate();
 const ambient=new THREE.HemisphereLight("#a1c5cb","#493b32",1.12);scene.add(ambient);
@@ -390,6 +395,7 @@ img.onload=()=>{
   const actor=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshStandardMaterial({map:texture,transparent:true,alphaTest:.05,depthWrite:true,side:THREE.DoubleSide,roughness:1,metalness:0,color:"#f0ece2"}));
   actor.position.y=h/2-.02;actor.position.z=.0;actor.castShadow=true;actor.receiveShadow=true;
   actorSlot.add(actor);actors.push(actor);loadedActor=true;
+  renderer.shadowMap.needsUpdate=true;
   actor.visible=state.actor;
   $("status").textContent="3D + Anima 原图已加载";
  }catch(e){console.error("Anima portrait matte",e);$("status").textContent="人物抠图失败，三维场景仍可用";}
@@ -428,6 +434,7 @@ function sync(){
  for(const a of actors)a.visible=state.actor;
  lampHalo.visible=!state.whitebox; dust.visible=!state.whitebox;
  renderer.shadowMap.enabled=state.shadows;sun.castShadow=state.shadows;
+ if(state.shadows)renderer.shadowMap.needsUpdate=true;
  for(const id of ["finished","whitebox"]){
   const v=id===(state.whitebox?"whitebox":"finished");
   $(id).classList.toggle("current",v);$(id).setAttribute("aria-pressed",String(v));
