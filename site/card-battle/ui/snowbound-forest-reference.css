@@ -411,9 +411,9 @@
   .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="0"]{--actor-x:25%}
   .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="3"]{--actor-x:42%}
   .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="1"],
-  .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="4"]{--actor-x:12%}
-  .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="2"],
-  .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="5"]{--actor-x:42%}
+  .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="5"]{--actor-x:12%}
+  .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="4"]{--actor-x:27%}
+  .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="2"]{--actor-x:42%}
   .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="0"]{--actor-x:59%}
   .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="3"]{--actor-x:85%}
   .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="1"],
