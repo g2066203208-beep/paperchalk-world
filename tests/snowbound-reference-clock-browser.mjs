@@ -57,6 +57,7 @@ for(const cfg of cfgs){
     const state=window.PaperchalkSnowboundUI.state.run.battle;
     let cues;
     if(args.type==="hand")cues=[{type:"redraw"}];
+    else if(args.type==="score")cues=[{type:"victory",gold:50}];
     else{
      const source=state.allies.find(u=>u.hp>0),target=state.foes.find(u=>u.hp>0);
      if(!source||!target)throw Error("no live stage actors for motion reference check");
@@ -83,10 +84,15 @@ for(const cfg of cfgs){
    const attackTrace=requireClock(attack.trace,"reference-attack",[
     ["F00-light",0],["F06-flash",6*FRAME],
     ["F10-impact",10*FRAME],["F16-tail-end",16*FRAME]],speed,72);
+   const score=await runScene("score",speed);
+   assert.equal(score.lastError,null);
+   const scoreTrace=requireClock(score.trace,"reference-score",[
+    ["F46-burst-start",0],["F53-burst-end",700]],speed,75);
    results.push({viewport:cfg.name,speed,passed:true,
-    sourceHandMs:2800,sourceAttackCoreMs:16*FRAME,ghostCount,
-    measuredHand:handTrace,measuredAttack:attackTrace});
-   console.log("PASS "+cfg.name+" "+speed+"x; real hand & attack source-clock stages",handTrace,attackTrace);
+    sourceHandMs:2800,sourceAttackCoreMs:16*FRAME,sourceScoreBurstMs:700,ghostCount,
+    measuredHand:handTrace,measuredAttack:attackTrace,measuredScore:scoreTrace});
+   console.log("PASS "+cfg.name+" "+speed+"x; real hand, impact and score original source-clock stages",
+    handTrace,attackTrace,scoreTrace);
   }
   assert.deepEqual(errors,[],"browser runtime errors");
  }catch(err){
