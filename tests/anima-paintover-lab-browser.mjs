@@ -38,7 +38,7 @@ for(const d of sizes){
   el.value=String(v);el.dispatchEvent(new Event("input",{bubbles:true}));
  },value);
  try{
-  const nav=await page.goto("http://127.0.0.1:4173/card-battle/anima-paintover-lab.html",{
+  const nav=await page.goto("http://127.0.0.1:4173/card-battle/anima-paintover-lab.html?dev=1",{
    waitUntil:"domcontentloaded",timeout:30000
   });
   assert.equal(nav.status(),200);
