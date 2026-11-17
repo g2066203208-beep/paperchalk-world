@@ -630,9 +630,19 @@
    busy=true;skipped=false;const run=++token;onChange(true);
    record("transaction","begin",cues.map(x=>x.type).join(","));
    const layer=rootNode();
-   const old=placeOldScene(snapshot);
    const incoming=app.querySelector(".scene");
    const sameBattle=nextView==="battle"&&snapshot?.view?.startsWith("battle-scene");
+   // A full 1920×1080 forest snapshot must not be repainted before every
+   // ordinary attack: on CI Chromium it stalls compositor animation time at
+   // 0ms for ~350ms, so an intended F06=100ms impact remains INVISIBLE.
+   // For attacks where actors survive and the stage isn't changing, animate
+   // against the already-mounted real game scene. Lethal/sequence changes
+   // still use the existing historical snapshot and correct death poses.
+   const liveStageAttack=!changing&&nextView==="battle"&&
+     !!incoming&&!!cues.length&&
+     cues.every(c=>c.type==="attack"&&!c.lethal);
+   const old=liveStageAttack?incoming:placeOldScene(snapshot);
+   if(liveStageAttack)record("director","live-stage-fastpath","snapshot not remounted");
    // Snapshot deliberately covers the just-rendered committed scene while
    // sequential events advance; no new rule mutation occurs during the clips.
    if(changing&&incoming)incoming.classList.add("motion-entering");
@@ -654,8 +664,8 @@
      else if(cue.type==="victory"||cue.type==="defeat")await outcome(cue.type,run,cue);
     }
     if(!skipped&&run===token){
-     if(old)await animate(old,[{opacity:1},{opacity:0}],changing?TOKENS.scene:115,{},run);
-     if(old)old.remove();
+     if(old&&!liveStageAttack)await animate(old,[{opacity:1},{opacity:0}],changing?TOKENS.scene:115,{},run);
+     if(old&&!liveStageAttack)old.remove();
      if(changing&&incoming){
       incoming.classList.remove("motion-entering");
       if(nextView==="battle")await revealBattle(run);
