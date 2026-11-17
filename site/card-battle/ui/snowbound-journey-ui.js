@@ -308,7 +308,7 @@ function battle(){
  // 12-spot-safe snow formation by ACTUAL live actor density, not just total.
  const stageDensity=(friendlyCount>=2||friendlyCount+enemyCount>3)?"stage-crowded":"stage-sparse";
  return wrap("battle-scene stage-actors "+stageDensity+" "+(r.zone===1?"ice-zone":r.zone===2?"summit-zone":""),commonHead(z.name+" · "+(b.boss?"首领战":"遭遇战"),{back:"map",className:"battle-header",subtitle:"ROUND "+b.turn})+
- '<div class="battle-core"><div class="battle-field">'+
+ '<div class="battle-core"><div class="battle-field"><canvas class="fmf2-world-canvas" aria-hidden="true"></canvas><button type="button" class="fmf2-world-toggle" aria-pressed="true" aria-label="切换漫画三维场景与原始场景">原画场景</button>'+
  '<div class="battle-log" aria-live="polite">'+esc(latest)+'</div><div class="battle-caption"><span>己方</span><span>双排战线</span><span>敌方</span></div>'+
  '<div class="battle-side left"><button class="battle-bell" data-act="redraw" type="button" title="重抽钟"><span class="bell-glyph">♧</span><b>重抽 '+b.redrawCharge+'/4</b></button><button class="side-btn" data-act="summonlist" type="button" '+(!reserve.length||!b.playsLeft?'disabled':'')+'>召唤 '+reserve.length+'</button></div>'+
  '<div class="double-board" aria-label="双方各三列上下两排，共12阵位">'+combatRow(b.allies,b.foes,0)+combatRow(b.allies,b.foes,1)+'</div>'+
