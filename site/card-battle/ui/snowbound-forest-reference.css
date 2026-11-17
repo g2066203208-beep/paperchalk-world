@@ -140,8 +140,11 @@
 .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="5"]{--actor-x:11%}
 .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="1"],
 .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="4"]{--actor-x:21%}
-.battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="0"],
-.battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="3"]{--actor-x:31%}
+.battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="0"]{--actor-x:31%}
+/* The reserve/back slot 3 must be visibly behind and aside from slot 0.
+   With both centers identical, dragging a person 0→3 moved just 6px on
+   narrow landscape screens, making the tactical action impossible. */
+.battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="3"]{--actor-x:41%}
 .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="0"]{--actor-x:57%}
 .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="3"]{--actor-x:80%}
 .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="1"],
@@ -398,8 +401,8 @@
   .battle-scene.stage-actors .battle-grid .battle-slot{
     width:var(--actor-size)!important;
   }
-  .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="0"],
-  .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="3"]{--actor-x:25%}
+  .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="0"]{--actor-x:25%}
+  .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="3"]{--actor-x:42%}
   .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="1"],
   .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="4"]{--actor-x:12%}
   .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="2"],
