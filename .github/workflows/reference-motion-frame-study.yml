@@ -46,6 +46,7 @@ jobs:
           fetch balatro_official_2.gif 'https://www.playbalatro.com/press-kit/Gifs/Balatro_gif_2%20.gif'
           fetch slots_game_explainer.mp4 'https://video.akamai.steamstatic.com/store_trailers/257204109/movie480.mp4' 'https://cdn.akamai.steamstatic.com/steam/apps/257204109/movie480.mp4'
           fetch slots_reveal_trailer.mp4 'https://video.akamai.steamstatic.com/store_trailers/257195046/movie480.mp4' 'https://cdn.akamai.steamstatic.com/steam/apps/257195046/movie480.mp4'
+          fetch wildfrost_release_trailer.mp4 'https://video.akamai.steamstatic.com/store_trailers/256938631/movie480.mp4' 'https://cdn.akamai.steamstatic.com/steam/apps/256938631/movie480.mp4' 'https://video.fastly.steamstatic.com/store_trailers/256938631/movie480.mp4'
           ls -lh motion-source/
       - name: Decode timestamped consecutive frames, measure changes and build source-backed contact sheets
         run: python tests/reference-motion-study.py
