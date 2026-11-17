@@ -1,220 +1,78 @@
 /*
- * Snowbound Journey / visual reset 2026-11-16.
- *
- * The snowy forest is a full original player-supplied 1536x1024 scene.
- * Give the battle a legible quiet middle ground, without re-generating
- * the Anima portraits, clipping original 11:16 card bodies, or replacing
- * real combat elements with a fake illustration.
- *
- * This is the FINAL battle-only stylesheet in the HTML cascade. Design
- * overrides live here rather than accumulating new patch files.
- */
+  Snowbound Journey · Snowforest world-stage integration v1
+  2026-11-17. Original user-supplied 1536×1024 Anima background and original
+  704×1024 full-body actors only. No generated or replacement image assets.
+
+  SCENE COORDINATE CONTRACT:
+  bottom of each actor == painted snow, not sky. Two physical depth bands
+  (near: 4–7% of field height above the board base; far: 10–13%).
+  A previous cascade contained incompatible 22/39/53% "ground" values
+  which left the rear vampire hovering above the snow.
+  The same original alpha from snowbound-portrait-cutouts.js drives
+  both the displayed sprite and its ambient/bounce-light matte.
+*/
+
+/* ─── 1. Original hand-painted world and quiet environmental light ─── */
 .battle-scene:not(.ice-zone):not(.summit-zone){
-  background-color:#8aa6a5;
+  background-color:#91ada8;
   background-image:
-    linear-gradient(180deg,rgba(26,48,57,.10) 0%,rgba(215,229,222,.12) 46%,rgba(29,52,67,.18) 100%),
+    linear-gradient(180deg,rgba(19,42,51,.055),rgba(225,233,224,.01) 53%,rgba(32,59,75,.065)),
     url("../assets/snowy-forest-reference.webp");
-  background-position:center,center 49%;
   background-size:cover,cover;
+  background-position:center,center 49%;
   background-repeat:no-repeat;
 }
-.battle-scene:not(.ice-zone):not(.summit-zone)::before{
-  background:none;
+.battle-scene.stage-actors{isolation:isolate}
+.battle-scene.stage-actors::before{background:none!important}
+/* The outer branches are actual pixels of the same image, re-composited in
+   front of a character only when it enters the edge of the screen.
+   The source image uses precisely the same cover framing as the backdrop. */
+.battle-scene.stage-actors::after{
+  content:"";position:absolute;inset:0;
+  z-index:6;pointer-events:none;
+  background:url("../assets/snowy-forest-reference.webp") center 49%/cover no-repeat;
+  -webkit-mask-image:linear-gradient(90deg,#000 0%,#000 5%,transparent 16%,
+    transparent 84%,#000 95%,#000 100%);
+  mask-image:linear-gradient(90deg,#000 0%,#000 5%,transparent 16%,
+    transparent 84%,#000 95%,#000 100%);
+  opacity:1;
 }
-/* The encounter itself is a soft snow clearing, not another opaque panel.
-   Bloomed mist separates busy high-contrast branches from the cards. */
-.battle-scene .battle-field:before{
-  content:"";
-  position:absolute;
-  inset:3% clamp(55px,12vw,250px) 2%;
-  z-index:0;
-  pointer-events:none;
-  border-radius:48%;
-  background:radial-gradient(
-    ellipse at center,
-    rgba(236,242,238,.63) 0%,
-    rgba(221,234,232,.48) 39%,
-    rgba(208,226,228,.22) 62%,
-    rgba(208,226,228,0) 83%
-  );
-  filter:blur(16px);
-}
-.battle-scene .double-board{
-  position:relative;
-  z-index:1;
-}
-/* Pale, physical paper cards instead of rectangular pure-white stickers.
-   White pixels in portraits take on the pale paper tint via multiply. */
-.battle-scene .battle-grid .battle-unit{
-  padding:3px!important;
-  border:3px solid #3c5a60!important;
-  border-radius:9px!important;
-  background:#dce7db!important;
-  box-shadow:
-    inset 0 0 0 1px #f7f5e6,
-    0 3px 0 #243f49,
-    0 9px 18px #173b4d72!important;
-}
-.battle-scene .battle-grid .battle-unit.enemy{
-  border-color:#725a64!important;
-  background:#e4dcd6!important;
-}
-.battle-scene .battle-grid .battle-unit:before{
-  inset:3px!important;
-  border:1px solid #f0ead9b8;
-  border-radius:5px;
-}
-.battle-scene .battle-grid .battle-unit .unit-art{
-  border-radius:5px!important;
-  background:#dce7db!important;
-  isolation:isolate;
-}
-.battle-scene .battle-grid .battle-unit.enemy .unit-art{
-  background:#e4dcd6!important;
-}
-.battle-scene .battle-grid .battle-unit .unit-art img{
-  mix-blend-mode:multiply!important;
-  filter:saturate(.85) contrast(1.04);
-}
-.battle-scene .battle-unit .unit-name{
-  color:#253e47!important;
-  background:#e5eadbcf!important;
-  border-top:1px solid #6c8b8c!important;
-  font-weight:800!important;
-  text-shadow:0 1px #fff7;
-}
-.battle-scene .battle-unit.enemy .unit-name{
-  color:#523c48!important;
-  background:#eee4dddc!important;
-  border-top-color:#a18b91!important;
-}
-.battle-scene .unit-badges .badge{
-  border:2px solid #f5f0df!important;
-  outline:1px solid #495864!important;
-  box-shadow:0 2px 4px #1d39456b!important;
-}
-/* A slightly concentrated board makes the game pieces the focal point. */
-@media (min-width:1200px) and (min-height:650px){
-  .battle-scene .double-board{
-    width:min(100%,1160px);
-    gap:clamp(8px,1.5vh,18px);
-  }
-  .battle-scene .battle-grid{
-    column-gap:clamp(7px,.75vw,14px);
-  }
-}
-/* The hand is a separate play surface, but should share the icy navy
-   palette and thin snowy tabletop edge instead of a dark mahogany slab. */
-.battle-scene .battle-bottom{
-  border-top:4px solid #cddcda!important;
-  background:
-    linear-gradient(180deg,#b2c8c7 0px,#7d9da3 5px,#405e6d 12px,#2c475a 56%,#273b50 100%)!important;
-  box-shadow:
-    inset 0 2px 0 #edeee4a0,
-    0 -8px 22px #25425237!important;
-}
-.battle-scene .battle-bottom .hand .paint-card.compact{
-  border:3px solid #4b6570!important;
-  border-radius:8px!important;
-  background:linear-gradient(#f3f2e6,#d4dfd6)!important;
-  box-shadow:inset 0 0 0 1px #fffbe8,0 3px 0 #1a3543,0 9px 14px #102d3f8c!important;
-}
-.battle-scene .battle-bottom .hand .paint-card.compact .title{
-  background:#e5eadcd9;
-  color:#264351;
-}
-.battle-scene .battle-bottom .hand .paint-card.compact .text{
-  color:#53616a;
-}
-.battle-scene .battle-bottom .hand-indicator,
-.battle-scene .hand-indicator{
-  color:#e9f5ee!important;
-}
-.battle-scene .battle-hint{
-  color:#d0e4e0!important;
-  text-shadow:0 1px 3px #163345!important;
-}
-/* Leave system layout geometry intact; recentre the actual FRONT position
-   of both factions on mobile. Earlier CSS pinned the logical frontline
-   to the right edge of each 3-slot ribbon; two enemies + leader ended up
-   stacked at x=280 of a 390 px screen with most of the left half blank.
-   Logical IDs and game engine targeting are unchanged. */
-@media (orientation:portrait) and (max-width:700px){
-  .battle-scene:not(.ice-zone):not(.summit-zone){
-    background-position:center,54% center;
-  }
-  .battle-scene .battle-field:before{
-    inset:4% -14% 0;
-    filter:blur(12px);
-    background:radial-gradient(ellipse at center,
-      #e5eeec8c 0%,#e0e9e65e 48%,#d3e2e000 85%);
-  }
-  .battle-scene .battle-grid{
-    grid-template-columns:repeat(3,minmax(0,1fr))!important;
-  }
-  .battle-scene .battle-grid .battle-slot:nth-child(1){
-    grid-column:3!important;grid-row:1!important;
-  }
-  .battle-scene .battle-grid .battle-slot:nth-child(2){
-    grid-column:1!important;grid-row:1!important;
-  }
-  .battle-scene .battle-grid .battle-slot:nth-child(3){
-    grid-column:2!important;grid-row:1!important;
-  }
-  .battle-scene .battle-grid .battle-slot:nth-child(4){
-    grid-column:2!important;grid-row:2!important;
-  }
-  .battle-scene .battle-grid .battle-slot:nth-child(5){
-    grid-column:1!important;grid-row:2!important;
-  }
-  .battle-scene .battle-grid .battle-slot:nth-child(6){
-    grid-column:3!important;grid-row:2!important;
-  }
-  .battle-scene .battle-unit .unit-name{
-    font-size:9px!important;
-  }
-  .battle-scene .battle-bottom{
-    border-top-width:3px!important;
-  }
-  .battle-scene .battle-bottom .hand>button:not(:first-child){
-    margin-left:-8px!important;
-  }
-  .battle-scene .battle-bottom .hand .paint-card.compact{
-    border-width:2px!important;
-  }
-}
-@media (orientation:landscape) and (max-height:520px){
-  .battle-scene .battle-field:before{
-    inset:0 7% -5%;
-    filter:blur(9px);
-  }
-  .battle-scene .battle-grid .battle-unit{
-    padding:2px!important;
-    border-width:2px!important;
-  }
-}
-
-
-/* ── 2.5D story-stage / Anima portrait actors ─────────────────────────────
- * Characters are now interactive standing portraits, not framed cards.
- * The original source image stays untouched. White paper backing in the
- * PNG is optically removed with multiply until true-alpha art exists.
- * Existing rules, targeting, inspect, drag/drop and combat IDs are retained.
- */
-.battle-scene.stage-actors{
-  --stage-actor-near:clamp(120px,10.8vw,174px);
-  --stage-actor-far:clamp(140px,9.5vw,164px);
-}
+/* Sky-to-snow lighting is localized, not an opaque overlay on the characters. */
 .battle-scene.stage-actors .battle-field{
+  position:relative;
   isolation:isolate;
-  padding:12px clamp(76px,5vw,110px) 10px;
+  padding:12px clamp(76px,5vw,110px) 10px!important;
 }
-.battle-scene.stage-actors .battle-field:before{
-  inset:8% 6% -8%;
-  border-radius:35%;
-  opacity:.48;
-  filter:blur(28px);
-  z-index:0;
+.battle-scene.stage-actors .battle-field::before{
+  content:"";position:absolute;z-index:0;pointer-events:none;
+  inset:29% 10% 0;
+  border-radius:48%;
+  background:radial-gradient(ellipse at 50% 83%,
+      rgba(235,243,236,.25),rgba(216,231,226,.12) 49%,transparent 79%);
+  filter:none;
+}
+.battle-scene.stage-actors .battle-field::after{
+  content:"";position:absolute;z-index:0;pointer-events:none;
+  inset:36% 0 5%;
+  border-radius:45%;
+  background:
+    radial-gradient(ellipse at 34% 84%,rgba(222,235,231,.21),transparent 54%),
+    radial-gradient(ellipse at 72% 68%,rgba(203,231,228,.13),transparent 59%);
+  opacity:.35;
+  animation:snowbound-air-in-the-trees 13.2s ease-in-out infinite alternate;
+}
+@keyframes snowbound-air-in-the-trees{
+  from{transform:translate3d(-1.6%,0,0);opacity:.27}
+  to{transform:translate3d(1.9%,-.6%,0);opacity:.47}
+}
+.battle-scene.stage-actors .battle-header,
+.battle-scene.stage-actors .battle-side{position:relative;z-index:12}
+.battle-scene.stage-actors .battle-bottom{position:relative;z-index:12}
+
+/* ─── 2. World positions · no card panels and no hovering rear row ─── */
+.battle-scene.stage-actors{
+  --stage-actor-near:clamp(135px,11.5vw,196px);
+  --stage-actor-far:clamp(114px,9.2vw,159px);
 }
 .battle-scene.stage-actors .double-board{
   display:block!important;
@@ -226,479 +84,360 @@
   min-width:0;
   margin:0 auto;
   isolation:isolate;
-  z-index:1;
+  z-index:2;
 }
-.battle-scene.stage-actors .double-board::before{
-  display:none!important;
-}
-/* Both logical lanes occupy the same world stage; only character feet
-   and depth differ. This is not a six-across floating-card grid. */
+.battle-scene.stage-actors .double-board::before{display:none!important}
 .battle-scene.stage-actors .battle-grid{
   display:block!important;
   position:absolute!important;
   inset:0!important;
-  width:100%!important;
-  height:100%!important;
-  margin:0;
-  padding:0!important;
+  width:100%!important;height:100%!important;
+  margin:0;padding:0!important;
   container-type:normal!important;
   pointer-events:none;
 }
 .battle-scene.stage-actors .battle-grid .battle-slot{
+  display:block!important;
   position:absolute!important;
-  top:auto!important;
   left:var(--actor-x,50%)!important;
   bottom:var(--actor-ground,7%)!important;
+  top:auto!important;
   width:var(--actor-size,var(--stage-actor-near))!important;
-  height:auto!important;
-  max-width:none!important;
-  max-height:none!important;
   aspect-ratio:11/16!important;
+  height:auto!important;
+  min-width:0!important;max-width:none!important;max-height:none!important;
+  padding:0!important;margin:0!important;
   transform:translateX(-50%);
-  display:block!important;
-  padding:0!important;
-  margin:0!important;
   overflow:visible!important;
-  border:0!important;
   background:transparent!important;
-  box-shadow:none!important;
-  border-radius:0!important;
+  border:0!important;border-radius:0!important;
+  outline:0!important;box-shadow:none!important;
   isolation:auto!important;
   pointer-events:auto;
 }
-/* 3 allied + 3 enemy standing positions, two depths, per side.
-   Keep semantic logical slot numbers unchanged for combat. */
+/* Preserve exact semantic tactical slot IDs. Render only their placement. */
 .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="2"],
-.battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="5"]{--actor-x:13%}
+.battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="5"]{--actor-x:11%}
 .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="1"],
-.battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="4"]{--actor-x:27%}
+.battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="4"]{--actor-x:21%}
 .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="0"],
-.battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="3"]{--actor-x:41%}
+.battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="3"]{--actor-x:31%}
 .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="0"],
-.battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="3"]{--actor-x:59%}
+.battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="3"]{--actor-x:57%}
 .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="1"],
-.battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="4"]{--actor-x:73%}
+.battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="4"]{--actor-x:72%}
 .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="2"],
-.battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="5"]{--actor-x:87%}
+.battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="5"]{--actor-x:86%}
 .battle-scene.stage-actors .battle-grid[data-row="0"] .battle-slot{
-  --actor-ground:7%;
-  --actor-size:var(--stage-actor-near);
-  z-index:3;
+  --actor-ground:5.7%;--actor-size:var(--stage-actor-near);z-index:3;
 }
 .battle-scene.stage-actors .battle-grid[data-row="1"] .battle-slot{
-  --actor-ground:54%;
-  --actor-size:var(--stage-actor-far);
-  z-index:2;
+  --actor-ground:11.5%;--actor-size:var(--stage-actor-far);z-index:2;
 }
-/* Feet cast a shadow directly onto the painted snow. */
-.battle-scene.stage-actors .battle-grid .battle-slot:before,
-.battle-scene.stage-actors .battle-grid .battle-slot:has(.battle-unit):before{
-  content:"";
-  display:block!important;
-  position:absolute;
-  width:82%;
-  height:9%;
-  left:50%;
-  top:auto;
-  bottom:-2%;
+/* Same snowy ground is respected for 1v1, sparse groups and full 6v6.
+   A rear actor shrinks rather than floating 150px higher in the trees. */
+.battle-scene.stage-actors.stage-sparse .battle-grid[data-row="0"] .battle-slot{
+  --actor-ground:5.7%;
+}
+.battle-scene.stage-actors.stage-sparse .battle-grid[data-row="1"] .battle-slot{
+  --actor-ground:11.5%;
+}
+.battle-scene.stage-actors.stage-crowded .battle-grid[data-row="0"] .battle-slot{
+  --actor-ground:3%;
+}
+.battle-scene.stage-actors.stage-crowded .battle-grid[data-row="1"] .battle-slot{
+  --actor-ground:11.5%;
+}
+
+/* ─── 3. Actual physical contact with snow ─── */
+/* Every ground contact has a compact dark core, cool ambient penumbra and
+   pale snow-edge compression. Neither is a rectangular HTML plate. */
+.battle-scene.stage-actors .battle-grid .battle-slot:has(.battle-unit)::before{
+  content:"";display:block!important;position:absolute;
+  left:50%;bottom:-3.5%;top:auto;
+  width:94%;height:clamp(10px,1.8vw,24px);
   transform:translateX(-50%);
   z-index:0;
-  background:radial-gradient(ellipse,#1d384f8c 0%,#32566e52 44%,transparent 73%);
-  box-shadow:none;
-  border:0;
-  border-radius:50%;
-  opacity:.84;
-  filter:blur(5px);
+  border-radius:50%;border:0!important;outline:0!important;
+  background:radial-gradient(ellipse at center,
+    rgba(19,43,55,.58) 0 17%,rgba(32,66,75,.32) 40%,
+    rgba(49,80,86,.13) 63%,transparent 78%);
+  box-shadow:none!important;
+  opacity:.9;filter:blur(3.5px);
   pointer-events:none;
 }
-.battle-scene.stage-actors .battle-grid .battle-slot:not(:has(.battle-unit)):before{
-  opacity:.2;
+.battle-scene.stage-actors .battle-grid .battle-slot:has(.battle-unit)::after{
+  content:"";display:block!important;position:absolute;
+  left:50%;bottom:-5.4%;top:auto;width:100%;height:15px;
+  transform:translateX(-50%);z-index:1;
+  border:0!important;border-radius:50%;
+  background:radial-gradient(ellipse at center,
+    rgba(247,248,241,.68) 0 18%,rgba(230,240,235,.34) 48%,transparent 72%);
+  opacity:.72;pointer-events:none;
 }
-.battle-scene.stage-actors .battle-grid .battle-slot:has(.battle-unit):after{display:none}
-.battle-scene.stage-actors .battle-grid .battle-unit{
-  display:block!important;
-  position:relative!important;
-  width:100%!important;
-  height:100%!important;
-  aspect-ratio:11/16!important;
-  padding:0!important;
-  max-width:none!important;
-  max-height:none!important;
-  overflow:visible!important;
-  border:0!important;
-  border-radius:0!important;
-  outline:0!important;
-  background:transparent!important;
-  box-shadow:none!important;
-  filter:none!important;
-  transform-origin:50% 95%;
-  isolation:auto!important;
-}
-.battle-scene.stage-actors .battle-grid .battle-unit:before,
-.battle-scene.stage-actors .battle-grid .battle-unit:after{
+.battle-scene.stage-actors .battle-grid .battle-slot:not(:has(.battle-unit))::before,
+.battle-scene.stage-actors .battle-grid .battle-slot:not(:has(.battle-unit))::after{
   display:none!important;
 }
-.battle-scene.stage-actors .battle-grid .battle-unit:hover,
-.battle-scene.stage-actors .battle-grid .battle-unit.is-selected{
-  transform:translateY(-5px) scale(1.045)!important;
-  filter:drop-shadow(0 0 7px #f4ffffb3) drop-shadow(1px 8px 4px #1e3b517a);
-}
-.battle-scene.stage-actors .battle-grid .battle-unit .unit-art{
-  position:absolute!important;
-  inset:0!important;
-  display:block!important;
-  width:100%!important;
-  height:100%!important;
-  background:transparent!important;
-  border:0!important;
-  border-radius:0!important;
+
+/* ─── 4. Frameless actors, original silhouette and shared world lighting ─── */
+.battle-scene.stage-actors .battle-grid .battle-unit{
+  position:relative!important;display:block!important;
+  width:100%!important;height:100%!important;aspect-ratio:11/16!important;
+  padding:0!important;margin:0!important;max-width:none!important;max-height:none!important;
+  border:0!important;outline:0!important;border-radius:0!important;
+  box-shadow:none!important;background:transparent!important;
   overflow:visible!important;
   isolation:auto!important;
+  transform-origin:50% 96%;
+  filter:none!important;
+}
+.battle-scene.stage-actors .battle-grid .battle-unit::before,
+.battle-scene.stage-actors .battle-grid .battle-unit::after{display:none!important}
+.battle-scene.stage-actors .battle-grid .battle-unit:hover,
+.battle-scene.stage-actors .battle-grid .battle-unit.is-selected{
+  transform:translateY(-1px) scale(1.012)!important;
+  filter:none!important;
+}
+.battle-scene.stage-actors .battle-grid .battle-unit .unit-art{
+  position:absolute!important;inset:0!important;
+  display:block!important;width:100%!important;height:100%!important;
+  background:transparent!important;border:0!important;border-radius:0!important;
+  overflow:visible!important;
   mix-blend-mode:normal!important;
+  isolation:isolate!important;
 }
 .battle-scene.stage-actors .battle-grid .battle-unit .unit-art img{
-  display:block!important;
-  object-fit:contain!important;
-  object-position:center bottom!important;
-  width:100%!important;
-  height:100%!important;
+  display:block!important;position:relative;
+  width:100%!important;height:100%!important;
+  object-fit:contain!important;object-position:center bottom!important;
   mix-blend-mode:normal!important;
-  filter:drop-shadow(1px 4px 2px #1e3b5159);
+  /* Muted palette and atmospheric shadow consistent with the inked forest.
+     Character identity, face and clothing outlines remain intact. */
+  filter:saturate(.83) contrast(1.035) brightness(.967)
+    drop-shadow(1px 2px 2px rgba(29,52,58,.34));
+  pointer-events:none!important;
+  -webkit-user-drag:none!important;user-select:none!important;
 }
-/* Compact status labels live by the character's feet, never across
-   the upper body. No rectangular photo background or nameplate card. */
+.battle-scene.stage-actors .battle-grid .battle-unit .unit-art img:not([data-cutout-ready]),
+.battle-scene.stage-actors .battle-grid .battle-unit .unit-art img[data-cutout-ready="fallback"]{
+  opacity:0!important;
+}
+.battle-scene.stage-actors .battle-grid .battle-unit .unit-art img[data-cutout-ready="1"]{
+  opacity:1!important;transition:opacity .2s ease-out;
+}
+/* Each lighting layer is clipped to the exact extracted Anima pixels.
+   The empty space between arms, legs and coats stays fully transparent. */
+.battle-scene.stage-actors .battle-grid .battle-unit .unit-art[data-mask-ready="1"]::before,
+.battle-scene.stage-actors .battle-grid .battle-unit .unit-art[data-mask-ready="1"]::after{
+  content:"";position:absolute;inset:0;
+  pointer-events:none;z-index:2;
+  -webkit-mask-image:var(--actor-alpha-mask);
+  mask-image:var(--actor-alpha-mask);
+  -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
+  -webkit-mask-position:center bottom;mask-position:center bottom;
+  -webkit-mask-size:100% 100%;mask-size:100% 100%;
+}
+.battle-scene.stage-actors .battle-grid .battle-unit .unit-art[data-mask-ready="1"]::before{
+  background:linear-gradient(116deg,rgba(241,230,201,.30) 0%,
+    rgba(203,227,217,.12) 35%,rgba(60,99,115,.27) 92%);
+  mix-blend-mode:soft-light;opacity:.88;
+}
+.battle-scene.stage-actors .battle-grid .battle-unit .unit-art[data-mask-ready="1"]::after{
+  background:linear-gradient(to top,
+    rgba(230,245,242,.35) 0%,rgba(207,227,222,.19) 20%,
+    transparent 43%);
+  mix-blend-mode:screen;opacity:.76;
+}
+.battle-scene.stage-actors .battle-grid .battle-unit.enemy .unit-art img{
+  filter:saturate(.82) contrast(1.045) brightness(.955)
+    drop-shadow(1px 3px 3px rgba(22,42,49,.42));
+}
+/* Small diegetic HUD remains separate from the art and below the feet. */
 .battle-scene.stage-actors .battle-unit .unit-name{
-  position:absolute!important;
-  left:50%!important;
-  right:auto!important;
-  top:auto!important;
-  bottom:-24px!important;
-  z-index:9!important;
+  display:block!important;position:absolute!important;
+  left:50%!important;right:auto!important;
+  top:auto!important;bottom:-25px!important;z-index:9!important;
   transform:translateX(-50%);
-  display:block!important;
-  width:max-content!important;
-  max-width:130%!important;
-  border:1px solid #dce9e8a6!important;
-  border-radius:12px!important;
-  padding:2px 10px!important;
-  background:#193947c9!important;
-  color:#f8f8ec!important;
-  text-shadow:0 1px 2px #13232a;
-  box-shadow:0 2px 6px #14252d80;
-  font:750 clamp(10px,.9vw,13px)/1.3 "Noto Sans SC",sans-serif!important;
-  white-space:nowrap;
-  pointer-events:none;
+  width:max-content!important;max-width:135%!important;
+  padding:2px 8px!important;border-radius:12px!important;
+  border:1px solid rgba(235,244,230,.75)!important;
+  background:rgba(28,55,68,.82)!important;
+  color:#f5f5e8!important;
+  text-shadow:0 1px 2px #102a34;
+  box-shadow:0 2px 7px rgba(17,37,46,.30);
+  font:750 clamp(9px,.85vw,13px)/1.4 "Noto Sans SC",system-ui,sans-serif!important;
+  white-space:nowrap;pointer-events:none;
 }
 .battle-scene.stage-actors .battle-unit .unit-trait{display:none!important}
-.battle-scene.stage-actors .unit-badges{
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-}
+.battle-scene.stage-actors .unit-badges{position:absolute;inset:0;pointer-events:none}
 .battle-scene.stage-actors .unit-badges .badge{
-  position:absolute!important;
-  top:auto!important;
-  bottom:6px!important;
-  min-width:25px!important;
-  height:25px!important;
+  position:absolute!important;top:auto!important;bottom:5px!important;
+  width:auto!important;min-width:24px!important;height:24px!important;
   padding:2px 4px!important;
-  border:1px solid #fff8e4dd!important;
-  outline:0!important;
-  border-radius:8px!important;
-  font:800 12px/19px system-ui!important;
-  box-shadow:0 2px 6px #12283e8e!important;
-  transform:none!important;
+  border:1px solid rgba(249,250,233,.90)!important;
+  outline:0!important;border-radius:8px!important;
+  font:800 12px/18px system-ui!important;
+  box-shadow:0 2px 6px rgba(27,48,59,.35)!important;
 }
-.battle-scene.stage-actors .unit-badges .hp{left:1%!important;right:auto!important}
-.battle-scene.stage-actors .unit-badges .atk{left:auto!important;right:1%!important}
+.battle-scene.stage-actors .unit-badges .hp{left:0!important;right:auto!important}
+.battle-scene.stage-actors .unit-badges .atk{left:auto!important;right:0!important}
 .battle-scene.stage-actors .unit-badges .tick{
   left:50%!important;right:auto!important;
-  transform:translateX(-50%)!important;
-  background:#e5c27eec!important;
+  transform:translateX(-50%)!important;background:#dfb974e9!important;
 }
-.battle-scene.stage-actors .unit-badges .badge:before{display:none!important}
+.battle-scene.stage-actors .unit-badges .badge::before{display:none!important}
+
+/* ─── 5. Interaction: empty positions never cover people ─── */
+.battle-scene.stage-actors .battle-grid .battle-slot:not(:has(.battle-unit)){pointer-events:none!important}
+.battle-scene.stage-actors .battle-grid .battle-slot .slot-drop{
+  pointer-events:auto!important;position:absolute!important;inset:auto!important;
+  top:0!important;left:calc(50% - 20px)!important;right:auto!important;bottom:auto!important;
+  width:40px!important;height:40px!important;min-height:40px!important;
+  display:grid!important;place-items:center!important;
+  padding:0!important;border:1px solid rgba(237,242,225,.9)!important;
+  border-radius:50%!important;
+  color:#f2f5e5!important;background:rgba(37,76,85,.86)!important;
+  font:25px/1 system-ui!important;
+  box-shadow:0 3px 9px rgba(24,46,53,.40)!important;
+  z-index:44!important;
+}
+.battle-scene.stage-actors .battle-grid .battle-slot:has(>.slot-drop){z-index:40!important}
+.battle-scene.stage-actors .battle-grid .battle-slot>.slot-drop:hover{
+  transform:scale(1.065);background:#426f78!important;
+}
 .battle-scene.stage-actors .battle-slot.is-move-target{
-  outline:1px dashed #fff4c7ad!important;
-  outline-offset:2px;
-  background:transparent!important;
+  outline:1px dashed rgba(239,249,224,.92)!important;
+  outline-offset:3px;background:transparent!important;
 }
-.battle-scene.stage-actors .battle-slot .slot-drop{
-  position:absolute;
-  inset:0;
-  width:100%!important;height:100%!important;
-  border:0;
-  display:grid;
-  place-items:end center;
-  padding-bottom:11px;
-  color:#fff6cd;
-  background:transparent;
-}
-/* A lighter, less intrusive UI rail; hand cards stay interactive. */
-.battle-scene.stage-actors .battle-side{opacity:.84}
-.battle-scene.stage-actors .battle-caption{opacity:.72;font-size:10px}
+.battle-scene.stage-actors .battle-caption{opacity:.55;font-size:10px}
 .battle-scene.stage-actors .battle-log{font-size:10px}
-/* Portrait is a separate theatrical composition: enemies among deep
-   trees, allies in foreground. Three places per depth, not tiny six columns. */
+.battle-scene.stage-actors .battle-side{opacity:.91}
+
+/* ─── 6. Hand remains a separate game control surface, never on the snow ─── */
+.battle-scene.stage-actors .battle-bottom{
+  border-top:3px solid rgba(229,236,226,.90)!important;
+  background:linear-gradient(180deg,#a6b9b7 0,#577c86 8px,#315062 18px,
+    #293f54 58%,#263a4e 100%)!important;
+  box-shadow:inset 0 2px 0 rgba(246,250,242,.36),
+    0 -7px 17px rgba(33,64,70,.19)!important;
+}
+.battle-scene.stage-actors .battle-bottom .hand .paint-card.compact{
+  border:2px solid #4f6871!important;border-radius:7px!important;
+  background:linear-gradient(#f1f0e5,#dbe5da)!important;
+  box-shadow:inset 0 0 0 1px #fff9e2,0 3px 0 #223c48,
+    0 7px 12px rgba(20,44,55,.38)!important;
+}
+.battle-scene.stage-actors .battle-bottom .hand .paint-card.compact .title{
+  background:#e4ebdfd9;color:#264451;
+}
+.battle-scene.stage-actors .battle-bottom .hand .paint-card.compact .text{color:#526269}
+.battle-scene.stage-actors .battle-bottom .hand-indicator,
+.battle-scene.stage-actors .hand-indicator{color:#e4f0ec!important}
+.battle-scene.stage-actors .battle-hint{
+  color:#d5e5df!important;text-shadow:0 1px 3px #173640!important;
+}
+
+/* ─── 7. Portrait stage: physically same left/right snow strip ─── */
 @media (orientation:portrait) and (max-width:700px){
-  .battle-scene.stage-actors{--stage-actor-near:clamp(68px,21vw,88px);--stage-actor-far:clamp(58px,19vw,79px)}
-  .battle-scene.stage-actors .battle-field{
-    padding:20px 5px 43px!important;
+  .battle-scene:not(.ice-zone):not(.summit-zone){
+    background-position:center,54% center;
   }
-  .battle-scene.stage-actors .double-board{
-    width:100%!important;
+  .battle-scene.stage-actors::after{
+    background-position:54% center;
+    -webkit-mask-image:linear-gradient(90deg,#000 0%,transparent 10%,
+      transparent 90%,#000 100%);
+    mask-image:linear-gradient(90deg,#000 0%,transparent 10%,
+      transparent 90%,#000 100%);
   }
+  .battle-scene.stage-actors{
+    --stage-actor-near:clamp(80px,25.8vw,109px);
+    --stage-actor-far:clamp(68px,22.5vw,93px);
+  }
+  .battle-scene.stage-actors .battle-field{padding:20px 5px 38px!important}
+  .battle-scene.stage-actors .double-board{width:100%!important}
   .battle-scene.stage-actors .battle-grid .battle-slot{
     width:var(--actor-size)!important;
   }
   .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="0"],
-  .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="3"],
-  .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="0"],
-  .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="3"]{--actor-x:50%}
+  .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="3"]{--actor-x:25%}
   .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="1"],
-  .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="4"],
-  .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="1"],
-  .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="4"]{--actor-x:25%}
+  .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="4"]{--actor-x:12%}
   .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="2"],
-  .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="5"],
+  .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="5"]{--actor-x:42%}
+  .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="0"],
+  .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="3"]{--actor-x:59%}
+  .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="1"],
+  .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="4"]{--actor-x:85%}
   .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="2"],
-  .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="5"]{--actor-x:75%}
-  .battle-scene.stage-actors .battle-grid[data-row="0"] .battle-slot[data-side="enemy"]{
-    --actor-ground:73%;--actor-size:var(--stage-actor-far);z-index:1;
+  .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="5"]{--actor-x:74%}
+  .battle-scene.stage-actors.stage-sparse .battle-grid[data-row="0"] .battle-slot,
+  .battle-scene.stage-actors.stage-crowded .battle-grid[data-row="0"] .battle-slot{
+    --actor-ground:4%;
   }
-  .battle-scene.stage-actors .battle-grid[data-row="1"] .battle-slot[data-side="enemy"]{
-    --actor-ground:48%;--actor-size:var(--stage-actor-far);z-index:2;
+  .battle-scene.stage-actors.stage-sparse .battle-grid[data-row="1"] .battle-slot,
+  .battle-scene.stage-actors.stage-crowded .battle-grid[data-row="1"] .battle-slot{
+    --actor-ground:11.5%;
   }
-  .battle-scene.stage-actors .battle-grid[data-row="0"] .battle-slot[data-side="friendly"]{
-    --actor-ground:24%;--actor-size:var(--stage-actor-near);z-index:3;
+  /* Crowded tactical formation is a different camera blocking. Do not
+     squeeze six full-size standees over each other. */
+  .battle-scene.stage-actors.stage-crowded{
+    --stage-actor-near:clamp(54px,16.2vw,69px);
+    --stage-actor-far:clamp(48px,14.6vw,62px);
   }
-  .battle-scene.stage-actors .battle-grid[data-row="1"] .battle-slot[data-side="friendly"]{
-    --actor-ground:1%;--actor-size:var(--stage-actor-near);z-index:4;
-  }
+  .battle-scene.stage-actors.stage-crowded .battle-slot[data-side="friendly"][data-slot="0"],
+  .battle-scene.stage-actors.stage-crowded .battle-slot[data-side="friendly"][data-slot="3"]{--actor-x:46%}
+  .battle-scene.stage-actors.stage-crowded .battle-slot[data-side="friendly"][data-slot="1"],
+  .battle-scene.stage-actors.stage-crowded .battle-slot[data-side="friendly"][data-slot="4"]{--actor-x:30%}
+  .battle-scene.stage-actors.stage-crowded .battle-slot[data-side="friendly"][data-slot="2"],
+  .battle-scene.stage-actors.stage-crowded .battle-slot[data-side="friendly"][data-slot="5"]{--actor-x:13%}
+  .battle-scene.stage-actors.stage-crowded .battle-slot[data-side="enemy"][data-slot="0"],
+  .battle-scene.stage-actors.stage-crowded .battle-slot[data-side="enemy"][data-slot="3"]{--actor-x:55%}
+  .battle-scene.stage-actors.stage-crowded .battle-slot[data-side="enemy"][data-slot="1"],
+  .battle-scene.stage-actors.stage-crowded .battle-slot[data-side="enemy"][data-slot="4"]{--actor-x:72%}
+  .battle-scene.stage-actors.stage-crowded .battle-slot[data-side="enemy"][data-slot="2"],
+  .battle-scene.stage-actors.stage-crowded .battle-slot[data-side="enemy"][data-slot="5"]{--actor-x:89%}
   .battle-scene.stage-actors .battle-unit .unit-name{
-    font-size:9px!important;
-    bottom:-18px!important;
-    padding:1px 4px!important;
+    font-size:9px!important;bottom:-19px!important;padding:1px 5px!important;
   }
   .battle-scene.stage-actors .unit-badges .badge{
-    height:19px!important;min-width:19px!important;
-    line-height:15px!important;font-size:10px!important;
-    bottom:5px!important;
+    min-width:18px!important;height:19px!important;
+    font-size:10px!important;line-height:15px!important;bottom:4px!important;
+  }
+  .battle-scene.stage-actors .battle-grid .battle-slot>.slot-drop{
+    left:calc(50% - 16px)!important;width:32px!important;height:32px!important;
+    min-height:32px!important;font-size:20px!important;
   }
   .battle-scene.stage-actors .battle-caption{display:none}
+  .battle-scene.stage-actors .battle-bottom .hand>button:not(:first-child){margin-left:-8px!important}
 }
+/* Low-height landscape phones have one shallow snow ground plane. */
 @media (orientation:landscape) and (max-height:520px){
   .battle-scene.stage-actors{
     --stage-actor-near:clamp(57px,8vw,92px);
-    --stage-actor-far:clamp(51px,7vw,82px);
+    --stage-actor-far:clamp(50px,7vw,80px);
   }
-  .battle-scene.stage-actors .battle-grid[data-row="0"] .battle-slot{--actor-ground:4%}
-  .battle-scene.stage-actors .battle-grid[data-row="1"] .battle-slot{--actor-ground:53%}
-  .battle-scene.stage-actors .battle-unit .unit-name{font-size:9px!important;bottom:-17px!important}
+  .battle-scene.stage-actors .battle-grid[data-row="0"] .battle-slot{
+    --actor-ground:3.5%;
+  }
+  .battle-scene.stage-actors .battle-grid[data-row="1"] .battle-slot{
+    --actor-ground:12%;
+  }
+  .battle-scene.stage-actors .battle-unit .unit-name{
+    bottom:-17px!important;font-size:9px!important;
+  }
   .battle-scene.stage-actors .unit-badges .badge{
-    min-width:18px!important;height:18px!important;font-size:10px!important;
-    line-height:14px!important;bottom:4px!important;
+    min-width:18px!important;height:18px!important;
+    font-size:10px!important;line-height:14px!important;
+  }
+  .battle-scene.stage-actors .battle-grid .battle-slot>.slot-drop{
+    left:calc(50% - 14px)!important;width:28px!important;
+    height:28px!important;min-height:28px!important;font-size:18px!important;
   }
 }
-
-/* Hide the flat paper while the in-browser alpha cutout is being computed.
-   Fade in only the real PNG silhouette; the original source stays saved. */
-.battle-scene.stage-actors .battle-unit .unit-art img:not([data-cutout-ready]),
-.battle-scene.stage-actors .battle-unit .unit-art img[data-cutout-ready="fallback"]{
-  opacity:0;
-}
-.battle-scene.stage-actors .battle-unit .unit-art img[data-cutout-ready="1"]{
-  opacity:1;
-  transition:opacity .2s ease-out;
-}
-
-
-/* Mobile stage composition refinement: all visible actors stand near the
-   snow clearing instead of being stacked vertically among tree branches.
-   Dense six-versus-six lineups use smaller depth-perspective standees. */
-@media (orientation:portrait) and (max-width:700px){
- .battle-scene.stage-actors.stage-sparse{
-  --stage-actor-near:clamp(80px,26vw,113px);
-  --stage-actor-far:clamp(71px,23vw,101px);
- }
- .battle-scene.stage-actors.stage-sparse .battle-slot[data-side="friendly"][data-slot="0"],
- .battle-scene.stage-actors.stage-sparse .battle-slot[data-side="friendly"][data-slot="3"]{--actor-x:26%}
- .battle-scene.stage-actors.stage-sparse .battle-slot[data-side="friendly"][data-slot="1"],
- .battle-scene.stage-actors.stage-sparse .battle-slot[data-side="friendly"][data-slot="4"]{--actor-x:15%}
- .battle-scene.stage-actors.stage-sparse .battle-slot[data-side="friendly"][data-slot="2"],
- .battle-scene.stage-actors.stage-sparse .battle-slot[data-side="friendly"][data-slot="5"]{--actor-x:45%}
- .battle-scene.stage-actors.stage-sparse .battle-slot[data-side="enemy"][data-slot="0"],
- .battle-scene.stage-actors.stage-sparse .battle-slot[data-side="enemy"][data-slot="3"]{--actor-x:64%}
- .battle-scene.stage-actors.stage-sparse .battle-slot[data-side="enemy"][data-slot="1"],
- .battle-scene.stage-actors.stage-sparse .battle-slot[data-side="enemy"][data-slot="4"]{--actor-x:87%}
- .battle-scene.stage-actors.stage-sparse .battle-slot[data-side="enemy"][data-slot="2"],
- .battle-scene.stage-actors.stage-sparse .battle-slot[data-side="enemy"][data-slot="5"]{--actor-x:52%}
- .battle-scene.stage-actors.stage-sparse .battle-grid[data-row="0"] .battle-slot[data-side="enemy"]{--actor-ground:13%}
- .battle-scene.stage-actors.stage-sparse .battle-grid[data-row="0"] .battle-slot[data-side="friendly"]{--actor-ground:3%}
- .battle-scene.stage-actors.stage-sparse .battle-grid[data-row="1"] .battle-slot[data-side="enemy"]{--actor-ground:39%}
- .battle-scene.stage-actors.stage-sparse .battle-grid[data-row="1"] .battle-slot[data-side="friendly"]{--actor-ground:30%}
- .battle-scene.stage-actors.stage-crowded{
-  --stage-actor-near:clamp(54px,16vw,68px);
-  --stage-actor-far:clamp(50px,15vw,64px);
- }
- .battle-scene.stage-actors.stage-crowded .battle-slot[data-side="friendly"][data-slot="0"],
- .battle-scene.stage-actors.stage-crowded .battle-slot[data-side="friendly"][data-slot="3"]{--actor-x:48%}
- .battle-scene.stage-actors.stage-crowded .battle-slot[data-side="friendly"][data-slot="1"],
- .battle-scene.stage-actors.stage-crowded .battle-slot[data-side="friendly"][data-slot="4"]{--actor-x:30%}
- .battle-scene.stage-actors.stage-crowded .battle-slot[data-side="friendly"][data-slot="2"],
- .battle-scene.stage-actors.stage-crowded .battle-slot[data-side="friendly"][data-slot="5"]{--actor-x:12%}
- .battle-scene.stage-actors.stage-crowded .battle-slot[data-side="enemy"][data-slot="0"],
- .battle-scene.stage-actors.stage-crowded .battle-slot[data-side="enemy"][data-slot="3"]{--actor-x:55%}
- .battle-scene.stage-actors.stage-crowded .battle-slot[data-side="enemy"][data-slot="1"],
- .battle-scene.stage-actors.stage-crowded .battle-slot[data-side="enemy"][data-slot="4"]{--actor-x:73%}
- .battle-scene.stage-actors.stage-crowded .battle-slot[data-side="enemy"][data-slot="2"],
- .battle-scene.stage-actors.stage-crowded .battle-slot[data-side="enemy"][data-slot="5"]{--actor-x:91%}
- .battle-scene.stage-actors.stage-crowded .battle-grid[data-row="0"] .battle-slot[data-side="enemy"]{--actor-ground:25%}
- .battle-scene.stage-actors.stage-crowded .battle-grid[data-row="0"] .battle-slot[data-side="friendly"]{--actor-ground:3%}
- .battle-scene.stage-actors.stage-crowded .battle-grid[data-row="1"] .battle-slot[data-side="enemy"]{--actor-ground:53%}
- .battle-scene.stage-actors.stage-crowded .battle-grid[data-row="1"] .battle-slot[data-side="friendly"]{--actor-ground:31%}
-}
-
-
-/* Placement calibrated to actual Chromium screenshots, not a mockup.
-   The rear enemy was standing in the *sky* (old rear ground 54%).
-   Keep all actors grounded along the snowy clearing's middle perspective. */
-.battle-scene.stage-actors .battle-grid[data-row="1"] .battle-slot{
-  --actor-ground:22%;
-}
-.battle-scene.stage-actors.stage-sparse .battle-slot[data-side="friendly"][data-slot="0"],
-.battle-scene.stage-actors.stage-sparse .battle-slot[data-side="friendly"][data-slot="3"]{--actor-x:31%}
-.battle-scene.stage-actors.stage-sparse .battle-slot[data-side="enemy"][data-slot="0"]{--actor-x:56%}
-.battle-scene.stage-actors.stage-sparse .battle-slot[data-side="enemy"][data-slot="3"]{--actor-x:72%}
-.battle-scene.stage-actors.stage-sparse .battle-slot[data-side="enemy"][data-slot="4"]{--actor-x:80%}
-.battle-scene.stage-actors.stage-sparse .battle-slot[data-side="enemy"][data-slot="5"]{--actor-x:88%}
-@media (orientation:portrait) and (max-width:700px){
- .battle-scene.stage-actors.stage-sparse .battle-grid[data-row="0"] .battle-slot[data-side="enemy"]{
-  --actor-ground:7%;
- }
- .battle-scene.stage-actors.stage-sparse .battle-grid[data-row="1"] .battle-slot[data-side="enemy"]{
-  --actor-ground:22%;
- }
- .battle-scene.stage-actors.stage-sparse .battle-slot[data-side="enemy"][data-slot="0"]{--actor-x:58%}
- .battle-scene.stage-actors.stage-sparse .battle-slot[data-side="enemy"][data-slot="3"]{--actor-x:85%}
- .battle-scene.stage-actors.stage-sparse .battle-slot[data-side="enemy"][data-slot="4"]{--actor-x:88%}
- .battle-scene.stage-actors.stage-crowded .battle-grid[data-row="1"] .battle-slot[data-side="enemy"]{
-  --actor-ground:28%;
- }
- .battle-scene.stage-actors.stage-crowded .battle-grid[data-row="1"] .battle-slot[data-side="friendly"]{
-  --actor-ground:20%;
- }
-}
-@media (orientation:landscape) and (max-height:520px){
- .battle-scene.stage-actors .battle-grid[data-row="1"] .battle-slot{
-  --actor-ground:24%;
- }
-}
-
-/* Native HTML image dragging dispatches pointercancel to the battle's
-   pointer controller. Portrait images are purely decorative: pointer
-   interaction belongs to their button/scene actor, never to the PNG. */
-.battle-scene.stage-actors .battle-unit .unit-art img,
-.battle-scene.stage-actors .battle-unit .unit-art svg{
-  pointer-events:none!important;
-  -webkit-user-drag:none!important;
-  user-select:none!important;
-  -webkit-user-select:none!important;
-}
-
-/* Keep the far-right desktop reserve coordinates from leaking into the
-   mobile 2.5D composition through cascade order. */
-@media (orientation:portrait) and (max-width:700px){
-  .battle-scene.stage-actors.stage-sparse .battle-slot[data-side="enemy"][data-slot="2"],
-  .battle-scene.stage-actors.stage-sparse .battle-slot[data-side="enemy"][data-slot="5"]{
-    --actor-x:52%;
+@media (prefers-reduced-motion:reduce){
+  .battle-scene.stage-actors .battle-field::after{animation:none;opacity:.34}
+  .battle-scene.stage-actors .battle-grid .battle-unit .unit-art img[data-cutout-ready="1"]{
+    transition:none;
   }
-}
-
-/* Empty world coordinates should never cover painted actors or steal their
-   clicks, even when absolute depth layers overlap on narrow phones.
-   Only the actual summon/drop control may receive a pointer on empty slots. */
-.battle-scene.stage-actors .battle-grid .battle-slot:not(:has(.battle-unit)){
- pointer-events:none!important;
-}
-.battle-scene.stage-actors .battle-grid .battle-slot .slot-drop{
- pointer-events:auto!important;
-}
-
-/* Full formations: pull the near row toward the viewer by one depth
-   increment. The previous shared x-column caused the front portrait to
-   cover the rear companion's clickable face/body at the centre point. */
-@media (min-width:701px) and (min-height:540px){
- .battle-scene.stage-actors.stage-crowded .battle-grid[data-row="0"] .battle-slot{
-   --actor-ground:-1%;
- }
-}
-
-/* Scene placement target: a compact visible action marker, not a
-   full-portrait invisible click rectangle hidden behind another actor. */
-.battle-scene.stage-actors .battle-grid .battle-slot:has(>.slot-drop){
-  z-index:40!important;
-}
-.battle-scene.stage-actors .battle-grid .battle-slot>.slot-drop{
-  position:absolute!important;
-  inset:auto!important;
-  top:0!important;
-  left:calc(50% - 22px)!important;
-  right:auto!important;
-  bottom:auto!important;
-  width:44px!important;
-  height:44px!important;
-  min-height:44px!important;
-  display:grid!important;
-  place-items:center!important;
-  padding:0!important;
-  background:#244757e0!important;
-  border:1px solid #e7f5e0!important;
-  border-radius:50%!important;
-  color:#f1f2db!important;
-  font:26px/1 system-ui!important;
-  text-shadow:0 1px 3px #17303f;
-  box-shadow:0 0 0 3px #dceede5c,0 4px 12px #223c4d7d!important;
-  pointer-events:auto!important;
-  z-index:42!important;
-}
-.battle-scene.stage-actors .battle-grid .battle-slot>.slot-drop:hover{
-  background:#37677c!important;
-  transform:scale(1.07);
-}
-@media (orientation:landscape) and (max-height:520px){
- .battle-scene.stage-actors .battle-grid .battle-slot>.slot-drop{
-   left:calc(50% - 14px)!important;
-   width:28px!important;height:28px!important;min-height:28px!important;
-   font-size:19px!important;
- }
-}
-@media (orientation:portrait) and (max-width:700px){
- .battle-scene.stage-actors .battle-grid .battle-slot>.slot-drop{
-   left:calc(50% - 18px)!important;
-   width:36px!important;height:36px!important;min-height:36px!important;
-   font-size:22px!important;
- }
-}
-
-/* Independent, low-contrast drifting forest atmosphere beneath the actors.
-   This is an additive lighting layer over the user's original painting,
-   not a substitute for individually painted transparent trees. */
-.battle-scene.stage-actors .battle-field::after{
-  content:"";position:absolute;z-index:0;pointer-events:none;
-  inset:6% -11% 4%;border-radius:45%;
-  background:
-   radial-gradient(ellipse at 30% 82%,#d9f0f13d 0%,transparent 46%),
-   radial-gradient(ellipse at 74% 70%,#e9f6e530 0%,transparent 52%);
-  opacity:.35;filter:blur(20px);
-  animation:snowbound-forest-mist-breath 13.2s ease-in-out infinite alternate;
-  will-change:transform,opacity;
-}
-@keyframes snowbound-forest-mist-breath{
-  from{transform:translate3d(-2.8%,0,0);opacity:.24}
-  to{transform:translate3d(2.3%,-.8%,0);opacity:.50}
-}
-@media(prefers-reduced-motion:reduce){
- .battle-scene.stage-actors .battle-field::after{
-  animation:none;transform:none;opacity:.32;will-change:auto;
- }
 }
