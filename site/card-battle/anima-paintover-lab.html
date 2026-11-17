@@ -4,24 +4,32 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#101c20">
-<title>PAINTOVER STUDIO — 3D × Anima 分层场景</title>
-<link rel="stylesheet" href="./ui/anima-paintover-lab.css?v=20261117-01">
+<title>褪色的会客厅 · 3D × Anima 场景</title>
+<link rel="stylesheet" href="./ui/anima-paintover-lab.css?v=20261118-mobile-v2">
 </head>
 <body>
 <main class="studio">
 <header class="top">
  <div><p class="eyebrow">PAPERCHALK / REAL-TIME MATERIAL STUDY 01</p>
  <h1>3D 白膜 <span>×</span> Anima 分层合成</h1></div>
- <div class="top-right"><span id="status">初始化三维空间…</span><a href="./index.html" title="返回游戏">返回游戏</a></div>
+ <div class="top-right"><span id="status">初始化三维空间…</span><a href="../index.html" title="返回主菜单">← 主菜单</a></div>
 </header>
 <section class="work">
  <div class="stage">
   <canvas id="world" aria-label="可旋转查看的真实三维绘画场景"></canvas>
   <div class="scene-title"><span class="scene-num">01 / 01</span><div>褪色的会客厅<small>THE FADING HALL</small></div></div>
-  <div class="camera-hint">拖动旋转镜头 · 滚轮缩放 · 双击恢复构图</div>
+  <div class="camera-hint"><span class="desktop-hint">拖动旋转镜头 · 滚轮缩放 · 双击恢复构图</span><span class="touch-hint">单指旋转 · 双指缩放 · 双击复位</span></div>
   <div class="stage-hud"><span id="mode-state">合成视图</span><span id="fps-state">实时 3D</span></div>
+  <nav class="mobile-toolbar" aria-label="手机场景操作">
+   <button id="mobile-view" type="button" aria-pressed="false"><span class="tool-icon">◧</span><span id="mobile-view-label">白膜</span></button>
+   <button id="mobile-light" type="button" aria-pressed="false"><span class="tool-icon">☼</span><span id="mobile-light-label">昼光</span></button>
+   <button id="mobile-fit" type="button"><span class="tool-icon">⤢</span><span>复位</span></button>
+   <button id="mobile-panel" type="button" aria-controls="material-controls" aria-expanded="false"><span class="tool-icon">☷</span><span>材质</span></button>
+  </nav>
  </div>
- <aside class="controls" aria-label="材质合成控制面板">
+ <button class="panel-backdrop" id="panel-backdrop" type="button" aria-label="关闭材质面板" tabindex="-1"></button>
+ <aside class="controls" id="material-controls" aria-label="材质合成控制面板" aria-hidden="false">
+  <div class="mobile-panel-heading"><div><strong>场景材质</strong><small>调节各层权重 / 即时预览</small></div><button id="mobile-close" type="button" aria-label="关闭材质面板">✕</button></div>
   <section class="control-section">
    <p class="subheading">01 — 场景结构</p>
    <div class="pair"><button id="finished" class="mode current" aria-pressed="true">最终合成</button><button id="whitebox" class="mode" aria-pressed="false">仅看 3D 白膜</button></div>
@@ -57,6 +65,6 @@
 </section>
 <footer>真实 THREE.JS 网格 / ShadowMap / UV 贴图 / 多层权重蒙版 / Alpha Cutout / Depth Test / 实时光照 · 原有角色资产未修改</footer>
 </main>
-<script type="module" src="./engine/anima-paintover-lab.js?v=20261117-01"></script>
+<script type="module" src="./engine/anima-paintover-lab.js?v=20261118-mobile-v2"></script>
 </body>
 </html>
