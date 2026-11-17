@@ -1,0 +1,213 @@
+{
+  "version": "2026-11-17-v1.0",
+  "scene": "fading-hall",
+  "status": "prompt-only-not-generated",
+  "promptSource": "docs/game/visual-reference-library/ANIMA_ENVIRONMENT_PROMPTS_LIBRARY.md",
+  "assetRoot": "site/assets/anima-environments/fading-hall/",
+  "qualityGate": {
+    "seamless": "verify four edges on base textures",
+    "alpha": "verify true transparency and no halos",
+    "reprojection": "verify against existing 3D geometry",
+    "realScreenshot": "compare original vs each layer in Chromium"
+  },
+  "assets": [
+    {
+      "asset_id": "HALL-01",
+      "name": "风化石墙基础纹理",
+      "size": "1024×1024",
+      "render_type": "square seamless opaque",
+      "blend": "UV repeat / base",
+      "target": "wallPaint / stone walls and columns",
+      "acceptance": "四边拼接，不能有斜透视或完整墙面/窗/门；不画明暗聚光。",
+      "positive_prompt": "masterpiece, best quality, highres, a single flat seamless hand-painted limestone wall texture tile, aged European manor limestone, faded grey ochre and cool sage stone, delicate mineral pigment variation, subtle chalky dry brush strokes, occasional tiny worn marks, subdued painterly gouache and oil texture, soft natural material variation across the entire surface, evenly detailed from edge to edge, neutral diffuse lighting, top-down flat texture scan, uniform scale, straight-on orthographic surface view, perfectly square texture sample, seamless repeating pattern, no central subject, no visible border, no horizon, no architectural features, texture only",
+      "generated": false
+    },
+    {
+      "asset_id": "HALL-02",
+      "name": "老旧石砖地面",
+      "size": "1024×1024",
+      "render_type": "square seamless opaque",
+      "blend": "UV repeat / base",
+      "target": "floorPaint / walkable surfaces and stair treads",
+      "acceptance": "绝对俯视，不要画斜地砖视角；石砖之间缝大小一致，做平铺测试。",
+      "positive_prompt": "masterpiece, best quality, highres, a seamless square hand-painted flagstone floor texture, viewed perfectly from directly overhead, old broad rectangular limestone paving stones in a staggered running bond pattern, irregular hand-worn softened edges, narrow dark mortar gaps, muted charcoal teal, grey olive and warm dusted stone, tactile brushed pigment and tiny chips, visual rhythm of medium-sized slabs, restrained uneven stone tone, soft diffuse neutral shading, consistent realistic size across the image, seamless repeat at every edge, pure flat orthographic material sample, texture only, no perspective, no cast shadows, no objects, no furniture, no border",
+      "generated": false
+    },
+    {
+      "asset_id": "HALL-03",
+      "name": "深褐老木材主纹理",
+      "size": "1024×1024",
+      "render_type": "square seamless opaque",
+      "blend": "UV repeat / base",
+      "target": "woodPaint / door and sideboard",
+      "acceptance": "只画木料，不能带门、桌脚、锁孔。",
+      "positive_prompt": "masterpiece, best quality, highres, a single seamless flat material sample of old walnut oak wooden boards, narrow straight vertical grain, faded smoked brown and muted umber, very fine visible carved fibers and varnish wear, gentle desaturated copper-toned brushstroke highlights embedded into wood grain, aged elegant European interior wood with subtle tiny scratches, hand-painted painterly material texture, orthographic front facing, completely flat, consistent grain size and color throughout, low-contrast neutral diffuse illumination, texture only, no door handles, no furniture silhouettes, no frame, no perspective, seamlessly repeatable on all sides",
+      "generated": false
+    },
+    {
+      "asset_id": "HALL-04",
+      "name": "脱落灰泥底纹",
+      "size": "1024×1024",
+      "render_type": "square seamless opaque",
+      "blend": "UV repeat / base",
+      "target": "optional wallPaint variant / plaster wall",
+      "acceptance": "做第二套墙面底色，不能把具体位置污渍画死。",
+      "positive_prompt": "masterpiece, best quality, highres, seamless square flat hand-painted worn chalk plaster wall material, old European interior faded linen grey, pale mineral cream, cool desaturated mushroom and ash undertones, extremely subtle layered painterly washes, soft pigment clouds, delicate powdery texture, scattered tiny aged speckles, occasional nearly invisible fine hairline abrasions, even surface frequency, muted low saturation, orthographic texture scan under neutral diffuse light, edge-to-edge painting, seamless repeat in all directions, material only, no architectural structures, no window, no moldings, no vignette, no perspective",
+      "generated": false
+    },
+    {
+      "asset_id": "HALL-05",
+      "name": "浮灰油污覆盖层",
+      "size": "1024×1024",
+      "render_type": "square alpha overlay",
+      "blend": "multiply with alpha mask",
+      "target": "grime weight / stone and plaster only",
+      "acceptance": "仅脏污，背景务必真透明；覆盖率约30%，不能整张变黑。",
+      "positive_prompt": "masterpiece, best quality, highres, a single isolated transparent overlay of aged surface grime and dusty soot, irregular scattered smoky grey-brown deposits, softly diffused mineral stain islands, dusty residue at random sizes, porous edges, thin hand-painted pigments with very different levels of opacity, sparse patches with large clear empty areas between stains, detailed delicate grunge texture, painterly dry-brush texture only, absolutely no solid wall material behind the grime, no bricks, no furniture, no room, transparent empty background, centered distribution suitable for a wall decal sheet, orthographic flat view, no baked cast shadow, no border",
+      "generated": false
+    },
+    {
+      "asset_id": "HALL-06",
+      "name": "潮湿渗水覆盖层",
+      "size": "1024×1024",
+      "render_type": "square alpha overlay",
+      "blend": "tint + roughness modulation using alpha",
+      "target": "wet weight / base of stone walls and ground",
+      "acceptance": "只负责水迹分布，真实高光/roughness由程序计算，不能在贴图里画死反光。",
+      "positive_prompt": "masterpiece, best quality, highres, transparent standalone hand-painted dampness marks, subtle dark blue-green translucent water seepage streaks on old stone, a handful of irregular vertical drips, soft edge diffusion into transparent emptiness, scattered thin mineral water marks, mild stains concentrated toward the bottom half, painterly washes, faint oxidized blue slate pigment, soft organic transitions and varying transparency, large uninterrupted transparent negative space, texture overlay only, orthographic flat surface detail, no painted wall, no bricks, no architecture, no light beam, no glossy floor reflection, no border",
+      "generated": false
+    },
+    {
+      "asset_id": "HALL-07",
+      "name": "苔藓色斑覆盖层",
+      "size": "1024×1024",
+      "render_type": "square alpha overlay",
+      "blend": "overlay + alpha",
+      "target": "growth weight / wall footing and stone pillars",
+      "acceptance": "只画青苔斑块，绝不画成带石头/花盆的场景。",
+      "positive_prompt": "masterpiece, best quality, highres, an isolated transparent sheet of tiny delicate patches of old moss and lichen growing on stone, soft olive green, muted bottle green, dusty sage green and scattered pale ochre lichen, very fine branching moss filaments, small irregular velvety clumps with naturally broken boundaries, painterly gouache detail and subtle tonal variation, about two thirds of the canvas remaining transparent, nonuniform sparse coverage with clumps stronger near the bottom edge, orthographic straight-on decal asset, no wall surface, no entire garden, no flower pots, no architectural elements, no cast shadow, transparent empty background",
+      "generated": false
+    },
+    {
+      "asset_id": "HALL-08",
+      "name": "裂纹与干笔边缘",
+      "size": "1024×1024",
+      "render_type": "square alpha overlay",
+      "blend": "multiply/darken using alpha",
+      "target": "ink weight / wall rough paint edge accents",
+      "acceptance": "只保留稀疏裂纹与笔触，不能整张做成黑噪声。",
+      "positive_prompt": "masterpiece, best quality, highres, an isolated transparent 2D paint detail overlay, thin branching hairline stone cracks, a few chipped plaster scratches and sparse uneven hand-painted dark dry-brush marks, restrained old ink edges mixed with warm pale chalk highlights, sharp natural tapering endings, broken discontinuous sketchlike texture, delicate handmade strokes on otherwise transparent empty canvas, flat orthographic asset, balanced random distribution with generous negative space, no outline around the whole image, no wall or floor underneath, no border, no full object, no background shadows",
+      "generated": false
+    },
+    {
+      "asset_id": "HALL-09",
+      "name": "尖拱门石雕贴面",
+      "size": "1024×1536",
+      "render_type": "vertical alpha front-on",
+      "blend": "world-space trim decal + depth-tested",
+      "target": "door arch geometry / back wall",
+      "acceptance": "贴在真实3D门拱几何外表面，不作为可替代厚度的建筑。",
+      "positive_prompt": "masterpiece, best quality, highres, one isolated antique Gothic pointed stone door arch decorative facade, strictly frontal orthographic elevation view, only the stone framing trim surrounding one tall pointed empty doorway, elegant but weathered carved limestone, off-white grey stone, lightly chipped raised molding, subtle sculpted ornament and faded gold traces, refined hand-painted European fantasy architecture texture, visible paint brush edges and mineral pigment, the entire doorway opening completely empty and transparent, no door inside, no wall behind, all external space transparent, complete object entirely inside the frame with generous margins, no perspective, no cast lighting, no floor",
+      "generated": false
+    },
+    {
+      "asset_id": "HALL-10",
+      "name": "石柱表面雕纹",
+      "size": "768×1536",
+      "render_type": "vertical alpha front-on",
+      "blend": "world-space trim decal",
+      "target": "pillars / vertical plane or UV label",
+      "acceptance": "只画石柱雕饰花纹；3D柱子已经有体积，不能再生成一根透视柱子。",
+      "positive_prompt": "masterpiece, best quality, highres, a single tall narrow transparent decorative carved pattern intended for one ancient limestone interior column, faded hand-painted Gothic floral stone relief and sparse vertical fluting highlights, very subtle patina and fine cracks, graceful narrow vertical symmetrical ornamental arrangement, calm old architectural material palette of cool grey, ash beige and faint dark olive, front elevation flat orthographic design, isolated decoration ONLY, empty transparent surroundings, no complete pillar cylinder, no wall, no pedestal, no background, no drop shadow, no perspective, full ornament visible with margins",
+      "generated": false
+    },
+    {
+      "asset_id": "HALL-11",
+      "name": "老木门雕花门板",
+      "size": "1024×1536",
+      "render_type": "vertical alpha front-on",
+      "blend": "front surface world-space overlay",
+      "target": "wooden door existing 3D block",
+      "acceptance": "主材质可拆面板纹理与金属把手；如透明生成失败，可程序扣除外围。",
+      "positive_prompt": "masterpiece, best quality, highres, one flat front-elevation antique dark walnut wooden door surface decorative panel, tall rectangular single door, old European manor style, deeply but delicately carved rectangular raised panels, faint worn engraved floral ornament, fine smoked oak grain, subtle antique golden hinge details and a small authentic brass knob on the left, restrained muted brown and black wood tones, artisanal painterly surface detail, orthographic directly frontal, flat surface to apply to existing door geometry, centered and fully visible, isolated with transparent exterior, no complete room, no wall, no floor, no perspective, no open door, no theatrical lighting",
+      "generated": false
+    },
+    {
+      "asset_id": "HALL-12",
+      "name": "古典彩窗玻璃花纹",
+      "size": "1024×1536",
+      "render_type": "vertical alpha front-on",
+      "blend": "translucent overlay map",
+      "target": "existing glass and mullion 3D geometry",
+      "acceptance": "玻璃纹样而不是一整面窗墙；光穿透、闪烁由程序。",
+      "positive_prompt": "masterpiece, best quality, highres, an isolated tall lancet Gothic stained-glass window artwork, strictly flat front elevation, narrow pointed top and long vertical pane, weathered hand-painted semi-translucent glass sections in desaturated teal, dark petrol blue, smoky amber and cloudy sage, subtle artisan glass pigment swirls, thin antique black lead lines making an elegant geometric rosette and elongated lozenge pattern, no religious figure or portrait, rich but controlled painterly detail, tiny scratches and slight opacity variation within glass segments, single window glass surface only, transparent outer canvas, no stone wall, no stone window frame, no perspective, no visible sunbeams, no floor",
+      "generated": false
+    },
+    {
+      "asset_id": "HALL-13",
+      "name": "旧天鹅绒垂布",
+      "size": "1024×1536",
+      "render_type": "vertical alpha sprite",
+      "blend": "alphaTest world-space sprite",
+      "target": "foreground cloth world card",
+      "acceptance": "做单块布不是整套窗帘；程序动画轻微摆动。",
+      "positive_prompt": "masterpiece, best quality, highres, one single isolated long worn European velvet hanging drapery panel, suspended from its straight top edge, dark faded dusty wine-brown and charcoal plum textile, several natural long vertical folds, frayed ragged uneven hem, subtle faded embroidery near the edge and old hand-stitched seams, tactile gouache and painterly fine brush strokes, gentle fabric highlights only showing inherent material folds, fully visible from top edge to bottom hem, no window, no wall, no rod, no other curtain panel, neutral frontal view with almost no perspective, generous transparent margins around the entire cloth, no floor or cast shadow",
+      "generated": false
+    },
+    {
+      "asset_id": "HALL-14",
+      "name": "一条垂落藤蔓",
+      "size": "1024×1536",
+      "render_type": "vertical alpha sprite",
+      "blend": "alpha clip world card",
+      "target": "foreground vines and wall foliage",
+      "acceptance": "藤蔓逐条生成，每条要不同轮廓；不能生成一整片墙叶。",
+      "positive_prompt": "masterpiece, best quality, highres, one isolated hanging climbing vine branch descending naturally from the top of the image, thin dark twisting woody stem, several small overlapping pointed ivy leaves and a few dried leaves, delicate realistic irregular growth, desaturated deep sage and olive green, dark smoky green shadow leaves, hand-painted fine gouache brushstrokes, varied leaf sizes and directions, elegant asymmetrical silhouette, leaf shapes must remain individually readable, full branch visible inside canvas, abundant transparent empty background all around, natural two-dimensional front elevation, no pot, no wall, no tree trunk, no ground, no forest, no extra plants, no framing, no baked dramatic lighting",
+      "generated": false
+    },
+    {
+      "asset_id": "HALL-15",
+      "name": "前景一丛植物叶片",
+      "size": "1024×1536",
+      "render_type": "vertical alpha sprite",
+      "blend": "alpha-tested world card with depth sorting",
+      "target": "camera-near foreground leaf card",
+      "acceptance": "一丛叶片，不包含整棵树；近景可用轻微镜头偏移。",
+      "positive_prompt": "masterpiece, best quality, highres, a single isolated irregular spray of old indoor ivy and broad wild leaves growing from one off-center stem, many individually separated leaves, elegant asymmetrical clustered silhouette, muted dusty olive, deep pine green and blue-grey green, tiny faded yellow edges, exquisite hand-painted stylized organic texture with believable leaf veins, oil-gouache hybrid painting, front-facing orthographic sprite for a 2.5D game, the complete plant cluster fully visible with breathing room around the edges, clean transparent empty background, no pot, no stone, no ground, no room, no landscape, no decorative frame, no heavy cast shadows",
+      "generated": false
+    },
+    {
+      "asset_id": "HALL-16",
+      "name": "古典小木柜雕饰面",
+      "size": "1024×1024",
+      "render_type": "square alpha front-on",
+      "blend": "surface decal on furniture proxy",
+      "target": "sideboard 3D mesh front",
+      "acceptance": "已有真实3D柜体；只画可贴前面的装饰层。",
+      "positive_prompt": "masterpiece, best quality, highres, one flat decorative front facade of a narrow antique European oak sideboard cabinet, only the visible front wooden panels and two drawers, faded carved trim, uneven wood stain, tiny brass handles, detailed weathered smoked walnut finish, delicate floral line engraving, hand-painted storybook realism, restrained warm grey-brown palette, strictly straight-on front elevation designed to be mapped onto an existing cuboid 3D furniture front, no legs, no top surface, no surrounding table, no room, no perspective, clean isolated rectangular flat front with transparent outside",
+      "generated": false
+    },
+    {
+      "asset_id": "HALL-17",
+      "name": "铜质古灯罩",
+      "size": "1024×1024",
+      "render_type": "square alpha single prop",
+      "blend": "sprite facade / 3D surface map",
+      "target": "existing 3D lamp at (3.45,6.5,-3.9)",
+      "acceptance": "美术仅灯罩外观；点光源、投影、光晕由游戏引擎生成。",
+      "positive_prompt": "masterpiece, best quality, highres, one isolated antique bell-shaped brass hanging lamp shade, aged dark bronze and warm muted gold metal, gently scalloped rim, tiny worn ornamental grooves and patina, refined old European manor design, tactile small painted scratches and fine metallic highlights belonging to the surface, neutral studio-like soft lighting, view from directly in front at slight natural eye level, complete lamp shade entirely inside the square frame, no bulb, no chains, no ceiling, no wall, no visible beam of light, no room, no floor, no drop shadow, empty transparent background",
+      "generated": false
+    },
+    {
+      "asset_id": "HALL-18",
+      "name": "地面碎石独立素材",
+      "size": "1024×1024",
+      "render_type": "square alpha single decal",
+      "blend": "world sprite or decal",
+      "target": "small stone debris world-space floor",
+      "acceptance": "不能画地面或接触阴影；碎石与主地砖由程序贴合。",
+      "positive_prompt": "masterpiece, best quality, highres, a single modest scatter of several tiny aged limestone chips and broken plaster flakes arranged loosely as one compact cluster, directly overhead orthographic view, pale grey beige, dusty slate and subtle olive moss hints, hand-painted realistic stone pigment with fine chips and surface grain, irregular organic broken pieces in a believable random cluster, no larger than one small patch of a floor, surrounding empty transparent canvas, delicate controlled painted edges, no entire floor, no stone tiles beneath, no architecture, no ground shadow, no dramatic studio light, no border, no perspective",
+      "generated": false
+    }
+  ]
+}
