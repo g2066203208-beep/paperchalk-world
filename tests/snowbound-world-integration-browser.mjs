@@ -13,7 +13,7 @@ const devices=[
  {name:"phone-390",width:390,height:844,mobile:true},
  {name:"landscape-844",width:844,height:390,mobile:true}
 ];
-const browser=await chromium.launch({headless:true,args:["--no-sandbox"]});
+const browser=await chromium.launch({headless:true,args:["--no-sandbox","--enable-webgl","--use-gl=angle","--use-angle=swiftshader","--enable-unsafe-swiftshader"]});
 const reports=[];
 for(const cfg of devices){
  const context=await browser.newContext({
@@ -34,7 +34,29 @@ for(const cfg of devices){
   await page.waitForFunction(()=>[...document.querySelectorAll(".stage-actor .unit-art img")]
     .every(img=>img.dataset.cutoutReady==="1" &&
       img.closest(".unit-art")?.dataset.maskReady==="1"),null,{timeout:16000});
-  await page.waitForTimeout(240);
+  await page.waitForTimeout(360);
+  // Actual WebGL screenshot, same real Anima actors, BEFORE original backdrop comparison.
+  await page.waitForFunction(()=>document.querySelector(".fmf2-world-canvas")?.dataset.inkStatus==="running",null,{timeout:18000});
+  const inkWorld=await page.evaluate(()=>{
+    const canvas=document.querySelector(".fmf2-world-canvas"),gl=canvas.getContext("webgl");
+    const r=canvas.getBoundingClientRect();
+    return {running:canvas.dataset.inkStatus,webgl:!!gl,
+      framebuffer:gl?[gl.drawingBufferWidth,gl.drawingBufferHeight]:[],
+      visible:getComputedStyle(canvas).visibility,
+      active:canvas.closest(".battle-scene").classList.contains("fmf2-world-active"),
+      actorCount:document.querySelectorAll(".battle-unit").length,
+      bounds:[r.width,r.height]};
+  });
+  assert(inkWorld.webgl&&inkWorld.running==="running"&&inkWorld.active&&inkWorld.visible==="visible",
+    "Real 3D scene missing: "+JSON.stringify(inkWorld));
+  assert(inkWorld.framebuffer[0]>100&&inkWorld.framebuffer[1]>100,
+    "WebGL framebuffer not sized to the battlefield");
+  assert(inkWorld.actorCount>=3,"Must keep original Anima actors");
+  await page.screenshot({path:OUT+"/"+cfg.name+"-3d-inkworld.png",fullPage:false});
+  await page.locator(".fmf2-world-toggle").click();
+  assert(!(await page.locator(".battle-scene").evaluate(el=>el.classList.contains("fmf2-world-active"))),
+    "Comparison toggle failed to restore original painting");
+  await page.waitForTimeout(140);
   const measure=await page.evaluate(()=>{
     const board=document.querySelector(".double-board").getBoundingClientRect();
     const field=document.querySelector(".battle-field").getBoundingClientRect();
@@ -122,7 +144,7 @@ for(const cfg of devices){
   }
   assert.deepEqual(errors,[],"original scene color/alpha/motion code must produce no runtime errors");
   await page.screenshot({path:OUT+"/"+cfg.name+"-snow-grounded.png",fullPage:false});
-  reports.push({device:cfg.name,passed:true,measure,
+  reports.push({device:cfg.name,passed:true,inkWorld,measure,
     evidence:"actual alpha-mask feet + Chrome screenshot + original video"});
   console.log("PASS real-world original Anima scene grounding",cfg.name,
     measure.nodes.map(u=>({side:u.side,slot:u.slot,paintedFootY:+u.feet.y.toFixed(1)})));
