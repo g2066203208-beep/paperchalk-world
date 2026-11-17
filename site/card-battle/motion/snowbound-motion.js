@@ -64,6 +64,27 @@
     requestAnimationFrame(tick);
    });
   }
+  function waitClock(refElapsedMs,startedAt,run){
+   // One absolute source timeline for every cue. Restarting rAF after each
+   // phase made four 80ms GIF stages accumulate up to 130ms of drift.
+   // Timeout targets a shared monotonic epoch; compositor Web Animations
+   // continue rendering independently even when the main thread is busy.
+   if(skipped||run!==token||document.hidden)return Promise.resolve();
+   const target=startedAt+duration(refElapsedMs);
+   const remaining=Math.max(0,target-now());
+   if(!remaining)return Promise.resolve();
+   return new Promise(resolve=>{
+    let settled=false;
+    const timer=setTimeout(done,remaining);
+    function done(){
+     if(settled)return;
+     settled=true;
+     clearTimeout(timer);
+     resolve();
+    }
+    pending.push(done);
+   });
+  }
   async function animate(element,keyframes,ms,{easing="cubic-bezier(.19,.8,.3,1)",fill="forwards",delay=0}={},run=token){
    if(!element||!element.isConnected||skipped||run!==token)return;
    const d=duration(ms);
@@ -266,6 +287,7 @@
    const target=cue.targetId?unit(old,cue.targetId):null;
    if(!target)return;
    const profile=REFERENCE_CLOCK.slotsAttack;
+   const clockStart=now();
    const label=cue.type+" "+(cue.actorId||cue.cardId||"item")+" → "+cue.targetId;
    record(label,"start",cue.kind);
    record("reference-attack","F00-light",label);
@@ -284,7 +306,7 @@
       frameTime(profile,16),{easing:"cubic-bezier(.16,.75,.25,1)"},run);
    }
    // Source clip F06 (~100ms) is the FIRST weapon flash, not the impact.
-   await wait(frameTime(profile,profile.flashFirst),run);
+   await waitClock(frameTime(profile,profile.flashFirst),clockStart,run);
    if(skipped||run!==token)return;
    record("reference-attack","F06-flash",label);
    if(cue.type==="itemHit"&&from&&from.dataset.motionLaunched!=="1"){
@@ -294,7 +316,7 @@
    beep(cue.kind==="gun"?"gun":"paper");materialTransient(cue.kind==="gun"?"gun":"slash");
    strikeFlash(target,run,cue);
    line(from||target,target,cue.kind,run);
-   await wait(frameTime(profile,profile.impactFrame-profile.flashFirst),run);
+   await waitClock(frameTime(profile,profile.impactFrame),clockStart,run);
    if(skipped||run!==token)return;
    record("reference-attack","F10-impact",label);
    record(label,"impact");
@@ -310,7 +332,7 @@
       {transform:"translateX(-3px) rotate(-.8deg) scale(1.01)",filter:"brightness(1.05)",offset:.55},
       {transform:"translateX(0) rotate(0)",filter:"brightness(1)"}],
       TOKENS.hurt,{easing:"cubic-bezier(.18,.85,.3,1)"},run);
-   await wait(frameTime(profile,profile.frames-profile.impactFrame),run);
+   await waitClock(frameTime(profile,profile.frames),clockStart,run);
    if(skipped||run!==token)return;
    record("reference-attack","F16-tail-end",label);
    // The first 16 source frames take 266.67ms at 1x; the remaining ~60ms
@@ -350,6 +372,7 @@
    const ref=REFERENCE_CLOCK.balatroHand;
    const oldHand=[...(old?.querySelectorAll(".battle-bottom .hand>button")||[])];
    const newHand=[...app.querySelectorAll(".battle-bottom .hand>button")];
+   const clockStart=now();
    record("reference-hand","F00-start","35×80ms; 1x=2800ms");
    // Old cards leave in the original GIF's F04..F07 window (320..560ms).
    oldHand.forEach((card,i)=>{
@@ -397,18 +420,18 @@
     wait(ref.totalMs+frameTime(ref,4),run).then(()=>ghost.remove());
    });
    beep("paper");
-   await wait(frameTime(ref,ref.exitFirst),run);
+   await waitClock(frameTime(ref,ref.exitFirst),clockStart,run);
    if(skipped||run!==token)return;
    record("reference-hand","F04-exit");
-   await wait(frameTime(ref,ref.drawFirst-ref.exitFirst),run);
+   await waitClock(frameTime(ref,ref.drawFirst),clockStart,run);
    if(skipped||run!==token)return;
    record("reference-hand","F13-draw");
    beep("paper");
-   await wait(frameTime(ref,ref.faceFirst-ref.drawFirst),run);
+   await waitClock(frameTime(ref,ref.faceFirst),clockStart,run);
    if(skipped||run!==token)return;
    record("reference-hand","F27-flip");
    beep("bell");
-   await wait(frameTime(ref,ref.frames-ref.faceFirst),run);
+   await waitClock(frameTime(ref,ref.frames),clockStart,run);
    if(skipped||run!==token)return;
    record("reference-hand","F35-end");
   }
