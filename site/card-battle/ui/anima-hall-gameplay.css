@@ -1,0 +1,116 @@
+/* Fading Hall chapter 1: playable game shell. The full Three.js whitebox
+   and material inspector still exist under ?dev=1, but are not player UI. */
+html:not(.dev-mode) body{overflow:hidden;overscroll-behavior:none}
+html:not(.dev-mode) .studio{position:relative;height:100dvh;min-height:0;max-height:100dvh;overflow:hidden}
+html:not(.dev-mode) .top{position:absolute;left:0;top:0;right:0;z-index:13;
+  padding:calc(9px + env(safe-area-inset-top)) 14px 9px;
+  border:0;min-height:0;background:linear-gradient(#061016eb,#0610168a 75%,transparent);
+  pointer-events:none;align-items:flex-start}
+html:not(.dev-mode) .top h1{font:600 clamp(17px,2vw,23px)/1.2 Georgia,"Noto Serif SC",serif;
+ color:#f1ead7;text-shadow:0 1px 8px #000;margin:3px 0}
+html:not(.dev-mode) .eyebrow{font:10px ui-monospace,monospace;letter-spacing:.17em;color:#b7a078}
+html:not(.dev-mode) .top-right{pointer-events:auto}
+html:not(.dev-mode) .top-right span{display:none}
+html:not(.dev-mode) .top-right a{background:#0d1c22b4;border:1px solid #b49c685b;
+ border-radius:9px;color:#e8dec8;font-size:11px;padding:8px 11px;min-height:35px}
+html:not(.dev-mode) .work{display:block;flex:1;min-height:0;position:relative}
+html:not(.dev-mode) .stage{width:100%;height:100dvh;min-height:0;position:relative}
+html:not(.dev-mode) .scene-title,
+html:not(.dev-mode) .camera-hint,
+html:not(.dev-mode) .stage-hud,
+html:not(.dev-mode) .mobile-toolbar,
+html:not(.dev-mode) .controls,
+html:not(.dev-mode) .panel-backdrop,
+html:not(.dev-mode) footer{display:none!important}
+.game-hud{position:absolute;z-index:11;left:clamp(13px,3vw,36px);
+ top:calc(72px + env(safe-area-inset-top));pointer-events:none;color:#efeadc;max-width:min(340px,68vw)}
+.game-mission{display:flex;flex-direction:column;gap:5px;padding:12px 14px;
+ background:linear-gradient(100deg,#0b1a1cbb,#101d2379);
+ border-left:2px solid #c5ac7c;box-shadow:0 5px 29px #060d15a1;border-radius:2px 12px 12px 2px}
+.game-chapter{font:10px ui-monospace,monospace;letter-spacing:.15em;color:#d4b580}
+.game-mission strong{font:600 clamp(17px,1.9vw,22px) Georgia,"Noto Serif SC",serif;text-shadow:0 1px 5px #000}
+.game-mission #game-objective{font:12px/1.45 system-ui,sans-serif;color:#dfded4}
+#game-progress{font:11px ui-monospace,monospace;letter-spacing:.08em;color:#dec694}
+.game-hint{margin:12px 0 0 8px;color:#d7d6c8;font:11px/1.5 system-ui,sans-serif;text-shadow:0 1px 6px #000}
+.game-hotspots{position:absolute;inset:0;pointer-events:none;z-index:9;overflow:hidden}
+.game-hotspot{position:absolute;pointer-events:auto;display:flex;align-items:center;gap:7px;max-width:160px;
+ transform:translate(-50%,-50%);padding:7px 10px 7px 8px;
+ border:1px solid #ecd29c83;border-radius:24px;
+ color:#fff3cc;background:#182b2acc;box-shadow:0 2px 17px #0d1419bd,0 0 20px #e7c88132;
+ backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+ cursor:pointer;transition:border-color .16s,background .16s,transform .14s;
+ font:600 11px system-ui,"Noto Sans SC",sans-serif;text-align:left;white-space:nowrap;
+ min-height:38px;user-select:none;-webkit-tap-highlight-color:transparent}
+.game-hotspot .hotspot-icon{width:24px;height:24px;border:1px solid #eac07c7b;
+ border-radius:50%;display:grid;place-items:center;background:#6d5834a8;color:#ffe5a9;
+ font-size:16px;flex:none;box-shadow:inset 0 1px #fff1bb4d}
+.game-hotspot:active{transform:translate(-50%,-50%) scale(.92)}
+.game-hotspot:hover,.game-hotspot:focus-visible{background:#3a4237e8;border-color:#ffe7aa}
+.game-hotspot.is-done{background:#10241eac;border-color:#93bc9a87}
+.game-hotspot.is-done .hotspot-icon{background:#365e4aba;color:#d9f3c3}
+.game-hotspot[hidden]{display:none!important}
+.game-walk-mark{position:absolute;z-index:8;width:25px;height:25px;pointer-events:none;
+ border:2px solid #ffdf9bbb;border-radius:50%;box-shadow:0 0 15px #ffcc7aaf;
+ transform:translate(-50%,-50%) scale(.2);opacity:0}
+.game-walk-mark.is-active{animation:walktap .72s ease-out both}
+@keyframes walktap{0%{opacity:1;transform:translate(-50%,-50%) scale(.2)}60%{opacity:.8}100%{opacity:0;transform:translate(-50%,-50%) scale(2)}}
+.game-dialogue{position:absolute;z-index:15;left:50%;bottom:calc(23px + env(safe-area-inset-bottom));
+ transform:translateX(-50%);width:min(690px,calc(100% - 24px));pointer-events:auto;
+ background:linear-gradient(115deg,#15282ceF,#1b2829f5);border:1px solid #b69a70bc;
+ border-radius:13px;box-shadow:0 15px 60px #000d,0 0 26px #c1a17318;
+ backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px)}
+.game-dialogue[hidden]{display:none}
+.game-dialogue-inner{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;
+ padding:18px 20px 17px}
+#game-speaker{grid-column:1/3;color:#d9b27b;font:600 13px "Noto Serif SC",serif;letter-spacing:.15em}
+#game-message{font:15px/1.72 system-ui,"Noto Sans SC",sans-serif;color:#f1eadd;
+ margin:4px 0;grid-column:1;white-space:pre-wrap}
+#game-dialogue-next{grid-column:2;align-self:end;border:1px solid #d6b78090;
+ background:#544a38c9;color:#f4e5c7;border-radius:7px;min-width:91px;min-height:43px;
+ padding:9px 12px;font:600 12px system-ui,sans-serif;cursor:pointer}
+#game-dialogue-next:hover{background:#766145}
+.game-transition{position:absolute;z-index:20;inset:0;background:#050b0f;opacity:0;
+ pointer-events:none;transition:opacity .48s ease}
+.game-transition.active{opacity:1;pointer-events:auto}
+html.dev-mode .game-hud,
+html.dev-mode .game-hotspots,
+html.dev-mode .game-walk-mark,
+html.dev-mode .game-dialogue,
+html.dev-mode .game-transition{display:none!important}
+@media(max-width:900px){
+ .game-hud{top:calc(59px + env(safe-area-inset-top));left:11px;max-width:min(250px,70vw)}
+ .game-mission{padding:9px 11px;gap:3px}
+ .game-chapter{font-size:9px}
+ .game-mission strong{font-size:16px}
+ .game-mission #game-objective{font-size:11px;line-height:1.4}
+ #game-progress{font-size:10px}
+ .game-hint{font-size:10px;margin:8px 0 0 5px}
+ .game-hotspot{font-size:10px;padding:5px 7px;gap:5px;min-height:43px;max-width:135px}
+ .game-hotspot .hotspot-icon{width:25px;height:25px;font-size:15px}
+ .game-dialogue-inner{padding:15px 13px 14px;gap:5px 8px}
+ #game-message{font-size:13px;line-height:1.65}
+ #game-dialogue-next{min-height:44px;min-width:70px}
+}
+@media(max-width:900px) and (orientation:landscape) and (max-height:520px){
+ html:not(.dev-mode) .top{padding:5px 10px}
+ html:not(.dev-mode) .top h1{font-size:15px}
+ html:not(.dev-mode) .eyebrow{font-size:8px}
+ .game-hud{top:49px;left:9px;max-width:min(270px,40vw)}
+ .game-mission{padding:6px 9px}
+ .game-mission strong{font-size:13px}
+ .game-mission #game-objective{font-size:10px}
+ .game-hint{font-size:9px;margin-top:4px}
+ .game-dialogue{bottom:7px;width:min(590px,calc(100% - 15px))}
+ .game-dialogue-inner{padding:8px 11px;grid-template-columns:1fr auto}
+ #game-speaker{font-size:11px}#game-message{font-size:12px;line-height:1.35}
+}
+@media(max-width:390px){
+ html:not(.dev-mode) .top{padding:calc(5px + env(safe-area-inset-top)) 9px 6px}
+ html:not(.dev-mode) .top h1{font-size:15px}
+ .game-hud{top:calc(49px + env(safe-area-inset-top));max-width:min(215px,64vw)}
+ .game-mission #game-objective{font-size:10px}
+ .game-hotspot span.hotspot-name{display:none}
+ .game-hotspot{width:43px;height:43px;border-radius:50%;padding:4px;justify-content:center}
+ .game-hotspot .hotspot-icon{width:31px;height:31px}
+}
+@media(prefers-reduced-motion:reduce){.game-transition,.game-hotspot{transition:none}.game-walk-mark.is-active{animation-duration:.1s}}
