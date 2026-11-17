@@ -1,0 +1,541 @@
+{
+  "version": "2026-11-17",
+  "title": "Game visual research assets — external source index",
+  "policy": "LINK_ONLY: external copyright-protected images/video/GIF are referenced by URL and not copied into this repository. The QA screenshots we own remain in GitHub Actions artifacts.",
+  "verificationStates": {
+    "source-page-verified": "公开页面已找到",
+    "image-search-verified": "图片检索返回具体 URL，未下载二次分发",
+    "video-page-verified": "视频页面已检索到",
+    "gif-url-present-frames-not-measured": "采集到 GIF 外链，但无法借当前网页检索器逐帧核实",
+    "previously-collected-not-reprobed": "既有资料里采集，当前未逐一重测媒体文件",
+    "embedded-only": "嵌在来源网页，无稳定独立 GIF 原始下载地址"
+  },
+  "games": [
+    {
+      "id": "forgive-me-father-2",
+      "name": "Forgive Me Father 2",
+      "studio": "Byte Barrel",
+      "focus": [
+        "3D 建筑和透视",
+        "手绘漫画轮廓",
+        "8方向 2D 敌人",
+        "动态光和雾",
+        "打击、破碎和回弹"
+      ],
+      "media": [
+        [
+          "website",
+          "官方 Steam 页面",
+          "https://store.steampowered.com/app/2272250/Forgive_Me_Father_2/",
+          "官方商店、预告片、截图汇总",
+          "official",
+          "source-page-verified"
+        ],
+        [
+          "article",
+          "开发日志 2：八方向敌人与 2D+3D",
+          "https://store.steampowered.com/news/app/2272250/view/3740859408912773681",
+          "开发者对 8 方位 sprite 与首代差别的说明",
+          "official",
+          "source-page-verified"
+        ],
+        [
+          "article",
+          "开发日志 3：场景/材质/氛围",
+          "https://store.steampowered.com/news/posts/?enddate=1697461329&feed=steam_community_announcements",
+          "场景贴图/着色/装饰物与灯光",
+          "official",
+          "source-page-verified"
+        ],
+        [
+          "article",
+          "开发日志 4：教堂模型制作",
+          "https://store.steampowered.com/news/app/2272250/view/3775765476432166473",
+          "灰盒、教堂构图到正式贴图",
+          "official",
+          "source-page-verified"
+        ],
+        [
+          "article",
+          "开发日志 7：命中与死亡反馈",
+          "https://store.steampowered.com/news/posts/?enddate=1704991355&feed=steam_community_announcements",
+          "打击、破碎、命中反馈",
+          "official",
+          "source-page-verified"
+        ],
+        [
+          "image",
+          "教堂灰盒原始 PNG",
+          "https://clan.fastly.steamstatic.com/images/43916633/13c816d7ef808e05c990e051d5558856b780a933.png",
+          "同场景 before 参考；对照正式场景",
+          "official",
+          "previously-collected-not-reprobed"
+        ],
+        [
+          "image",
+          "教堂完成图原始 PNG",
+          "https://clan.fastly.steamstatic.com/images/43916633/08a83ade378ad7d6c4d3203d43e7682277155afb.png",
+          "同场景 after、材质/光比",
+          "official",
+          "previously-collected-not-reprobed"
+        ],
+        [
+          "image",
+          "八方向人物对照 PNG",
+          "https://clan.fastly.steamstatic.com/images/43916633/aa6e72de41ea162de8a0747acc8e48882f5ff1e8.png",
+          "方向切换参考",
+          "official",
+          "previously-collected-not-reprobed"
+        ],
+        [
+          "image",
+          "温暖教堂实机截图",
+          "https://cdn.cloudflare.steamstatic.com/steam/apps/2272250/ss_1330f61dda7e7b9105f16d7986782e1eb5752d07.1920x1080.jpg?t=1712342923",
+          "暖色逆光和高纵深空间",
+          "official",
+          "image-search-verified"
+        ],
+        [
+          "image",
+          "潮湿夜巷实机截图",
+          "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2272250/ss_1c3efec2d2f47c8a1dac5b7ba7bedb5fe3dc0744.1920x1080.jpg?t=1721056082",
+          "青色窗光+湿地反射",
+          "official",
+          "image-search-verified"
+        ],
+        [
+          "image",
+          "植物园实机截图",
+          "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2272250/ss_57250e83ca7c9e3bd7b091349df92612385b9ab4.1920x1080.jpg?t=1731401324",
+          "装饰栏杆、枝叶遮挡、色彩调度",
+          "official",
+          "image-search-verified"
+        ],
+        [
+          "gif",
+          "敌人八方向旋转 GIF",
+          "https://clan.fastly.steamstatic.com/images/43916633/d6bb3f6ff3695cfdbb7aeb1c0f92d0ae9757ab5a.gif",
+          "每45度切换；gif URL 已记录，不代表已下载或逐帧测量",
+          "official",
+          "gif-url-present-frames-not-measured"
+        ],
+        [
+          "gif",
+          "场景材质制作 GIF",
+          "https://clan.fastly.steamstatic.com/images/43916633/247e746c576a13b9aa215a0ad79a2d00e1baf314.gif",
+          "逐层添加材质对照",
+          "official",
+          "gif-url-present-frames-not-measured"
+        ],
+        [
+          "gif",
+          "漫画描边效果 GIF",
+          "https://clan.fastly.steamstatic.com/images/43916633/b3e024a68e85a6344ed21d2544b5a9ab0a89b64d.gif",
+          "深度/法线边缘效果",
+          "official",
+          "gif-url-present-frames-not-measured"
+        ],
+        [
+          "gif",
+          "场景物体交互 GIF",
+          "https://clan.fastly.steamstatic.com/images/43916633/9dc81476db595ac87bd28d7a8189b795348cd315.gif",
+          "反应细节与舞台物理感",
+          "official",
+          "gif-url-present-frames-not-measured"
+        ],
+        [
+          "gif",
+          "死亡与破碎 GIF",
+          "https://clan.fastly.steamstatic.com/images/43916633/168ddf79a362fac1b9c9197e5b3822f2d9deca46.gif",
+          "死亡节奏与分层碎片",
+          "official",
+          "gif-url-present-frames-not-measured"
+        ],
+        [
+          "gif",
+          "命中喷溅 GIF",
+          "https://clan.fastly.steamstatic.com/images/43916633/1e353b60cbdba2ad13f8d42e2d51ea0aff3d0dc2.gif",
+          "屏幕内叠加/打击瞬间",
+          "official",
+          "gif-url-present-frames-not-measured"
+        ],
+        [
+          "video",
+          "教堂完整游戏录制",
+          "https://www.youtube.com/watch?v=tU6_MWgpAAE",
+          "第一人称运动/室内打光",
+          "third-party",
+          "video-page-verified"
+        ],
+        [
+          "video",
+          "全流程 4K 视频",
+          "https://www.youtube.com/watch?v=0tAab42MADw",
+          "机位移动/时间先后/整局演出",
+          "third-party",
+          "previously-collected-not-reprobed"
+        ]
+      ]
+    },
+    {
+      "id": "slots-and-daggers",
+      "name": "Slots & Daggers",
+      "studio": "Friedemann",
+      "focus": [
+        "金币发射与堆叠",
+        "厚度和移动金属反光",
+        "反弹碰撞音效",
+        "像素+3D透视投影",
+        "老虎机反馈与 UI 质感"
+      ],
+      "media": [
+        [
+          "website",
+          "开发者官方网站（含截图+Trailer）",
+          "https://slotsanddaggers.ateo.ch/",
+          "机台截图、产品展示、官方预告片入口",
+          "official",
+          "source-page-verified"
+        ],
+        [
+          "website",
+          "Steam 官方商店",
+          "https://store.steampowered.com/app/3631290/Slots__Daggers/",
+          "官方截图、视频、玩法文案",
+          "official",
+          "source-page-verified"
+        ],
+        [
+          "article",
+          "80 Level：金币动画与音效专题",
+          "https://80.lv/articles/check-out-coin-animation-sound-effect-in-this-slot-fantasy-game",
+          "重点研究金币喷出与声音；内嵌开发者动态",
+          "editorial-developer-footage",
+          "source-page-verified"
+        ],
+        [
+          "video",
+          "开发者亲述视频 00:43–00:52",
+          "https://www.dailymotion.com/video/x9sjabo",
+          "开发者讲到金币声音、菜单动画的精细打磨",
+          "developer",
+          "video-page-verified"
+        ],
+        [
+          "video",
+          "实机全流程 4K 60fps",
+          "https://www.youtube.com/watch?v=oo73Xs0HcFg",
+          "逐帧研究投注、转轮、中奖、收钱与节奏",
+          "third-party",
+          "video-page-verified"
+        ],
+        [
+          "video",
+          "之前采集的实机演示视频",
+          "https://www.youtube.com/watch?v=35dhkRyCvhU",
+          "备用不同版本参考",
+          "third-party",
+          "previously-collected-not-reprobed"
+        ],
+        [
+          "article",
+          "开发者技术访谈：Unity 3D 透视与 FMOD",
+          "https://indiegames.wtf/interviews/slots-daggers-the-roguelite-between-luck-and-strategy/",
+          "确认 2D+3D、透视相机、实时阴影和音效流程",
+          "developer-interview",
+          "source-page-verified"
+        ],
+        [
+          "image",
+          "老虎机战斗 UI 实机图",
+          "https://i0.wp.com/rogueliker.com/wp-content/uploads/2025/10/slotsart.jpg?fit=1920%2C1080&ssl=1",
+          "金属机壳、屏幕、像素表演、转轮布局",
+          "third-party",
+          "image-search-verified"
+        ],
+        [
+          "image",
+          "升级界面与金币实机图",
+          "https://i3.gamebiz.jp/media/6f77cda6-dcbd-4608-ad72-0e3c3b1e1f1e.jpg",
+          "机台物理质感、硬边轮廓、金币簇",
+          "third-party",
+          "image-search-verified"
+        ],
+        [
+          "image",
+          "80 Level modifiers 截图",
+          "https://cdn.80.lv/api/upload/content/b6/689efe48bf4cf.jpg",
+          "机台边框/阴影色调",
+          "editorial",
+          "image-search-verified"
+        ],
+        [
+          "video-embedded",
+          "金币喷出循环：专题嵌入源",
+          "https://80.lv/articles/check-out-coin-animation-sound-effect-in-this-slot-fantasy-game",
+          "页面含相关原开发动态视频；尚未获得独立可保存 GIF URL",
+          "editorial-developer-footage",
+          "embedded-only"
+        ]
+      ]
+    },
+    {
+      "id": "illusion-carnival",
+      "name": "幻象游园剧 / Illusion Carnival",
+      "studio": "KiZ_qi",
+      "focus": [
+        "斜俯视多层纸片空间",
+        "黑童话演出",
+        "角色/背景风格统一",
+        "大装置剪纸层",
+        "紫红暖光与遮挡"
+      ],
+      "media": [
+        [
+          "video",
+          "【作者】第一章宣传 PV（用户指定）",
+          "https://www.bilibili.com/video/BV1Cx4y1x7kz/",
+          "第一优先：完整构图、剪纸层位、移动镜头、过场反馈",
+          "official-creator",
+          "video-page-verified"
+        ],
+        [
+          "website",
+          "Steam 游戏页",
+          "https://store.steampowered.com/app/2796340/Illusion_Carnival/",
+          "官方图片、预告、游戏说明，2.5D/手绘标签",
+          "official",
+          "source-page-verified"
+        ],
+        [
+          "video",
+          "完整第一章剧情与成就演示",
+          "https://www.bilibili.com/video/BV1zS411w7Ri/",
+          "真实游戏内从探索到对话/机关/场景切换",
+          "third-party",
+          "video-page-verified"
+        ],
+        [
+          "video",
+          "正式版全流程合集",
+          "https://www.bilibili.com/video/BV1a9bHe7E75/",
+          "不同版本对照，章节内场景完整性",
+          "third-party",
+          "video-page-verified"
+        ],
+        [
+          "website",
+          "IGDB press kit",
+          "https://www.igdb.com/games/illusion-carnival/presskit",
+          "截图/其他正式媒体入口",
+          "third-party",
+          "source-page-verified"
+        ],
+        [
+          "image",
+          "霓虹剪纸舞台 Steam 原图",
+          "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2796340/ss_3430dc80d2ac834d82cd331b8c27d6f9b8acb5d2.1920x1080.jpg?t=1774685346",
+          "巨型手臂与粉紫前景分层，冷暖光",
+          "official",
+          "image-search-verified"
+        ],
+        [
+          "image",
+          "齿轮立体舞台 Steam 原图",
+          "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2796340/ss_15c00bad45920433c40117cce5501fe4ed759ed6.1920x1080.jpg?t=1773124376",
+          "主景平台/装置竖深/剪纸背景",
+          "official",
+          "image-search-verified"
+        ],
+        [
+          "image",
+          "角色景别与人设 Steam 原图",
+          "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2796340/ss_2d250b762443cb29b85ca167e59ba16df7ea1a42.1920x1080.jpg?t=1773124376",
+          "人物比例、角色边线与舞台配色",
+          "official",
+          "image-search-verified"
+        ],
+        [
+          "image",
+          "游戏谜题界面截图",
+          "https://jj-labo.up.seesaa.net/image/Illusion_Carnival__image6.jpg",
+          "对话/谜题的画面占比",
+          "third-party",
+          "image-search-verified"
+        ]
+      ]
+    },
+    {
+      "id": "disco-elysium",
+      "name": "极乐迪斯科 / Disco Elysium",
+      "studio": "ZA/UM",
+      "focus": [
+        "3D 灰盒与相机投射",
+        "静态绘画+实时对象",
+        "多pass遮挡/光场",
+        "局部植物透明剪片",
+        "整体画面式调色/构图"
+      ],
+      "media": [
+        [
+          "website",
+          "官方媒体库（截图/概念图/壁纸/预告）",
+          "https://discoelysium.com/media",
+          "美术源索引",
+          "official",
+          "source-page-verified"
+        ],
+        [
+          "article",
+          "官方技术文章：Tiling of the World",
+          "https://discoelysium.com/devblog/2016/08/18/tiling-of-the-world",
+          "正交相机投射 UV / block-in / depth-occlusion",
+          "official",
+          "source-page-verified"
+        ],
+        [
+          "article",
+          "官方技术文章：From Render to Paintover",
+          "https://discoelysium.com/devblog/2019/01/23/from-render-to-paintover",
+          "动态物体分离、透明植被/水体/flow map",
+          "official",
+          "source-page-verified"
+        ],
+        [
+          "article",
+          "美术总监 Aleksander Rostov 专访",
+          "https://drumiel.wordpress.com/2023/04/04/entrevista-a-aleksander-rostov-disco-elysium/",
+          "Blender diff/shadow/height/normal/object-ID 各 Pass + 手绘",
+          "developer-interview",
+          "source-page-verified"
+        ],
+        [
+          "article",
+          "GamesRadar 艺术团队访谈",
+          "https://www.gamesradar.com/disco-elysium-comes-to-life-once-the-talking-stops-zaum-details-its-approach-to-creating-a-truly-expressive-rpg/",
+          "动态世界与角色的表现策略",
+          "editorial-developer-interview",
+          "source-page-verified"
+        ],
+        [
+          "video",
+          "Noclip：Making of Disco Elysium Part 4 Art",
+          "https://www.youtube.com/watch?v=-eUtrUW2QVU",
+          "画风、构图、角色艺术设计访谈",
+          "documentary",
+          "video-page-verified"
+        ],
+        [
+          "video",
+          "Noclip：Making of Disco Elysium Part 2",
+          "https://www.youtube.com/watch?v=yrVWe_ZCAko",
+          "游戏搭建与制作背景",
+          "documentary",
+          "video-page-verified"
+        ],
+        [
+          "article",
+          "GDC 2020 技术美术讲座介绍",
+          "https://www.gamedeveloper.com/art/come-to-gdc-and-see-how-i-disco-elysium-i-s-unique-style-was-achieved-",
+          "Turpentine Fumes and Shaders；讲座存在，不冒充获取全文视频",
+          "editorial",
+          "source-page-verified"
+        ],
+        [
+          "image",
+          "摇摆旅舍室内图",
+          "https://miro.medium.com/v2/0%2AlCXs2KKaBZLCqR0b",
+          "俯视角色融合，光照与地面花纹",
+          "third-party",
+          "image-search-verified"
+        ],
+        [
+          "image",
+          "教堂遗迹室内图",
+          "https://miro.medium.com/v2/resize%3Afit%3A1400/1%2AavwNWTVIgcgtywFGtyusSQ.jpeg",
+          "复杂高差/场景遮挡/绘画笔触",
+          "third-party",
+          "image-search-verified"
+        ],
+        [
+          "image",
+          "海岸教堂俯视场景图",
+          "https://image.gcores.com/fee434ac-1747-4eea-bbd6-1eb145d00e3f.jpg?x-oss-process=image%2Fresize%2Climit_1%2Cm_lfit%2Cw_3000%2Ch_5250%2Fquality%2Cq_90%2Fformat%2Cwebp",
+          "室外场景，岸边材质、破旧建筑",
+          "editorial",
+          "image-search-verified"
+        ]
+      ]
+    },
+    {
+      "id": "balatro",
+      "name": "小丑牌 / Balatro",
+      "studio": "LocalThunk",
+      "focus": [
+        "像素卡面与 shader 分离",
+        "CRT/屏幕扭曲/噪声",
+        "计分数字逐级冲刺",
+        "亮色 holo/foil 反光",
+        "毫秒级 hover/点击反馈"
+      ],
+      "media": [
+        [
+          "website",
+          "Steam 官方商店与视频/截图",
+          "https://store.steampowered.com/app/2379780/Balatro/",
+          "玩家视图、joker、计分和牌面",
+          "official",
+          "source-page-verified"
+        ],
+        [
+          "video",
+          "Playstack 官方 Launch Trailer",
+          "https://www.youtube.com/watch?v=2n9pkiuSZLU",
+          "卡牌滑入、倍数计分、背景流动、卡光泽",
+          "publisher",
+          "video-page-verified"
+        ],
+        [
+          "website",
+          "SteamDB 游戏媒体截图索引",
+          "https://steamdb.info/app/2379780/screenshots/",
+          "版本/媒体图索引",
+          "third-party",
+          "source-page-verified"
+        ],
+        [
+          "article",
+          "Balatro shader 与画面构成研究",
+          "https://teemo.dev/game-design/balatro/systems/art-direction-and-visual-language/",
+          "CRT、等离子背景、foil/holo 游戏系统视觉拆解；第三方分析",
+          "third-party",
+          "source-page-verified"
+        ],
+        [
+          "image",
+          "Balatro 正常实机截图",
+          "https://eu-images.contentstack.com/v3/assets/bltbc1876152fcd9f07/blt538c506b7a24d9d1/65d4b8c214f744040a8949cb/B2.webp",
+          "左侧分数面板、joker 卡列、得分行",
+          "third-party",
+          "image-search-verified"
+        ],
+        [
+          "image",
+          "Balatro 高得分界面",
+          "https://cdn.mos.cms.futurecdn.net/7XhFiLvHowWdxVmUNLTxKk-1200-80.jpg",
+          "倍数变化、foil/card feel、CRT",
+          "third-party",
+          "image-search-verified"
+        ],
+        [
+          "image",
+          "Balatro joker 展示图",
+          "https://cdn.mos.cms.futurecdn.net/v2/t%3A0%2Cl%3A240%2Ccw%3A1440%2Cch%3A1080%2Cq%3A80%2Cw%3A1440/5RfKm7sJMmppVJ9kox5AvR.jpg",
+          "卡牌系列/美术一致性和可读性",
+          "third-party",
+          "image-search-verified"
+        ]
+      ]
+    }
+  ]
+}
