@@ -121,18 +121,22 @@ for(const cfg of scenarios){
    // The scene has real LEFT and RIGHT world positions, no vertical stack.
    assert(board.every(l=>l.slots[1].x<l.slots[2].x&&l.slots[2].x<l.slots[0].x),
      'allied near-front character stands among left-side supports');
-   assert(board.every(l=>l.slots[5].x<l.slots[3].x&&l.slots[3].x<l.slots[4].x),
-     'enemy near-front character stands among right-side supports');
-   assert(board.every(l=>l.slots[2].right<l.slots[3].x+6),
-     'opposing portraits occupy distinct halves of the snowy clearing');
+   assert(board.every(l=>l.slots[5].x<l.slots[4].x),
+     'enemy support slots follow left-to-right actual terrain positions');
+   assert(board[1].slots[3].x>board[0].slots[3].x+22,
+     'rear vampire must occupy a separate visible clearing position, not hide behind the front enemy');
+   assert(board[0].slots[0].right<board[0].slots[3].x+6,
+     'the actual deployed hunter and near enemy occupy distinct snow locations');
    assert(board.every(l=>l.slots[0].width>=60),'portrait actors visible');
-   assert(board[1].slots[0].y<board[0].slots[0].y-10,
-     'second character row stands deeper into the same scene');
+   // The rear actor is smaller, so its TOP can be below the taller
+   // front actor's head while its FEET stand farther uphill in the snow.
+   assert(board[1].slots[0].bottom<board[0].slots[0].bottom-7,
+     'second row painted feet stand farther back uphill on the snow');
   }else{
    assert(board.every(l=>l.slots.every((x,i)=>i===0||x.x>l.slots[i-1].x)),
      'landscape stage actors follow left-side allies and right-side enemies');
-   assert(board[1].slots[0].y<board[0].slots[0].y-10,
-     'second lane stands farther back in the snowfield');
+   assert(board[1].slots[0].bottom<board[0].slots[0].bottom-7,
+     'second lane footsteps stand farther back on the snow, not in empty sky');
   }
   assert(board.every(l=>l.slots.every(c=>c.x>=-1&&c.right<=cfg.viewport.width+1&&c.y>=0&&c.bottom<=cfg.viewport.height+1)),
     'all twelve standing actors fit within the viewport');
