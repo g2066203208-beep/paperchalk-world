@@ -1,9 +1,12 @@
 import * as THREE from "../vendor/three.module.js";
+import {createFadingHallGame} from "./anima-hall-gameplay.js";
 
 /* 3D whitebox / paintover study. Original Anima actor from the user's repo.
    Remaining surface textures are deliberately labelled PROCEDURAL PLACEHOLDERS,
    constructed as separate editable paint/mask/decals. No full-scene AI image. */
 const $=id=>document.getElementById(id), canvas=$("world");
+const devMode=new URLSearchParams(location.search).get("dev")==="1";
+document.documentElement.classList.toggle("dev-mode",devMode);
 const mobileMatch=window.matchMedia("(max-width:900px)");
 const compact=mobileMatch.matches;
 let drawerOpen=false;
@@ -59,7 +62,8 @@ function cameraUpdate(){
  const r=Math.sin(pitch)*distance;
  camera.position.set(target.x+r*Math.sin(yaw),target.y+Math.cos(pitch)*distance,target.z+r*Math.cos(yaw));
  camera.lookAt(target);
- renderer.shadowMap.needsUpdate=true;
+ // Camera movement does not move the physical sun or its shadow casters.
+ // Gameplay character movement triggers a throttled shadow refresh itself.
 }
 cameraUpdate();
 const ambient=new THREE.HemisphereLight("#a1c5cb","#493b32",1.12);scene.add(ambient);
@@ -463,6 +467,17 @@ for(let i=0;i<dustN;i++){
 const dustGeo=new THREE.BufferGeometry();dustGeo.setAttribute("position",new THREE.BufferAttribute(dustPos,3));
 const dust=new THREE.Points(dustGeo,new THREE.PointsMaterial({color:"#f3cc91",size:.047,transparent:true,opacity:.56,depthWrite:false,sizeAttenuation:true}));
 root.add(dust);
+const gameplay=createFadingHallGame({
+ THREE,scene,hallRoot:root,camera,renderer,actorSlot,groundShadow:shadows[0],
+ materials:{wall:wallPaint,floor:floorPaint,wood:woodPaint,gold},
+ getPortraitTexture:image=>{
+  const t=tex(removeWhiteBackground(image));
+  t.wrapS=t.wrapT=THREE.ClampToEdgeWrapping;
+  return t;
+ },
+ groundCanvas:canvas,target,cameraUpdate,debug:devMode
+});
+window.HallGame=gameplay;
 function relight(){
  state.day=!state.day?false:true;
  if(state.day){
@@ -548,6 +563,7 @@ $("reset").addEventListener("click",()=>{
 // interacting with the world. Both mouse and touch use Pointer Events.
 const touches=new Map();
 let dragPrevious=null,pinchPrevious=0,touchMoved=false,lastTouchUp=0;
+let tapStart=null,gestureHadMulti=false;
 const pointerDistance=()=>{
  const a=[...touches.values()];return a.length<2?0:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);
 };
@@ -556,7 +572,12 @@ canvas.addEventListener("pointerdown",e=>{
  e.preventDefault();
  canvas.setPointerCapture(e.pointerId);
  touches.set(e.pointerId,{x:e.clientX,y:e.clientY});
- touchMoved=false;
+ if(touches.size===1){
+  touchMoved=false;gestureHadMulti=false;
+  tapStart={x:e.clientX,y:e.clientY,when:clockNow()};
+ }else{
+  gestureHadMulti=true;touchMoved=true;
+ }
  dragPrevious={x:e.clientX,y:e.clientY};
  if(touches.size===2)pinchPrevious=pointerDistance();
 });
@@ -566,7 +587,7 @@ canvas.addEventListener("pointermove",e=>{
  const prev=touches.get(e.pointerId);
  touches.set(e.pointerId,{x:e.clientX,y:e.clientY});
  const motion=Math.hypot(e.clientX-prev.x,e.clientY-prev.y);
- if(motion>1.3)touchMoved=true;
+ if(tapStart&&Math.hypot(e.clientX-tapStart.x,e.clientY-tapStart.y)>9)touchMoved=true;
  if(touches.size>=2){
   const current=pointerDistance();
   if(pinchPrevious>3&&current>3){
@@ -574,7 +595,7 @@ canvas.addEventListener("pointermove",e=>{
    distance=fitDistance(distance*change);cameraTouched=true;cameraUpdate();
   }
   pinchPrevious=current;
- }else if(dragPrevious){
+ }else if(dragPrevious&&devMode){
   const rect=canvas.getBoundingClientRect();
   const speed=rect.width<550?.0042:.005;
   yaw=Math.max(-.30,Math.min(1.40,yaw+(e.clientX-dragPrevious.x)*speed));
@@ -588,11 +609,16 @@ function releasePointer(e){
  touches.delete(e.pointerId);
  if(touches.size<2)pinchPrevious=0;
  dragPrevious=touches.size?[...touches.values()][0]:null;
- if(e.type==="pointerup"&&e.pointerType==="touch"&&!touchMoved&&!touches.size){
-  const now=clockNow();
-  if(now-lastTouchUp<300){setCameraPreset(true);resetCounter++;}
-  lastTouchUp=now;
+ if(e.type==="pointerup"&&!touchMoved&&!gestureHadMulti&&!touches.size){
+  if(devMode){
+   if(e.pointerType==="touch"){
+    const now=clockNow();
+    if(now-lastTouchUp<300){setCameraPreset(true);resetCounter++;}
+    lastTouchUp=now;
+   }
+  }else gameplay.worldTap(e.clientX,e.clientY);
  }
+ if(!touches.size){tapStart=null;gestureHadMulti=false}
 }
 canvas.addEventListener("pointerup",releasePointer);
 canvas.addEventListener("pointercancel",releasePointer);
@@ -620,7 +646,8 @@ function animate(t){
  // Low-powered phones need a stable frame budget, not futile 60-fps draws
  // that compete with touch handlers and browser compositing.
  if(compact&&t-last<33)return;
- const delta=Math.min(.05,(t-last)/1000||0);last=t;
+ const elapsed=Math.min(.22,(t-last)/1000||0);
+ const delta=Math.min(.05,elapsed);last=t;
  lamp.intensity=(state.day?3.8:33)*(1+Math.sin(t*.004)*.035+Math.sin(t*.017)*.018);
  cloth.rotation.y=.17+Math.sin(t*.00082)*.085;
  for(let i=0;i<dustN;i++){
@@ -629,6 +656,7 @@ function animate(t){
  }
  dustGeo.attributes.position.needsUpdate=true;
  if(actors.length)actors[0].rotation.y=yaw*.42;
+ if(!devMode)gameplay.update(elapsed);
  renderer.render(scene,camera);
  frames++;
  if(t-framesAt>1000){
@@ -639,6 +667,8 @@ function animate(t){
 }
 window.PaintoverStudio={
  get ready(){return renderer.info.render.calls>0},
+ get gameplay(){return !devMode},
+ get room(){return gameplay.room},
  get loadedActor(){return loadedActor},
  get mode(){return state.whitebox?"whitebox":"composite"},
  get layerWeights(){return {...state.weights}},
