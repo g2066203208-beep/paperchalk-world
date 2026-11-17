@@ -518,6 +518,23 @@
    panel.innerHTML=kind==="victory"?"<b>战斗胜利</b><small>夜路平安</small>":"<b>远征失败</b><small>寒夜漫长</small>";
    if(kind==="defeat"&&cue.cause)panel.querySelector("small").textContent=String(cue.cause).slice(0,36);
    overlay.append(panel);
+   const scoreClock=now();
+   // Balatro official scoring GIF's active F46..F53 surge spans seven 100ms
+   // frames (700ms); the GIF's earlier 2.9s scene cut is promotional editing,
+   // not an interactive scoring animation, so only the visible scoring burst
+   // is matched here at the original source playback speed.
+   if(kind==="victory"){
+    const score=document.createElement("strong");
+    score.className="motion-score-surge";
+    score.textContent="◈ +"+Math.max(0,Number(cue.gold)||30);
+    panel.append(score);
+    record("reference-score","F46-burst-start","7×100ms; not promotional scene cut");
+    animate(score,[{opacity:0,transform:"translateY(13px) scale(.52)",filter:"brightness(1)"},
+      {opacity:1,transform:"translateY(-6px) scale(1.38)",filter:"brightness(1.9)",offset:.32},
+      {opacity:1,transform:"translateY(0) scale(1.07)",filter:"brightness(1.3)",offset:.72},
+      {opacity:1,transform:"translateY(0) scale(1)",filter:"brightness(1)"}],
+     frameTime(REFERENCE_CLOCK.balatroScore,7),{easing:"cubic-bezier(.14,.9,.25,1)"},run);
+   }
    beep(kind==="victory"?"win":"lose");
    const stage=overlay.querySelector(".motion-snapshot");
    if(kind==="victory"){
@@ -541,7 +558,11 @@
    await animate(panel,[{opacity:0,transform:"translate(-50%,-40%) scale(.91)"},
     {opacity:1,transform:"translate(-50%,-50%) scale(1.045)",offset:.45},
     {opacity:1,transform:"translate(-50%,-50%) scale(1)"}],TOKENS.result*.65,{},run);
-   await wait(TOKENS.result*.4,run);
+   if(kind==="victory"){
+    await waitClock(frameTime(REFERENCE_CLOCK.balatroScore,7),scoreClock,run);
+    if(!skipped&&run===token)record("reference-score","F53-burst-end");
+   }
+   await waitClock(TOKENS.result,scoreClock,run);
   }
   async function revealBattle(run){
    const scene=app.querySelector(".battle-scene");
