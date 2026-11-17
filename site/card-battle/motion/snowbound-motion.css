@@ -406,8 +406,8 @@
 .battle-scene .battle-bottom .hand>button .paint-card.compact.selected{
   --tactile-lift:-7px;
 }
-.battle-scene .battle-bottom .hand>button .paint-card.compact::before{
-  content:"";position:absolute;z-index:18;inset:0;pointer-events:none;
+.battle-scene .battle-bottom .hand>button .paint-card.compact>.tactile-foil{
+  display:block;position:absolute;z-index:18;inset:5px;pointer-events:none;
   border-radius:inherit;
   opacity:var(--tactile-sheen,0);
   background:radial-gradient(ellipse 68% 45% at
@@ -419,7 +419,7 @@
  .battle-scene .battle-bottom .hand>button .paint-card.compact{
   transform:none!important;will-change:auto!important;
  }
- .battle-scene .battle-bottom .hand>button .paint-card.compact::before{
+ .battle-scene .battle-bottom .hand>button .paint-card.compact>.tactile-foil{
   opacity:0!important;
  }
 }
