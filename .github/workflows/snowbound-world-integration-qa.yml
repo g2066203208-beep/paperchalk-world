@@ -4,6 +4,8 @@ on:
     branches: [main]
     paths:
       - 'site/card-battle/ui/snowbound-forest-reference.css'
+      - 'site/card-battle/engine/snowbound-inkworld.js'
+      - 'site/card-battle/ui/snowbound-inkworld.css'
       - 'site/card-battle/ui/snowbound-portrait-cutouts.js'
       - 'site/card-battle/ui/snowbound-journey-ui.js'
       - 'site/card-battle/assets/snowy-forest-reference.webp'
@@ -25,6 +27,7 @@ jobs:
       - name: Check original scene compositor and QA syntax
         run: |
           node --check site/card-battle/ui/snowbound-portrait-cutouts.js
+          node --check site/card-battle/engine/snowbound-inkworld.js
           node --check tests/snowbound-world-integration-browser.mjs
       - name: Install real Chromium
         run: |
@@ -34,9 +37,9 @@ jobs:
         run: |
           nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/snow-world.log 2>&1 &
           sleep 2
-      - name: Capture original forest plus Anima portraits on snow with actual Chromium alpha-foot geometry
+      - name: Capture 3D ink-world and original Anima portraits in real Chromium
         run: node tests/snowbound-world-integration-browser.mjs
-      - name: Upload desktop, portrait and landscape original game screenshots and WebM
+      - name: Upload real 3D and original background screenshots with browser WebM
         if: always()
         uses: actions/upload-artifact@v4
         with:
