@@ -33,10 +33,10 @@ function program(gl,v,f){
 }
 function geometry(){
  const verts=[],cols={
- stone:[.37,.47,.48],stone2:[.40,.49,.48],stone3:[.31,.41,.45],ledge:[.46,.49,.45],
- mortar:[.18,.27,.30],ink:[.087,.15,.18],blue:[.20,.48,.53],glass:[.17,.53,.53],
- amber:[.98,.54,.20],gold:[.72,.47,.20],floor:[.29,.40,.42],floor2:[.37,.48,.48],
- water:[.21,.36,.40],snow:[.54,.62,.58],iron:[.12,.22,.25],wood:[.21,.25,.23]
+ stone:[.25,.34,.36],stone2:[.34,.43,.45],stone3:[.21,.29,.34],ledge:[.45,.47,.43],
+ mortar:[.10,.19,.23],ink:[.035,.09,.12],blue:[.16,.45,.55],glass:[.11,.53,.57],
+ amber:[1.0,.51,.17],gold:[.85,.46,.19],floor:[.23,.35,.39],floor2:[.32,.43,.44],
+ water:[.12,.28,.35],snow:[.52,.64,.64],iron:[.055,.13,.17],wood:[.31,.20,.19]
  };
  let seed=92471;const rnd=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
  function tri(a,b,c,n,col){for(const p of [a,b,c])verts.push(...p,...n,...col)}
@@ -159,24 +159,29 @@ uniform float uTime;
 float hash(vec3 p){p=fract(p*.1031);p+=dot(p,p.yxz+33.33);return fract((p.x+p.y)*p.z);}
 void main(){
  vec3 n=normalize(vNormal);
- float grain=hash(floor(vPos*16.))*0.09;
- float strokes=step(.93,fract(vPos.x*5.8+vPos.y*2.3+sin(vPos.z*1.1)*.3))*.075;
- vec3 base=vCol*(.87+grain-strokes);
+ float grain=hash(floor(vPos*16.))*.14;
+ float strokes=step(.91,fract(vPos.x*5.8+vPos.y*2.3+sin(vPos.z*1.1)*.3))*.09;
+ float brush=sin(vPos.x*19.3+sin(vPos.z*11.))*cos(vPos.y*27.+vPos.z*12.);
+ vec3 base=vCol*(.85+grain-strokes+brush*.055);
  vec3 lightDir=normalize(vec3(-.52,.82,.42));
  float diffuse=max(dot(n,lightDir),0.0);
  float toon=floor((.35+diffuse*.73)*4.)/4.;
- vec3 ink=base*(.53+toon*.53);
+ vec3 ink=base*(.39+toon*.67);
+ float wet=(1.-smoothstep(.04,.20,abs(vPos.y)))*smoothstep(.48,.83,hash(floor(vPos.xzz*1.6)));
+ ink+=vec3(.06,.18,.24)*wet*(.2+.7*pow(max(dot(n,normalize(vec3(.1,1.,.34))),0.),9.));
+ if(vCol.g>.49&&vCol.b>.48&&vCol.r<.22)ink+=vec3(.06,.28,.33);
+ if(vCol.r>.90&&vCol.g>.45)ink+=vec3(.45,.22,.035);
  float flicker=.92+.08*sin(uTime*9.)*sin(uTime*13.);
  for(int i=0;i<2;i++){
    float x=i==0?-8.:8.;
    float d=length((vPos-vec3(x,5.3,-6.5))*vec3(1.0,.84,1.0));
-   ink+=vec3(.62,.27,.06)*flicker*2.4/(1.4+d*d*.23);
+   ink+=vec3(1.0,.39,.07)*flicker*5.0/(.8+d*d*.23);
  }
  // Stylised ground blue bounce and distance fog.
  ink+=vec3(.023,.058,.064)*max(0.,n.y);
  float fog=clamp((vDistance-10.)/43.,0.,.82);
- fog+=.025*sin(vPos.x*.16+uTime*.20)*sin(vPos.z*.14-uTime*.15);
- ink=mix(ink,vec3(.23,.34,.40),fog);
+ fog+=.028*sin(vPos.x*.16+uTime*.20)*sin(vPos.z*.14-uTime*.15);
+ ink=mix(ink,vec3(.16,.32,.38),fog);
  gl_FragColor=vec4(pow(clamp(ink,0.,1.),vec3(.92)),clamp(vDistance/58.,0.,.98));
 }
 `;
@@ -197,9 +202,20 @@ void main(){
    colorEdge=max(colorEdge,length(s.rgb-b.rgb));
  }
  float outline=smoothstep(.009,.036,edge)*.67+smoothstep(.15,.33,colorEdge)*.29;
- vec3 ink=mix(s.rgb,vec3(.029,.066,.079),clamp(outline,0.,.86));
+ vec3 ink=mix(s.rgb,vec3(.020,.048,.069),clamp(outline*1.16,0.,.91));
+ // Sky is NOT flat paint: fog layers, drifting cloud strokes and moon glow,
+ // correctly masked by rendered 3D depth so towers block the moon.
+ float sky=step(.995,depth);
+ vec3 skyColor=mix(vec3(.13,.27,.31),vec3(.018,.055,.105),smoothstep(.20,.93,uv.y));
+ float clouds=sin(uv.x*18.+sin(uv.y*12.)+uTime*.024)*sin(uv.y*19.-uTime*.015);
+ skyColor+=vec3(.033,.052,.054)*clouds;
+ float m=length((uv-vec2(.72,.79))*vec2(1.0,1.0));
+ float moon=1.-smoothstep(.041,.049,m);
+ float halo=exp(-m*15.)*.20;
+ skyColor+=vec3(.63,.80,.76)*(moon*.61+halo);
+ ink=mix(ink,skyColor,sky);
  float screenVignette=pow(length((uv-.5)*vec2(1.15,1.0)),1.9);
- ink*=1.-screenVignette*.45;
+ ink*=1.-screenVignette*.54;
  // Subtle film grain; stable scene geometry, animated atmosphere only.
  float grain=fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233))+uTime*.2)*43758.5453);
  ink+=(grain-.5)*.017;
@@ -239,9 +255,12 @@ function run(canvas){
    if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)throw Error("InkWorld FBO incomplete");
   }
   const start=performance.now(),reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let lastFrame=-100;
   function tick(now){
    if(stopped||!canvas.isConnected)return;
    if(document.hidden){raf=requestAnimationFrame(tick);return;}
+   if(now-lastFrame<36){raf=requestAnimationFrame(tick);return;}
+   lastFrame=now;
    resize();
    const t=reduced?0:(now-start)/1000,aspect=width/height;
    const proj=mat4Perspective((aspect<.85?66:53)*Math.PI/180,aspect,.1,95);
