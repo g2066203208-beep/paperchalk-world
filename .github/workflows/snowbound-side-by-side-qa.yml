@@ -1,0 +1,53 @@
+name: Snowbound Mandatory Source vs Actual Game Frames + Video
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tests/snowbound-motion-side-by-side-browser.mjs'
+      - 'tests/snowbound-motion-side-by-side-audit.py'
+      - '.github/workflows/snowbound-side-by-side-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real-reference:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Confirm actual frame-comparison scripts
+        run: |
+          node --check tests/snowbound-motion-side-by-side-browser.mjs
+          python3 -m py_compile tests/snowbound-motion-side-by-side-audit.py
+      - name: Install Chromium and reference decoders
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+          sudo apt-get install -y ffmpeg python3-pil
+      - name: Start real GitHub game
+        run: |
+          nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/snowbound-compare.log 2>&1 &
+          sleep 2
+      - name: Film player-click redraw and stage attack with Chromium WebM and timestamped screenshot frames
+        run: node tests/snowbound-motion-side-by-side-browser.mjs
+      - name: Retrieve original real GIF/video from publishers
+        shell: bash
+        run: |
+          mkdir -p motion-source
+          curl -fLSs --retry 3 --max-time 110 -A 'Mozilla/5.0' 'https://www.playbalatro.com/press-kit/Gifs/Balatro_gif_1%20.gif' -o motion-source/balatro_official_1.gif
+          curl -fLSs --retry 3 --max-time 110 -A 'Mozilla/5.0' 'https://video.akamai.steamstatic.com/store_trailers/257204109/movie480.mp4' -o motion-source/slots_game_explainer.mp4
+          test -s motion-source/balatro_official_1.gif
+          test -s motion-source/slots_game_explainer.mp4
+      - name: Render four mandatory actual-vs-original synchronized screenshot GIF/video comparisons
+        run: python3 tests/snowbound-motion-side-by-side-audit.py
+      - name: Upload comparison contact sheets + paired GIFs + actual play videos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: snowbound-original-vs-our-real-movement-evidence
+          path: artifacts/snowbound-motion-side-by-side/
+          if-no-files-found: warn
+          retention-days: 14
