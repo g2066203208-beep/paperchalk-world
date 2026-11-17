@@ -379,3 +379,17 @@
   transition:none!important;
  }
 }
+
+/* Localized seven-frame score burst (100ms/source frame), not full-screen
+   flicker. The rest of the HUD stays stable and readable. */
+.motion-cinema .motion-score-surge{
+ display:block;position:relative;
+ color:#fff3bc;
+ font:900 clamp(18px,2.5vw,31px)/1.1 Georgia,"Noto Sans SC",serif;
+ letter-spacing:.03em;white-space:nowrap;
+ text-shadow:0 2px 0 #744c42,0 4px 7px #233b4b,
+   0 0 9px #ffd37b,0 0 18px #ffc8757a;
+ transform-origin:center;
+ filter:drop-shadow(0 0 5px #ffdd8c);
+ will-change:opacity,transform,filter;
+}
