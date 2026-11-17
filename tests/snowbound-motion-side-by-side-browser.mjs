@@ -156,6 +156,17 @@ for(const cfg of cfgs){
    await page.evaluate(()=>window.__comparisonPending);
    const trace=await page.evaluate(()=>window.__comparisonDirector.trace());
    const visualSamples=await page.evaluate(()=>window.__comparisonVisualSamples||[]);
+   const visiblePeak=visualSamples.some(sample=>sample.t>=90&&sample.t<=285&&
+    sample.elements.some(el=>
+      el.visible&&/motion-strike-(?:flash|slash)/.test(el.class)&&
+      Number(el.opacity)>=.25));
+   assert(visiblePeak,
+     "REAL VISIBLE ATTACK FAILED: browser compositor produced no visible flash/slash"+
+     " during source F06..F16 (100-267ms). Logging events alone is not sufficient."+
+     " samples="+JSON.stringify(visualSamples.slice(0,16).map(a=>({
+        t:a.t,flash:a.elements.find(x=>x.class==="motion-strike-flash")?.opacity,
+        slash:a.elements.find(x=>x.class==="motion-strike-slash")?.opacity
+      }))));
    return {...info,trace,visualSamples};
   },"reference-attack",1000/60*16);
   await cdp.send("Page.stopScreencast");
