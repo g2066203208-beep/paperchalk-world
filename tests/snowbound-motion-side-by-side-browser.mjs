@@ -63,8 +63,12 @@ for(const cfg of cfgs){
    }catch(e){errs.push("screencast: "+e.message)}
    cdp.send("Page.screencastFrameAck",{sessionId:msg.sessionId}).catch(()=>{});
   });
-  await cdp.send("Page.startScreencast",{format:"jpeg",quality:65,
-    maxWidth:720,maxHeight:440,everyNthFrame:1});
+  // Fast evidence-only screen cast. A full 1920x1080 browser viewport is
+  // retained, but the emitted JPEG frames are small so the video sampler
+  // spends time capturing motion instead of JPEG encoding pixels. The
+  // independent Playwright WebM remains at full test resolution.
+  await cdp.send("Page.startScreencast",{format:"jpeg",quality:44,
+    maxWidth:480,maxHeight:280,everyNthFrame:1});
   async function film(kind,click,traceEvent,expectedDurationMs){
    const dir=OUT+"/raw/"+cfg.id+"-"+kind;
    fs.mkdirSync(dir,{recursive:true});
