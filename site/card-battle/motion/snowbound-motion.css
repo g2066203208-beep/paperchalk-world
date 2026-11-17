@@ -393,3 +393,33 @@
  filter:drop-shadow(0 0 5px #ffdd8c);
  will-change:opacity,transform,filter;
 }
+
+/* TACTILE PAPER. 3D light/tilt is applied to live game cards, not a video. */
+.battle-scene .battle-bottom .hand>button .paint-card.compact{
+  transform:perspective(780px) translateY(var(--tactile-lift,0px))
+    rotateX(var(--tactile-rx,0deg)) rotateY(var(--tactile-ry,0deg));
+  transform-origin:50% 55%;
+  transform-style:preserve-3d;
+  backface-visibility:hidden;
+  will-change:transform;
+}
+.battle-scene .battle-bottom .hand>button .paint-card.compact.selected{
+  --tactile-lift:-7px;
+}
+.battle-scene .battle-bottom .hand>button .paint-card.compact::before{
+  content:"";position:absolute;z-index:18;inset:0;pointer-events:none;
+  border-radius:inherit;
+  opacity:var(--tactile-sheen,0);
+  background:radial-gradient(ellipse 68% 45% at
+   var(--tactile-light-x,50%) var(--tactile-light-y,45%),
+   #fffdf8c8 0%,#fff4a039 34%,transparent 77%);
+  mix-blend-mode:screen;
+}
+@media(prefers-reduced-motion:reduce){
+ .battle-scene .battle-bottom .hand>button .paint-card.compact{
+  transform:none!important;will-change:auto!important;
+ }
+ .battle-scene .battle-bottom .hand>button .paint-card.compact::before{
+  opacity:0!important;
+ }
+}
