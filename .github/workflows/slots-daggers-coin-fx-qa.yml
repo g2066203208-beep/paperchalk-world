@@ -1,0 +1,48 @@
+name: Slots & Daggers Coin Material - WebGL Video and Frame QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/card-battle/motion/slot-daggers-coins.js'
+      - 'site/card-battle/coin-fx-lab.html'
+      - 'site/card-battle/snowbound-journey.html'
+      - 'site/card-battle/motion/snowbound-motion.js'
+      - 'site/card-battle/ui/snowbound-journey-ui.js'
+      - 'tests/slots-daggers-coins-browser.mjs'
+      - '.github/workflows/slots-daggers-coin-fx-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  metal-payout-visual-qa:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax validation
+        run: |
+          node --check site/card-battle/motion/slot-daggers-coins.js
+          node --check site/card-battle/motion/snowbound-motion.js
+          node --check site/card-battle/ui/snowbound-journey-ui.js
+          node --check tests/slots-daggers-coins-browser.mjs
+      - name: Install browser
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve actual game files
+        run: |
+          nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/slot-coin-web.log 2>&1 &
+          sleep 2
+      - name: Test real metal payout and capture videos screenshots
+        run: node tests/slots-daggers-coins-browser.mjs
+      - name: Upload visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: slots-daggers-coin-reflection-payout-screens-and-video
+          path: artifacts/slot-daggers-coin-fx/
+          if-no-files-found: warn
+          retention-days: 14
