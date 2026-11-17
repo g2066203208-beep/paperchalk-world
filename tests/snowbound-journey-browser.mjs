@@ -119,8 +119,15 @@ for(const cfg of scenarios){
   assert(cutoutPaths.every(i=>i.ready==='1'&&i.source),'source Anima art must stay referenced after transparent conversion');
   if(portrait){
    // The scene has real LEFT and RIGHT world positions, no vertical stack.
-   assert(board.every(l=>l.slots[1].x<l.slots[2].x&&l.slots[2].x<l.slots[0].x),
-     'allied near-front character stands among left-side supports');
+   // The front lane reads as left-support→front actor, while the back
+   // lane is independently offset so the player can actually drag 0→3.
+   // Do not force both depth bands to share the OLD floating-card column order.
+   assert(board[0].slots[1].x<board[0].slots[2].x &&
+     board[0].slots[2].x<board[0].slots[0].x,
+     'first lane original hero stands in the left snow clearing');
+   assert(board[1].slots[0].x<board[1].slots[1].x &&
+     board[1].slots[1].x<board[1].slots[2].x,
+     'second lane has distinct offset footprints to support playable drag');
    assert(board.every(l=>l.slots[5].x<l.slots[4].x),
      'enemy support slots follow left-to-right actual terrain positions');
    assert(board[1].slots[3].x>board[0].slots[3].x+22,
