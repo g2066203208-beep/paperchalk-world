@@ -423,3 +423,14 @@
   opacity:0!important;
  }
 }
+
+/* Snow material responds to an attack in the same six source frames as
+   local camera recoil; never shakes the persistent HUD or entire screen. */
+.motion-cinema .motion-snow-impact{
+ position:fixed;z-index:7;pointer-events:none;
+ width:clamp(10px,1.25vw,20px);height:clamp(7px,.75vw,13px);
+ border-radius:50%;opacity:0;
+ background:radial-gradient(ellipse,#fafffded 0%,#e4f3f0ae 41%,transparent 77%);
+ filter:blur(1.6px);
+ mix-blend-mode:screen;will-change:transform,opacity;
+}
