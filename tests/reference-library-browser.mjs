@@ -26,7 +26,7 @@ for(const v of [{id:"desktop-1440",w:1440,h:900},{id:"phone-390",w:390,h:844}]){
  page.on("pageerror",e=>errors.push(e.message));
  try{
   await page.goto("http://127.0.0.1:4173/card-battle/reference-library.html",{waitUntil:"domcontentloaded",timeout:30000});
-  await page.waitForFunction(()=>window.document.querySelectorAll("#grid article.tile").length===list.length,null,{timeout:15000});
+  await page.waitForFunction(expected=>window.document.querySelectorAll("#grid article.tile").length===expected,list.length,{timeout:15000});
   const total=await page.locator("#grid article.tile").count();assert.equal(total,list.length);
   await page.screenshot({path:"artifacts/game-reference-library/"+v.id+"-01-all-sources.png"});
   await page.getByRole("button",{name:"Forgive Me Father 2",exact:true}).click();
