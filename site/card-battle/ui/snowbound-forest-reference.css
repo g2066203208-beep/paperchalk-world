@@ -122,8 +122,8 @@
 .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="4"]{--actor-x:21%}
 .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="0"],
 .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="3"]{--actor-x:31%}
-.battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="0"],
-.battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="3"]{--actor-x:57%}
+.battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="0"]{--actor-x:57%}
+.battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="3"]{--actor-x:75%}
 .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="1"],
 .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="4"]{--actor-x:72%}
 .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="2"],
@@ -141,6 +141,10 @@
 }
 .battle-scene.stage-actors.stage-sparse .battle-grid[data-row="1"] .battle-slot{
   --actor-ground:11.5%;
+}
+.battle-scene.stage-actors.stage-crowded{
+  --stage-actor-near:clamp(110px,8vw,145px);
+  --stage-actor-far:clamp(93px,7.2vw,128px);
 }
 .battle-scene.stage-actors.stage-crowded .battle-grid[data-row="0"] .battle-slot{
   --actor-ground:3%;
@@ -355,7 +359,12 @@
     --stage-actor-far:clamp(68px,22.5vw,93px);
   }
   .battle-scene.stage-actors .battle-field{padding:20px 5px 38px!important}
-  .battle-scene.stage-actors .double-board{width:100%!important}
+  /* Flex shrink used to squeeze the theatrical world to only ~170px on
+     a 390px phone. Reserve the entire actual snow clearing instead. */
+  .battle-scene.stage-actors .double-board{
+    width:100%!important;max-width:100%!important;
+    flex:0 0 100%!important;min-width:0!important;
+  }
   .battle-scene.stage-actors .battle-grid .battle-slot{
     width:var(--actor-size)!important;
   }
@@ -365,8 +374,8 @@
   .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="4"]{--actor-x:12%}
   .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="2"],
   .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="5"]{--actor-x:42%}
-  .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="0"],
-  .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="3"]{--actor-x:59%}
+  .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="0"]{--actor-x:59%}
+  .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="3"]{--actor-x:85%}
   .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="1"],
   .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="4"]{--actor-x:85%}
   .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="2"],
