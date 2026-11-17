@@ -347,14 +347,70 @@
      {transform:"translate("+dx+"px,"+dy+"px) scale(1)"}],TOKENS.cardSwap,{},run);
   }
   async function redraw(old,run){
-   const hand=old?.querySelectorAll(".battle-bottom .hand>button")||[];
+   const ref=REFERENCE_CLOCK.balatroHand;
+   const oldHand=[...(old?.querySelectorAll(".battle-bottom .hand>button")||[])];
+   const newHand=[...app.querySelectorAll(".battle-bottom .hand>button")];
+   record("reference-hand","F00-start","35×80ms; 1x=2800ms");
+   // Old cards leave in the original GIF's F04..F07 window (320..560ms).
+   oldHand.forEach((card,i)=>{
+    const spread=oldHand.length>1?i/(oldHand.length-1):0;
+    animate(card,[{transform:"translate(0,0) rotate(0deg) scale(1)",opacity:1},
+      {transform:"translate("+(-32-14*spread)+"px,8px) rotate(-4deg) scale(.97)",opacity:.94,offset:.30},
+      {transform:"translate("+(-120-35*spread)+"px,26px) rotate(-13deg) scale(.56)",opacity:0}],
+      frameTime(ref,5),{
+       easing:"cubic-bezier(.22,.75,.38,1)",delay:frameTime(ref,ref.exitFirst)+i*15
+      },run);
+   });
+   // We show REAL new hand-card DOM artwork in a separate cinematic layer.
+   // Each entry is delayed as in source GIF F13..F20 (1.04–1.60s).
+   // An opaque patterned original card back temporarily covers its face.
+   // The flip starts at source F27 (2.16s), not at an arbitrary default.
+   newHand.forEach((card,i)=>{
+    if(!overlay||!card.isConnected)return;
+    const b=card.getBoundingClientRect();
+    const ghost=card.cloneNode(true);
+    ghost.classList.add("motion-draw-card");
+    ghost.removeAttribute("data-act");
+    ghost.setAttribute("aria-hidden","true");
+    Object.assign(ghost.style,{
+     position:"fixed",left:b.left+"px",top:b.top+"px",width:b.width+"px",height:b.height+"px",
+     margin:"0",padding:"0",pointerEvents:"none",opacity:"0"
+    });
+    const back=document.createElement("span");
+    back.className="motion-draw-back";
+    back.setAttribute("aria-hidden","true");
+    back.textContent="✧";
+    ghost.append(back);
+    overlay.append(ghost);
+    const spread=Math.min(i,7),startMs=frameTime(ref,ref.drawFirst+spread);
+    animate(ghost,[{opacity:0,transform:"translate3d(-90px,16px,0) rotate(-8deg) scale(.72)"},
+       {opacity:1,transform:"translate3d(10px,-7px,0) rotate(3deg) scale(1.035)",offset:.68},
+       {opacity:1,transform:"translate3d(0,0,0) rotate(0deg) scale(1)"}],
+      frameTime(ref,5),{delay:startMs,easing:"cubic-bezier(.16,.76,.25,1)",fill:"both"},run);
+    animate(back,[{opacity:1,transform:"scaleX(1)",filter:"brightness(1)"},
+       {opacity:1,transform:"scaleX(.08)",filter:"brightness(1.6)",offset:.48},
+       {opacity:0,transform:"scaleX(.02)",filter:"brightness(1.1)"}],
+      frameTime(ref,3),{delay:frameTime(ref,ref.faceFirst)+spread*33,easing:"ease-in-out",fill:"both"},run)
+      .then(()=>back.remove());
+    // Ghost survives until the 2800ms source end, then the live card replaces
+    // it at the same world-space rectangle without a visible position jump.
+    wait(ref.totalMs+frameTime(ref,1),run).then(()=>ghost.remove());
+   });
    beep("paper");
-   for(let i=0;i<hand.length;i++){
-    animate(hand[i],[{transform:"translateY(0) scale(1)",opacity:1},
-      {transform:"translate(-70px,22px) scale(.42)",opacity:0}],TOKENS.redraw*.57,{},run);
-   }
-   await wait(TOKENS.redraw*.6,run);
+   await wait(frameTime(ref,ref.exitFirst),run);
+   if(skipped||run!==token)return;
+   record("reference-hand","F04-exit");
+   await wait(frameTime(ref,ref.drawFirst-ref.exitFirst),run);
+   if(skipped||run!==token)return;
+   record("reference-hand","F13-draw");
+   beep("paper");
+   await wait(frameTime(ref,ref.faceFirst-ref.drawFirst),run);
+   if(skipped||run!==token)return;
+   record("reference-hand","F27-flip");
    beep("bell");
+   await wait(frameTime(ref,ref.frames-ref.faceFirst),run);
+   if(skipped||run!==token)return;
+   record("reference-hand","F35-end");
   }
   async function reinforce(old,cue,run){
    const newCard=unit(app,cue.actorId);
