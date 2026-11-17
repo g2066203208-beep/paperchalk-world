@@ -1,0 +1,58 @@
+name: Original motion references - sampled frames
+on:
+  push:
+    paths:
+      - .github/workflows/reference-motion-frame-study.yml
+      - tests/reference-motion-study.py
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  frames:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install open media decoding dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
+          python -m pip install --disable-pip-version-check numpy pillow
+      - name: Fetch actual publisher GIF and official Steam promo footage
+        shell: bash
+        run: |
+          mkdir -p motion-source
+          fetch() {
+            local dest="$1"; shift
+            local source
+            for source in "$@"; do
+              echo "Downloading real motion source: $source"
+              if curl -f -L -sS -A 'Mozilla/5.0' --retry 2 --connect-timeout 15 --max-time 110 "$source" -o "motion-source/$dest"; then
+                if [[ -s "motion-source/$dest" ]]; then
+                  file "motion-source/$dest"
+                  return 0
+                fi
+              fi
+              rm -f "motion-source/$dest"
+            done
+            echo "::warning::Unable to download $dest"
+            return 0
+          }
+          fetch balatro_official_1.gif 'https://www.playbalatro.com/press-kit/Gifs/Balatro_gif_1%20.gif'
+          fetch balatro_official_2.gif 'https://www.playbalatro.com/press-kit/Gifs/Balatro_gif_2%20.gif'
+          fetch slots_game_explainer.mp4 'https://video.akamai.steamstatic.com/store_trailers/257204109/movie480.mp4' 'https://cdn.akamai.steamstatic.com/steam/apps/257204109/movie480.mp4'
+          fetch slots_reveal_trailer.mp4 'https://video.akamai.steamstatic.com/store_trailers/257195046/movie480.mp4' 'https://cdn.akamai.steamstatic.com/steam/apps/257195046/movie480.mp4'
+          ls -lh motion-source/
+      - name: Decode timestamped consecutive frames, measure changes and build source-backed contact sheets
+        run: python tests/reference-motion-study.py
+      - name: Share analytical frame contacts only - never redistributed full footage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: balatro-slots-actual-consecutive-motion-frames
+          path: artifacts/reference-motion/
+          if-no-files-found: warn
+          retention-days: 7
