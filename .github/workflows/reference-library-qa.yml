@@ -1,4 +1,4 @@
-name: Five Game Reference Library - Source and Browser QA
+name: Seven Game Reference Library - Source and Browser QA
 on:
   push:
     branches: [main]
@@ -23,7 +23,7 @@ jobs:
       - name: Validate test syntax and JSON manifest
         run: |
           node --check tests/reference-library-browser.mjs
-          node -e 'const x=require("./site/card-battle/reference-media-manifest.json");if(x.games.length!==5)process.exit(1)'
+          node -e 'const x=require("./site/card-battle/reference-media-manifest.json");if(x.games.length!==7||x.games.reduce((n,g)=>n+g.media.length,0)!==97)process.exit(1)'
       - name: Install Chromium
         run: |
           npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
@@ -32,7 +32,7 @@ jobs:
         run: |
           nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/reference-library-server.log 2>&1 &
           sleep 2
-      - name: Verify 57 records and capture browsing screenshots
+      - name: Verify 97 records and capture browsing screenshots
         run: node tests/reference-library-browser.mjs
       - uses: actions/upload-artifact@v4
         if: always()
