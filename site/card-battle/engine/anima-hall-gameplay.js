@@ -104,17 +104,34 @@ export function createFadingHallGame({
  // the entire playable room from the view angle (+X,+Z).
  cb(0,.25,6.46,8.4,.50,.48,wall);
  // Alternating pilasters, frames, layered glowing sconces and receding arches.
- for(const z of [4.20,.40,-3.40,-6.45]){
+ // The nearest 4.2m arch was removed: it occluded the playable actor on
+ // both portrait and desktop screenshots. Three readable bays remain.
+ for(const z of [.10,-3.40,-6.45]){
   for(const x of [-3.8,3.8]){
    cb(x,.23,z,1.05,.46,1.05,wall);
    cb(x,3.25,z,.67,6.13,.72,wall);
    cb(x,6.40,z,1.18,.31,1.14,wall);
   }
-  for(let i=0;i<8;i++){
-   const a=Math.PI-i*Math.PI/7;
-   const archX=Math.cos(a)*3.38, archY=6.13+Math.sin(a)*.82;
-   addCorridor(new THREE.BoxGeometry(.94,.42,.58),wall,archX,archY,z,a-Math.PI/2);
+  // Continuous extruded masonry arch band, not 8 unattached block sprites.
+  // Two ellipse contours form a true 3D painted stone ribbon.
+  const shape=new THREE.Shape();
+  const segments=24,outerR=3.65,innerR=3.09,yBase=6.13;
+  shape.moveTo(-outerR,yBase);
+  for(let i=0;i<=segments;i++){
+   const a=Math.PI-i*Math.PI/segments;
+   shape.lineTo(Math.cos(a)*outerR,yBase+1.13*Math.sin(a));
   }
+  shape.lineTo(innerR,yBase);
+  for(let i=0;i<=segments;i++){
+   const a=i*Math.PI/segments;
+   shape.lineTo(Math.cos(a)*innerR,yBase+.72*Math.sin(a));
+  }
+  shape.closePath();
+  const archGeo=new THREE.ExtrudeGeometry(shape,{
+   depth:.42,steps:1,bevelEnabled:true,bevelSegments:1,
+   bevelSize:.035,bevelThickness:.028,curveSegments:24
+  });
+  addCorridor(archGeo,wall,0,0,z-.21);
  }
  for(const z of [-4.50,-1.00,2.50]){
   cb(0,.09,z,8.0,.06,.13,materials.gold);
