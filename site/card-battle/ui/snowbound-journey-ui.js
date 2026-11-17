@@ -315,7 +315,7 @@ function battle(){
  '<span class="battle-hint">选择道具牌 → 点击敌人 · 点击我方角色调整站位</span></div>'+
  (selected?'<div class="fight-choice"><span>'+esc(selected.name)+'：'+esc(selected.desc)+'</span>'+
  '<button type="button" data-act="playselected">打出</button><button type="button" data-act="cancel">取消</button></div>':'')+
- '</div>');
+ '</div><div class="snowforest-ink-foreground" aria-hidden="true"></div>');
 }
 function battleClear(){
  const r=game.state().run,b=r.battle;
