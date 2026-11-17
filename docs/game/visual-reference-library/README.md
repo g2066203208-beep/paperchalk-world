@@ -1,9 +1,9 @@
 # 游戏视觉与动态参考库｜2026-11-17
 
-> 项目唯一索引：**五款重点参考游戏、57 条已编目的参考媒体**。这里保存**外部官方/开发者/实机/编辑图源链接**、验证程度、技术拆解、逐帧复刻验收标准。未把受版权保护的第三方图片与视频直接提交到仓库。  
+> 项目唯一索引：**七款重点参考游戏、97 条已编目的参考媒体**。这里保存**外部官方/开发者/实机/编辑图源链接**、验证程度、技术拆解、逐帧复刻验收标准。未把受版权保护的第三方图片与视频直接提交到仓库。  
 > 浏览器可视化入口（同仓库静态站部署后）：[`site/card-battle/reference-library.html`](../../../site/card-battle/reference-library.html)。
 
-## 五个重点游戏（分别维护，不混成一堆）
+## 七个重点游戏（分别维护，不混成一堆）
 
 | 游戏 | 参考重点 | 详细资料 | 图片/视频/GIF 链接数量 |
 |---|---|---|---:|
@@ -13,10 +13,14 @@
 | **极乐迪斯科 / Disco Elysium** | 3D 灰盒、相机投射、diffuse/shadow/depth/object-ID pass、paintover | [独立记录](disco-elysium.md) | 11 |
 | **小丑牌 / Balatro** | CRT、卡牌特殊箔片反光、计分动画、交互节奏 | [独立记录](balatro.md) | 7 |
 
-- [**机器可读总表 JSON**](reference-media-manifest.json)：57 条媒体，保存媒体类型、来源、URL、目标画面和已核实状态。
+| **Dungeonborne** | 真实 3D 哥特城堡、石墙 PBR、火光、湿地反射和深度雾 | [独立记录](dungeonborne.md) | 17 |
+| **格林堡 / GrimKeep** | 手绘黑童话、怪物立绘、背景叙事、骰子动效、场景构图 | [独立记录](grimkeep.md) | 23 |
+
+- [**机器可读总表 JSON**](reference-media-manifest.json)：97 条媒体，保存媒体类型、来源、URL、目标画面和已核实状态。
 - [**场景合成执行规范**](RENDER_AND_ANIMA_PIPELINE.md)：3D 白膜 → 单元素 Anima → 图层权重 → 深度遮挡 → 灯光 → 逐帧对比。
 - [**Anima 独立素材完整提示词库：18 张素材，尺寸、正负提示词、分层与验收规则**](ANIMA_ENVIRONMENT_PROMPTS_LIBRARY.md)。
 - [**Anima 场景素材机器可读生产清单（JSON）**](anima-fading-hall-prompt-catalog.json)；状态为 `prompt-only-not-generated`，防止把规划误判为已入库的素材。
+- [**首批三张实际 Anima 图像验收：石墙底纹 / 石块图集 / 污渍贴花**](ANIMA_FIRST_THREE_TEXTURES_QA_20261117.md)：保留像素诊断与 SHA256，指出图1无缝、图2 atlas、图3透明通道问题（原图附件本身尚未上传 GitHub）。
 
 - [原有 Slots & Daggers 金币实现研究](../SLOTS_DAGGERS_COIN_REFERENCE_AND_IMPLEMENTATION_20261117.md)。
 - [原有雪地场景原版 vs 游戏实机 QA](../SNOWBOUND_REQUIRED_REAL_REFERENCE_VISUAL_QA.md)。
