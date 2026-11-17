@@ -1,0 +1,43 @@
+name: Five Game Reference Library - Source and Browser QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/card-battle/reference-library.html'
+      - 'site/card-battle/reference-media-manifest.json'
+      - 'docs/game/visual-reference-library/**'
+      - 'tests/reference-library-browser.mjs'
+      - '.github/workflows/reference-library-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browse-references:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate test syntax and JSON manifest
+        run: |
+          node --check tests/reference-library-browser.mjs
+          node -e 'const x=require("./site/card-battle/reference-media-manifest.json");if(x.games.length!==5)process.exit(1)'
+      - name: Install Chromium
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve GitHub Pages site root
+        run: |
+          nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/reference-library-server.log 2>&1 &
+          sleep 2
+      - name: Verify 57 records and capture browsing screenshots
+        run: node tests/reference-library-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: game-reference-library-real-browser-screens
+          path: artifacts/game-reference-library/
+          if-no-files-found: warn
+          retention-days: 14
