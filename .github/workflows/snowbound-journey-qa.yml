@@ -23,6 +23,8 @@ on:
       - 'tests/snowbound-cinematic-outcomes-browser.mjs'
       - 'site/card-battle/motion/snowbound-motion.js'
       - 'site/card-battle/motion/snowbound-motion.css'
+      - 'site/card-battle/motion/snowbound-tactile.js'
+      - 'tests/snowbound-tactile-browser.mjs'
       - '.github/workflows/snowbound-journey-qa.yml'
   workflow_dispatch:
 permissions:
@@ -43,6 +45,8 @@ jobs:
           node --check site/card-battle/motion/snowbound-motion.js
           node --check tests/snowbound-semantic-events.test.cjs
           node --check tests/snowbound-motion-capture-browser.mjs
+          node --check tests/snowbound-tactile-browser.mjs
+          node --check site/card-battle/motion/snowbound-tactile.js
           node --check tests/snowbound-reference-clock-browser.mjs
           node --check tests/snowbound-cinematic-outcomes-browser.mjs
           node --check tests/snowbound-journey-browser.mjs
@@ -69,6 +73,8 @@ jobs:
         run: node tests/snowbound-motion-capture-browser.mjs
       - name: Verify actual 1x and 2x original-GIF/video frame clocks in real game recordings
         run: node tests/snowbound-reference-clock-browser.mjs
+      - name: Verify living card material, spring return and touch accessibility in real Chromium
+        run: node tests/snowbound-tactile-browser.mjs
       - name: Validate fatal-hit death and full victory-defeat cinematic branch
         run: node tests/snowbound-cinematic-outcomes-browser.mjs
       - name: Publish side-by-side official reference and actual game screenshots
@@ -85,6 +91,7 @@ jobs:
             artifacts/snowbound-pixel-audit/
             artifacts/snowbound-motion-v2/
             artifacts/snowbound-motion-reference-clocks/
+            artifacts/snowbound-tactile-proof/
             artifacts/snowbound-outcome-cinema/
             artifacts/snowbound-reference-comparison/
           if-no-files-found: warn
