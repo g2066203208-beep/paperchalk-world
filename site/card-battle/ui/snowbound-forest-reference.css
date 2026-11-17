@@ -91,8 +91,8 @@
 
 /* ─── 2. World positions · no card panels and no hovering rear row ─── */
 .battle-scene.stage-actors{
-  --stage-actor-near:clamp(135px,11.5vw,196px);
-  --stage-actor-far:clamp(114px,9.2vw,159px);
+  --stage-actor-near:clamp(138px,12.3vw,219px);
+  --stage-actor-far:clamp(116px,9.8vw,171px);
 }
 .battle-scene.stage-actors .double-board{
   display:block!important;
@@ -143,7 +143,7 @@
 .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="0"],
 .battle-scene.stage-actors .battle-slot[data-side="friendly"][data-slot="3"]{--actor-x:31%}
 .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="0"]{--actor-x:57%}
-.battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="3"]{--actor-x:75%}
+.battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="3"]{--actor-x:80%}
 .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="1"],
 .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="4"]{--actor-x:72%}
 .battle-scene.stage-actors .battle-slot[data-side="enemy"][data-slot="2"],
