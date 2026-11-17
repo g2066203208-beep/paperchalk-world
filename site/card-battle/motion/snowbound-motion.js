@@ -563,7 +563,10 @@
     }
    }else if(stage)animate(stage,[{filter:"saturate(1) brightness(1)"},
     {filter:"saturate(.55) brightness(.74)"}],400,{},run);
-   await animate(panel,[{opacity:0,transform:"translate(-50%,-40%) scale(.91)"},
+   // Animation completion callbacks may be delayed if Chromium paints
+   // a large frame. The panel is a visual sidecar, never an authoritative
+   // clock gate (at 2x it previously stretched a 350ms burst to ~473ms).
+   animate(panel,[{opacity:0,transform:"translate(-50%,-40%) scale(.91)"},
     {opacity:1,transform:"translate(-50%,-50%) scale(1.045)",offset:.45},
     {opacity:1,transform:"translate(-50%,-50%) scale(1)"}],TOKENS.result*.65,{},run);
    if(kind==="victory"){
