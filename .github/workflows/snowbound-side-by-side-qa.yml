@@ -5,6 +5,7 @@ on:
     paths:
       - 'tests/snowbound-motion-side-by-side-browser.mjs'
       - 'tests/snowbound-motion-side-by-side-audit.py'
+      - 'tests/snowbound_motion_video_alignment.py'
       - '.github/workflows/snowbound-side-by-side-qa.yml'
   workflow_dispatch:
 permissions:
@@ -22,6 +23,7 @@ jobs:
         run: |
           node --check tests/snowbound-motion-side-by-side-browser.mjs
           python3 -m py_compile tests/snowbound-motion-side-by-side-audit.py
+          python3 -m py_compile tests/snowbound_motion_video_alignment.py
       - name: Install Chromium and reference decoders
         run: |
           npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
