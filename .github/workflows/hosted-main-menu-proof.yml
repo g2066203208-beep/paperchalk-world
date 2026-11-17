@@ -1,0 +1,36 @@
+name: Capture Current Hosted Main Menu (Unmodified)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'tests/hosted-main-menu-proof-browser.mjs'
+      - '.github/workflows/hosted-main-menu-proof.yml'
+permissions:
+  contents: read
+jobs:
+  current-menu:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Start local fallback (hosted page is always first)
+        run: |
+          nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/hosted-menu-web.log 2>&1 &
+          sleep 2
+      - name: Screenshot actual current main menu before any deletion
+        run: node tests/hosted-main-menu-proof-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: actual-hosted-main-menu-before-user-selects-deletions
+          path: artifacts/hosted-main-menu-proof/
+          retention-days: 14
+          if-no-files-found: warn
