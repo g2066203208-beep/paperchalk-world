@@ -30,7 +30,7 @@ select{border:1px solid #5b6c70;border-radius:5px;background:#142128;color:#ddd;
 .tile{border:1px solid #3a4b4e;border-radius:8px;background:#19282e;overflow:hidden;display:flex;flex-direction:column;min-width:0}
 .tile:hover{border-color:#b69b6e}
 .preview{aspect-ratio:16/9;background:radial-gradient(ellipse at 50% 42%,#43505a,#101f25);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
-.preview img{width:100%;height:100%;object-fit:cover;display:block}
+.preview img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .18s ease}
 .preview .glyph{color:#a5bdb8;font:600 16px Georgia,serif;letter-spacing:.1em;padding:22px;text-align:center;opacity:.8}
 .tag{position:absolute;top:9px;left:9px;font:10px monospace;letter-spacing:.08em;background:#102027de;border:1px solid #81909288;border-radius:4px;padding:4px 6px}
 .tile-body{padding:12px;display:flex;flex:1;flex-direction:column;gap:8px}
@@ -94,10 +94,13 @@ function card(game,m){
  const article=document.createElement("article");article.className="tile";
  const preview=document.createElement("div");preview.className="preview";
  if(type==="image"||type==="gif"){
+  const glyph=document.createElement("div");glyph.className="glyph";
+  glyph.textContent=type==="gif"?"GIF 原始动图 · 点击打开":"原始截图 · 点击打开";
+  preview.append(glyph);
   const im=new Image();im.loading="lazy";im.decoding="async";im.alt=title;
-  im.referrerPolicy="no-referrer";im.src=safe(url);
-  im.onerror=()=>{im.remove();const glyph=document.createElement("div");glyph.className="glyph";glyph.textContent="图片请打开原出处";preview.append(glyph)};
-  preview.append(im);
+  im.referrerPolicy="no-referrer";im.onload=()=>{im.style.opacity="1"};
+  im.onerror=()=>{im.remove();glyph.textContent="原站限制预览 · 打开出处查看"};
+  im.src=safe(url);preview.append(im);
  }else{const glyph=document.createElement("div");glyph.className="glyph";glyph.textContent=type==="video"||type==="video-embedded"?"▶ 原版实机视频":type==="article"?"技术制作解析":"官方图库";preview.append(glyph)}
  const tag=document.createElement("span");tag.className="tag";tag.textContent=cn[type]||type;preview.append(tag);article.append(preview);
  const body=document.createElement("div");body.className="tile-body";
