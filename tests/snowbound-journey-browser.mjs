@@ -70,6 +70,14 @@ for(const cfg of scenarios){
   assert.equal(await page.locator(".battle-slot").count(),12);
   assert.equal(await page.locator(".battle-grid").count(),2);
   assert(await page.locator(".battle-unit").count()>=3);
+  // First screenshot the new TRUE 3D mode, then restore the exact user
+  // painting for the existing forest-specific identity and foot checks.
+  await page.waitForFunction(()=>document.querySelector(".fmf2-world-canvas")?.dataset.inkStatus==="running",
+    null,{timeout:18000});
+  await screenshot("05-3d-inkworld");
+  await page.locator(".fmf2-world-toggle").click();
+  assert(!(await page.locator(".battle-scene").evaluate(el=>el.classList.contains("fmf2-world-active"))),
+    "original Anima forest comparison toggle must restore its untouched painting");
 
   // The user-provided forest MUST be a real binary asset, not CSS placeholder art.
   const forestScene=await page.evaluate(async()=>{
