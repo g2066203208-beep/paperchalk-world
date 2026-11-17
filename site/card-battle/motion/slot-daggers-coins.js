@@ -32,12 +32,12 @@ const fs=[
  "float nd=max(dot(n,l),0.);float spec=pow(max(dot(n,h),0.),32.);float glint=pow(max(dot(n,normalize(vec3(.76,.14,1.))),0.),135.);",
  "float edge=step(1.5,vPart);float back=step(2.5,vPart);",
  "float r=length(vLocal.xy);float radial=sin(r*65.)*.022;",
- "vec3 metal=mix(vec3(.43,.245,.065),vec3(1.0,.72,.19),.30+.70*nd);",
- "metal+=vec3(.48,.42,.20)*spec+vec3(1.0,.89,.65)*glint;",
- "metal+=vec3(.23,.20,.10)*pow(max(dot(reflect(vec3(.42,-.6,-.66),n),vec3(.0,1.,.35)),0.),4.);",
+ "vec3 metal=mix(vec3(.57,.30,.045),vec3(1.0,.84,.34),.47+.53*nd);",
+ "metal+=vec3(.79,.65,.30)*spec+vec3(1.0,.97,.79)*glint*1.35;",
+ "metal+=vec3(.38,.29,.11)*pow(max(dot(reflect(vec3(.42,-.6,-.66),n),vec3(.0,1.,.35)),0.),4.);",
  "if(vPart>.5&&vPart<1.5)metal=metal*1.15+vec3(.12,.085,.01);",
  "if(edge>.5&&back<.5)metal*=.69+.24*abs(sin(atan(vLocal.y,vLocal.x)*36.));",
- "if(back>.5)metal*=.67;",
+ "if(back>.5)metal*=.73;",
  "if(vPart<.5){",
  " float minted=step(.53,r)*step(r,.61)*.12+step(.66,r)*step(r,.70)*.16;",
  " float crest=step(length(vLocal.xy),.30)*(0.09+.07*sin(vLocal.x*19.)*cos(vLocal.y*22.));",
@@ -169,7 +169,7 @@ function update(dt){
  const mobile=innerWidth<600;
  for(const c of particles){
   c.age+=dt;if(c.age<0)continue;
-  const inFlight=c.age<1.9;
+  const inFlight=c.age<3.1;
   if(inFlight){
    c.vy+=1000*dt;c.x+=c.vx*dt;c.y+=c.vy*dt;
    c.roll+=c.vr*dt;c.spin+=c.vs*dt;c.tilt+=c.vt*dt;
@@ -183,11 +183,11 @@ function update(dt){
      clink(.52+c.size/27);
     }else{c.vy=0;c.vx*=.77; c.vr*=.87;}
    }
-   if(c.x<c.size){c.x=c.size;c.vx=Math.abs(c.vx)*.58;}
-   if(c.x>innerWidth-c.size){c.x=innerWidth-c.size;c.vx=-Math.abs(c.vx)*.58;}
+   if(c.x<c.minX+c.size){c.x=c.minX+c.size;c.vx=Math.abs(c.vx)*.46;}
+   if(c.x>c.maxX-c.size){c.x=c.maxX-c.size;c.vx=-Math.abs(c.vx)*.46;}
   }else{
    if(!c.gathered){c.gathered=true;c.gx=c.x;c.gy=c.y;}
-   const t=clamp((c.age-1.9-c.delay*.08)/.72,0,1),q=ease(t);
+   const t=clamp((c.age-3.1-c.delay*.05)/.72,0,1),q=ease(t);
    c.x=c.gx+(c.targetX-c.gx)*q;
    c.y=c.gy+(c.targetY-c.gy)*q-68*Math.sin(t*Math.PI);
    c.roll+=dt*10;c.spin+=dt*19;
@@ -195,7 +195,7 @@ function update(dt){
    c.size*=1-dt*.36;
   }
  }
- particles=particles.filter(c=>c.age<2.75+c.delay*.08&&c.alpha>.02);
+ particles=particles.filter(c=>c.age<3.96+c.delay*.05&&c.alpha>.02);
 }
 function smoothstep(a,b,t){let q=clamp((t-a)/(b-a),0,1);return q*q*(3-2*q);}
 function tick(ts){
@@ -221,8 +221,10 @@ function burst(options={}){
   const delay=i*.0125,spread=direction==="spend"?.64:1;
   particles.push({
    age:-delay,delay,x:originX+rand(-10,10),y:originY+rand(-7,7),
-   vx:rand(-360,320)*spread,vy:rand(-550,-215),
-   size:rand(9,18)*(innerWidth<580?.72:1),floor:floor+rand(-7,12),
+   vx:rand(-125,390)*spread,vy:rand(-480,-205),
+   size:rand(15,25)*(innerWidth<580?.70:innerWidth<1000?.83:1),floor:floor+rand(-4,11),
+   minX:Number.isFinite(options.minX)?options.minX:0,
+   maxX:Number.isFinite(options.maxX)?options.maxX:innerWidth,
    spin:rand(0,TAU),roll:rand(0,TAU),tilt:rand(-.7,.7),
    vs:rand(-18,18),vr:rand(-11,11),vt:rand(-9,9),
    hits:0,alpha:1,targetX:tar[0]+rand(-8,8),targetY:tar[1],
