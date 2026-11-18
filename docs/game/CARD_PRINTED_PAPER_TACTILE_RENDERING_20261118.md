@@ -38,3 +38,28 @@
 - 发现手机视图此前因为常规老虎机将 DPR 压到 0.78，艺术图显得糊；现进入观赏将 DPR 上限提升至 1.5（设备实际 DPR 低则照设备值），并关闭观赏时 Bloom，退出恢复机器低开销渲染和 1.25 Bloom。浏览器测试验证模式切换。
 - 派生纹理数据改为同原始图方向一致的 `CanvasTexture`，防止 WebGL TypedArray `flipY` 语义不同导致完整人物倒立，用户图片原始文件没有任何写入变更。
 - 当前卡背依旧是低于源 PNG 的游戏版 480×724 WebP，极限放大纤细金丝的清晰度有上限。最终微纹理效果偏向“印刷亚麻纸”，要继续增强可调尺寸和局部金属反光，但**不许再建模粗厚金边**。
+
+## 2026-11-18 白边和真实厚度修复（用户当轮要求“修复”）
+
+此前错误：
+1. 认可的酒红金线 WebP 卡背虽然已经裁掉外部白底，但透明像素/圆角 Alpha 边缘的 RGB 仍被白色扫描底污染。材质使用 alphaTest 时这些半透明白色会形成明显白线。仅提高 alphaTest 不能彻底解决。
+2. 正反面各一张 plane、相距仅约 .012 世界单位，侧视几乎零厚度。用户拒绝加回难看的立体金边，要求真实纸板切面。
+
+已正式提交代码：
+- `site/card-battle/motion/card-physical-edge.mjs` 的 `sanitizeCardMatte` 对卡背 RGBA 外圈检测“偏白＋半透明”污染，仅删除外围的污染像素，保留金线/中部图案；对透明区做最近实色边缘 RGB 扩色，防止线性采样和 mipmap 又混出白色。对源图 bytes 不做写回。
+- 同模块的 `roundedPaperEdgeGeometry` 生成真正圆角闭合侧面三角条，且在 UV 接缝重复顶点，正面采用 THREE.FrontSide；没有多余的上下 cap 或任何金边模型。
+- `site/card-battle/motion/character-card-machine.mjs` 将 front/back 真实距离改为纸板 `cardThickness=.042`，约为 1.68 卡宽的 2.5%。单独创建 `cardCutEdge` 三维侧面，使用暖灰白压缩纸纤维纹理、金属度=0、粗糙度=.97。内侧两面保留原人物绘画与原酒红金线卡背；CPU 视觉剔除和 GPU FrontSide 剔除完整保留。
+- 卡背加载时先通过 `sanitizeCardMatte` 处理源图像，再用清理后的 RGB+A 生成 normal/roughness/metalness/pigment；所以白边修复不只是视觉遮罩，实际 mipmap 来源已经清洁。
+- `tests/card-physical-edge.test.mjs` 校验白色边缘和透明 RGB 污染被移除、金线仍完整、厚度数值正确、真实三角形侧壁外法向/FrontSide 几何、材质 UV 无断层。
+- `tests/character-card-machine-browser.mjs` 校验真实 GPU 成功载入边缘图、金属度为零、切边几何长度，卡牌转到精确 90° 时正反两面都被剔除，但纸板侧壁仍正常显示；每个设备留下真实 `INSPECT-EDGE-paper-cut-thickness.png`。
+- 主菜单已链接 `site/card-battle/character-card-machine.html`，脚本 cache bust 到 `?v=20261118-no-white-edge-paper-stock-v6`。
+
+**实际验收：** GitHub Actions [44327859001](https://github.com/g2066203208-beep/paperchalk-world/actions/runs/44327859001)，结果 `success`，Chromium 三尺寸 **desktop / portrait / landscape** 均 `passed:true`、错误 0。自动永久截图已存入 `site/card-battle/qa/character-card-machine/`：
+- `desktop-inspect-back.png` / `phone-inspect-back.png`：卡背正视及白线移除
+- `desktop-inspect-card-stock-edge.png` / `phone-inspect-card-stock-edge.png`：90° 纸板侧面，角色图和背图均不应透出来
+- `desktop-inspect-front.png` / `phone-inspect-front.png`：真实人物正面
+- 该轮 3 个视口完整截图和 WebM：[artifact 14436599932](https://github.com/g2066203208-beep/paperchalk-world/actions/runs/44327859001/artifacts/14436599932)
+
+**肉眼核验：** 与上一轮 390x844 Playwright 卡背截图比，背面左/右侧白色垂直亮线不再出现；在背景同一带状取样 x≈59–65、323–330，y=260–460 区间，灰白高亮像素计数由 182/2600 降为 0/2600（只是验证该部位的定量示例，不保证所有 DPI 与光照像素完全无异常）。90° 截图实见独立灰白压缩纸切边约数 px 宽，没有金色装饰模型。
+
+注意：此处解决的是卡牌*外轮廓*的白色 Alpha 污染。当前马戏团团长的来源 PNG 为 **RGB 不透明的白背景原画**，因此人物周围的整片白色背景不是“透明抠图失败”，绝不可简单把人物绘画里面的白衣物或白眼睛判为透明。若后续用户要角色 silhouette 透明、背景换图，须另走原画无损/人工抠像流程，不得用以上卡背清理把人物误删。
