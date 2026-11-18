@@ -19,12 +19,18 @@ for(const d of [{name:'desktop',w:1365,h:850},{name:'phone',w:390,h:844}]){
   await page.waitForFunction(()=>window.PaperchalkSpriteCoinQA?.loaded,{timeout:15000});
   const initial=await page.evaluate(()=>window.PaperchalkSpriteCoinQA.snapshot());
   assert(initial.triangles>50,'actual 3D triangulated body required');
+  assert(initial.pixelArt,'reference-style coin must preserve pixel-art shading');
+  assert(initial.sourceSample.includes('slots-style-pixel-coin.svg'),'should never regress to the bright star/casino SVG default');
   assert.equal(initial.outlines,1);
+  assert(initial.thickness<.09,'reference chip is a thin 3D cutout, not a thick gold cylinder');
   assert(initial.frontMapped,'texture front should use original single uploaded file');
   assert(initial.actualExtrusion,'body must be real geometry, not billboard/HTML');
   assert.equal(initial.geometryType,'ExtrudeGeometry','solid must be an actual THREE.ExtrudeGeometry');
   assert(Math.abs(initial.measuredDepth-initial.thickness)<1e-5,'actual geometry must have nonzero Z-depth');
   await page.screenshot({path:`${output}/${d.name}-angled-default-coin.png`});
+  await page.locator('#front').click();
+  await page.screenshot({path:`${output}/${d.name}-original-reference-style-coin-front.png`});
+  await page.locator('#angled').click();
   await page.locator('#side').click();
   await page.screenshot({path:`${output}/${d.name}-edge-visible.png`});
   await page.locator('#front').click();
