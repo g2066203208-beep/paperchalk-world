@@ -197,3 +197,37 @@ https://80.lv/articles/check-out-coin-animation-sound-effect-in-this-slot-fantas
 `node tests/slot-whitebox-physics.test.cjs` 对 12/48/76 枚、初始 18 枚旧币、固定种子等价、后续累计喷发、最终不穿透桌面/左右边界、金币间接触全部通过；48 新币+18 原有在约 5.8s 完成静止，最终 66/66 都处于 sleeping，最终最大穿透校正误差约 `0.04` 画面单位。桌面/手机浏览器按 360/900/1800/3200/5800/10000ms 渲染并截图，未出现 JS 异常。具体 QA 录屏与截图依托上传后的 GitHub Actions workflow；**未确认 CI final success 之前不得称线上自动验收已通过**。
 
 **仍然待做**：真正找到并提取开发者出币 WIP 视频相邻帧，统一参照帧宽、FPS、起喷/触地/峰值/结束时间，以实机帧与我们的同帧画面对比反复改调；当前新白模是“有静态构图证据的物理布局纠正”，还不是完整原版动作重现。
+
+
+## 2026-11-18 白模 V3：真 X/Y/Z 三维刚体、强力喷币
+
+**用户纠正并否决 V1/V2**：此前二维圆形碰撞 + `flip` 缩宽假扮三维币，既没有桌面深度 Y，也没有真实竖直 Z 轴的金币-金币支撑，机台吐币速度像漏水。用户明确要求 **金币带明显的厚度和三维角度，机身口强力吐出，X/Y/Z 三轴空间内翻滚、碰撞、反弹、物理堆叠**。这项纠正覆盖此前“金币用 2D sprite 物理代理”的早期假设；未来视觉素材仍可用 2D sequence/2.5D，但**物理绝不能退化回二维圆片解算**。
+
+### 真正已提交的替换文件
+
+- **原白模测试 URL 不变**：`site/card-battle/coin-whitebox-lab.html`，更新 commit `58d9ab57ee992724b24b82291e0be79a8f958db4`
+- 物理文件：`site/card-battle/motion/slot-3d-physics.js`，commit `5a0e48023c9ce6d6ece8bf0eba00bd35955e874b`
+- Node 物理回归：`tests/slot-3d-physics.test.cjs`，commit `287c088022ca2d0afb50f34035dd8c1fc00096e7`
+- 浏览器 QA：`tests/slot-3d-browser.mjs`，commit `5b46b2d75566ac2c96fd9ad79adb631ae014f99c`
+- 每次 main push 运行 Playwright 与截图/WebM 的工作流：`.github/workflows/slot-whitebox-qa.yml`，commit `8ab4edc8845b19db27b3d1dc97d352684fe39ddc`。**不能因工作流已提交就宣称它在线通过**。
+
+### 工程技术：可以直接核对代码而不是听描述
+
+- 每枚金币是有厚度的**三维短圆柱几何体**（半径约 .235 世界单位、厚约 .076），位置 `p=[x,y,z]`、线速度 `vel=[vx,vy,vz]`、角速度 `w=[wx,wy,wz]`、姿态四元数 `q=[qx,qy,qz,qw]`；绝非通过 Canvas `scaleX(cos())` 的伪翻面。
+- 120Hz 确定性时间步。几何渲染投影为真实 18 分段圆柱的前/后面与侧壁多边形；使用不同统一灰阶表现白模正面/侧壁（没有贴图/反射/动态光照）。
+- 3D 碰撞：圆柱体支持半径 `r*sqrt(1-(n·axis)^2)+h*abs(n·axis)`，混合 SAT 候选轴与 rim/face 支撑点，3D 点接触的线冲量、转动惯量、摩擦冲量、重力、桌面/四壁、休眠。这里是**原创轻量化近似刚体解算**，不是业界 3D 引擎完全精确的工业级 CCD 物理解算；严禁承诺绝不交叠。
+- 机器在右，出币喷口在左侧 `[.70,0,1.42]`，金币主要沿**负 X 高速喷射**，同时带显著 Y 深度散射和向上的 Z 弹道，出射强度约 **17–26 世界单位/秒**，首段吐币间隔约 **13–17ms**，之后变缓；模拟参数未经原版视频标定，不得声称同原版毫秒精度。
+- 已有金币为 18 枚**多层真实物理体**，其后每次中奖追加新的 12/48/76 枚进入同一堆；静止币可被冲击重新唤醒。不再重新生成一个与场景不一致的金币动画堆。
+- 可即时切换 **斜俯视 X/Y/Z、正侧视 X/Z、俯视 X/Y**（同一套三维物理状态，非三套动画）；手机额外同一画面局部放大。
+- 浏览器有 `window.PaperchalkCoin3DQA.start(count)`、`seek(ms)`、`step()`、`advanceFrames(n)`、`view('side'|'top'|'angle')` 和 `state`，用于严格指定模拟帧输出。
+
+### 已实测的具体数据（本地开发环境）
+
+- Node 纯物理断言：12 / 48 / 76 三个档位全通过，最高初速约 23.2 / 23.4 / 25.9 世界单位/秒，最大高度约 4.18–4.27 世界单位；包括独立 Y 速度、四元数变化、三维逐帧 repeatability、二次累计喷币、三维边界和同种币接触。
+- **真实 Headless Chrome Canvas 截图测试**（本地禁用 HTTP 请求情况下，通过同源 HTML+JS 内联方式加载相同页面源代码，非 Photoshop 或 AI 生成）：1365x900 桌面、390x844 手机、844x390 横屏，在 0/180/500/1100/2000/4300/7200ms 关键帧，无 JS 报错。实测 Chrome 48 枚 500ms 已喷 22 枚、2.0s 全吐完且 649 次金币接触、4.3s 697 次金币接触、可见非零 Z 层堆叠。
+- 本地真实浏览器导出 12FPS 连续帧 GIF/MP4、桌面/手机/侧视关键帧图；这些成品是**白模实机证据**，不是《Slots & Daggers》原版片段。
+- 自动化 GitHub Actions 的 `tests/slot-3d-browser.mjs` 会在已部署 repo 副本上通过独立 Python HTTP server 访问并保存截图+录屏、比对 120Hz 定时帧。CI 通过状态须另查。
+
+### 下一轮严格原版动态对比缺口
+
+开发者公开说明自己打磨了机械吐币、碰撞声音、动画的物理手感： https://80.lv/articles/check-out-coin-animation-sound-effect-in-this-slot-fantasy-game 以及 https://www.dailymotion.com/video/x9sjabo 00:43–00:52。现在**仍缺独立可下载、能逐帧测时间戳的原版吐币 WIP 视频**，目前白模的喷射速度是按用户描述的“强力老虎机弹币”建立的改进，并非已经确认的原版精确速度。后续取得官方片段必须对起喷、首撞、币流密度、反弹/滚动、落堆 5 个时间段同帧实机对照，不得再次凭主观速度称“逐帧完成”。
