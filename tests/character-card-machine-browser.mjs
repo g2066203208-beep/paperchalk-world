@@ -31,6 +31,18 @@ for(const d of [
   assert.equal(initial.metallic,true);
   assert.equal(initial.HDR,true);
   assert.equal(await page.evaluate(()=>window.PaperchalkCharacterMachineQA.manifestCount),35);
+  if(d.name==='landscape'){
+   const layout=await page.evaluate(()=>({
+    stageBottom:document.querySelector('.stage').getBoundingClientRect().bottom,
+    stageTop:document.querySelector('.stage').getBoundingClientRect().top,
+    controlBottom:document.querySelector('.controls').getBoundingClientRect().bottom,
+    windowHeight:innerHeight
+   }));
+   assert(layout.stageTop>=0&&layout.stageBottom<=layout.windowHeight,
+    'landscape machine must fit entirely on the viewport BEFORE button click');
+   assert(layout.controlBottom<=layout.windowHeight,
+    'landscape draw buttons must remain visible without a scroll');
+  }
   await page.screenshot({path:out+'/'+d.name+'-00-machine-standby.png'});
   await page.locator('#draw-one').click();
   await page.waitForFunction(()=>window.PaperchalkCharacterMachineQA?.state?.current &&
