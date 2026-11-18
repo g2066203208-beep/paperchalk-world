@@ -65,6 +65,8 @@ jobs:
           cp artifacts/coin-payout-3d/desktop-03b-strong-hdr-bloom.png site/card-battle/qa/coin-payout/desktop-hdr-bloom.png
           cp artifacts/coin-payout-3d/desktop-03c-downsampled-pixel-hdr.png site/card-battle/qa/coin-payout/desktop-pixel-hdr.png
           cp artifacts/coin-payout-3d/portrait-03b-strong-hdr-bloom.png site/card-battle/qa/coin-payout/phone-hdr-bloom.png
+          cp artifacts/coin-payout-3d/desktop-07-420-heavy-coins-fast-3d.png site/card-battle/qa/coin-payout/desktop-420-heavy-coins.png
+          cp artifacts/coin-payout-3d/portrait-07-420-heavy-coins-fast-3d.png site/card-battle/qa/coin-payout/phone-420-heavy-coins.png
           cp artifacts/coin-payout-3d/results.json site/card-battle/qa/coin-payout/results.json
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
