@@ -246,3 +246,16 @@ https://80.lv/articles/check-out-coin-animation-sound-effect-in-this-slot-fantas
 **技术参考**： https://github.com/shaoruu/three-extruded-image （单张透明 PNG -> ThreeJS mesh 的参考范式，不是直接复制代码）；原版开发者展示中奖金币动画的 https://80.lv/articles/check-out-coin-animation-sound-effect-in-this-slot-fantasy-game （未公布具体网格算法，不能宣称原版技术实现被证实）。
 
 **下一步门禁**：等用户实际审查金币单枚厚度、黑边和朝向后，再把此 mesh 作为可复用视觉组件接回金币碰撞和堆叠系统；绝不能用之前假三维 Canvas 圆片替换这个模型。
+
+## 2026-11-18 V5：原版金币像素美术纠偏（否决五星卡通金币）
+
+此前 V4 演示使用的黄金 #f7bd33 橙金渐变、巨大五角星和光滑矢量圈层被用户明确否决：虽然自动实体挤出的 API 对，但**单金币正面外观完全偏离原版美术**。新参考依据：真实实机截图 https://assets.st-note.com/production/uploads/images/224807377/rectangle_large_type_2_3f697b50263642d1d3c051cc38795bab.jpeg?fit=bounds&height=2000&quality=85&width=2000 （可从 https://note.com/stanfied/n/na3ee30bc900a 打开）。画面左侧金币是被暗色酒馆背景包围的低分辨率像素片，偏灰黄/奶油金色正面、深褐黑边、少量跳变像素高光与古旧小刻痕；绝非精细金属 PBR 大徽章。独立开发者动态文章 https://80.lv/articles/check-out-coin-animation-sound-effect-in-this-slot-fantasy-game 证明其重视喷币演出，但**未证明金币单体的内部网格/贴图制作方法**。
+
+2026-11-18 更新并提交：
+- `site/card-battle/assets/slots-style-pixel-coin.svg`：48×48 手工程序绘制的低分彩、无五星**原创**像素币素材（原版风格练习，非官方原画，无原版截取贴图），浅米金像素块、近黑轮廓、少量暗色凿痕。
+- `site/card-battle/coin-model-lab.html`：把明亮五星默认 SVG 完全删掉，默认使用上述真实独立素材文件，缩小自动三维厚度到 0.064/3 (≈2.1%)，黑边轮廓比例 1.012，暗色背景配原版基调，支持 PNG/WebP/SVG/JPG 替换素材、像素/平滑采样切换、真实三维侧视。
+- `site/card-battle/motion/sprite-extrusion.mjs`：增加 `pixelArt` 模式，保持硬边的 Canvas 像素采样，`CanvasTexture.magFilter/minFilter = THREE.NearestFilter` 并取消自动 mipmaps，使贴图不会因为 3D 显示而糊成水彩。高分辨率手绘用户素材可关掉像素模式恢复平滑采样。
+- `tests/sprite-extrusion-browser.mjs`：默认金币检查像素模式、真实厚度、非五星素材文件路径；增加正面静帧输出；`.github/workflows/coin-model-3d-qa.yml` 追踪新资产变更。
+- 本地 `node --check` 和 `node tests/sprite-extrusion-unit.mjs` 已通过。**无 CI run 成功/真实 WebGL 对比截图证据不得声称像素级完成；下一步必须获取原版独立单金币放大帧与实机画面对照。**
+
+绝对不要把“技术上正确的程序化自动挤出”误认为“美术上符合用户的《Slots & Daggers》金币”；二者必须分别验收。
