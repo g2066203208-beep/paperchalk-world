@@ -2,8 +2,8 @@
   {
     "viewport": "desktop",
     "passed": true,
-    "character": "星象魔女",
-    "id": "witch-workshop/astral-witch.png",
+    "character": "使魔魔女",
+    "id": "witch-workshop/familiar-witch.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
@@ -12,8 +12,8 @@
   {
     "viewport": "portrait",
     "passed": true,
-    "character": "重斧清道夫",
-    "id": "monster-hunters/07-axe-scout.png",
+    "character": "采购主管",
+    "id": "demon-merchant/purchasing-director.webp",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
@@ -22,8 +22,8 @@
   {
     "viewport": "landscape",
     "passed": true,
-    "character": "持剑指挥官",
-    "id": "monster-hunters/01-legendary-hunter.png",
+    "character": "大力士",
+    "id": "wonder-circus/strongwoman.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
