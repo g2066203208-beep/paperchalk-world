@@ -255,10 +255,10 @@ export function buildLowPolyPixelCoin3D(profile,THREE,{
  // Circumscribed decagon: at edge midpoints, radius equals the image silhouette.
  // This retains more pixel-edge art than an inscribed polygon would.
  const radius=diameter/(2*Math.cos(Math.PI/facets));
- const indexed=new THREE.CylinderGeometry(radius,radius,depth,facets,1,false);
- // Face UVs need individual cap vertices; make a non-indexed mesh so that
- // geometry.groups[].start/count refer to attribute elements, not indices.
- const geometry=indexed.toNonIndexed();indexed.dispose();
+ const geometry=new THREE.CylinderGeometry(radius,radius,depth,facets,1,false);
+ // CylinderGeometry is indexed. Each cap has its OWN UV vertices, so use
+ // index lookup when remapping cap images; retain actual CylinderGeometry
+ // semantics/parameters for runtime inspection and exact facet counts.
  // Cylinder defaults to Y-up; turn it so its REAL thickness runs along Z.
  geometry.rotateX(Math.PI/2);
  // Rotate half an edge so that the faceted perimeter has a flat vertex alignment.
@@ -269,8 +269,8 @@ export function buildLowPolyPixelCoin3D(profile,THREE,{
  for(const group of geometry.groups){
   if(group.materialIndex===0)continue; // side uses no texture
   for(let i=group.start;i<group.start+group.count;i++){
-   const x=pos.getX(i),y=pos.getY(i);
-   uv.setXY(i,
+   const vertex=geometry.index.getX(i),x=pos.getX(vertex),y=pos.getY(vertex);
+   uv.setXY(vertex,
     (x-profile.plane.x)/profile.plane.width+.5,
     (y-profile.plane.y)/profile.plane.height+.5);
   }
