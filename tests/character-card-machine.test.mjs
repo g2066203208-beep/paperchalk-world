@@ -33,6 +33,7 @@ assert.equal(s0.card.visible,false,'no card in front of chute before release');
 assert.equal(s1750.card.visible,false,'no premature floating portrait');
 assert(s1770.card.visible,'physical cardstock emerges AFTER door unlock');
 assert(s1770.card.rotationY>3,'card exits BACK-FIRST, no leaked character identity');
+assert(s1770.card.rotationX< -1.3,'card leaves the narrow opening nearly FLAT, not as a vertical teleport');
 assert(s2120.card.z>s1770.card.z,'card moves physically away from cabinet');
 assert(s2500.card.rotationY<s1770.card.rotationY,'flips toward the viewer');
 assert(s2990.card.rotationY<.001,'reveal must finish facing the viewer');
