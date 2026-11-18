@@ -308,7 +308,7 @@ function seek(ms){
  if(!lastBurst||!gl)return false;
  if(raf)cancelAnimationFrame(raf);
  raf=0;last=0;accumulator=0;pausedForFrame=true;
- particles=startParticles.map(c=>({...c}));sparks=[];simTime=0;hitCount=0;
+ particles=startParticles.map(c=>({...c}));sparks=[];simTime=0;hitCount=0;phase="eject";
  silentPhysics=true;
  const steps=Math.min(600,Math.max(0,Math.round(Number(ms)/1000/PAYOUT.step)));
  for(let i=0;i<steps;i++)update(PAYOUT.step);
