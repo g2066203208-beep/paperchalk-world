@@ -92,6 +92,21 @@ footer{font-size:11px;color:#968e83;line-height:1.55}
  #inspect-toolbar button,#inspect-toolbar select{min-height:32px;font-size:10px;padding:3px 6px}
  #inspect-toolbar select{min-width:135px;flex:1 1 135px}
 }
+/* Inspection controls occupy their own row, NEVER cover the treasured art. */
+#inspect-toolbar{position:relative;top:auto;bottom:auto;left:auto;right:auto;transform:none;width:100%;max-width:100%;background:#17191fe8;border:1px solid #72634d68;box-shadow:none;padding:8px 10px}
+#inspect-toolbar select{max-width:380px}
+#inspect-toolbar[hidden]{display:none!important}
+body.inspect-open .controls,body.inspect-open .library,body.inspect-open footer{display:none!important}
+@media(max-width:760px){
+ #inspect-toolbar{padding:8px;gap:5px}
+ #inspect-toolbar select{flex:1 1 100%;max-width:100%}
+ #inspect-toolbar button{flex:1 1 auto}
+}
+@media(orientation:landscape) and (max-height:470px) and (min-width:650px){
+ #inspect-toolbar{padding:4px 6px;gap:5px;flex-wrap:nowrap}
+ #inspect-toolbar button{flex:none;min-height:32px}
+ #inspect-toolbar select{flex:1 1 auto;min-width:175px;max-width:none}
+}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 </style>
 </head>
@@ -107,6 +122,7 @@ footer{font-size:11px;color:#968e83;line-height:1.55}
  <div class="led" id="machine-led"><i></i><span id="machine-state">STANDBY</span></div>
  <div id="announce" hidden aria-live="polite"><strong id="card-name"></strong><small id="card-origin"></small></div>
  <div id="inspect-hint" hidden>拖动旋转卡牌 · 滚轮或双指缩放 · 正反面均可自由查看</div>
+</section>
  <div id="inspect-toolbar" hidden aria-label="卡牌自由观赏操作">
   <select id="inspect-character" aria-label="选择已入库人物原画"><option value="back">只看通用卡背</option></select>
   <button id="inspect-front" type="button">看正面</button>
@@ -115,7 +131,6 @@ footer{font-size:11px;color:#968e83;line-height:1.55}
   <button id="inspect-reset" type="button">复位</button>
   <button id="inspect-exit" type="button">返回机器</button>
  </div>
-</section>
 <section class="controls" aria-label="抽卡操作">
  <button type="button" class="primary" id="draw-one" disabled>抽取 1 张</button>
  <button type="button" class="primary" id="draw-five" disabled>连续抽取 5 张</button>
@@ -132,6 +147,6 @@ footer{font-size:11px;color:#968e83;line-height:1.55}
 </section>
 <footer>当前为角色抽取与电影演出的交互原型。使用 GitHub 已上传的原始人物立绘；未制定正式抽卡货币、概率、保底和人物强度，也不会据此修改已有七职业或角色设定。记录保存在当前浏览器。</footer>
 </main>
-<script type="module" src="./motion/character-card-machine.mjs?v=20261118-card-inspection-v2"></script>
+<script type="module" src="./motion/character-card-machine.mjs?v=20261118-card-inspection-v3"></script>
 </body>
 </html>
