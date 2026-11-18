@@ -25,16 +25,20 @@ for(const device of [{name:'desktop',w:1440,h:900},{name:'portrait',w:390,h:844}
   assert.equal(before.facetCount,10);
   assert(before.geometryType.includes('CylinderGeometry'));
   assert.equal(before.real3D,true);
+  assert(before.bowl.left<before.bowl.right&&before.bowl.front>before.bowl.back,
+    'coin catching bowl must have physical four-wall enclosure');
   assert(before.height<before.radius*.13);
-  await page.screenshot({path:`${out}/${device.name}-00-empty-physical-table.png`});
+  await page.screenshot({path:`${out}/${device.name}-00-empty-real-coin-basin.png`});
   await page.evaluate(()=>window.PaperchalkPayoutQA.fire(120));
-  const sequence=[{frames:36,name:'01-high-pressure-opening'},{frames:66,name:'02-first-gold-impacts'},
-   {frames:88,name:'03-growing-real-3d-stack'}];
+  const sequence=[{frames:36,name:'01-high-pressure-opening'},{frames:66,name:'02-first-gold-impacts-in-basin'},
+   {frames:88,name:'03-growing-real-3d-stack-in-basin'}];
   const frames=[];
   for(const seq of sequence){
    await page.evaluate(n=>window.PaperchalkPayoutQA.advanceFrames(n),seq.frames);
    const s=await page.evaluate(()=>window.PaperchalkPayoutQA.snapshot());
    assert(s.count>0 && s.count<=120);
+   assert.equal(s.inBasin,s.count,'each coin must remain inside the 3D bowl, not spray off-screen');
+   assert.equal(s.escapedEver,0,'physics must not let coins fly beyond the bowl walls');
    assert.equal(s.count,s.renderInstances,'WebGL instance count must match physics collider bodies');
    await page.screenshot({path:`${out}/${device.name}-${seq.name}.png`,animations:'disabled'});
    frames.push(s);
@@ -51,6 +55,8 @@ for(const device of [{name:'desktop',w:1440,h:900},{name:'portrait',w:390,h:844}
   const next=await page.evaluate(()=>window.PaperchalkPayoutQA.snapshot());
   assert(next.count>prev,'second batch must share persistent 3D coin pile');
   assert(next.moving>0);
+  assert.equal(next.inBasin,next.count,'second burst must also remain inside the actual bowl');
+  assert.equal(next.escapedEver,0,'all second-burst coins stay within the rim');
   await page.screenshot({path:`${out}/${device.name}-06-second-high-energy-burst.png`});
   assert.deepEqual(errors,[], 'no fatal JS exception in live WebGL and physics');
   results.push({device:device.name,passed:true,before,frames,next});
