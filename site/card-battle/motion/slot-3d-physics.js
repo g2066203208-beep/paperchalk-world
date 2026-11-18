@@ -50,19 +50,21 @@
   return best?{n:best,depth:Math.max(0,depth)}:null;
  }
  function invI(c,torque){ // symmetric world-space inverse inertia for thin circular cylinder
+  if(c.sleep)return [0,0,0];
   const parallel=dot(c.n,torque),perp=sub(torque,mul(c.n,parallel));
   return add(mul(perp,c.invIT),mul(c.n,parallel*c.invIN));
  }
  function pointV(c,r){return add(c.vel,cross(c.w,r));}
- function apply(c,j,r){if(c.sleep){c.sleep=false;c.quiet=0;}
+ function apply(c,j,r){if(c.sleep)return;
   c.vel=add(c.vel,mul(j,c.im));c.w=add(c.w,invI(c,cross(r,j)));
  }
  function impactPair(a,b,normal,depth,impactCallback,iteration){
   // Velocity solver includes angular momentum at the actual rim/face contact.
-  const sum=a.im+b.im;
+  const sum=(a.sleep?0:a.im)+(b.sleep?0:b.im);
+  if(!sum)return;
   const correction=Math.min(depth,.18)*.58/sum;
-  a.p=sub(a.p,mul(normal,correction*a.im));
-  b.p=add(b.p,mul(normal,correction*b.im));
+  a.p=sub(a.p,mul(normal,correction*(a.sleep?0:a.im)));
+  b.p=add(b.p,mul(normal,correction*(b.sleep?0:b.im)));
   const pa=support(a,normal),pb=support(b,mul(normal,-1));
   const cp=mul(add(pa,pb),.5),ra=sub(cp,a.p),rb=sub(cp,b.p);
   const relative=sub(pointV(b,rb),pointV(a,ra)),vn=dot(relative,normal);
@@ -207,8 +209,8 @@
     if(supported&&speed<1.8){
       c.vel[0]*=.87;c.vel[1]*=.87;c.vel[2]*=.65;c.w=mul(c.w,.71);
     }
-    if(supported&&len(c.vel)<.55&&len(c.w)<1.5){c.quiet+=STEP;
-     if(c.quiet>.28){c.sleep=true;c.vel=[0,0,0];c.w=[0,0,0];}}
+    if(supported&&len(c.vel)<.85&&len(c.w)<2.4){c.quiet+=STEP;
+     if(c.quiet>.16){c.sleep=true;c.vel=[0,0,0];c.w=[0,0,0];}}
     else c.quiet=0;
     if(!c.sleep)awake++;
    }
