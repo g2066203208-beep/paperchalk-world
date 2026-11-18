@@ -56,4 +56,17 @@ const clear=deriveCardRelief(transparent,w,h,'back');
 assert.equal(pix(43,55,clear.surface)[2],0,'transparent pixel has no PBR foil');
 assert.throws(()=>deriveCardRelief([],w,h),/Invalid image pixels/);
 assert.throws(()=>deriveCardRelief(rgba,w,h,'unsupported'),/Unknown/);
-console.log('PASS image-based normal map / gold foil recognition / red paper PBR / alpha edges');
+// On-the-fly material generation must not freeze the draw sequence. The
+// actual game limits output normal maps to 448 px (phone) or 640 px (desktop).
+const bw=320,bh=448,benchmarkPixels=new Uint8Array(bw*bh*4);
+for(let i=0;i<benchmarkPixels.length;i+=4){
+ benchmarkPixels[i]=112;benchmarkPixels[i+1]=56;
+ benchmarkPixels[i+2]=65;benchmarkPixels[i+3]=255;
+}
+const t0=performance.now();
+const benchmark=deriveCardRelief(benchmarkPixels,bw,bh,'portrait');
+const elapsed=performance.now()-t0;
+assert.equal(benchmark.stats.totalPixels,bw*bh);
+assert(elapsed<6000,'procedural material generation is too slow and blocks the UI: '+elapsed.toFixed(0)+'ms');
+console.log('Paper relief generation '+bw+'×'+bh+' '+elapsed.toFixed(1)+'ms');
+console.log('PASS fully inked paper card: whole-surface microfiber normals, physical roughness, pigment stipple, original images immutable');
