@@ -2,8 +2,8 @@
   {
     "viewport": "desktop",
     "passed": true,
-    "character": "巨兽屠夫",
-    "id": "monster-hunters/06-beast-butcher.png",
+    "character": "逃脱术师",
+    "id": "wonder-circus/escape-artist.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
@@ -12,8 +12,8 @@
   {
     "viewport": "portrait",
     "passed": true,
-    "character": "蔷薇血医",
-    "id": "crimson-vampires/rose-physician.png",
+    "character": "夜宴夫人",
+    "id": "crimson-vampires/midnight-hostess.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
@@ -22,8 +22,8 @@
   {
     "viewport": "landscape",
     "passed": true,
-    "character": "血族小公主",
-    "id": "crimson-vampires/vampire-princess.png",
+    "character": "契约经理",
+    "id": "demon-merchant/contract-manager.webp",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
