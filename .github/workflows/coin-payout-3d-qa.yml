@@ -14,7 +14,7 @@ on:
       - '.github/workflows/coin-payout-3d-qa.yml'
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   stacked-coin-rigidbody-qa:
     runs-on: ubuntu-24.04
@@ -42,6 +42,23 @@ jobs:
           sleep 2
       - name: Capture actual 3D payouts on desktop portrait and landscape
         run: node tests/coin-payout-browser.mjs
+      - name: Preserve verified Chromium keyframes in the GitHub game repository
+        if: success() && github.event_name == 'push'
+        continue-on-error: true
+        run: |
+          mkdir -p site/card-battle/qa/coin-payout
+          cp artifacts/coin-payout-3d/desktop-02-first-gold-impacts.png site/card-battle/qa/coin-payout/desktop-impact.png
+          cp artifacts/coin-payout-3d/desktop-03-growing-real-3d-stack.png site/card-battle/qa/coin-payout/desktop-stack.png
+          cp artifacts/coin-payout-3d/portrait-04-close-up-real-coin-pile.png site/card-battle/qa/coin-payout/phone-closeup.png
+          cp artifacts/coin-payout-3d/desktop-05-side-view-true-height.png site/card-battle/qa/coin-payout/side-height.png
+          cp artifacts/coin-payout-3d/results.json site/card-battle/qa/coin-payout/results.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add site/card-battle/qa/coin-payout/
+          if ! git diff --cached --quiet; then
+            git commit -m 'qa: preserve live Chrome screenshots of rigid pixel coin ejection and stack'
+            git push origin HEAD:main
+          fi
       - name: Upload screenshot and gameplay recording evidence
         if: always()
         uses: actions/upload-artifact@v4
