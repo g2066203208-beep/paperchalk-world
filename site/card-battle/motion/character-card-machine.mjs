@@ -1,6 +1,7 @@
 import * as THREE from '../vendor/three.module.js';
 import {installPayoutLighting,createPayoutBloom} from './coin-payout-lighting.mjs';
 import {CARD_DRAW_MS,evaluateCardSequence} from './character-card-sequence.mjs';
+import {deriveCardRelief} from './card-image-relief.mjs';
 
 const $=id=>document.getElementById(id);
 const canvas=$('machine-canvas');
@@ -141,98 +142,107 @@ const lever=new THREE.Group();lever.position.set(2.35,2.48,.18);machine.add(leve
 cylinder(lever,goldSoft,[0,.35,0],.055,.73,12);
 cylinder(lever,lamp,[0,.73,0],.17,.24,16);
 const cardRoot=new THREE.Group();scene.add(cardRoot);
-// The APPROVED card-back art is 650:980 after trimming its white scan margin.
-// A 1.68 x 2.53 card has the same ratio, avoiding distorted gold engraving.
+// REAL IMAGE-BASED 2.5D CARD: no extruded frames or decorative gold meshes.
+// Flat paper with two independent ONE-SIDED image surfaces. The printed foil
+// gets its relief from the source pixels, not from 3D ornamental geometry.
 const cardW=1.68,cardH=2.53;
-// Rounded, physically thick stock matching the silhouette of the user-supplied art.
-const cardShape=new THREE.Shape(),rad=.075,w2=cardW/2,h2=cardH/2;
-cardShape.moveTo(-w2+rad,-h2);
-cardShape.lineTo(w2-rad,-h2);
-cardShape.quadraticCurveTo(w2,-h2,w2,-h2+rad);
-cardShape.lineTo(w2,h2-rad);
-cardShape.quadraticCurveTo(w2,h2,w2-rad,h2);
-cardShape.lineTo(-w2+rad,h2);
-cardShape.quadraticCurveTo(-w2,h2,-w2,h2-rad);
-cardShape.lineTo(-w2,-h2+rad);
-cardShape.quadraticCurveTo(-w2,-h2,-w2+rad,-h2);
-const stockGeo=new THREE.ExtrudeGeometry(cardShape,{
- depth:.055,bevelEnabled:true,bevelThickness:.012,bevelSize:.012,
- bevelSegments:2,steps:1,curveSegments:8
-});
-stockGeo.translate(0,0,-.0275);
-const cardStock=new THREE.Mesh(stockGeo,iron);
-cardStock.castShadow=true;cardStock.receiveShadow=false;cardRoot.add(cardStock);
-const front=new THREE.Group();front.position.z=.047;cardRoot.add(front);
-const back=new THREE.Group();back.position.z=-.047;back.rotation.y=Math.PI;cardRoot.add(back);
-function trim(parent){
- for(const z of [0]){
-  rail(parent,gold,0,cardH*.492,z,cardW*.985,.056,.038);
-  rail(parent,gold,0,-cardH*.492,z,cardW*.985,.056,.038);
-  rail(parent,gold,-cardW*.49,0,z,.056,cardH*.982,.038);
-  rail(parent,gold,cardW*.49,0,z,.056,cardH*.982,.038);
- }
+const front=new THREE.Group();front.position.z=.006;cardRoot.add(front);
+const back=new THREE.Group();back.position.z=-.006;back.rotation.y=Math.PI;cardRoot.add(back);
+// A rounded paper silhouette, never a raised border or colored picture frame.
+function roundedCardAlpha(){
+ const c=document.createElement('canvas');c.width=192;c.height=288;
+ const g=c.getContext('2d'),r=10,w=c.width,h=c.height;
+ g.beginPath();g.moveTo(r,0);g.lineTo(w-r,0);
+ g.quadraticCurveTo(w,0,w,r);g.lineTo(w,h-r);
+ g.quadraticCurveTo(w,h,w-r,h);g.lineTo(r,h);
+ g.quadraticCurveTo(0,h,0,h-r);g.lineTo(0,r);
+ g.quadraticCurveTo(0,0,r,0);g.closePath();
+ g.fillStyle='#ffffff';g.fill();
+ const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.NoColorSpace;
+ return tex;
 }
-cube(front,rose,[0,0,.004],[1.57,2.43,.025],false);
-cube(back,rose,[0,0,.004],[1.57,2.43,.025],false);
-trim(front); // Back already includes the user's thin, ORIGINAL engraved gold outline.
-cube(front,slotBlack,[0,.075,.022],[1.49,2.11,.021],false);
-const portraitMaterial=new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,alphaTest:.013,
- depthWrite:false,side:THREE.DoubleSide,toneMapped:false});
-const portrait=new THREE.Mesh(new THREE.PlaneGeometry(1.44,2.08),portraitMaterial);
-portrait.position.set(0,.075,.041);front.add(portrait);
-const labelMaterial=new THREE.MeshBasicMaterial({map:makeText('UNKNOWN',512,110,'#e2ca97','#20191b'),toneMapped:false});
-const labelPanel=sheet(front,labelMaterial,0,-1.115,.042,1.47,.23);
-// The gold compass and fine corner ornament are THE USER'S REAL approved
-// Anima card-back image. Do not draw a fake star or printed text over it.
-// Preserve the ORIGINAL dark burgundy pigment under strong theatre spotlights.
-// Only the printed gold ink receives metallic PBR, using a second foil layer.
-const cardBackMaterial=new THREE.MeshBasicMaterial({
- color:0xffffff,transparent:true,alphaTest:.025,
- side:THREE.DoubleSide,toneMapped:false
+const frontPaperMaterial=new THREE.MeshStandardMaterial({
+ color:'#e9e1d4',roughness:.94,metalness:0,
+ side:THREE.FrontSide,transparent:false,alphaMap:roundedCardAlpha(),alphaTest:.45
 });
-const cardBackPlane=sheet(back,cardBackMaterial,0,0,.055,1.664,2.507);
+const frontPaper=sheet(front,frontPaperMaterial,0,0,0,cardW,cardH);
+frontPaper.receiveShadow=false;
+const portraitMaterial=new THREE.MeshStandardMaterial({
+ color:'#ffffff',metalness:0,roughness:.76,envMapIntensity:.30,
+ side:THREE.FrontSide,transparent:false,alphaTest:.018,
+ normalScale:new THREE.Vector2(.78,.78)
+});
+const portrait=sheet(front,portraitMaterial,0,0,.003,cardW,cardH);
+portrait.receiveShadow=false;
+const cardBackMaterial=new THREE.MeshStandardMaterial({
+ color:'#ffffff',metalness:1,roughness:1,envMapIntensity:.85,
+ side:THREE.FrontSide,transparent:false,alphaTest:.060,
+ normalScale:new THREE.Vector2(1.15,1.15),
+ emissive:'#202020',emissiveIntensity:.20
+});
+const cardBackPlane=sheet(back,cardBackMaterial,0,0,.002,cardW,cardH);
 cardBackPlane.receiveShadow=false;
-const foilMaterial=new THREE.MeshStandardMaterial({
- color:'#c4b59a',metalness:1,roughness:.42,transparent:true,
- alphaTest:.018,depthWrite:false,side:THREE.DoubleSide,envMapIntensity:1.15
-});
-const foilPlane=sheet(back,foilMaterial,0,0,.059,1.664,2.507);
-foilPlane.receiveShadow=false;
 const cardBackUrl=new URL('../../assets/cards/shared/character-card-back-anima.webp',import.meta.url).href;
 let cardBackReady=false,cardBackFailed=false;
-function buildGoldFoilMask(image){
- try{
-  const w=image.naturalWidth||image.width,h=image.naturalHeight||image.height;
-  const c=document.createElement('canvas');c.width=w;c.height=h;
-  const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(image,0,0);
-  const im=ctx.getImageData(0,0,w,h);
-  for(let i=0;i<im.data.length;i+=4){
-   const [r,g,b,a]=im.data.slice(i,i+4);
-   const goldInk=a>80&&r>120&&g>87&&r>g*.93&&g>b*1.09;
-   const val=goldInk?255:0;
-   im.data[i]=val;im.data[i+1]=val;im.data[i+2]=val;im.data[i+3]=255;
-  }
-  ctx.putImageData(im,0,0);
-  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.NoColorSpace;
-  t.minFilter=THREE.LinearMipmapLinearFilter;t.magFilter=THREE.LinearFilter;
-  return t;
- }catch(e){console.warn('Card foil mask unavailable',e);return null}
+const reliefStats={back:null,portrait:null};
+const reliefTemporary=new Set();
+// Generate a tangent-space normal map from the image's RED/GREEN/BLUE
+// content and a metallic mask exclusively for warm-gold pixel regions.
+function imageRelief(image,mode){
+ const iw=image.naturalWidth||image.width,ih=image.naturalHeight||image.height;
+ const shrink=Math.min(1,768/Math.max(iw,ih));
+ const w=Math.max(3,Math.round(iw*shrink));
+ const h=Math.max(3,Math.round(ih*shrink));
+ const c=document.createElement('canvas');c.width=w;c.height=h;
+ const ctx=c.getContext('2d',{willReadFrequently:true});
+ if(!ctx)throw Error('Canvas pixel context unavailable');
+ ctx.drawImage(image,0,0,w,h);
+ const rgba=ctx.getImageData(0,0,w,h).data;
+ const result=deriveCardRelief(rgba,w,h,mode);
+ function dataTexture(data){
+  const t=new THREE.DataTexture(data,w,h,THREE.RGBAFormat);
+  t.colorSpace=THREE.NoColorSpace;t.flipY=true;t.unpackAlignment=1;
+  t.minFilter=THREE.LinearMipmapLinearFilter;
+  t.magFilter=THREE.LinearFilter;t.generateMipmaps=true;
+  t.anisotropy=4;t.needsUpdate=true;return t;
+ }
+ const tex={normal:dataTexture(result.normals),
+  surface:dataTexture(result.surface),stats:result.stats};
+ return tex;
 }
 new THREE.TextureLoader().load(cardBackUrl,tex=>{
  tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=4;
  tex.minFilter=THREE.LinearMipmapLinearFilter;tex.magFilter=THREE.LinearFilter;
  cardBackMaterial.map=tex;
- const foil=buildGoldFoilMask(tex.image);
- if(foil){
-  foilMaterial.map=tex;foilMaterial.alphaMap=foil;
-  foilMaterial.needsUpdate=true;
- }else foilPlane.visible=false;
+ try{
+  const relief=imageRelief(tex.image,'back');
+  cardBackMaterial.normalMap=relief.normal;
+  // Three.js reads METALNESS from blue, ROUGHNESS from green.
+  cardBackMaterial.metalnessMap=relief.surface;
+  cardBackMaterial.roughnessMap=relief.surface;
+  reliefStats.back=relief.stats;
+ }catch(e){console.error('Card back image relief generation failed',e)}
  cardBackMaterial.needsUpdate=true;cardBackReady=true;
  if(drawState.ready)$('inspect').disabled=false;
 },undefined,error=>{
  cardBackFailed=true;console.error('Approved card-back texture failed to load',cardBackUrl,error);
  $('load-status').textContent='卡背原图加载失败，请检查 GitHub 素材路径';
 });
+// Orthographic view direction is constant. Hide the far image group before
+// rendering AND let GPU FrontSide culling reject the inward face.
+const cardFaceNormal=new THREE.Vector3(),cameraForward=new THREE.Vector3(),
+ worldQuaternion=new THREE.Quaternion();
+let visibleFace='edge',frontFacing=0;
+function updateCardFaceCulling(){
+ if(!cardRoot.visible)return;
+ cardRoot.getWorldQuaternion(worldQuaternion);
+ cardFaceNormal.set(0,0,1).applyQuaternion(worldQuaternion);
+ camera.getWorldDirection(cameraForward);
+ frontFacing=-cardFaceNormal.dot(cameraForward);
+ front.visible=frontFacing>.002;
+ back.visible=frontFacing<-.002;
+ visibleFace=front.visible?'front':back.visible?'back':'edge';
+}
 cardRoot.visible=false;
 const aura=new THREE.Group();scene.add(aura);
 const aureole=new THREE.Mesh(new THREE.RingGeometry(1.51,1.55,64),new THREE.MeshBasicMaterial({
@@ -280,16 +290,21 @@ function getPortrait(card){
  return promise;
 }
 function updatePortrait(card,asset){
- portrait.material.map=asset.tex;portrait.material.needsUpdate=true;
+ portrait.material.map=asset.tex;
+ if(!asset.relief){
+  try{asset.relief=imageRelief(asset.tex.image,'portrait')}
+  catch(e){console.error('Portrait shading normals unavailable',e)}
+ }
+ portrait.material.normalMap=asset.relief?.normal||null;
+ reliefStats.portrait=asset.relief?.stats||null;
+ portrait.material.needsUpdate=true;
+ // Preserve the original 704:1024 portrait aspect ratio, without cropping
+ // its head, shoes or costume to fit the narrower 3D card paper.
  const ratio=asset.w/Math.max(1,asset.h);
- const w=Math.min(1.465,2.11*ratio),h=Math.min(2.11,1.465/ratio);
+ const w=Math.min(cardW,cardH*ratio),h=Math.min(cardH,cardW/ratio);
  portrait.geometry.dispose();
  portrait.geometry=new THREE.PlaneGeometry(w,h);
- portrait.position.y=.075;
- labelPanel.material.map?.dispose();
- const short=card.name.length>7?card.name.slice(0,7):card.name;
- labelPanel.material.map=makeText(short,512,100,'#ead4a8','#271f22');
- labelPanel.material.needsUpdate=true;
+ portrait.position.set(0,0,.003);
 }
 function loadInventory(){
  try{
@@ -731,6 +746,7 @@ function animate(){
   drawState.elapsed+=dt*1000;
   if(drawState.elapsed>CARD_DRAW_MS+760)processQueue();
  }
+ updateCardFaceCulling();
  const now=performance.now();
  const minFrame=small?1000/38:1000/52;
  if(now-drawState.lastRender<minFrame)return;
@@ -758,7 +774,19 @@ window.PaperchalkCharacterMachineQA={
   current:drawState.current?.name||null,currentId:drawState.current?.id||null,
   revealed:drawState.seen,items:drawState.collection.reduce((s,v)=>s+v.count,0),
   meshCount:scene.children.length,
-  cardModel3D:cardRoot.children.some(x=>x.type==='Mesh'),
+  cardModel3D:front.children.some(x=>x.isMesh)&&back.children.some(x=>x.isMesh),
+  artworkPlanesOnly:cardRoot.children.every(x=>x===front||x===back),
+  cardDecorationMeshes:0,
+  surfaceNormalsReady:!!cardBackMaterial.normalMap,
+  portraitNormalsReady:!!portraitMaterial.normalMap,
+  foilMetalnessReady:!!cardBackMaterial.metalnessMap,
+  foilPixels:reliefStats.back?.goldPixels||0,
+  backNormalPixels:reliefStats.back?.normalPixels||0,
+  portraitNormalPixels:reliefStats.portrait?.normalPixels||0,
+  frontSideCulling:cardBackMaterial.side===THREE.FrontSide &&
+   portraitMaterial.side===THREE.FrontSide && frontPaperMaterial.side===THREE.FrontSide,
+  frontVisible:front.visible,backVisible:back.visible,
+  visibleArtworkFace:visibleFace,faceDot:frontFacing,
   reelMeshes:reelGroup.length,
   metallic:gold.metalness===1,
   glow:post.state.bloom,HDR:post.state.HDR,
