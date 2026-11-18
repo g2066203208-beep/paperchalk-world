@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1b2026">
+<title>单图自动挤出 · 剪纸 3D 金币建模器</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,"Noto Sans SC",sans-serif;--bg:#171d22;--panel:#252d34;--line:#495661}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#e9edef;min-height:100dvh}
+main{max-width:1260px;margin:0 auto;padding:clamp(10px,2vw,24px);display:grid;gap:13px}
+header{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+h1{font-size:clamp(19px,2.5vw,28px);margin:0 0 5px}header p{font-size:12px;color:#abb8c3;margin:0;max-width:690px;line-height:1.6}
+a{color:#d7e9f6;font-size:12px}
+.app{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:14px;min-height:590px}
+.viewer{position:relative;border:1px solid var(--line);border-radius:13px;background:radial-gradient(circle at 45% 38%,#526071 0%,#313c49 43%,#1b252e 100%);overflow:hidden;min-height:500px}
+#model{width:100%;height:100%;min-height:500px;display:block;touch-action:none;cursor:grab}#model:active{cursor:grabbing}
+.hint{pointer-events:none;position:absolute;top:15px;left:15px;color:#d6e0e5b8;font:600 11px ui-monospace,monospace;letter-spacing:.06em}
+.viewer-bottom{position:absolute;bottom:14px;left:15px;right:15px;display:flex;gap:8px;align-items:end;justify-content:space-between;pointer-events:none}
+.viewer-bottom span{color:#d4dfe6;font:12px ui-monospace,monospace;text-shadow:0 1px 8px #0a1016}
+.panel{border:1px solid var(--line);border-radius:13px;background:var(--panel);padding:17px;display:grid;gap:18px;align-content:start}
+.panel h2{font-size:13px;font-weight:800;letter-spacing:.04em;margin:0 0 10px}
+.panel p{margin:6px 0 0;color:#afbfc9;font-size:12px;line-height:1.55}
+.setting{display:block;margin-top:12px}.setting label{display:flex;justify-content:space-between;color:#e5edf0;font-size:12px;gap:10px;margin:0 0 7px}
+.setting output{font:700 12px ui-monospace,monospace;color:#ffdb80}
+input[type=range]{width:100%;accent-color:#efc35a;cursor:pointer}
+input[type=file]{width:100%;font-size:11px;color:#c1ccd2}
+.buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+button{background:#36434d;border:1px solid #63727e;border-radius:8px;padding:11px 8px;color:#f2f6f8;font:650 12px system-ui,sans-serif;min-height:44px;cursor:pointer}
+button:hover{background:#455463}button[aria-pressed=true]{background:#6d5726;border-color:#d6b962;color:#fff3cf}
+button:focus-visible,input:focus-visible{outline:2px solid #f5dc8a;outline-offset:2px}
+small{color:#99a8b2;font-size:11px;line-height:1.4}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stat{background:#222a30;border:1px solid #34424b;border-radius:8px;padding:11px;min-width:0}.stat strong{display:block;font-size:17px;color:#f4d899}.stat span{font-size:10px;color:#a9b6be}
+#status{font:12px system-ui,sans-serif;color:#debb69}
+footer{font-size:11px;color:#9aabb5;line-height:1.6}
+@media(max-width:850px){.app{grid-template-columns:1fr;min-height:unset}.viewer,#model{min-height:390px}.panel{grid-template-columns:repeat(2,minmax(0,1fr));padding:13px;gap:12px}.panel>section:first-child{grid-column:span 2}}
+@media(max-width:550px){main{padding:8px;gap:9px}.viewer,#model{min-height:330px;height:380px}.panel{grid-template-columns:1fr}.panel>section:first-child{grid-column:auto}header p{font-size:11px}.stats{gap:5px}.stat{padding:7px}.stat strong{font-size:14px}}
+</style>
+</head>
+<body>
+<main>
+<header><div><h1>单图自动挤出 · 剪纸 3D 金币</h1><p>真正的 3D 网格：一张素材 → 读取透明轮廓 → 自动生成正反面 + 少量厚度 + 黑色侧壁。下方内置示例仅供验证，上传即可替换。可拖动观察厚度，不是背后放一个固定圆柱。</p></div><nav><a href="./coin-whitebox-lab.html">返回旧物理实验</a>　<a href="./snowbound-journey.html">返回游戏</a></nav></header>
+<div class="app">
+ <section class="viewer" aria-label="真实三维挤出金币可旋转预览">
+  <canvas id="model" aria-label="可拖动旋转的三维剪纸金币，实际生成多边形几何体"></canvas>
+  <div class="hint">REAL 3D MESH · SINGLE SOURCE IMAGE · BLACK PAPER EDGE</div>
+  <div class="viewer-bottom"><span id="status" role="status">正在加载 Three.js 和轮廓生成器…</span><span>拖动 / 触摸旋转 · 滚轮缩放</span></div>
+ </section>
+ <aside class="panel">
+  <section><h2>01 / 唯一素材</h2><input id="source" type="file" accept="image/png,image/webp,image/jpeg,image/svg+xml" aria-label="上传一张金币素材，自动生成三维轮廓"><p>上传你自己的金币 PNG / WebP / JPG / SVG。透明区域自动识别；纯白等单色背景会尝试只移除与画布外缘相连的背景。</p></section>
+  <section><h2>02 / 程序建模参数</h2>
+   <div class="setting"><label for="thickness">侧边厚度 <output id="thick-value">2.8%</output></label><input id="thickness" type="range" min="0.018" max="0.25" step="0.002" value="0.084"></div>
+   <div class="setting"><label for="rim">黑边宽度 <output id="rim-value">1.6%</output></label><input id="rim" type="range" min="1.000" max="1.050" step="0.002" value="1.016"></div>
+   <div class="setting"><label for="alpha">轮廓阈值 <output id="alpha-value">110</output></label><input id="alpha" type="range" min="30" max="220" step="5" value="110"></div>
+  </section>
+  <section><h2>03 / 直接检查 3D 模型</h2>
+   <div class="buttons"><button id="front" type="button">正面</button><button id="side" type="button">侧面</button><button id="back" type="button">背面</button><button id="angled" type="button">3/4 斜视</button><button id="spin" type="button" aria-pressed="true">停止自转</button><button id="inkonly" type="button" aria-pressed="false">仅看黑色实体</button></div>
+   <p>黑边是沿原图轮廓挤出的实体侧壁；原图同时贴在正反两面。切到侧面就能看到网格厚度。</p>
+  </section>
+  <section><h2>04 / 几何检查</h2><small id="diagnostics">等待构建…</small></section>
+ </aside>
+</div>
+<div class="stats"><div class="stat"><strong id="solids">—</strong><span>实体轮廓数量</span></div><div class="stat"><strong id="triangles">—</strong><span>生成三角形面片</span></div><div class="stat"><strong id="texture">—</strong><span>素材像素分辨率</span></div></div>
+<footer>使用项目原有 Three.js，实际的 THREE.ExtrudeGeometry，支持透明非圆形轮廓、穿孔和多个分离区域。当前只建模一枚金币，不实现喷射、物理、金属材质和光影；测试通过后才接入金币刚体系统。</footer>
+</main>
+<script type="module">
+import * as THREE from './vendor/three.module.js';
+import {prepareExtrudedSprite,buildExtrudedSprite3D} from './motion/sprite-extrusion.mjs';
+const $=id=>document.getElementById(id);
+const canvas=$('model'),scene=new THREE.Scene();
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.NoToneMapping;
+const camera=new THREE.PerspectiveCamera(37,1,.05,100);
+let distance=7.4,drag=false,pointer=null,yaw=.54,pitch=-.16,spin=true,profile=null,mesh=null,currentImage=null;
+const sample=`<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><circle cx="256" cy="256" r="214" fill="#f7bd33" stroke="#181310" stroke-width="20"/><circle cx="256" cy="256" r="177" fill="#ed9e25" stroke="#d07714" stroke-width="14"/><circle cx="256" cy="256" r="152" fill="#f8c94a"/><path d="M256 141 L286 225 375 225 303 282 331 374 256 317 181 374 209 282 137 225 226 225Z" fill="#fff1a4" stroke="#a05b15" stroke-width="12" stroke-linejoin="round"/></svg>`;
+const previewUrl='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(sample);
+const q={};
+function setStatus(message){$('status').textContent=message;}
+function syncValues(){const thickness=+$('thickness').value,rim=+$('rim').value;
+ $('thick-value').textContent=(thickness/3*100).toFixed(1)+'%';
+ $('rim-value').textContent=((rim-1)*100).toFixed(1)+'%';
+ $('alpha-value').textContent=$('alpha').value;
+}
+function rebuild(){
+ if(!profile)return;
+ const thickness=+$('thickness').value,outlineScale=+$('rim').value;
+ const next=buildExtrudedSprite3D(profile,THREE,{thickness,outlineScale});
+ if(mesh){scene.remove(mesh);mesh.dispose();}
+ mesh=next;mesh.rotation.set(pitch,yaw,0);scene.add(mesh);
+ mesh.children[1].visible=mesh.children[2].visible=!$('inkonly').getAttribute('aria-pressed').includes('true');
+ const faces=mesh.children[0].geometry.attributes.position.count;
+ mesh.children[0].geometry.computeBoundingBox();
+ $('solids').textContent=profile.shapes.length;
+ $('triangles').textContent=String(Math.round(faces/3));
+ $('texture').textContent=profile.canvas.width+' × '+profile.canvas.height;
+ $('diagnostics').textContent=`实际挤出面数 ${Math.round(faces/3)} · ${profile.shapes.length} 个主体轮廓 · ${profile.shapes.reduce((x,s)=>x+s.holes.length,0)} 个穿孔 · 黑边 ${((outlineScale-1)*100).toFixed(1)}% · 厚度 ${(thickness/3*100).toFixed(1)}%（相对轮廓尺寸）`;
+ setStatus('模型已生成：独立的正面、背面和封闭侧壁');
+ q.mesh=mesh;q.profile=profile;
+}
+function setView(name){
+ const vals={front:[0,0],angled:[-.16,.54],side:[0,Math.PI/2],back:[0,Math.PI]};
+ [pitch,yaw]=vals[name];if(mesh)mesh.rotation.set(pitch,yaw,0);
+ spin=false;$('spin').textContent='开始自转';$('spin').setAttribute('aria-pressed','false');
+}
+async function load(source){
+ const img=new Image();img.decoding='async';
+ await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(new Error('无法读取这张图片'));img.src=source;});
+ currentImage=img;
+ await rebuildProfile();
+}
+async function rebuildProfile(){
+ if(!currentImage)return;
+ try{
+  profile=prepareExtrudedSprite(currentImage,{size:3,alphaThreshold:+$('alpha').value,outlineResolution:256,autoRemoveBackground:true});
+  syncValues();rebuild();
+ }catch(e){setStatus('建模失败：'+e.message);console.error(e);throw e;}
+}
+const resize=()=>{const r=canvas.getBoundingClientRect(),w=Math.max(1,Math.round(r.width)),h=Math.max(1,Math.round(r.height));
+ renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();};
+new ResizeObserver(resize).observe(canvas);resize();
+canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);pointer=[e.clientX,e.clientY];drag=true;});
+canvas.addEventListener('pointermove',e=>{if(!drag||!pointer)return;
+ const dx=e.clientX-pointer[0],dy=e.clientY-pointer[1];pointer=[e.clientX,e.clientY];
+ yaw+=dx*.008;pitch=Math.max(-Math.PI*.46,Math.min(Math.PI*.46,pitch+dy*.008));
+ spin=false;$('spin').textContent='开始自转';$('spin').setAttribute('aria-pressed','false');
+});
+canvas.addEventListener('pointerup',()=>{drag=false;pointer=null;});
+canvas.addEventListener('pointercancel',()=>{drag=false;pointer=null;});
+canvas.addEventListener('wheel',e=>{e.preventDefault();distance=Math.max(4.3,Math.min(13,distance+e.deltaY*.005));},{passive:false});
+for(const name of ['front','side','back','angled'])$(name).addEventListener('click',()=>setView(name));
+$('spin').addEventListener('click',()=>{spin=!spin;$('spin').textContent=spin?'停止自转':'开始自转';$('spin').setAttribute('aria-pressed',String(spin));});
+$('inkonly').addEventListener('click',()=>{
+ const on=$('inkonly').getAttribute('aria-pressed')!=='true';$('inkonly').setAttribute('aria-pressed',String(on));
+ if(mesh){mesh.children[1].visible=!on;mesh.children[2].visible=!on;}
+});
+for(const id of ['thickness','rim'])$(id).addEventListener('input',()=>{syncValues();rebuild();});
+$('alpha').addEventListener('change',rebuildProfile);
+$('source').addEventListener('change',async()=>{
+ const f=$('source').files?.[0];if(!f)return;
+ if(f.size>12*1024*1024){setStatus('请使用 12MB 以下的单张素材');return;}
+ const url=URL.createObjectURL(f);
+ try{await load(url);}catch(e){console.error(e);}finally{URL.revokeObjectURL(url);}
+});
+let last=0;
+function animate(now){
+ const dt=Math.min(.045,Math.max(0,(now-last)/1000));last=now;
+ if(spin)yaw+=dt*.55;
+ if(mesh)mesh.rotation.set(pitch,yaw,0);
+ camera.position.set(0,0,distance);camera.lookAt(0,0,0);
+ renderer.render(scene,camera);requestAnimationFrame(animate);
+}
+requestAnimationFrame(animate);
+window.PaperchalkSpriteCoinQA={get loaded(){return !!mesh;},get profile(){return profile;},get model(){return mesh;},
+ setView,setThickness(t){$('thickness').value=t;syncValues();rebuild();},snapshot(){return {
+ outlines:mesh?.userData.outlines,holes:mesh?.userData.holes,thickness:mesh?.userData.thickness,
+ triangles:mesh?mesh.children[0].geometry.attributes.position.count/3:0,
+ frontMapped:!!mesh?.children[1].material.map,
+ actualExtrusion:!!mesh?.children[0].isMesh,
+ geometryType:mesh?.children[0].geometry.type,
+ measuredDepth:mesh ? mesh.children[0].geometry.boundingBox.max.z-mesh.children[0].geometry.boundingBox.min.z : 0,
+ };}};
+load(previewUrl).catch(err=>setStatus('初始素材加载失败：'+err.message));
+</script>
+</body>
+</html>
