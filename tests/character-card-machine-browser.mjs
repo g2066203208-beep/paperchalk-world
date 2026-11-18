@@ -54,12 +54,24 @@ for(const d of [
    return {...state,textureWidth:image.naturalWidth,textureHeight:image.naturalHeight};
   });
   assert.equal(original.backsideUsesOriginalTexture,true);
+  assert.equal(original.artworkPlanesOnly,true,'no extruded or ornamental gold frame geometry');
+  assert.equal(original.cardDecorationMeshes,0,'must not use chunky procedural gold frame');
+  assert.equal(original.frontSideCulling,true,'front and back require GPU FrontSide culling');
+  assert.equal(original.surfaceNormalsReady,true,'normalMap must be attached to real card back');
+  assert.equal(original.foilMetalnessReady,true,'gold foil is classified in a material map');
+  assert(original.foilPixels>100,'image RGB should identify meaningful fine gold lines');
+  assert(original.backNormalPixels>100,'color-derived relief MUST produce non-flat normals');
   assert(original.backImageUrl.endsWith('/assets/cards/shared/character-card-back-anima.webp'));
   assert.equal(original.textureWidth,480);
   assert(original.textureHeight>700);
   await page.locator('#inspect').click();
   await page.waitForFunction(()=>window.PaperchalkCharacterMachineQA?.state?.inspecting);
   assert.equal(await page.locator('#inspect-toolbar').isVisible(),true);
+  await page.waitForTimeout(130);
+  let cull=await page.evaluate(()=>window.PaperchalkCharacterMachineQA.state);
+  assert(cull.backVisible&&!cull.frontVisible&&cull.visibleArtworkFace==='back',
+    'back-only image is visible after 180-degree rotation');
+  assert.equal(cull.frontSideCulling,true);
   // Inspect toolbar must not obscure the artwork: it's in its own layout row.
   const layout=await page.evaluate(()=>({
    cardRect:document.querySelector('#machine-canvas').getBoundingClientRect().toJSON(),
@@ -73,7 +85,18 @@ for(const d of [
    window.PaperchalkCharacterMachineQA?.state?.portraitLoaded,{timeout:10000});
   await page.locator('#inspect-front').click();
   await page.waitForTimeout(320);
+  const frontState=await page.evaluate(()=>window.PaperchalkCharacterMachineQA.state);
+  assert(frontState.frontVisible&&!frontState.backVisible,
+   'rear image MUST be culled as soon as the character turns toward camera');
+  assert(frontState.portraitNormalsReady,'character portrait should receive subtle color-derived normal maps');
+  assert(frontState.portraitNormalPixels>100,'actual portrait colors should generate real surface detail');
   await page.screenshot({path:out+'/'+d.name+'-INSPECT-01-real-ringmaster-front.png'});
+  await page.evaluate(()=>window.PaperchalkCharacterMachineQA.inspectRotate(Math.PI,0));
+  await page.waitForTimeout(130);
+  const reverseState=await page.evaluate(()=>window.PaperchalkCharacterMachineQA.state);
+  assert(reverseState.backVisible&&!reverseState.frontVisible,
+   'turning back around must hide every pixel of character front');
+  await page.evaluate(()=>window.PaperchalkCharacterMachineQA.inspectRotate(0,0));
   // Real pointer drag, not only a test-helper angle setter.
   const bounds=await page.locator('#machine-canvas').boundingBox();
   assert(bounds&&bounds.width>100&&bounds.height>150);
@@ -118,6 +141,9 @@ for(const d of [
   await page.screenshot({path:out+'/'+d.name+'-INSPECT-05-recentered.png'});
   await page.locator('#inspect-back').click();
   await page.waitForTimeout(340);
+  cull=await page.evaluate(()=>window.PaperchalkCharacterMachineQA.state);
+  assert(cull.visibleArtworkFace==='back'&&cull.backVisible&&!cull.frontVisible,
+   'manual back button must not leak opposite face');
   await page.screenshot({path:out+'/'+d.name+'-INSPECT-03-back-after-flip.png'});
   await page.locator('#inspect-exit').click();
   assert.equal((await page.evaluate(()=>window.PaperchalkCharacterMachineQA.state)).inspecting,false);
