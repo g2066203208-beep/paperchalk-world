@@ -62,7 +62,14 @@ export function createCastleCourtyard({THREE,scene,materials,compact=false}){
  box(-7.28,2.3,-1.05,.65,4.9,13.5,stone);
  box(0,2.1,-7.44,14.9,4.5,.75,stone);
  box(7.12,.40,-1.05,.48,.85,12.8,stoneDark); // low cutaway right rail
- box(0,.34,5.52,14.9,.70,.48,stoneDark); // low cutaway foreground rail
+ // Camera-side entrance stays physically open at its center: a real return route.
+ box(-4.66,.34,5.52,5.55,.70,.48,stoneDark);
+ box(4.66,.34,5.52,5.55,.70,.48,stoneDark);
+ box(0,.12,5.36,3.70,.25,.72,wornStone); // entry threshold slab
+ for(const x of [-1.96,1.96]){
+  box(x,.58,5.40,.57,1.17,.64,stone);
+  box(x,1.18,5.40,.72,.19,.78,wornStone);
+ }
  for(let x=-6.55;x<=6.55;x+=1.47){
   const height=4.18+(rand()-.5)*.46;
   box(x,height+.27,-7.45,1.06,.47,.91,stoneDark);
