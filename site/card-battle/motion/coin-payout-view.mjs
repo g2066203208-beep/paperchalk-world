@@ -1,6 +1,6 @@
 import * as THREE from '../vendor/three.module.js';
 import {prepareExtrudedSprite,buildLowPolyPixelCoin3D} from './sprite-extrusion.mjs';
-import {RigidCoinPayout,COIN,FIXED_DT,CAPS} from './coin-payout-rigid.mjs';
+import {RigidCoinPayout,COIN,FIXED_DT,CAPS,BASIN} from './coin-payout-rigid.mjs';
 
 const $=id=>document.getElementById(id);
 const canvas=$('payout-view');
@@ -22,12 +22,26 @@ function makeBox(center,size,color,parent=scene){
  const o=new THREE.Mesh(new THREE.BoxGeometry(...size),material(color));o.position.set(...center);parent.add(o);return o;
 }
 function makeEnvironment(){
- // The machine is an actual 3D object. Coins remain visible on the LEFT table.
- makeBox([-2.82,-.14,0],[7,.26,4.65],colors.table);
- makeBox([-2.83,-.28,0],[7.03,.04,4.72],colors.tableEdge);
- makeBox([-6.19,.70,0],[.20,1.42,4.65],'#344349');
- makeBox([-2.83,.32,-2.34],[7,.66,.16],'#303d43');
- makeBox([-2.83,.32,2.34],[7,.66,.16],'#303d43');
+ // Coins must exit machine chute INTO the physically modelled basin, never
+ // beyond the stage or onto an imaginary unbounded flat table.
+ makeBox([-2.53,-.16,0],[6.75,.32,3.94],'#373e40');
+ makeBox([-2.53,-.33,0],[6.81,.035,4.00],'#22292b');
+ // Exact coordinates as physical collision boxes; user can see every wall.
+ makeBox([BASIN.left-.115,BASIN.wallTop*.5,0],[.23,BASIN.wallTop,4.20],'#556063');
+ makeBox([BASIN.right+.10,BASIN.wallTop*.5,0],[.20,BASIN.wallTop,4.20],'#28343a');
+ // Tall rear wall and actual open-basin front wall; translucent panels keep
+ // the pile visible while still depicting genuine physical containment.
+ const rear=makeBox([-2.53,BASIN.wallTop*.5,BASIN.back-.105],[6.80,BASIN.wallTop,.21],'#414f51');
+ const front=makeBox([-2.53,BASIN.wallTop*.5,BASIN.front+.105],[6.80,BASIN.wallTop,.21],'#414f51');
+ front.material.transparent=true;front.material.opacity=.20;front.material.depthWrite=false;
+ // Visible physical inner fillets that guide the high-speed stream inward.
+ makeBox([-5.51,.12,0],[.38,.24,3.76],'#59625d');
+ makeBox([-2.52,.12,-1.68],[6.24,.24,.34],'#59625d');
+ makeBox([-2.52,.12,1.68],[6.24,.24,.34],'#59625d');
+ // Top rails trace the rim so the mouth of the real 3D coin bowl is legible.
+ makeBox([-2.53,BASIN.wallTop+.025,BASIN.back-.105],[6.80,.05,.25],'#a09d7f');
+ makeBox([-2.53,BASIN.wallTop+.025,BASIN.front+.105],[6.80,.05,.25],'#a09d7f');
+ makeBox([BASIN.left-.115,BASIN.wallTop+.025,0],[.27,.05,4.25],'#a09d7f');
  const unit=new THREE.Group();scene.add(unit);
  makeBox([2.85,1.24,0],[4.15,2.5,4.3],'#263638',unit);
  makeBox([.79,1.14,0],[.15,2.25,4.13],'#384549',unit);
@@ -38,7 +52,6 @@ function makeEnvironment(){
  for(let i=0;i<3;i++){
    const x=2.25+i*.86;
    makeBox([x,1.7,2.202],[.7,.91,.03],'#9da98c',unit);
-   // Symbols only label the stylized original scene, not user-supplied art.
    const tex=document.createElement('canvas');tex.width=64;tex.height=64;
    const g=tex.getContext('2d');g.fillStyle='#b9bd96';g.fillRect(0,0,64,64);
    g.fillStyle='#253332';g.font='bold 42px serif';g.textAlign='center';g.textBaseline='middle';g.fillText(reelSymbols[i],32,32);
@@ -46,12 +59,11 @@ function makeEnvironment(){
    const face=new THREE.Mesh(new THREE.PlaneGeometry(.64,.85),new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide}));
    face.position.set(x,1.7,2.226);unit.add(face);
  }
- makeBox([.59,1.42,0],[.15,.31,.83],'#090e11',unit); // actual side ejection hole
- makeBox([.58,1.62,0],[.17,.035,.95],'#c4ba84',unit);
- makeBox([.58,1.22,0],[.17,.035,.95],'#c4ba84',unit);
+ // Dark outlet aligned with the actual physical emission XYZ at .39,1.22,0.
+ makeBox([.59,BASIN.chute[1],0],[.13,.34,.75],'#090e11',unit);
+ makeBox([.58,BASIN.chute[1]+.19,0],[.15,.035,.82],'#c4ba84',unit);
+ makeBox([.58,BASIN.chute[1]-.19,0],[.15,.035,.82],'#c4ba84',unit);
  makeBox([2.88,2.5,2.29],[3.0,.22,.05],'#ab9a65',unit);
- // desk registration guides, helpful for recognizing real pile depth
- for(let z=-1.8;z<=1.8;z+=.72)makeBox([-2.84,.002,z],[6.1,.006,.006],'#39484d');
 }
 makeEnvironment();
 const isPhone=()=>window.innerWidth<700;
@@ -88,7 +100,7 @@ async function loadCoinModel(){
  instance.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
  instance.count=0;instance.frustumCulled=false;
  scene.add(instance);
- $('status').textContent='真正的 3D 十边金币 · 启动完成';
+ $('status').textContent='10 边实体金币 · 出币口高速吐入实体接币盆';
  return instance;
 }
 function updateCoins(){if(!instance)return;
@@ -106,7 +118,7 @@ function updateStats(){const s=payout.getSnapshot();
  coinCounter.textContent=`${s.count} / ${CAPS.max}`;
  hitCounter.textContent=s.contacts.toLocaleString('en-US');
  sleepCounter.textContent=String(s.asleep);
- meter.textContent=`喷出 ${s.emitted}/${s.target} · ${s.phase} · ${s.time.toFixed(2)}s`;
+ meter.textContent=`盆内 ${s.inBasin}/${s.count} · 出币 ${s.emitted}/${s.target} · ${s.time.toFixed(2)}s`;
  window.__coinPayoutLastSnapshot=s;
 }
 function redraw(){updateCoins();updateStats();renderer.render(scene,camera);}
