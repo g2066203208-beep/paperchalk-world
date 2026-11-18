@@ -17,23 +17,15 @@ function hash2(x,y,salt=0){
  v=Math.imul(v^(v>>>13),1274126177);
  return ((v^(v>>>16))>>>0)/4294967295;
 }
-function softNoise(x,y,size,salt){
- const gx=x/size,gy=y/size,ix=Math.floor(gx),iy=Math.floor(gy);
- const u=gx-ix,v=gy-iy;
- const sx=u*u*(3-2*u),sy=v*v*(3-2*v);
- const a=hash2(ix,iy,salt),b=hash2(ix+1,iy,salt);
- const c=hash2(ix,iy+1,salt),d=hash2(ix+1,iy+1,salt);
- return (a+(b-a)*sx)*(1-sy)+(c+(d-c)*sx)*sy;
-}
 function paperFiber(x,y,mode){
- // Short pulp fibers and two orthogonal softly embossed woven directions.
- // This spans the entire card, including otherwise flat dark burgundy areas.
- const a=hash2(x,y,mode==='back'?3:13)-.5;
- const b=softNoise(x,y,7,23)-.5;
- const threads=softNoise(x,Math.floor(y/5)*5,3,31)-.5;
- const fleck=(hash2(Math.floor(x/2),Math.floor(y/9),41)-.5);
- return a*.030+b*.065+threads*.037+fleck*.028+
-  Math.sin(x*.83+y*.054)*.010+Math.sin(y*.78-x*.030)*.007;
+ // Plausible anisotropic pulp: coordinate-stable fine speckles, long fibers
+ // and a faint cross-weave. No expensive Perlin interpolation per texel.
+ const y1=y>>3, x1=x>>2;
+ const dust=hash2(x,y,mode==='back'?3:13)-.5;
+ const thread=hash2(x1,y1,23)-.5;
+ const longFiber=hash2(x>>1,y>>5,31)-.5;
+ return dust*.032+thread*.042+longFiber*.030+
+  Math.sin(x*.78+y*.065)*.012+Math.sin(y*.64-x*.035)*.006;
 }
 export function goldInkWeight(r,g,b,a=255){
  if(a<20)return 0;
@@ -48,7 +40,8 @@ export function deriveCardRelief(rgba,width,height,mode='back'){
   throw new Error('Invalid image pixels for card relief');
  if(mode!=='back'&&mode!=='portrait')throw new Error('Unknown card relief mode');
  const count=width*height,lum=new Float32Array(count),
-  gold=new Float32Array(count),heightMap=new Float32Array(count);
+  gold=new Float32Array(count),heightMap=new Float32Array(count),
+  raw=new Float32Array(count),horizontal=new Float32Array(count);
  const normals=new Uint8Array(count*4),surface=new Uint8Array(count*4),
   pigment=new Uint8Array(count*4),paperGrain=new Float32Array(count);
  let goldPixels=0,normalPixels=0,minL=1,maxL=0;
@@ -60,35 +53,36 @@ export function deriveCardRelief(rgba,width,height,mode='back'){
   const metal=mode==='back'?goldInkWeight(r,g,b,a):0;
   lum[p]=value;
   gold[p]=metal;
+  const saturation=(Math.max(r,g,b)-Math.min(r,g,b))/255;
+  raw[p]=mode==='back'?
+   metal*.91+value*.065:
+   value*.42+saturation*.085;
   if(a>40){minL=Math.min(minL,value);maxL=Math.max(maxL,value);}
   if(metal>.48)goldPixels++;
  }
+ // 3x3 binomial blur, done as TWO linear O(pixels) passes rather than
+ // 9 inner-loop image reads + repeated RGB math per texel.
+ for(let y=0;y<height;y++){
+  const row=y*width;
+  for(let x=0;x<width;x++){
+   const p=row+x;
+   horizontal[p]=(raw[row+Math.max(0,x-1)]+
+    2*raw[p]+raw[row+Math.min(width-1,x+1)])*.25;
+  }
+ }
+ for(let y=0;y<height;y++){
+  const prev=Math.max(0,y-1)*width,here=y*width,next=Math.min(height-1,y+1)*width;
+  for(let x=0;x<width;x++){
+   const p=here+x,i=p*4;
+   const fiber=paperFiber(x,y,mode);
+   paperGrain[p]=fiber;
+   const base=(horizontal[prev+x]+2*horizontal[p]+horizontal[next+x])*.25;
+   heightMap[p]=rgba[i+3]<20?0:
+    base+fiber*(mode==='back'?(1-gold[p]*.65):.78);
+  }
+ }
  const sample=(arr,x,y)=>arr[Math.max(0,Math.min(height-1,y))*width+
   Math.max(0,Math.min(width-1,x))];
- // Image colors indicate plausible relief, not true reconstructible depth.
- // Smooth the height before a central gradient to suppress WebP block noise.
- for(let y=0;y<height;y++)for(let x=0;x<width;x++){
-  const p=y*width+x,i=p*4;
-  if(rgba[i+3]<20){heightMap[p]=0;continue;}
-  let local=0,weight=0;
-  for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
-   const w=dx===0&&dy===0?4:(dx===0||dy===0?2:1);
-   const sx=Math.max(0,Math.min(width-1,x+dx));
-   const sy=Math.max(0,Math.min(height-1,y+dy));
-   const k=sy*width+sx;
-   // Back: gold/engraving is raised, burgundy has quiet paper grain.
-   // Portrait: gentle fold/outline normals, never make a relief statue.
-   const h=mode==='back'?
-    gold[k]*.91+lum[k]*.065:
-    lum[k]*.42+(Math.max(rgba[k*4],rgba[k*4+1],rgba[k*4+2])-
-     Math.min(rgba[k*4],rgba[k*4+1],rgba[k*4+2]))/255*.085;
-   local+=h*w;weight+=w;
-  }
-  const goldMix=gold[p];
-  const fiber=paperFiber(x,y,mode);
-  paperGrain[p]=fiber;
-  heightMap[p]=local/weight+fiber*(mode==='back'?(1-goldMix*.65):.78);
- }
  const scale=mode==='back'?5.8:2.1;
  for(let y=0;y<height;y++)for(let x=0;x<width;x++){
   const p=y*width+x,i=p*4;
@@ -113,7 +107,7 @@ export function deriveCardRelief(rgba,width,height,mode='back'){
   normals[i+3]=255;
   if(Math.abs(nx)+Math.abs(ny)>.035)normalPixels++;
   const m=gold[p],roughGrain=hash2(x,y,71)-.5,
-   blotch=softNoise(x,y,17,89)-.5;
+   blotch=hash2(x>>4,y>>4,89)-.5;
   // Cellulose has high, NONUNIFORM roughness; the entire surface scatters
   // reflections. Foil is smoother but still scratched/micro-embossed.
   // Dark burgundy paper never picks up metallic highlights.
