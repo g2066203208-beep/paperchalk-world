@@ -81,8 +81,9 @@ export function roundedPaperEdgeGeometry({
    });
   }
  }
- const count=points.length,positions=new Float32Array(count*6),
-  normals=new Float32Array(count*6),uvs=new Float32Array(count*4),
+ const count=points.length,ringCount=count+1,
+  positions=new Float32Array(ringCount*6),
+  normals=new Float32Array(ringCount*6),uvs=new Float32Array(ringCount*4),
   indices=new Uint16Array(count*6);
  const distance=new Float32Array(count+1);
  for(let i=1;i<=count;i++){
@@ -91,14 +92,16 @@ export function roundedPaperEdgeGeometry({
  }
  // Every side quad has outward normals, up/down thickness, and continuous
  // UVs for genuine compressed cardstock fibers. No top/bottom/metal caps.
- for(let i=0;i<count;i++){
-  const p=points[i],v=i*6,t=i*4,ind=i*6,u=distance[i]/distance[count];
+ for(let i=0;i<=count;i++){
+  const p=points[i%count],v=i*6,t=i*4,u=distance[i]/distance[count];
   positions.set([p.x,p.y,thickness/2,p.x,p.y,-thickness/2],v);
   normals.set([p.nx,p.ny,0,p.nx,p.ny,0],v);
   uvs.set([u,0,u,1],t);
-  const a=i*2,b=((i+1)%count)*2;
-  indices.set([a,a+1,b,a+1,b+1,b],ind);
+  if(i<count){
+   const a=i*2,b=(i+1)*2;
+   indices.set([a,a+1,b,a+1,b+1,b],i*6);
+  }
  }
  return {positions,normals,uvs,indices,thickness,radius,
-  vertexCount:count*2,triangleCount:count*2};
+  vertexCount:ringCount*2,triangleCount:count*2};
 }
