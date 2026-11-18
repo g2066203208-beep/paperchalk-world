@@ -72,6 +72,9 @@ for(const d of [
   assert(cull.backVisible&&!cull.frontVisible&&cull.visibleArtworkFace==='back',
     'back-only image is visible after 180-degree rotation');
   assert.equal(cull.frontSideCulling,true);
+  assert.equal(cull.studioLighting,true,'inspection needs independent, neutral studio lighting');
+  assert(cull.inspectWarmIntensity<1,'the slot machine orange spotlight must not wash out portrait art');
+  assert(cull.inspectBloom<.3,'do not burn white details with large HDR bloom in free viewer');
   // Inspect toolbar must not obscure the artwork: it's in its own layout row.
   const layout=await page.evaluate(()=>({
    cardRect:document.querySelector('#machine-canvas').getBoundingClientRect().toJSON(),
@@ -146,7 +149,10 @@ for(const d of [
    'manual back button must not leak opposite face');
   await page.screenshot({path:out+'/'+d.name+'-INSPECT-03-back-after-flip.png'});
   await page.locator('#inspect-exit').click();
-  assert.equal((await page.evaluate(()=>window.PaperchalkCharacterMachineQA.state)).inspecting,false);
+  const restored=await page.evaluate(()=>window.PaperchalkCharacterMachineQA.state);
+  assert.equal(restored.inspecting,false);
+  assert.equal(restored.studioLighting,false);
+  assert(restored.inspectWarmIntensity>10,'original slot machine dramatic lighting must return on exit');
   await page.locator('#draw-one').click();
   await page.waitForFunction(()=>window.PaperchalkCharacterMachineQA?.state?.current &&
    window.PaperchalkCharacterMachineQA?.state?.portraitLoaded,{timeout:22000});
