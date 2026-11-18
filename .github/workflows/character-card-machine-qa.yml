@@ -5,6 +5,7 @@ on:
     paths:
       - 'site/card-battle/character-card-machine.html'
       - 'site/card-battle/motion/character-card-machine.mjs'
+      - 'site/card-battle/motion/card-image-relief.mjs'
       - 'site/card-battle/motion/character-card-sequence.mjs'
       - 'site/card-battle/motion/coin-payout-lighting.mjs'
       - 'site/data/art/seven-card-groups.v1.json'
@@ -31,6 +32,9 @@ jobs:
         run: |
           node --check site/card-battle/motion/character-card-sequence.mjs
           node --check site/card-battle/motion/character-card-machine.mjs
+          node --check site/card-battle/motion/card-image-relief.mjs
+          node --check tests/card-image-relief.test.mjs
+          node tests/card-image-relief.test.mjs
           node --check tests/character-card-machine.test.mjs
           node --check tests/character-card-machine-browser.mjs
           node tests/character-card-machine.test.mjs
