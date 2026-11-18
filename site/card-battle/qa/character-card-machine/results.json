@@ -1,0 +1,32 @@
+[
+  {
+    "viewport": "desktop",
+    "passed": true,
+    "character": "血液医师",
+    "id": "monster-hunters/02-blood-physician.png",
+    "portraits": 35,
+    "beforeCount": 0,
+    "afterCount": 1,
+    "errors": []
+  },
+  {
+    "viewport": "portrait",
+    "passed": true,
+    "character": "重斧清道夫",
+    "id": "monster-hunters/07-axe-scout.png",
+    "portraits": 35,
+    "beforeCount": 0,
+    "afterCount": 1,
+    "errors": []
+  },
+  {
+    "viewport": "landscape",
+    "passed": true,
+    "character": "月下剑姬",
+    "id": "crimson-vampires/moonlight-duelist.png",
+    "portraits": 35,
+    "beforeCount": 0,
+    "afterCount": 1,
+    "errors": []
+  }
+]
