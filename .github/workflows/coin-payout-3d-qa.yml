@@ -1,4 +1,4 @@
-name: High-Velocity Real 3D Pixel Coin Payout - Visual and Physics QA
+name: Chute-To-Catch-Basin Real 3D Pixel Coin Payout - Physics and Visual QA
 on:
   push:
     branches: [main]
@@ -47,9 +47,10 @@ jobs:
         continue-on-error: true
         run: |
           mkdir -p site/card-battle/qa/coin-payout
-          cp artifacts/coin-payout-3d/desktop-02-first-gold-impacts.png site/card-battle/qa/coin-payout/desktop-impact.png
-          cp artifacts/coin-payout-3d/desktop-03-growing-real-3d-stack.png site/card-battle/qa/coin-payout/desktop-stack.png
+          cp artifacts/coin-payout-3d/desktop-02-first-gold-impacts-in-basin.png site/card-battle/qa/coin-payout/desktop-impact.png
+          cp artifacts/coin-payout-3d/desktop-03-growing-real-3d-stack-in-basin.png site/card-battle/qa/coin-payout/desktop-stack.png
           cp artifacts/coin-payout-3d/portrait-04-close-up-real-coin-pile.png site/card-battle/qa/coin-payout/phone-closeup.png
+          cp artifacts/coin-payout-3d/desktop-00-empty-real-coin-basin.png site/card-battle/qa/coin-payout/empty-basin.png
           cp artifacts/coin-payout-3d/desktop-05-side-view-true-height.png site/card-battle/qa/coin-payout/side-height.png
           cp artifacts/coin-payout-3d/results.json site/card-battle/qa/coin-payout/results.json
           git config user.name 'github-actions[bot]'
