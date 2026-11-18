@@ -1,0 +1,47 @@
+name: Original Anima Character Scene Relighting - Real Browser QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/card-battle/engine/character-scene-integration.js'
+      - 'site/card-battle/engine/anima-paintover-lab.js'
+      - 'site/card-battle/engine/anima-hall-gameplay.js'
+      - 'site/card-battle/anima-paintover-lab.html'
+      - 'tests/character-scene-lighting-browser.mjs'
+      - '.github/workflows/character-scene-lighting-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real-lighting-compare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate actual scene shader integration JS
+        run: |
+          node --check site/card-battle/engine/character-scene-integration.js
+          node --check site/card-battle/engine/anima-hall-gameplay.js
+          node --check site/card-battle/engine/anima-paintover-lab.js
+          node --check tests/character-scene-lighting-browser.mjs
+      - name: Install Chromium browser
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Host actual GitHub Pages source
+        run: |
+          nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/relight-http.log 2>&1 &
+          sleep 2
+      - name: Capture actual WebGL before and after on three viewports
+        run: node tests/character-scene-lighting-browser.mjs
+      - name: Upload verified PNG captures
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: original-anima-portrait-relight-before-after-real-chromium
+          path: artifacts/character-scene-lighting/
+          if-no-files-found: warn
+          retention-days: 14
