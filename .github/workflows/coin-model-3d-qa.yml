@@ -1,0 +1,46 @@
+name: Single-image Paper-Cut Coin 3D Model - Mesh and Browser QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/card-battle/motion/sprite-extrusion.mjs'
+      - 'site/card-battle/coin-model-lab.html'
+      - 'tests/sprite-extrusion-unit.mjs'
+      - 'tests/sprite-extrusion-browser.mjs'
+      - '.github/workflows/coin-model-3d-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  sprite-geometry-and-actual-chrome:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check syntax and test alpha contour geometry
+        run: |
+          node --check site/card-battle/motion/sprite-extrusion.mjs
+          node --check tests/sprite-extrusion-unit.mjs
+          node --check tests/sprite-extrusion-browser.mjs
+          node tests/sprite-extrusion-unit.mjs
+      - name: Install Chromium test browser
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Start local HTTP server for actual repository
+        run: |
+          nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/sprite-coin-web.log 2>&1 &
+          sleep 2
+      - name: Inspect real Three.js meshes and save desktop/mobile screenshots and video
+        run: node tests/sprite-extrusion-browser.mjs
+      - name: Upload geometry and browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coin-model-single-image-real-3d-mesh-desktop-mobile
+          path: artifacts/coin-model-3d/
+          if-no-files-found: warn
+          retention-days: 14
