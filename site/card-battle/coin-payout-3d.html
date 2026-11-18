@@ -52,5 +52,5 @@ button{padding:8px 3px;font-size:10px;min-height:43px}.metrics{gap:5px}.metric{p
 <div class="metric"><span>金币间接触次数</span><strong id="hit-count">0</strong></div>
 <div class="metric"><span>已静止实体</span><strong id="sleep-count">0</strong></div>
 <div class="metric"><span>物理类型</span><strong style="font-size:15px">10 FACET · 3D</strong></div></div>
-<p class="note"><strong>加厚金币：</strong>视觉模型仍是原有 10 边低模像素硬币，边缘厚度已从直径的 3.3% 提升至 10.3%；加快重力、降低弹跳与疯狂翻滚。<strong>流畅物理：</strong>默认用空间哈希的三维薄圆盘近似碰撞计算，保留每枚金币独立 XYZ 速度、姿态、旋转、碰撞与堆叠。大量金币不再用昂贵的 500 个 Cannon 凸多边形 SAT 接触——旧的精确 cannon-es 引擎仍保存在代码中作少量金币对照，不把近似求解误称为精确凸体。<strong>真实接币盆：</strong>解析式三维盆壁反弹、物理地面、不会越出接币盆。<br><strong>手机优化：</strong>帧率上限、低分辨率 Bloom 缓冲及间歇真实阴影。光照、金属高光、暖冷补光和辉光仍保留。<strong>A/B：</strong>三种辉光强度在相同物理帧切换。原版游戏逐帧速度和最新 GPU 实机画面仍须单独验收。</p>
-</main><script type="module" src="./motion/coin-payout-view.mjs?v=20261118-fast-3d-heavy-coins-v4"></script></body></html>
+<p class="note"><strong>加厚金币：</strong>视觉模型仍是原有 10 边低模像素硬币，边缘厚度已从直径的 3.3% 提升至 10.3%；加快重力、降低弹跳与疯狂翻滚。<strong>流畅物理：</strong>默认用空间哈希的三维薄圆盘近似碰撞计算，保留每枚金币独立 XYZ 速度、姿态、旋转、碰撞与堆叠，并按金币倾斜角度处理占用空间，最终强制修正穿模。大量金币不再用昂贵的 500 个 Cannon 凸多边形 SAT 接触——旧的精确 cannon-es 引擎仍保存在代码中作少量金币对照，不把近似求解误称为精确凸体。<strong>真实接币盆：</strong>解析式三维盆壁反弹、物理地面、不会越出接币盆。<br><strong>手机优化：</strong>帧率上限、低分辨率 Bloom 缓冲及间歇真实阴影。光照、金属高光、暖冷补光和辉光仍保留。<strong>A/B：</strong>三种辉光强度在相同物理帧切换。原版游戏逐帧速度和最新 GPU 实机画面仍须单独验收。</p>
+</main><script type="module" src="./motion/coin-payout-view.mjs?v=20261118-coin-anti-overlap-v5"></script></body></html>
