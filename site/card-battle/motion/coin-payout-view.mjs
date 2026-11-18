@@ -1,7 +1,7 @@
 import * as THREE from '../vendor/three.module.js';
-import * as CANNON from '../vendor/cannon-es.js';
 import {prepareExtrudedSprite,buildLowPolyPixelCoin3D} from './sprite-extrusion.mjs';
-import {RigidCoinPayout,COIN,FIXED_DT,CAPS,BASIN} from './coin-payout-rigid.mjs';
+import {COIN,CAPS,BASIN} from './coin-payout-rigid.mjs';
+import {FastCoinPayout,FAST_DT} from './coin-payout-fast.mjs';
 import {installPayoutLighting,createPayoutMaterialFactory,upgradeCoinMaterials,createPayoutBloom} from './coin-payout-lighting.mjs';
 
 const $=id=>document.getElementById(id);
@@ -23,7 +23,7 @@ const materials=createPayoutMaterialFactory(THREE);
 const post=createPayoutBloom(THREE,renderer,{compact});
 const camera=new THREE.OrthographicCamera(-8,8,5,-5,.05,140);
 const dummy=new THREE.Object3D(),axisCorrection=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-Math.PI/2);
-let payout=new RigidCoinPayout({seed:20261118}),instance=null,sourceModel=null;
+let payout=new FastCoinPayout({seed:20261118}),instance=null,sourceModel=null;
 let viewMode='scene',playing=true,speed=1,last=0,acc=0,spinPreview=false;
 let renderQuality='smooth',lastDraw=0,lastShadow=0,lastStats=0;
 let displayFrames=0,displayFps=0,displayWindowStart=0;
@@ -157,7 +157,7 @@ async function loadCoinModel(){
  instance.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
  instance.count=0;instance.frustumCulled=false;
  scene.add(instance);
- $('status').textContent='10 边实体金币 · 出币口高速吐入实体接币盆';
+ $('status').textContent='10 边加厚金币 · 空间分区 3D 快速碰撞 · 零外溢';
  return instance;
 }
 function updateCoins(){if(!instance)return;
@@ -183,7 +183,7 @@ function updateStats(force=false){
  window.__coinPayoutLastSnapshot=s;
 }
 function redraw(force=false){updateCoins();updateContactGlints();updateStats(force);post.render(scene,camera);}
-function reset(){payout.destroy();payout=new RigidCoinPayout({seed:20261118});acc=0;playing=false;renderer.shadowMap.needsUpdate=true;
+function reset(){payout.destroy();payout=new FastCoinPayout({seed:20261118});acc=0;playing=false;renderer.shadowMap.needsUpdate=true;
  $('pause').textContent='▶ 继续';redraw();}
 function fire(count){if(!instance)return 0;
  const n=payout.fire(count);playing=true;$('pause').textContent='Ⅱ 暂停';return n;}
@@ -243,8 +243,8 @@ function animate(t){
  if(playing){
   acc+=dt*speed;let steps=0;
   // Don't accumulate unbounded physics debt when the device slows down.
-  while(acc>=FIXED_DT&&steps<5){payout.step();acc-=FIXED_DT;steps++;}
-  if(steps===5)acc=Math.min(acc,FIXED_DT*1.1);
+  while(acc>=FAST_DT&&steps<4){payout.step();acc-=FAST_DT;steps++;}
+  if(steps===4)acc=Math.min(acc,FAST_DT*1.1);
  }
  const targetFrameMs=renderQuality==='smooth'?(compact?1000/42:1000/55):0;
  if(targetFrameMs===0||t-lastDraw>=targetFrameMs){
@@ -271,7 +271,7 @@ window.PaperchalkPayoutQA={
  advanceFrames(n){playing=false;payout.advanceFrames(n);redraw();return payout.getSnapshot();},
  snapshot(){return {...payout.getSnapshot(),facetCount:COIN.sides,
   renderInstances:instance.count,sourceName:'slots-style-pixel-coin.svg',
-  actualPhysics:CANNON.Cylinder.name,geometryType:instance.geometry.type,
+  actualPhysics:payout.physicsModel,geometryType:instance.geometry.type,
   projectedExtent:[camera.left,camera.right],
    lighting:{...post.state,look:renderLook,quality:renderQuality,
     realShadows:renderer.shadowMap.enabled,shadowsThrottled:renderer.shadowMap.autoUpdate===false,
