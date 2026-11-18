@@ -94,7 +94,7 @@ const sceneRelight=(room="hall")=>{
  }
 };
 const makeActorMaterial=(texture)=>{
- const mat=makeIntegratedCharacterMaterial(THREE,texture,getCharacterScenePreset(activeSceneLight,state.day));
+ const mat=makeIntegratedCharacterMaterial(THREE,texture,activeLightingPreset);
  if(!state.relighting)mat.userData.portraitLighting.uPortraitRelight.value=0;
  integratedMaterials.push(mat);return mat;
 };
