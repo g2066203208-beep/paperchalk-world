@@ -49,7 +49,8 @@ export function deriveCardRelief(rgba,width,height,mode='back'){
  if(mode!=='back'&&mode!=='portrait')throw new Error('Unknown card relief mode');
  const count=width*height,lum=new Float32Array(count),
   gold=new Float32Array(count),heightMap=new Float32Array(count);
- const normals=new Uint8Array(count*4),surface=new Uint8Array(count*4);
+ const normals=new Uint8Array(count*4),surface=new Uint8Array(count*4),
+  pigment=new Uint8Array(count*4),paperGrain=new Float32Array(count);
  let goldPixels=0,normalPixels=0,minL=1,maxL=0;
  let paperNormalPixels=0,roughnessMinimum=1,roughnessMaximum=0;
  const roughSamples=[];
@@ -85,6 +86,7 @@ export function deriveCardRelief(rgba,width,height,mode='back'){
   }
   const goldMix=gold[p];
   const fiber=paperFiber(x,y,mode);
+  paperGrain[p]=fiber;
   heightMap[p]=local/weight+fiber*(mode==='back'?(1-goldMix*.65):.78);
  }
  const scale=mode==='back'?5.8:2.1;
@@ -94,6 +96,8 @@ export function deriveCardRelief(rgba,width,height,mode='back'){
   if(alpha<20){
    normals[i]=128;normals[i+1]=128;normals[i+2]=255;normals[i+3]=255;
    surface[i]=0;surface[i+1]=255;surface[i+2]=0;surface[i+3]=255;
+   pigment[i]=rgba[i];pigment[i+1]=rgba[i+1];
+   pigment[i+2]=rgba[i+2];pigment[i+3]=rgba[i+3];
    continue;
   }
   // Central gradient in bitmap coordinates (Y down); the normal-map
@@ -130,8 +134,19 @@ export function deriveCardRelief(rgba,width,height,mode='back'){
   surface[i+1]=Math.round(255*rough);
   surface[i+2]=Math.round(255*m);
   surface[i+3]=255;
+  // Paper is print, not glossy injection-molded plastic. Optical
+  // micro-stippling exists across the WHOLE card; never paint new art.
+  // A tiny pigment-opacity variation is applied only in the shader's
+  // sampled albedo, original source PNG/WebP bytes stay untouched.
+  const dither=hash2(x,y,141)-.5;
+  const strength=(mode==='back'?.28:.17)*(1-m*.84);
+  const shade=1+paperGrain[p]*strength+dither*(mode==='back'?.027:.015);
+  for(let channel=0;channel<3;channel++){
+   pigment[i+channel]=Math.max(0,Math.min(255,Math.round(rgba[i+channel]*shade)));
+  }
+  pigment[i+3]=alpha;
  }
- return {width,height,normals,surface,
+ return {width,height,normals,surface,pigment,
   stats:{goldPixels,normalPixels,paperNormalPixels,totalPixels:count,
    roughnessMinimum,roughnessMaximum,
    minimumLuminance:minL,maximumLuminance:maxL,mode}};
