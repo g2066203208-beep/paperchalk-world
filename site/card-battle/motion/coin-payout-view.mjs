@@ -1,4 +1,5 @@
 import * as THREE from '../vendor/three.module.js';
+import * as CANNON from '../vendor/cannon-es.js';
 import {prepareExtrudedSprite,buildLowPolyPixelCoin3D} from './sprite-extrusion.mjs';
 import {RigidCoinPayout,COIN,FIXED_DT,CAPS,BASIN} from './coin-payout-rigid.mjs';
 import {installPayoutLighting,createPayoutMaterialFactory,upgradeCoinMaterials,createPayoutBloom} from './coin-payout-lighting.mjs';
