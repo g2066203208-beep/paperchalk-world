@@ -2,8 +2,8 @@
   {
     "viewport": "desktop",
     "passed": true,
-    "character": "夜宴夫人",
-    "id": "crimson-vampires/midnight-hostess.png",
+    "character": "血族守卫",
+    "id": "crimson-vampires/crimson-guardian.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
@@ -12,8 +12,8 @@
   {
     "viewport": "portrait",
     "passed": true,
-    "character": "大力士",
-    "id": "wonder-circus/strongwoman.png",
+    "character": "诅咒魔女",
+    "id": "witch-workshop/curse-witch.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
@@ -22,8 +22,8 @@
   {
     "viewport": "landscape",
     "passed": true,
-    "character": "血族小公主",
-    "id": "crimson-vampires/vampire-princess.png",
+    "character": "炼金魔女",
+    "id": "witch-workshop/alchemy-witch.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
