@@ -10,7 +10,8 @@ function validate(count,frames){
  assert.equal(a.world.gravity.y,-24,'gravity is a real Y-axis acceleration');
  assert(a.coins.length>=Math.min(18,count),'coins physically emitted over time');
  assert(snap.count===a.coins.length);
- assert(a.coins.every(b=>b.shapes.length===1 && b.shapes[0]===a.spawnShape), 'shared actual convex 3D coin colliders');
+ assert(a.coins.every(b=>b.shapes.length===1 && b.shapes[0].constructor.name==='Cylinder' && b.shapes[0].body===b), 'each coin needs its OWN true 3D convex cylinder collision shape');
+ assert(new Set(a.coins.map(b=>b.shapes[0])).size===a.coins.length, 'physics shapes are independent, unlike InstancedMesh draw geometry');
  assert(a.coins.every(b=>Number.isFinite(b.position.x)&&Number.isFinite(b.position.y)&&Number.isFinite(b.position.z)));
  assert(a.coins.some(b=>Math.abs(b.position.z)>.11), 'true depth axis spray');
  assert(a.coins.some(b=>Math.abs(b.quaternion.x)>.1 || Math.abs(b.quaternion.z)>.1),'true 3D coin tumbling');
