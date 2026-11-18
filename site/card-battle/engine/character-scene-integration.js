@@ -44,6 +44,79 @@ const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
  * The input is the same opaque/alpha canvas already fed to the portrait map.
  * It deliberately works at 160x240 (not per-frame) to reject ink-edge noise.
  */
+/**
+ * Extract a scene's prevailing colors from any Anima background image.
+ * Useful for 2.5D stages where lights are painted rather than modeled.
+ * The entire procedure is browser-side and avoids a new prompt or image.
+ * It estimates palette only; exact light direction should be authored.
+ */
+export function inferBackgroundLighting(image,options={}){
+ const canvas=document.createElement("canvas");
+ canvas.width=48;canvas.height=32;
+ const ctx=canvas.getContext("2d",{willReadFrequently:true});
+ if(!ctx)return getCharacterScenePreset("forest");
+ try{ctx.drawImage(image,0,0,48,32)}catch(_){return getCharacterScenePreset("forest")}
+ let data;
+ try{data=ctx.getImageData(0,0,48,32).data}
+ catch(_){return getCharacterScenePreset("forest")}
+ const bands=[[],[],[]],lightL=[],lightR=[];
+ for(let y=1;y<31;y++)for(let x=5;x<43;x++){
+  const off=(y*48+x)*4;
+  const r=data[off],g=data[off+1],b=data[off+2],a=data[off+3];
+  if(a<180)continue;
+  const lum=.2126*r+.7152*g+.0722*b;
+  // Reject glaring lamps, white sky blowout and deep prop silhouettes.
+  if(lum<24||lum>245)continue;
+  const group=y<12?0:y<22?1:2;
+  bands[group].push([r,g,b]);
+  if(y<17){if(x<24)lightL.push(lum);else lightR.push(lum)}
+ }
+ const med=list=>list.length?list.slice().sort((a,b)=>a-b)[Math.floor(list.length/2)]:120;
+ const medianRGB=(samples,fallback)=>{
+  if(samples.length<10)return fallback;
+  return [0,1,2].map(k=>med(samples.map(v=>v[k])));
+ };
+ const hex=v=>"#"+v.map(x=>Math.round(clamp(x,0,255)).toString(16).padStart(2,"0")).join("");
+ const sky=medianRGB(bands[0],[170,186,190]);
+ const mid=medianRGB(bands[1],[122,133,128]);
+ const ground=medianRGB(bands[2],[154,143,122]);
+ const left=med(lightL),right=med(lightR);
+ const dir=options.direction||(Math.abs(left-right)>5?
+   (left>right?[-.72,.45]:[.72,.45]):[-.66,.45]);
+ const p=getCharacterScenePreset("forest");
+ return {...p,sky:hex(sky),ground:hex(ground),
+  fog:hex(mid),key:hex(sky.map((a,i)=>clamp(a*.70+ground[i]*.30+19,0,255))),
+  direction:[...dir],strength:options.strength??.58,bounce:options.bounce??.17,
+  atmosphere:options.atmosphere??.035};
+}
+
+/** Convert actual THREE lighting into gentle artist-safe sprite shading.
+ * Use when there is real geometry and actual sun / hemisphere in the scene. */
+export function inferThreeSceneLighting(THREE,{sun,hemisphere,camera,fill}={},base="hall"){
+ const p=typeof base==="string"?getCharacterScenePreset(base):{...base};
+ if(!sun||!hemisphere)return p;
+ const mixColor=(original,actual,t)=>{
+  const c=new THREE.Color(original);c.lerp(actual,t);
+  return "#"+c.getHexString(THREE.SRGBColorSpace);
+ };
+ const sunColor=fill?.color||sun.color;
+ p.sky=mixColor(p.sky,hemisphere.color,.52);
+ p.ground=mixColor(p.ground,hemisphere.groundColor,.52);
+ p.key=mixColor(p.key,sunColor,.50);
+ const ray=new THREE.Vector3().copy(sun.position);
+ if(sun.target)ray.sub(sun.target.position);
+ ray.normalize();
+ if(camera){
+  camera.updateMatrixWorld();
+  const right=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,0).normalize();
+  const up=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,1).normalize();
+  const dir=new THREE.Vector2(ray.dot(right),ray.dot(up));
+  if(dir.lengthSq()>.08)p.direction=dir.normalize().toArray();
+ }
+ p.shadowAngle=Math.atan2(-ray.x,-ray.z);
+ return p;
+}
+
 export function makeIllustrativeNormalTexture(THREE,portraitCanvas){
  if(!portraitCanvas||!portraitCanvas.width||!portraitCanvas.height)return null;
  const w=160,h=240,off=document.createElement("canvas");
