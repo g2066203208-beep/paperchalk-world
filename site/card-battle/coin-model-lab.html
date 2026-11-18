@@ -102,7 +102,7 @@ function rebuild(){
  $('triangles').textContent=String(Math.round(faces/3));
  $('texture').textContent=profile.canvas.width+' × '+profile.canvas.height;
  $('diagnostics').textContent=`真 3D ${facets} 边金币 · 实体三角面 ${Math.round(faces/3)} · 尺寸 ${Math.round(+$('scale').value*100)}% · 厚度 ${(thickness/3*100).toFixed(1)}%（币宽百分比） · 边面为平直黑色多边形，不做平滑和倒角`;
- setStatus('已生成 10 边级别的小像素低模真 3D 金币');
+ setStatus(`已生成 ${facets} 边小像素低模真 3D 金币`);
  q.mesh=mesh;q.profile=profile;
 }
 function setView(name){
@@ -115,6 +115,7 @@ async function load(source){
  await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(new Error('无法读取这张图片'));img.src=source;});
  currentImage=img;
  await rebuildProfile();
+ q.loadedFiles=(q.loadedFiles||0)+1;
 }
 async function rebuildProfile(){
  if(!currentImage)return;
@@ -183,6 +184,7 @@ window.PaperchalkSpriteCoinQA={get loaded(){return !!mesh;},get profile(){return
  nearestFiltered:mesh?.children[0].material[1].map.magFilter===THREE.NearestFilter,
  radialSegments:mesh?.children[0].geometry.parameters.radialSegments,
  scale:mesh?.scale.x,
+ imageLoads:q.loadedFiles||0,
  };}};
 load(previewUrl).catch(err=>setStatus('初始素材加载失败：'+err.message));
 </script>
