@@ -1,4 +1,4 @@
-name: Chute-To-Catch-Basin Real 3D Pixel Coin Payout - Physics and Visual QA
+name: HDR PBR Glow + Real 3D Coin Payout - Desktop & Mobile Visual QA
 on:
   push:
     branches: [main]
@@ -6,6 +6,7 @@ on:
       - 'site/card-battle/vendor/cannon-es.js'
       - 'site/card-battle/motion/coin-payout-rigid.mjs'
       - 'site/card-battle/motion/coin-payout-view.mjs'
+      - 'site/card-battle/motion/coin-payout-lighting.mjs'
       - 'site/card-battle/motion/sprite-extrusion.mjs'
       - 'site/card-battle/assets/slots-style-pixel-coin.svg'
       - 'site/card-battle/coin-payout-3d.html'
@@ -29,6 +30,7 @@ jobs:
           node --check site/card-battle/vendor/cannon-es.js
           node --check site/card-battle/motion/coin-payout-rigid.mjs
           node --check site/card-battle/motion/coin-payout-view.mjs
+          node --check site/card-battle/motion/coin-payout-lighting.mjs
           node --check tests/coin-payout-physics.mjs
           node --check tests/coin-payout-browser.mjs
           node tests/coin-payout-physics.mjs
@@ -52,6 +54,10 @@ jobs:
           cp artifacts/coin-payout-3d/portrait-04-close-up-real-coin-pile.png site/card-battle/qa/coin-payout/phone-closeup.png
           cp artifacts/coin-payout-3d/desktop-00-empty-real-coin-basin.png site/card-battle/qa/coin-payout/empty-basin.png
           cp artifacts/coin-payout-3d/desktop-05-side-view-true-height.png site/card-battle/qa/coin-payout/side-height.png
+          cp artifacts/coin-payout-3d/desktop-03a-no-bloom-pbr-lighting.png site/card-battle/qa/coin-payout/desktop-pbr-no-bloom.png
+          cp artifacts/coin-payout-3d/desktop-03b-strong-hdr-bloom.png site/card-battle/qa/coin-payout/desktop-hdr-bloom.png
+          cp artifacts/coin-payout-3d/desktop-03c-downsampled-pixel-hdr.png site/card-battle/qa/coin-payout/desktop-pixel-hdr.png
+          cp artifacts/coin-payout-3d/portrait-03b-strong-hdr-bloom.png site/card-battle/qa/coin-payout/phone-hdr-bloom.png
           cp artifacts/coin-payout-3d/results.json site/card-battle/qa/coin-payout/results.json
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
@@ -64,7 +70,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: slot-inspired-3d-pixel-coin-fast-rigidbody-payout
+          name: slot-inspired-3d-pixel-coin-real-hdr-pbr-bloom-rendering
           path: artifacts/coin-payout-3d/
           if-no-files-found: warn
           retention-days: 14
