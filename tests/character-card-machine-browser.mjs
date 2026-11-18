@@ -56,6 +56,15 @@ for(const d of [
   assert.equal(original.backsideUsesOriginalTexture,true);
   assert.equal(original.artworkPlanesOnly,true,'no extruded or ornamental gold frame geometry');
   assert.equal(original.cardDecorationMeshes,0,'must not use chunky procedural gold frame');
+  assert.equal(original.artworkPlanesOnly,true,'only two image planes plus neutral cut-paper sidewalls');
+  assert.equal(original.paperCutEdgeMesh,true,'must have a REAL rounded cardboard sidewall mesh');
+  assert(original.paperCutEdgeThickness>=.035 && original.paperCutEdgeThickness<=.052,
+    'the edge must be a visible but THIN cardstock profile');
+  assert(original.paperCutEdgeTriangles>=90,'paper sidewall must wrap rounded corners');
+  assert.equal(original.paperCutEdgeMaterial.metalness,0,'NEVER reintroduce the gold modeled border');
+  assert(original.paperCutEdgeMaterial.roughness>.9,'edge should be matte compressed paper, not plastic');
+  assert(original.whiteFringeRemoved>15,'white semi-transparent matte must actually be eliminated');
+  assert(original.rgbBleedPaddedPixels>15,'cleaned edge must dilate wine-red RGB to stop mipmap halos');
   assert.equal(original.frontSideCulling,true,'front and back require GPU FrontSide culling');
   assert.equal(original.surfaceNormalsReady,true,'normalMap must be attached to real card back');
   assert.equal(original.foilMetalnessReady,true,'gold foil is classified in a material map');
@@ -114,6 +123,16 @@ for(const d of [
   assert(frontState.portraitPrintedPigment,'the whole illustrated front must receive fine non-plastic pigment stipple');
   assert(frontState.portraitPaperSheen>0,'physical satin/cellulose sheen must exist on the card front');
   await page.screenshot({path:out+'/'+d.name+'-INSPECT-01-real-ringmaster-front.png'});
+  // True edge-on look: both artwork faces MUST disappear but the rounded
+  // neutral cardstock edge MUST remain visible. No fake thick metal frame.
+  await page.evaluate(()=>window.PaperchalkCharacterMachineQA.inspectRotate(Math.PI/2,0));
+  await page.waitForTimeout(160);
+  const edgeSide=await page.evaluate(()=>window.PaperchalkCharacterMachineQA.state);
+  assert(edgeSide.paperCutEdgeMesh&&edgeSide.paperCutEdgeVisible,
+   'a real paper sidewall must stay present when looking along the card edge');
+  assert(!edgeSide.frontVisible&&!edgeSide.backVisible,
+   'near 90 degrees, neither portrait nor reverse artwork may overlap the edge');
+  await page.screenshot({path:out+'/'+d.name+'-INSPECT-EDGE-paper-cut-thickness.png'});
   await page.evaluate(()=>window.PaperchalkCharacterMachineQA.inspectRotate(Math.PI,0));
   await page.waitForTimeout(130);
   const reverseState=await page.evaluate(()=>window.PaperchalkCharacterMachineQA.state);
