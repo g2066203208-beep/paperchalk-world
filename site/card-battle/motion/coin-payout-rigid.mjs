@@ -145,17 +145,23 @@ export class RigidCoinPayout {
   }
   advanceFrames(n){for(let i=0;i<Math.max(0,Math.min(5000,Math.floor(n)));i++)this.step();return this;}
   getSnapshot(){
-    let moving=0,maxY=-Infinity,minY=Infinity;
-    for(const b of this.coins){moving+=b.sleepState!==CANNON.Body.SLEEPING?1:0;
-      minY=Math.min(minY,b.position.y);maxY=Math.max(maxY,b.position.y);}
+    let moving=0,maxY=-Infinity,minY=Infinity,inBasin=0;
+    for(const body of this.coins){
+      moving+=body.sleepState!==CANNON.Body.SLEEPING?1:0;
+      const p=body.position;
+      minY=Math.min(minY,p.y);maxY=Math.max(maxY,p.y);
+      if(p.x>=BASIN.left-.25&&p.x<=BASIN.right+.25&&
+         p.z>=BASIN.back-.25&&p.z<=BASIN.front+.25)inBasin++;
+    }
     return {tick:this.tick,time:+this.time.toFixed(3),count:this.coins.length,
       emitted:this.batchEmitted,target:this.batchTarget,totalEmitted:this.totalEmitted,
       moving,asleep:this.coins.length-moving,contacts:this.contactCount,
-      supportContacts:this.groundContacts,peakHeight:+this.peakHeight.toFixed(3),
+      supportContacts:this.groundContacts,groundContacts:this.groundContacts,
+      solverIterations:this.world.solver.iterations,peakHeight:+this.peakHeight.toFixed(3),
       pileY:[minY===Infinity?0:minY,maxY===-Infinity?0:maxY],
       real3D:true,collisionShape:'10-sided convex cylinder',
       escapedEver:this.escapedEver,
-      inBasin:this.coins.filter(b=>b.position.x>=BASIN.left-.25&&b.position.x<=BASIN.right+.25&&b.position.z>=BASIN.back-.25&&b.position.z<=BASIN.front+.25).length,
+      inBasin,
       bowl:BASIN,
       radius:COIN.radius,height:COIN.height,phase:this.phase};
   }
