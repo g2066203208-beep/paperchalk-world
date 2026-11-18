@@ -65,6 +65,8 @@ for(const d of [
   assert(original.backRoughnessRange[0]<.55 && original.backRoughnessRange[1]>.9,
    'foil and paper must NOT share one plastic-smooth roughness');
   assert(original.backPrintedPigment,'backside uses a carefully grained copy of original paint pixels');
+  assert.equal(original.correctArtworkTextureOrientation,true,
+   'generated print textures must have the same image top-left convention as original artwork');
   assert(original.frontPaperSheen>0 && original.backPaperSheen>0,
    'front paper and reverse stock need physical cellulose sheen, not glossy plastic');
   assert(original.backImageUrl.endsWith('/assets/cards/shared/character-card-back-anima.webp'));
