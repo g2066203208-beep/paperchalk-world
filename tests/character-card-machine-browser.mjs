@@ -132,6 +132,8 @@ for(const d of [
    'white background extraction needs to remove REAL pixels, not return a white rectangular image');
   assert(frontState.portraitRgbBleedPixels>1500,
    'transparent areas need extended foreground RGB to avoid white halos');
+  assert(frontState.portraitInnerWhitePixelsRemoved>500,
+   'the real ringmaster art contains a large white gap trapped by arm/cane; it must be removed too');
   await page.screenshot({path:out+'/'+d.name+'-INSPECT-01-real-ringmaster-front.png'});
   // True edge-on look: both artwork faces MUST disappear but the rounded
   // neutral cardstock edge MUST remain visible. No fake thick metal frame.
