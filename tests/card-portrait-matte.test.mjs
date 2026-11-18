@@ -37,8 +37,9 @@ assert.equal(pixel(result.pixels,50,60)[3],255,'dark red coat stays fully opaque
 assert(pixel(result.pixels,31,100)[3]>0 && pixel(result.pixels,31,100)[3]<255,
  'soft anti-aliased subject contour gets proper partial alpha');
 const notWhite=new Uint8ClampedArray(original);
-for(let i=0;i<notWhite.length;i+=4){
- if(i%(w*4)<4||i/(w*4)<1){
+for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+ if(x===0||x===w-1||y===0||y===h-1){
+  const i=(y*w+x)*4;
   notWhite[i]=77;notWhite[i+1]=32;notWhite[i+2]=42;
  }
 }
