@@ -35,6 +35,9 @@ export function evaluateCardSequence(timeMs){
    z:mix(1.62,3.64,shoot),
    scale:mix(.74,1.38,rise)*(1+show*.035),
    rotationY:Math.PI*(1-turn),
+   // A real stiff card leaves the narrow slot nearly horizontal, then rises
+   // upright before the final front/back turnover; no floating vertical pop-in.
+   rotationX:-Math.PI*.47*(1-smooth(segment(ms,1950,2770))),
    roll:-.17*(1-shoot)+.06*Math.sin(Math.PI*shoot)*Math.exp(-shoot*2),
    facing:turn>.50,
    reveal:show
