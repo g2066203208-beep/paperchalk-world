@@ -18,6 +18,16 @@ header nav{display:flex;flex-wrap:wrap;gap:15px;font-size:12px}
 .stage{position:relative;overflow:hidden;isolation:isolate;border:1px solid #685745;background:radial-gradient(ellipse at 50% 25%,#413738 0%,#232128 42%,#0c1218 100%);border-radius:16px;box-shadow:0 14px 55px #0006}
 #machine-canvas{display:block;width:100%;height:clamp(370px,64dvh,740px);touch-action:none}
 .stage::after{content:"";pointer-events:none;position:absolute;inset:0;border:1px solid #ffffff11;border-radius:inherit}
+#inspect-toolbar{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:4;width:min(calc(100% - 24px),790px);padding:10px;border:1px solid #b8a17b77;border-radius:12px;background:#11151cdb;backdrop-filter:blur(9px);display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:7px;box-shadow:0 12px 38px #0008}
+#inspect-toolbar[hidden]{display:none}
+#inspect-toolbar button,#inspect-toolbar select{min-height:39px;padding:8px 10px;font-size:12px}
+#inspect-toolbar select{flex:1 1 190px;max-width:290px}
+#inspect-hint{position:absolute;left:50%;top:20px;transform:translateX(-50%);z-index:4;pointer-events:none;color:#f2e0bd;font-size:12px;text-shadow:0 2px 8px #000b;text-align:center;width:85%}
+#inspect-hint[hidden]{display:none}
+.stage[data-inspecting="true"]{cursor:grab}
+.stage[data-inspecting="true"]:active{cursor:grabbing}
+.stage[data-inspecting="true"] #announce,.stage[data-inspecting="true"] .led{display:none}
+
 .hud{position:absolute;top:16px;left:18px;font:600 11px ui-monospace,monospace;letter-spacing:.085em;color:#cfbf9f;text-shadow:0 2px 8px #000;pointer-events:none;line-height:1.7}
 .hud strong{display:block;color:#f5f1dc;font-size:12px}
 #announce{position:absolute;bottom:20px;left:16px;max-width:70%;pointer-events:none;text-shadow:0 3px 15px #000b}
@@ -53,6 +63,10 @@ footer{font-size:11px;color:#968e83;line-height:1.55}
  .controls .status{grid-column:1/4;margin-left:0;text-align:center}
  #announce{bottom:12px;left:12px}#announce strong{font-size:21px}
  .hud{font-size:9px;top:8px;left:10px}.led{right:8px;top:8px;font-size:9px}
+ #inspect-toolbar{padding:7px;gap:5px}
+ #inspect-toolbar button,#inspect-toolbar select{font-size:11px;min-height:38px;padding:6px 8px}
+ #inspect-hint{top:7px;font-size:10px}
+
 }
 /* The actual 844×390 phone viewport must show BOTH the full machine and
    controls without Playwright (or touch) auto-scrolling the machine away. */
@@ -74,6 +88,9 @@ footer{font-size:11px;color:#968e83;line-height:1.55}
  .controls select{min-width:130px}
  .controls .status{display:none}
  .library,footer{display:none}
+ #inspect-toolbar{bottom:4px;width:min(99%,790px);padding:4px;gap:4px;border-radius:6px}
+ #inspect-toolbar button,#inspect-toolbar select{min-height:32px;font-size:10px;padding:3px 6px}
+ #inspect-toolbar select{min-width:135px;flex:1 1 135px}
 }
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 </style>
@@ -89,11 +106,21 @@ footer{font-size:11px;color:#968e83;line-height:1.55}
  <div class="hud">PAPERCHALK · CASTING MACHINE<strong id="stage-label">加载人物资源…</strong><span id="stage-frame">READY / 00:00</span></div>
  <div class="led" id="machine-led"><i></i><span id="machine-state">STANDBY</span></div>
  <div id="announce" hidden aria-live="polite"><strong id="card-name"></strong><small id="card-origin"></small></div>
+ <div id="inspect-hint" hidden>拖动旋转卡牌 · 滚轮或双指缩放 · 正反面均可自由查看</div>
+ <div id="inspect-toolbar" hidden aria-label="卡牌自由观赏操作">
+  <select id="inspect-character" aria-label="选择已入库人物原画"><option value="back">只看通用卡背</option></select>
+  <button id="inspect-front" type="button">看正面</button>
+  <button id="inspect-back" type="button">看背面</button>
+  <button id="inspect-spin" type="button" aria-pressed="false">自动转动</button>
+  <button id="inspect-reset" type="button">复位</button>
+  <button id="inspect-exit" type="button">返回机器</button>
+ </div>
 </section>
 <section class="controls" aria-label="抽卡操作">
  <button type="button" class="primary" id="draw-one" disabled>抽取 1 张</button>
  <button type="button" class="primary" id="draw-five" disabled>连续抽取 5 张</button>
  <button type="button" id="skip" disabled>跳过演出</button>
+ <button type="button" id="inspect" disabled>自由观赏卡牌</button>
  <select id="faction" aria-label="抽取组织"><option value="all">全部已入库组织</option></select>
  <button type="button" id="glow" aria-pressed="true">电影辉光：开</button>
  <button type="button" id="mute" aria-pressed="false">音效：开</button>
@@ -105,6 +132,6 @@ footer{font-size:11px;color:#968e83;line-height:1.55}
 </section>
 <footer>当前为角色抽取与电影演出的交互原型。使用 GitHub 已上传的原始人物立绘；未制定正式抽卡货币、概率、保底和人物强度，也不会据此修改已有七职业或角色设定。记录保存在当前浏览器。</footer>
 </main>
-<script type="module" src="./motion/character-card-machine.mjs?v=20261118-character-draw-v1"></script>
+<script type="module" src="./motion/character-card-machine.mjs?v=20261118-card-inspection-v2"></script>
 </body>
 </html>
