@@ -93,7 +93,11 @@ export class RigidCoinPayout {
     body.quaternion.setFromAxisAngle(normal,initial?Math.PI*0.5:Math.PI*.45*this.random());
     body.angularVelocity.set(...spin);
     body.userData={kind:'coin',id:this.coins.length};
-    this.world.addBody(body);this.coins.push(body);return body;
+    this.world.addBody(body);this.coins.push(body);
+    // Dynamic solver budget: keep a fully REAL 3D collider on every coin,
+    // reduce repeated iterative contact passes when hundreds pile up.
+    this.world.solver.iterations=this.coins.length>320?6:this.coins.length>180?8:9;
+    return body;
   }
   // Spacing is a mechanical payout: lots of thin 10-sided coins but each
   // arrives at a distinct instant with its own XYZ velocity and 3D tumble.
