@@ -16,7 +16,7 @@ export function evaluateCardSequence(timeMs){
  });
  const door=smooth(segment(ms,1580,1890))*(1-.10*smooth(segment(ms,2420,2820)));
  const shoot=out(segment(ms,1760,2430));
- const rise=smooth(segment(ms,1850,2760));
+ const rise=smooth(segment(ms,1760,2620));
  const turn=smooth(segment(ms,2350,2990));
  const show=smooth(segment(ms,2850,3240));
  const pulse=Math.sin(Math.PI*segment(ms,2850,3330))**2;
@@ -30,14 +30,14 @@ export function evaluateCardSequence(timeMs){
   door,
   card:{
    visible:showCard,
-   x:mix(0,1.04,rise),
+   x:mix(0,1.72,rise),
    y:mix(1.16,2.70,rise)+settle,
    z:mix(1.62,3.64,shoot),
-   scale:mix(.74,1.38,rise)*(1+show*.035),
+   scale:mix(.82,1.42,smooth(segment(ms,1700,2650)))*(1+show*.035),
    rotationY:Math.PI*(1-turn),
    // A real stiff card leaves the narrow slot nearly horizontal, then rises
    // upright before the final front/back turnover; no floating vertical pop-in.
-   rotationX:-Math.PI*.47*(1-smooth(segment(ms,1950,2770))),
+   rotationX:-Math.PI*.47*(1-smooth(segment(ms,1800,2480))),
    roll:-.17*(1-shoot)+.06*Math.sin(Math.PI*shoot)*Math.exp(-shoot*2),
    facing:turn>.50,
    reveal:show
