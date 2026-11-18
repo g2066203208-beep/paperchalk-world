@@ -47,16 +47,27 @@ export class FastCoinPayout{
   this.coins=[];this.world={contacts:[],gravity:vec(0,-COIN.gravity,0)};
   this.tick=0;this.time=0;this.phase='ready';this.totalEmitted=0;
   this.batchTarget=0;this.batchEmitted=0;this.nextEmission=0;
+  this.queuedBatches=[];
   this.contactCount=0;this.groundContacts=0;this.peakHeight=0;this.escapedEver=0;
   this.physicsModel='3D spatial-hash oriented-disc separation (non-SAT)';
   this.overlapPairs=0;this.maxOverlap=0;
   this.grid=new Map();this.collisionEvents=[];
  }
  fire(n=240){
-  if(this.coins.length>=this.maxCoins)return 0;
-  const num=clamp(Math.round(n)||120,1,this.maxCoins-this.coins.length);
-  this.batchTarget=num;this.batchEmitted=0;this.phase='firing';this.nextEmission=this.time;
+  // Reserve unemitted coins as well as visible coins. Consecutive jackpots
+  // must queue, never silently erase an active award or exceed body capacity.
+  const active=this.phase==='firing'?this.batchTarget-this.batchEmitted:0;
+  const reserved=this.queuedBatches.reduce((total,n)=>total+n,0);
+  const room=this.maxCoins-this.coins.length-active-reserved;
+  if(room<=0)return 0;
+  const num=clamp(Math.round(n)||120,1,room);
+  if(this.phase==='firing')this.queuedBatches.push(num);
+  else this.beginBurst(num);
   return num;
+ }
+ beginBurst(num){
+  this.batchTarget=num;this.batchEmitted=0;this.phase='firing';
+  this.nextEmission=this.time;
  }
  addCoin(pos,vel,spin){
   const q={x:(this.random()-.5)*.16,y:(this.random()-.5)*.14,z:(this.random()-.5)*.16,w:1};normalize(q);
@@ -78,7 +89,12 @@ export class FastCoinPayout{
   const p=this.batchEmitted/this.batchTarget;
   const interval=p<.13?.0125:p<.82?.0142:p<.94?.017:.024;
   this.nextEmission=this.time+interval+(r()-.5)*.001;
-  if(this.batchEmitted===this.batchTarget)this.phase='settling';
+  if(this.batchEmitted===this.batchTarget){
+   if(this.queuedBatches.length){
+    this.beginBurst(this.queuedBatches.shift());
+    this.nextEmission=this.time+.025; // keep consecutive jackpot beats distinct
+   }else this.phase='settling';
+  }
  }
  // An analytical impulse at a solid wall, no teleport or extra visible wall.
  wallHit(b,axis,low,high,half){
@@ -322,6 +338,7 @@ export class FastCoinPayout{
   const overlaps=this.countVisibleIntersections();
   return {tick:this.tick,time:+this.time.toFixed(3),count:this.coins.length,
    emitted:this.batchEmitted,target:this.batchTarget,totalEmitted:this.totalEmitted,
+   queuedCoins:this.queuedBatches.reduce((n,v)=>n+v,0),
    moving,asleep:this.coins.length-moving,contacts:this.contactCount,
    groundContacts:this.groundContacts,peakHeight:+this.peakHeight.toFixed(3),
    pileY:[min===Infinity?0:min,max===-Infinity?0:max],
