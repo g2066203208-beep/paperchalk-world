@@ -2,8 +2,8 @@
   {
     "viewport": "desktop",
     "passed": true,
-    "character": "血液医师",
-    "id": "monster-hunters/02-blood-physician.png",
+    "character": "飞刀演员",
+    "id": "wonder-circus/knife-thrower.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
@@ -12,8 +12,8 @@
   {
     "viewport": "portrait",
     "passed": true,
-    "character": "重斧清道夫",
-    "id": "monster-hunters/07-axe-scout.png",
+    "character": "血族守卫",
+    "id": "crimson-vampires/crimson-guardian.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
