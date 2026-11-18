@@ -1,10 +1,12 @@
-name: Fading Hall Chapter 1 - Real Playable Game QA
+name: Three-Scene Gothic Castle Chapter - Real Playable 3D QA
 on:
   push:
     branches: [main]
     paths:
       - 'site/card-battle/anima-paintover-lab.html'
       - 'site/card-battle/engine/anima-hall-gameplay.js'
+      - 'site/card-battle/engine/anima-courtyard-scene.js'
+      - 'tests/anima-courtyard-scene-unit.mjs'
       - 'site/card-battle/engine/anima-paintover-lab.js'
       - 'site/card-battle/ui/anima-hall-gameplay.css'
       - 'site/card-battle/ui/anima-paintover-lab.css'
@@ -25,6 +27,8 @@ jobs:
       - name: Validate scene and game JavaScript
         run: |
           node --check site/card-battle/engine/anima-hall-gameplay.js
+          node --check site/card-battle/engine/anima-courtyard-scene.js
+          node tests/anima-courtyard-scene-unit.mjs
           node --check site/card-battle/engine/anima-paintover-lab.js
           node --check tests/anima-hall-gameplay-browser.mjs
       - name: Install actual headless Chromium
@@ -35,7 +39,7 @@ jobs:
         run: |
           nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/fading-hall-game-http.log 2>&1 &
           sleep 2
-      - name: Play first chapter in desktop, portrait and landscape
+      - name: Play hall, corridor, courtyard and return on desktop and mobile
         run: node tests/anima-hall-gameplay-browser.mjs
       - name: Upload real game screenshots + videos
         if: always()
