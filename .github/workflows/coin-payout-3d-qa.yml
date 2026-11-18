@@ -18,6 +18,11 @@ on:
       - 'tests/coin-payout-browser.mjs'
       - '.github/workflows/coin-payout-3d-qa.yml'
   workflow_dispatch:
+# Source changes are frequent; running several Chromium installations in
+# parallel wastes CPU and risks older screenshots racing newer commits.
+concurrency:
+  group: coin-payout-real-webgl-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: write
 jobs:
