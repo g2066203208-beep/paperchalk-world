@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#100f18">
+<title>人物卡出卡机 · 真实立绘抽选与 3D 出卡</title>
+<style>
+:root{color-scheme:dark;font-family:ui-sans-serif,system-ui,"Noto Sans SC",sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 50% -10%,#302c36 0,#17151d 41%,#0c1015 100%);color:#ecece6;min-height:100dvh}
+button,select{font:inherit;touch-action:manipulation}
+a{color:#ddc991;text-decoration:none}a:hover{text-decoration:underline}
+main{width:min(1420px,100%);margin:auto;padding:clamp(7px,1.6vw,20px);display:grid;gap:12px}
+header{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap}
+header h1{margin:0;font-size:clamp(20px,2.4vw,32px);font-weight:740;letter-spacing:.045em}
+header p{margin:4px 0 0;color:#aeadb6;font-size:12px;line-height:1.65}
+header nav{display:flex;flex-wrap:wrap;gap:15px;font-size:12px}
+.stage{position:relative;overflow:hidden;isolation:isolate;border:1px solid #685745;background:radial-gradient(ellipse at 50% 25%,#413738 0%,#232128 42%,#0c1218 100%);border-radius:16px;box-shadow:0 14px 55px #0006}
+#machine-canvas{display:block;width:100%;height:clamp(370px,64dvh,740px);touch-action:none}
+.stage::after{content:"";pointer-events:none;position:absolute;inset:0;border:1px solid #ffffff11;border-radius:inherit}
+.hud{position:absolute;top:16px;left:18px;font:600 11px ui-monospace,monospace;letter-spacing:.085em;color:#cfbf9f;text-shadow:0 2px 8px #000;pointer-events:none;line-height:1.7}
+.hud strong{display:block;color:#f5f1dc;font-size:12px}
+#announce{position:absolute;bottom:20px;left:16px;max-width:70%;pointer-events:none;text-shadow:0 3px 15px #000b}
+#announce strong{display:block;font-size:clamp(19px,2.8vw,35px);font-weight:780;line-height:1.2}
+#announce small{display:block;margin-top:5px;color:#ded0ab;font-size:clamp(11px,1.4vw,14px)}
+#announce[hidden]{display:none}
+.led{position:absolute;right:16px;top:14px;display:flex;gap:7px;align-items:center;font:700 10px ui-monospace,monospace;letter-spacing:.1em;color:#bfb39c}
+.led i{width:7px;height:7px;border-radius:50%;background:#85ddc5;box-shadow:0 0 12px #66e7cb}
+.led[data-busy="true"] i{background:#ffd17e;box-shadow:0 0 14px #ffcc67}
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:9px;padding:4px 0}
+button,select{border:1px solid #63594c;background:#242730;color:#ebe6de;min-height:44px;padding:10px 14px;border-radius:8px;cursor:pointer}
+button.primary{background:linear-gradient(160deg,#e5cf90,#b98e4b);border-color:#f8dfa6;color:#201910;font-weight:800;box-shadow:inset 0 1px 0 #ffffff99,0 4px 18px #d9ad5133}
+button.primary:active{transform:translateY(2px)}
+button[disabled]{opacity:.38;cursor:not-allowed;transform:none}
+button[aria-pressed=true]{border-color:#c4a76b;color:#f8e1a2;background:#38342c}
+select{max-width:100%;font-size:12px;min-width:140px}
+.status{color:#b9b0a3;font-size:12px;margin-left:auto}
+.library{border-top:1px solid #54463c;padding-top:12px}
+.library header h2{font-size:14px;margin:0;color:#e7d4ae}
+.library header span{font-size:12px;color:#aaa5a0}
+#collection{display:flex;gap:8px;overflow-x:auto;min-height:99px;padding:9px 0 12px;scrollbar-color:#655842 transparent}
+#collection .empty{align-self:center;color:#9d9b97;font-size:12px}
+.mini{width:62px;height:87px;flex:none;position:relative;background:#1a1b1b;border:1px solid #81735b;border-radius:5px;overflow:hidden}
+.mini img{width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 2px 3px #000)}
+.mini em{position:absolute;right:2px;bottom:2px;background:#070a0bdb;color:#f4ddaa;font:700 10px ui-monospace,monospace;padding:2px 4px;border-radius:2px}
+footer{font-size:11px;color:#968e83;line-height:1.55}
+@media(max-width:760px){
+ main{gap:8px}header h1{font-size:21px}header p{font-size:11px}
+ #machine-canvas{height:clamp(390px,57dvh,700px)}
+ .controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+ .controls>*{min-width:0!important;padding:9px 6px;font-size:11px}
+ .controls select{grid-column:1/4;width:100%}
+ .controls .status{grid-column:1/4;margin-left:0;text-align:center}
+ #announce{bottom:12px;left:12px}#announce strong{font-size:21px}
+ .hud{font-size:9px;top:8px;left:10px}.led{right:8px;top:8px;font-size:9px}
+}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+ <div><h1>人物卡 · 实体出卡机</h1><p>真实组织立绘 · 机械滚轮锁定 · 卡背出仓 · 翻面揭晓 · PBR 金属灯光</p></div>
+ <nav><a href="../index.html">主菜单</a><a href="./coin-payout-3d.html">金币出奖机</a><a href="./anima-paintover-lab.html">古堡探索</a></nav>
+</header>
+<section class="stage" aria-label="可操作的立体人物卡自动售卡机">
+ <canvas id="machine-canvas" aria-label="3D 人物卡机：三只滚轮转动，人物卡从下方滑出、翻面展示"></canvas>
+ <div class="hud">PAPERCHALK · CASTING MACHINE<strong id="stage-label">加载人物资源…</strong><span id="stage-frame">READY / 00:00</span></div>
+ <div class="led" id="machine-led"><i></i><span id="machine-state">STANDBY</span></div>
+ <div id="announce" hidden aria-live="polite"><strong id="card-name"></strong><small id="card-origin"></small></div>
+</section>
+<section class="controls" aria-label="抽卡操作">
+ <button type="button" class="primary" id="draw-one" disabled>抽取 1 张</button>
+ <button type="button" class="primary" id="draw-five" disabled>连续抽取 5 张</button>
+ <button type="button" id="skip" disabled>跳过演出</button>
+ <select id="faction" aria-label="抽取组织"><option value="all">全部已入库组织</option></select>
+ <button type="button" id="glow" aria-pressed="true">电影辉光：开</button>
+ <button type="button" id="mute" aria-pressed="false">音效：开</button>
+ <span class="status" id="load-status" role="status">核对角色清单与原图…</span>
+</section>
+<section class="library" aria-label="本机抽取记录">
+ <header><h2>抽取记录 / 本机图鉴</h2><span id="library-count">0 张</span></header>
+ <div id="collection"><span class="empty">还未抽取人物卡</span></div>
+</section>
+<footer>当前为角色抽取与电影演出的交互原型。使用 GitHub 已上传的原始人物立绘；未制定正式抽卡货币、概率、保底和人物强度，也不会据此修改已有七职业或角色设定。记录保存在当前浏览器。</footer>
+</main>
+<script type="module" src="./motion/character-card-machine.mjs?v=20261118-character-draw-v1"></script>
+</body>
+</html>
