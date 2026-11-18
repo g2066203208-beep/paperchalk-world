@@ -195,12 +195,31 @@ cardBackPlane.receiveShadow=false;
 const cardBackUrl=new URL('../../assets/cards/shared/character-card-back-anima.webp',import.meta.url).href;
 let cardBackReady=false,cardBackFailed=false;
 const reliefStats={back:null,portrait:null};
-const reliefTemporary=new Set();
+// Keep only the last THREE derived portrait material sets resident. A
+// 35-character collection must not keep 35 x 3 GPU textures forever.
+const portraitReliefLRU=[];
+function keepPortraitRelief(asset){
+ const existing=portraitReliefLRU.indexOf(asset);
+ if(existing!==-1)portraitReliefLRU.splice(existing,1);
+ portraitReliefLRU.push(asset);
+ while(portraitReliefLRU.length>3){
+  const old=portraitReliefLRU.shift();
+  if(old===asset){portraitReliefLRU.push(old);break;}
+  if(old.relief){
+   for(const tex of [old.relief.normal,old.relief.surface,old.relief.pigment])
+    tex?.dispose();
+   old.relief=null;
+  }
+ }
+}
 // Generate a tangent-space normal map from the image's RED/GREEN/BLUE
 // content and a metallic mask exclusively for warm-gold pixel regions.
 function imageRelief(image,mode){
  const iw=image.naturalWidth||image.width,ih=image.naturalHeight||image.height;
- const shrink=Math.min(1,768/Math.max(iw,ih));
+ // Original COLOR art remains full size; derived shading maps are
+ // lower-res and cheap to compute on phone. Normal mipmaps fill closeups.
+ const maxDim=small?448:640;
+ const shrink=Math.min(1,maxDim/Math.max(iw,ih));
  const w=Math.max(3,Math.round(iw*shrink));
  const h=Math.max(3,Math.round(ih*shrink));
  const c=document.createElement('canvas');c.width=w;c.height=h;
@@ -312,6 +331,7 @@ function updatePortrait(card,asset){
  portrait.material.roughnessMap=asset.relief?.surface||null;
  portrait.material.map=asset.relief?.pigment||asset.tex;
  reliefStats.portrait=asset.relief?.stats||null;
+ if(asset.relief)keepPortraitRelief(asset);
  portrait.material.needsUpdate=true;
  // Preserve the original 704:1024 portrait aspect ratio, without cropping
  // its head, shoes or costume to fit the narrower 3D card paper.
@@ -838,6 +858,8 @@ window.PaperchalkCharacterMachineQA={
   portraitRoughnessRange:[reliefStats.portrait?.roughnessMinimum||0,reliefStats.portrait?.roughnessMaximum||0],
   backPrintedPigment:!!cardBackMaterial.map?.isDataTexture,
   portraitPrintedPigment:!!portraitMaterial.map?.isDataTexture,
+  portraitReliefResident:portraitReliefLRU.length,
+  normalMapMaxDimension:small?448:640,
   frontPaperSheen:frontPaperMaterial.sheen||0,
   backPaperSheen:cardBackMaterial.sheen||0,
   portraitPaperSheen:portraitMaterial.sheen||0,
