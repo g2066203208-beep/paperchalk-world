@@ -25,6 +25,12 @@ for(const device of [{name:'desktop',w:1440,h:900},{name:'portrait',w:390,h:844}
   assert.equal(before.facetCount,10);
   assert(before.geometryType.includes('CylinderGeometry'));
   assert.equal(before.real3D,true);
+  assert.equal(before.lighting.materialType,'MeshStandardMaterial','coin must receive real PBR lighting');
+  assert.equal(before.lighting.HDR,true,'scene should preserve highlights above display white');
+  assert.equal(before.lighting.linearSource,true,'bloom must work before output sRGB conversion');
+  assert.equal(before.lighting.realShadows,true,'machine and piled coins need actual shadow maps');
+  assert.equal(before.lighting.environmentReflections,true,'gold should reflect a convolved environment');
+  assert(before.lighting.bloom>.5,'film lighting must start with HDR glow');
   assert(before.bowl.left<before.bowl.right&&before.bowl.front>before.bowl.back,
     'coin catching bowl must have physical four-wall enclosure');
   assert(before.height<before.radius*.13);
@@ -44,6 +50,24 @@ for(const device of [{name:'desktop',w:1440,h:900},{name:'portrait',w:390,h:844}
    frames.push(s);
   }
   assert(frames.at(-1).contacts>0,'must actually collide coin-to-coin with physical contact equations');
+  // Same physical game frame, camera and 120-body coin pile: compare LIGHTING only.
+  await page.locator('#off').click();
+  const noBloom=await page.evaluate(()=>window.PaperchalkPayoutQA.snapshot().lighting);
+  assert.equal(noBloom.bloom,0);
+  const without=await page.locator('#payout-view').screenshot({
+   path:`${out}/${device.name}-03a-no-bloom-pbr-lighting.png`,animations:'disabled'});
+  await page.locator('#strong').click();
+  const strong=await page.evaluate(()=>window.PaperchalkPayoutQA.snapshot().lighting);
+  assert(strong.bloom>1.5 && strong.threshold<noBloom.threshold);
+  const withGlow=await page.locator('#payout-view').screenshot({
+   path:`${out}/${device.name}-03b-strong-hdr-bloom.png`,animations:'disabled'});
+  assert(!without.equals(withGlow),'HDR bloom must visibly change real captured WebGL pixels');
+  await page.locator('#pixel-render').click();
+  assert.equal(await page.evaluate(()=>window.PaperchalkPayoutQA.snapshot().lighting.pixelMode),true);
+  await page.screenshot({path:`${out}/${device.name}-03c-downsampled-pixel-hdr.png`,animations:'disabled'});
+  await page.locator('#pixel-render').click();
+  await page.locator('#filmic').click();
+  assert.equal(await page.evaluate(()=>window.PaperchalkPayoutQA.snapshot().lighting.look),'filmic');
   await page.locator('#pile').click();
   await page.screenshot({path:`${out}/${device.name}-04-close-up-real-coin-pile.png`});
   await page.locator('#side').click();
