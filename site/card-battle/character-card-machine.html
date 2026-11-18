@@ -104,7 +104,7 @@ body.inspect-open .controls,body.inspect-open .library,body.inspect-open footer{
 }
 @media(orientation:landscape) and (max-height:470px) and (min-width:650px){
  #inspect-toolbar{padding:4px 6px;gap:5px;flex-wrap:nowrap}
- #inspect-toolbar button{flex:none;min-height:32px}
+ #inspect-toolbar button{flex:none;min-height:32px;font-size:9px;padding:3px 4px}
  #inspect-toolbar select{flex:1 1 auto;min-width:175px;max-width:none}
 }
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
@@ -121,14 +121,16 @@ body.inspect-open .controls,body.inspect-open .library,body.inspect-open footer{
  <div class="hud">PAPERCHALK · CASTING MACHINE<strong id="stage-label">加载人物资源…</strong><span id="stage-frame">READY / 00:00</span></div>
  <div class="led" id="machine-led"><i></i><span id="machine-state">STANDBY</span></div>
  <div id="announce" hidden aria-live="polite"><strong id="card-name"></strong><small id="card-origin"></small></div>
- <div id="inspect-hint" hidden>拖动旋转卡牌 · 滚轮或双指缩放 · 正反面均可自由查看</div>
+ <div id="inspect-hint" hidden>拖动：任意方向 360° 旋转 · 滚轮/双指：放大缩小 · 右键/Shift 拖动或双指移动：平移 · 双指扭转：旋转角度</div>
 </section>
  <div id="inspect-toolbar" hidden aria-label="卡牌自由观赏操作">
   <select id="inspect-character" aria-label="选择已入库人物原画"><option value="back">只看通用卡背</option></select>
   <button id="inspect-front" type="button">看正面</button>
   <button id="inspect-back" type="button">看背面</button>
   <button id="inspect-spin" type="button" aria-pressed="false">自动转动</button>
-  <button id="inspect-reset" type="button">复位</button>
+  <button id="inspect-zoom-out" type="button" title="缩小卡牌" aria-label="缩小卡牌">− 缩小</button>
+  <button id="inspect-zoom-in" type="button" title="放大卡牌" aria-label="放大卡牌">＋ 放大</button>
+  <button id="inspect-reset" type="button">居中复位</button>
   <button id="inspect-exit" type="button">返回机器</button>
  </div>
 <section class="controls" aria-label="抽卡操作">
@@ -147,6 +149,6 @@ body.inspect-open .controls,body.inspect-open .library,body.inspect-open footer{
 </section>
 <footer>当前为角色抽取与电影演出的交互原型。使用 GitHub 已上传的原始人物立绘；未制定正式抽卡货币、概率、保底和人物强度，也不会据此修改已有七职业或角色设定。记录保存在当前浏览器。</footer>
 </main>
-<script type="module" src="./motion/character-card-machine.mjs?v=20261118-card-inspection-v3"></script>
+<script type="module" src="./motion/character-card-machine.mjs?v=20261118-card-inspection-v4"></script>
 </body>
 </html>
