@@ -1,5 +1,5 @@
 import * as THREE from "../vendor/three.module.js";
-import {createFadingHallGame} from "./anima-hall-gameplay.js";
+import {createFadingHallGame} from "./anima-hall-gameplay.js?v=scene03-20261118";
 
 /* 3D whitebox / paintover study. Original Anima actor from the user's repo.
    Remaining surface textures are deliberately labelled PROCEDURAL PLACEHOLDERS,
