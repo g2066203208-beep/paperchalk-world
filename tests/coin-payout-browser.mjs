@@ -52,6 +52,7 @@ for(const device of [{name:'desktop',w:1440,h:900},{name:'portrait',w:390,h:844}
    assert(s.count>0 && s.count<=120);
    assert.equal(s.inBasin,s.count,'each coin must remain inside the 3D bowl, not spray off-screen');
    assert.equal(s.escapedEver,0,'physics must not let coins fly beyond the bowl walls');
+   assert.equal(s.overlappingCoins,0,`frame ${seq.name} has ${s.overlappingCoins} interpenetrating gold-coin pairs`);
    assert.equal(s.count,s.renderInstances,'WebGL instance count must match physics collider bodies');
    await page.screenshot({path:`${out}/${device.name}-${seq.name}.png`,animations:'disabled'});
    frames.push(s);
@@ -96,6 +97,7 @@ for(const device of [{name:'desktop',w:1440,h:900},{name:'portrait',w:390,h:844}
   assert.equal(large.count,420);
   assert.equal(large.inBasin,420);
   assert.equal(large.escapedEver,0);
+  assert.equal(large.overlappingCoins,0,'420 gold coins must remain physically separated when piled up');
   assert(large.contacts>1000,'dense 3D coin-to-coin contacts must still be solved');
   await page.screenshot({path:`${out}/${device.name}-07-420-heavy-coins-fast-3d.png`,animations:'disabled'});
   assert.deepEqual(errors,[], 'no fatal JS exception in live WebGL and physics');
