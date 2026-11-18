@@ -197,6 +197,13 @@ function setRenderQuality(mode){
  renderQuality=mode==='quality'?'quality':'smooth';
  renderer.setPixelRatio(Math.min(devicePixelRatio||1,
   renderQuality==='quality'?(compact?1.0:1.20):(compact?.78:.92)));
+ const shadow=lighting.lights.key.shadow;
+ const shadowSize=renderQuality==='quality'?(compact?512:1024):(compact?256:512);
+ if(shadow.mapSize.x!==shadowSize){
+  shadow.map?.dispose();shadow.map=null;
+  shadow.mapSize.set(shadowSize,shadowSize);
+ }
+ post.setQuality(renderQuality);
  renderer.shadowMap.needsUpdate=true;
  resize();
  $('perf-smooth')?.setAttribute('aria-pressed',String(renderQuality==='smooth'));
