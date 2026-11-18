@@ -35,7 +35,8 @@ for(const device of [{name:'desktop',w:1440,h:900},{name:'portrait',w:390,h:844}
   assert(before.lighting.bloom>.5,'film lighting must start with HDR glow');
   assert(before.bowl.left<before.bowl.right&&before.bowl.front>before.bowl.back,
     'coin catching bowl must have physical four-wall enclosure');
-  assert(before.height<before.radius*.13);
+  assert(before.height>before.radius*.17&&before.height<before.radius*.25,
+   'the coin should show a solid 8-12% thickness, not a paper-thin disk');
   await page.screenshot({path:`${out}/${device.name}-00-empty-real-coin-basin.png`});
   await page.evaluate(()=>window.PaperchalkPayoutQA.fire(120));
   const sequence=[{frames:36,name:'01-high-pressure-opening'},{frames:66,name:'02-first-gold-impacts-in-basin'},
