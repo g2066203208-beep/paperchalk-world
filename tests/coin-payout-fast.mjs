@@ -10,7 +10,13 @@ for(const count of [120,240,420]){
  const a=new FastCoinPayout({seed:20261118});
  assert.equal(a.fire(count),count);
  const t=performance.now();
- a.advanceFrames(count===120?280:count===240?500:490);
+ // Test angular motion while coins are actually flying. Once they hit the
+ // bottom, damping intentionally makes heavy metal coins rest face-up.
+ const totalFrames=count===120?280:count===240?500:490;
+ a.advanceFrames(26);
+ assert(a.coins.filter(b=>Math.abs(b.quaternion.x)>.01||Math.abs(b.quaternion.z)>.01).length>=2,
+   'in-flight 3D coins must visibly tumble rather than act as flat sprites');
+ a.advanceFrames(totalFrames-26);
  const elapsed=performance.now()-t;
  const s=a.getSnapshot();
  assert.equal(s.count,count,'all coins emitted, not an abbreviated visual batch');
@@ -22,8 +28,10 @@ for(const count of [120,240,420]){
  assert(s.peakHeight>1.0,'the chute remains visibly above the real basin floor');
  assert(a.coins.every(b=>Number.isFinite(b.position.x)&&Number.isFinite(b.position.y)&&Number.isFinite(b.position.z)));
  assert(a.coins.every(b=>b.position.y>=COIN.height/2-1e-5),'coins cannot fall through solid floor');
- assert(a.coins.some(b=>Math.abs(b.quaternion.x)>.01||Math.abs(b.quaternion.z)>.01),
-   '3D angular orientation must be simulated, not a flat sprite particle');
+ assert(a.coins.every(b=>Number.isFinite(b.quaternion.x)&&Number.isFinite(b.quaternion.y)&&
+    Number.isFinite(b.quaternion.z)&&Number.isFinite(b.quaternion.w)),
+   'tilt damping and impact must never introduce an invalid quaternion');
+ assert.equal(s.overlappingCoins,0,'rendered disks must not pass through one another');
  // Conservative bound: avoid regression to multi-second SAT bottlenecks.
  assert(elapsed<8000,`fast ${count}-coin physics took ${Math.round(elapsed)}ms`);
  outputs.push({coins:count,steps:s.tick,wallMs:Math.round(elapsed),contacts:s.contacts,
