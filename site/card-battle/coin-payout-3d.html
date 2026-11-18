@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#171e20">
-<title>小像素低模金币 · 三维高速碰撞喷币</title>
+<title>小像素低模金币 · 高速喷入实体接币盆 · 三维碰撞</title>
 <style>
 :root{color-scheme:dark;font-family:system-ui,-apple-system,"Noto Sans SC",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#101619;color:#e7eae6;min-height:100dvh}
@@ -29,10 +29,10 @@ button{padding:8px 3px;font-size:10px;min-height:43px}.metrics{gap:5px}.metric{p
 .hud{font-size:9px;top:6px;left:6px}.note{font-size:10px}}
 </style></head>
 <body><main>
-<header><div><h1>低模像素金币 · 高速实体喷发</h1>
-<p>同一张 48px 像素金币素材，10 边超薄黑边模型；真实三维刚体引擎、互相挤压碰撞、撞地反弹、堆积休眠。不是 2D 粒子，也不生成新的金币图片。</p></div>
+<header><div><h1>低模像素金币 · 强力吐入接币盆</h1>
+<p>同一张 48px 像素金币素材，10 边超薄黑边模型；真实三维刚体引擎、互相挤压碰撞、落入实体接币盆反弹、盆内堆叠休眠；禁止金币乱飞出盆。不是 2D 粒子，也不生成新的金币图片。</p></div>
 <nav><a href="./coin-model-lab.html">单枚金币模型</a><a href="./coin-whitebox-lab.html">旧物理版</a></nav></header>
-<section class="stage"><canvas id="payout-view" aria-label="真实三维小像素金币从右侧机台高速射到左侧，互相碰撞反弹并堆积"></canvas>
+<section class="stage"><canvas id="payout-view" aria-label="真实三维小像素金币从机器出币口强力连续射入左侧实体接币盆，在盆内碰撞反弹并堆积"></canvas>
 <div class="hud">SLOTS &amp; DAGGERS · ORIGINAL PHYSICS STUDY<br>LOW-POLY COINS · REAL XYZ CONTACTS<br><span id="meter">初始化真实物理场景…</span></div>
 <div id="status">载入金币素材与三维刚体引擎…</div></section>
 <div class="controls">
@@ -46,5 +46,5 @@ button{padding:8px 3px;font-size:10px;min-height:43px}.metrics{gap:5px}.metric{p
 <div class="metric"><span>金币间接触次数</span><strong id="hit-count">0</strong></div>
 <div class="metric"><span>已静止实体</span><strong id="sleep-count">0</strong></div>
 <div class="metric"><span>物理类型</span><strong style="font-size:15px">10 FACET · 3D</strong></div></div>
-<p class="note">碰撞和堆积由仓库内置 cannon-es 真实刚体求解，使用同一物理世界的 X/Y/Z 坐标和实际薄圆柱碰撞体；各金币有独立姿态、三维角速度与摩擦。默认从 240 枚开始；可持续补币到 500 枚上限。原版实机录像逐帧速度尚未完成标定，这里只验收真实动力学和视觉密度。</p>
-</main><script type="module" src="./motion/coin-payout-view.mjs?v=20261118-dense-rigid-v1"></script></body></html>
+<p class="note">碰撞和堆积由仓库内置 cannon-es 真实刚体求解，使用同一物理世界的 X/Y/Z 坐标和实际薄圆柱碰撞体；各金币有独立姿态、三维角速度与摩擦。全部金币必须从出币口进入接币盆内，左右前后由真实三维实体盆壁阻挡，禁止喷出舞台；默认从 240 枚开始，可在同一盆中继续补币到 500 枚。原版实机录像逐帧速度尚未完成标定，这里只验收真实动力学和视觉密度。</p>
+</main><script type="module" src="./motion/coin-payout-view.mjs?v=20261118-basin-rigid-v2"></script></body></html>
