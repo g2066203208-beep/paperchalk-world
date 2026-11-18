@@ -388,6 +388,7 @@ function applySequence(ms,quiet=false){
   cardRoot.rotateX(p.card.rotationX);
   cardRoot.rotateZ(p.card.roll);
   cardRoot.scale.setScalar(p.card.scale);
+  updateCardFaceCulling(); // deterministic seek / screenshot should never be stale
  }
  aura.visible=p.card.visible&&p.card.reveal>.001;
  if(aura.visible){
@@ -491,6 +492,7 @@ function setInspectorFace(face){
  inspector.orientation.setFromAxisAngle(iy,face==='back'?Math.PI:0);
  inspector.yaw=face==='back'?Math.PI:0;
  inspector.pitch=0;inspector.roll=0;
+ if(inspector.active)renderInspectorCard();
 }
 function inspectZoomBy(factor){
  inspector.zoom=clampInspect(inspector.zoom*factor,.32,7.5);
@@ -514,6 +516,7 @@ function renderInspectorCard(){
  aura.visible=false;
  resultLight.intensity=3.2;
  resultLight.position.copy(viewTarget).addScaledVector(up,1.05).addScaledVector(iz,2.5);
+ updateCardFaceCulling(); // immediate same-frame front/back visibility
 }
 function openInspector(){
  if(!drawState.ready||!cardBackReady||inspector.active)return;
