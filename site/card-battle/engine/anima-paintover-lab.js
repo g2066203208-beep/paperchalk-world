@@ -1,5 +1,7 @@
 import * as THREE from "../vendor/three.module.js";
 import {createFadingHallGame} from "./anima-hall-gameplay.js?v=scene03-20261118";
+import {makeIntegratedCharacterMaterial,setIntegratedCharacterScene,createIntegratedGroundShadows,getCharacterScenePreset}
+ from "./character-scene-integration.js?v=20261118-v2";
 
 /* 3D whitebox / paintover study. Original Anima actor from the user's repo.
    Remaining surface textures are deliberately labelled PROCEDURAL PLACEHOLDERS,
@@ -78,6 +80,16 @@ const lamp=new THREE.PointLight("#ffb363",33,13,2);lamp.position.set(3.4,5.65,-3
 const edgeLight=new THREE.PointLight("#74afb2",11,13,2);edgeLight.position.set(-5,4.5,-2.1);scene.add(edgeLight);
 const root=new THREE.Group();scene.add(root);
 const architecture=[],masks=[],foreground=[],shadows=[],actors=[],anim=[],surfaceBundles=[];
+const integratedMaterials=[];
+let activeSceneLight="hall";
+const sceneRelight=(room="hall")=>{
+ activeSceneLight=room;
+ for(const mat of integratedMaterials)setIntegratedCharacterScene(mat,THREE,room,state.day);
+};
+const makeActorMaterial=(texture)=>{
+ const mat=makeIntegratedCharacterMaterial(THREE,texture,getCharacterScenePreset(activeSceneLight,state.day));
+ integratedMaterials.push(mat);return mat;
+};
 const whiteMat=new THREE.MeshStandardMaterial({color:"#b5b8b7",roughness:.87,metalness:0});
 const whiteDark=new THREE.MeshStandardMaterial({color:"#616c70",roughness:1});
 const oak=new THREE.MeshStandardMaterial({color:"#302a27",roughness:.82,metalness:.04});
@@ -446,7 +458,9 @@ img.onload=()=>{
   const source=removeWhiteBackground(img),texture=tex(source);
   texture.wrapS=texture.wrapT=THREE.ClampToEdgeWrapping;
   const w=3.35,h=4.85;
-  const actor=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshStandardMaterial({map:texture,transparent:true,alphaTest:.05,depthWrite:true,side:THREE.DoubleSide,roughness:1,metalness:0,color:"#f0ece2"}));
+  const actor=new THREE.Mesh(new THREE.PlaneGeometry(w,h),makeActorMaterial(texture));
+  actor.customDepthMaterial=new THREE.MeshDepthMaterial({depthPacking:THREE.RGBADepthPacking,map:texture,alphaTest:.095});
+  actor.customDistanceMaterial=new THREE.MeshDistanceMaterial({map:texture,alphaTest:.095});
   actor.position.y=h/2-.02;actor.position.z=.0;actor.castShadow=true;actor.receiveShadow=true;
   actorSlot.add(actor);actors.push(actor);loadedActor=true;
   renderer.shadowMap.needsUpdate=true;
@@ -467,6 +481,8 @@ for(let i=0;i<dustN;i++){
 const dustGeo=new THREE.BufferGeometry();dustGeo.setAttribute("position",new THREE.BufferAttribute(dustPos,3));
 const dust=new THREE.Points(dustGeo,new THREE.PointsMaterial({color:"#f3cc91",size:.047,transparent:true,opacity:.56,depthWrite:false,sizeAttenuation:true}));
 root.add(dust);
+const dynamicGrounding=createIntegratedGroundShadows(THREE,scene);
+shadows[0].material.opacity=.72;
 const gameplay=createFadingHallGame({
  THREE,scene,hallRoot:root,camera,renderer,actorSlot,groundShadow:shadows[0],
  materials:{wall:wallPaint,floor:floorPaint,wood:woodPaint,gold},
@@ -475,6 +491,7 @@ const gameplay=createFadingHallGame({
   t.wrapS=t.wrapT=THREE.ClampToEdgeWrapping;
   return t;
  },
+ getPortraitMaterial:texture=>makeActorMaterial(texture),
  groundCanvas:canvas,target,cameraUpdate,debug:devMode
 });
 window.HallGame=gameplay;
@@ -489,6 +506,7 @@ function relight(){
   lamp.intensity=33;edgeLight.intensity=11;scene.background.set("#172932");scene.fog.color.set("#263e42");
   renderer.toneMappingExposure=1.18;
  }
+ sceneRelight(gameplay.room);
  for(const id of ["day","night"]){$(id).classList.toggle("current",id===(state.day?"day":"night"));$(id).setAttribute("aria-pressed",String(id===(state.day?"day":"night")));}
 }
 function sync(){
@@ -496,6 +514,7 @@ function sync(){
  for(const ob of foreground)ob.visible=state.foreground&&!state.whitebox;
  for(const ob of masks)ob.visible=state.decals&&!state.whitebox;
  for(const ob of shadows)ob.visible=state.shadows&&!state.whitebox;
+ dynamicGrounding.root.visible=dynamicGrounding.cast.visible=state.shadows&&!state.whitebox;
  for(const a of actors)a.visible=state.actor;
  lampHalo.visible=!state.whitebox; dust.visible=!state.whitebox;
  renderer.shadowMap.enabled=state.shadows;sun.castShadow=state.shadows;
@@ -657,6 +676,8 @@ function animate(t){
  dustGeo.attributes.position.needsUpdate=true;
  if(actors.length)actors[0].rotation.y=yaw*.42;
  if(!devMode)gameplay.update(elapsed);
+ if(gameplay.room!==activeSceneLight)sceneRelight(gameplay.room);
+ dynamicGrounding.update(actorSlot,getCharacterScenePreset(activeSceneLight,state.day),state.shadows&&!state.whitebox&&state.actor);
  renderer.render(scene,camera);
  frames++;
  if(t-framesAt>1000){
@@ -670,6 +691,10 @@ window.PaintoverStudio={
  get gameplay(){return !devMode},
  get room(){return gameplay.room},
  get loadedActor(){return loadedActor},
+ get relightReady(){return !!integratedMaterials.length},
+ get relightPreset(){return activeSceneLight},
+ get relightMaterialCount(){return integratedMaterials.length},
+ get relightShadersInstalled(){return integratedMaterials.every(m=>typeof m.onBeforeCompile==="function")},
  get mode(){return state.whitebox?"whitebox":"composite"},
  get layerWeights(){return {...state.weights}},
  get drawCalls(){return renderer.info.render.calls},
