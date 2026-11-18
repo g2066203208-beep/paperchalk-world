@@ -2,8 +2,8 @@
   {
     "viewport": "desktop",
     "passed": true,
-    "character": "炼金魔女",
-    "id": "witch-workshop/alchemy-witch.png",
+    "character": "财务主管",
+    "id": "demon-merchant/finance-director.webp",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
@@ -12,8 +12,8 @@
   {
     "viewport": "portrait",
     "passed": true,
-    "character": "首席魔女",
-    "id": "witch-workshop/grand-witch.png",
+    "character": "店长",
+    "id": "demon-merchant/shop-owner.webp",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
@@ -22,8 +22,8 @@
   {
     "viewport": "landscape",
     "passed": true,
-    "character": "财务主管",
-    "id": "demon-merchant/finance-director.webp",
+    "character": "飞刀演员",
+    "id": "wonder-circus/knife-thrower.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
