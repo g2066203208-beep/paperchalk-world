@@ -56,6 +56,15 @@ jobs:
           cp artifacts/character-card-machine/desktop-06-portrait-on-card.png site/card-battle/qa/character-card-machine/desktop-character.png
           cp artifacts/character-card-machine/portrait-06-portrait-on-card.png site/card-battle/qa/character-card-machine/phone-character.png
           cp artifacts/character-card-machine/landscape-06-portrait-on-card.png site/card-battle/qa/character-card-machine/landscape-character.png
+          # Retain REAL inspected WebGL frames as durable art QA references.
+          cp artifacts/character-card-machine/desktop-INSPECT-00-original-back.png site/card-battle/qa/character-card-machine/desktop-inspect-back.png
+          cp artifacts/character-card-machine/desktop-INSPECT-01-real-ringmaster-front.png site/card-battle/qa/character-card-machine/desktop-inspect-front.png
+          cp artifacts/character-card-machine/desktop-INSPECT-02-side-and-zoom.png site/card-battle/qa/character-card-machine/desktop-inspect-angled.png
+          cp artifacts/character-card-machine/desktop-INSPECT-04-zoomed-detail.png site/card-battle/qa/character-card-machine/desktop-inspect-detail-zoom.png
+          cp artifacts/character-card-machine/portrait-INSPECT-00-original-back.png site/card-battle/qa/character-card-machine/phone-inspect-back.png
+          cp artifacts/character-card-machine/portrait-INSPECT-01-real-ringmaster-front.png site/card-battle/qa/character-card-machine/phone-inspect-front.png
+          cp artifacts/character-card-machine/landscape-INSPECT-00-original-back.png site/card-battle/qa/character-card-machine/landscape-inspect-back.png
+          cp artifacts/character-card-machine/landscape-INSPECT-01-real-ringmaster-front.png site/card-battle/qa/character-card-machine/landscape-inspect-front.png
           cp artifacts/character-card-machine/results.json site/card-battle/qa/character-card-machine/results.json
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
