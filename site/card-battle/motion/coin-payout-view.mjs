@@ -1,7 +1,7 @@
 import * as THREE from '../vendor/three.module.js';
 import {prepareExtrudedSprite,buildLowPolyPixelCoin3D} from './sprite-extrusion.mjs';
 import {COIN,CAPS,BASIN} from './coin-payout-shared.mjs';
-import {FastCoinPayout,FAST_DT} from './coin-payout-fast.mjs';
+import {FastCoinPayout,FAST_DT} from './coin-payout-fast.mjs?v=anti-ghost-20261118';
 import {installPayoutLighting,createPayoutMaterialFactory,upgradeCoinMaterials,createPayoutBloom} from './coin-payout-lighting.mjs?v=heavy-fast-gold-20261118';
 
 const $=id=>document.getElementById(id);
@@ -157,7 +157,7 @@ async function loadCoinModel(){
  instance.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
  instance.count=0;instance.frustumCulled=false;
  scene.add(instance);
- $('status').textContent='10 边加厚金币 · 空间分区 3D 快速碰撞 · 零外溢';
+ $('status').textContent='加厚金币 · 倾斜接触修正 · 盆底压入修正 · 穿模实时监测';
  return instance;
 }
 function updateCoins(){if(!instance)return;
@@ -179,7 +179,7 @@ function updateStats(force=false){
  coinCounter.textContent=`${s.count} / ${CAPS.max}`;
  hitCounter.textContent=s.contacts.toLocaleString('en-US');
  sleepCounter.textContent=String(s.asleep);
- meter.textContent=`盆内 ${s.inBasin}/${s.count} · 出币 ${s.emitted}/${s.target} · ${s.time.toFixed(2)}s · ${displayFps}FPS`;
+ meter.textContent=`盆内 ${s.inBasin}/${s.count} · 出币 ${s.emitted}/${s.target} · ${s.time.toFixed(2)}s · 穿插 ${s.overlappingCoins} · ${displayFps}FPS`;
  window.__coinPayoutLastSnapshot=s;
 }
 function redraw(force=false){updateCoins();updateContactGlints();updateStats(force);post.render(scene,camera);}
