@@ -46,6 +46,7 @@ precision highp float;
 varying vec2 vUv;
 uniform sampler2D tScene;
 uniform sampler2D tBloom;
+uniform sampler2D tBloomWide;
 uniform float uBloom;
 uniform float uExposure;
 uniform float uVignette;
@@ -61,7 +62,7 @@ vec3 linearToSrgb(vec3 c){
 float hash21(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 void main(){
  vec3 sceneColor=texture2D(tScene,vUv).rgb;
- vec3 bloom=texture2D(tBloom,vUv).rgb;
+ vec3 bloom=texture2D(tBloom,vUv).rgb*0.72+texture2D(tBloomWide,vUv).rgb*0.52;
  // Scene-linear addition occurs BEFORE exposure/tone mapping.
  vec3 color=sceneColor+max(vec3(0.),bloom)*uBloom;
  color=acesFilm(max(vec3(0.),color)*uExposure);
@@ -209,7 +210,9 @@ export function createPayoutBloom(THREE,renderer,{compact=false}={}){
  const brightRT=new THREE.WebGLRenderTarget(4,4,bloomOptions);
  const blurRT1=new THREE.WebGLRenderTarget(4,4,bloomOptions);
  const blurRT2=new THREE.WebGLRenderTarget(4,4,bloomOptions);
- for(const rt of [brightRT,blurRT1,blurRT2])rt.texture.colorSpace=THREE.LinearSRGBColorSpace;
+ const wideRT1=new THREE.WebGLRenderTarget(4,4,bloomOptions);
+ const wideRT2=new THREE.WebGLRenderTarget(4,4,bloomOptions);
+ for(const rt of [brightRT,blurRT1,blurRT2,wideRT1,wideRT2])rt.texture.colorSpace=THREE.LinearSRGBColorSpace;
  const makeShader=(fragmentShader,uniforms)=>new THREE.ShaderMaterial({
   vertexShader:VERTEX,fragmentShader,uniforms,
   depthTest:false,depthWrite:false,toneMapped:false
@@ -221,12 +224,12 @@ export function createPayoutBloom(THREE,renderer,{compact=false}={}){
   tInput:{value:brightRT.texture},uStep:{value:new THREE.Vector2(1,0)}
  });
  const composite=makeShader(COMPOSITE,{
-  tScene:{value:sceneRT.texture},tBloom:{value:blurRT1.texture},
+  tScene:{value:sceneRT.texture},tBloom:{value:blurRT1.texture},tBloomWide:{value:wideRT1.texture},
   uBloom:{value:1.22},uExposure:{value:.95},
   uVignette:{value:.24},uGrain:{value:.008}
  });
  const size=new THREE.Vector2();
- let width=4,height=4,smallW=4,smallH=4,pixelMode=false;
+ let width=4,height=4,smallW=4,smallH=4,wideW=4,wideH=4,pixelMode=false;
  function resize(){
   renderer.getDrawingBufferSize(size);
   const renderScale=pixelMode?.7:1;
@@ -234,8 +237,11 @@ export function createPayoutBloom(THREE,renderer,{compact=false}={}){
   height=Math.max(2,Math.floor(size.y*renderScale));
   smallW=Math.max(8,Math.ceil(width/(compact?5:4)));
   smallH=Math.max(8,Math.ceil(height/(compact?5:4)));
+  wideW=Math.max(8,Math.ceil(width/(compact?10:9)));
+  wideH=Math.max(8,Math.ceil(height/(compact?10:9)));
   sceneRT.setSize(width,height);
   for(const rt of [brightRT,blurRT1,blurRT2])rt.setSize(smallW,smallH);
+  wideRT1.setSize(wideW,wideH);wideRT2.setSize(wideW,wideH);
  }
  function render(scene,camera){
   renderer.setRenderTarget(sceneRT);
@@ -249,6 +255,13 @@ export function createPayoutBloom(THREE,renderer,{compact=false}={}){
   blur.uniforms.tInput.value=blurRT2.texture;
   blur.uniforms.uStep.value.set(0,1/smallH);
   renderer.setRenderTarget(blurRT1);renderer.render(stage,postCamera);
+  // Second, lower-resolution glow field supplies the broad cinematic halo.
+  blur.uniforms.tInput.value=blurRT1.texture;
+  blur.uniforms.uStep.value.set(1/wideW,0);
+  renderer.setRenderTarget(wideRT2);renderer.render(stage,postCamera);
+  blur.uniforms.tInput.value=wideRT2.texture;
+  blur.uniforms.uStep.value.set(0,1/wideH);
+  renderer.setRenderTarget(wideRT1);renderer.render(stage,postCamera);
   quad.material=composite;
   renderer.setRenderTarget(null);
   renderer.render(stage,postCamera);
@@ -265,13 +278,13 @@ export function createPayoutBloom(THREE,renderer,{compact=false}={}){
    bloom:composite.uniforms.uBloom.value,
    threshold:bright.uniforms.uThreshold.value,
    exposure:composite.uniforms.uExposure.value,
-   pixelMode,width,height,smallW,smallH,
+   pixelMode,width,height,smallW,smallH,wideW,wideH,
    HDR:sceneRT.texture.type===THREE.HalfFloatType,
    linearSource:sceneRT.texture.colorSpace===THREE.LinearSRGBColorSpace
   };},
   dispose(){
    for(const m of [bright,blur,composite])m.dispose();
-   quadGeo.dispose();for(const rt of [sceneRT,brightRT,blurRT1,blurRT2])rt.dispose();
+   quadGeo.dispose();for(const rt of [sceneRT,brightRT,blurRT1,blurRT2,wideRT1,wideRT2])rt.dispose();
   }
  };
 }
