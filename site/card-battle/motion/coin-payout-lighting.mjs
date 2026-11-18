@@ -275,25 +275,32 @@ export function createPayoutBloom(THREE,renderer,{compact=false}={}){
   for(const rt of [brightRT,blurRT1,blurRT2])rt.setSize(smallW,smallH);
   wideRT1.setSize(wideW,wideH);wideRT2.setSize(wideW,wideH);
  }
+ let wideFrame=0;
  function render(scene,camera){
   renderer.setRenderTarget(sceneRT);
   renderer.render(scene,camera);
-  quad.material=bright;bright.uniforms.tInput.value=sceneRT.texture;
-  renderer.setRenderTarget(brightRT);renderer.render(stage,postCamera);
-  quad.material=blur;
-  blur.uniforms.tInput.value=brightRT.texture;
-  blur.uniforms.uStep.value.set(1/smallW,0);
-  renderer.setRenderTarget(blurRT2);renderer.render(stage,postCamera);
-  blur.uniforms.tInput.value=blurRT2.texture;
-  blur.uniforms.uStep.value.set(0,1/smallH);
-  renderer.setRenderTarget(blurRT1);renderer.render(stage,postCamera);
-  // Second, lower-resolution glow field supplies the broad cinematic halo.
-  blur.uniforms.tInput.value=blurRT1.texture;
-  blur.uniforms.uStep.value.set(1/wideW,0);
-  renderer.setRenderTarget(wideRT2);renderer.render(stage,postCamera);
-  blur.uniforms.tInput.value=wideRT2.texture;
-  blur.uniforms.uStep.value.set(0,1/wideH);
-  renderer.setRenderTarget(wideRT1);renderer.render(stage,postCamera);
+  // No bloom selected: do not waste 5 fullscreen postprocessing passes.
+  if(composite.uniforms.uBloom.value>0.0001){
+   quad.material=bright;bright.uniforms.tInput.value=sceneRT.texture;
+   renderer.setRenderTarget(brightRT);renderer.render(stage,postCamera);
+   quad.material=blur;
+   blur.uniforms.tInput.value=brightRT.texture;
+   blur.uniforms.uStep.value.set(1/smallW,0);
+   renderer.setRenderTarget(blurRT2);renderer.render(stage,postCamera);
+   blur.uniforms.tInput.value=blurRT2.texture;
+   blur.uniforms.uStep.value.set(0,1/smallH);
+   renderer.setRenderTarget(blurRT1);renderer.render(stage,postCamera);
+   // Slow wide halo can update at 1/3 display FPS; sharp HDR highlights
+   // still respond to every gold impact. Quality mode updates both each frame.
+   if(quality==='quality'||wideFrame++%3===0){
+    blur.uniforms.tInput.value=blurRT1.texture;
+    blur.uniforms.uStep.value.set(1/wideW,0);
+    renderer.setRenderTarget(wideRT2);renderer.render(stage,postCamera);
+    blur.uniforms.tInput.value=wideRT2.texture;
+    blur.uniforms.uStep.value.set(0,1/wideH);
+    renderer.setRenderTarget(wideRT1);renderer.render(stage,postCamera);
+   }
+  }
   quad.material=composite;
   renderer.setRenderTarget(null);
   renderer.render(stage,postCamera);
@@ -302,11 +309,11 @@ export function createPayoutBloom(THREE,renderer,{compact=false}={}){
  resize();
  return {
   resize,render,
-  setBloom(v){composite.uniforms.uBloom.value=Math.max(0,Math.min(2.7,v));},
+  setBloom(v){composite.uniforms.uBloom.value=Math.max(0,Math.min(2.7,v));wideFrame=0;},
   setThreshold(v){bright.uniforms.uThreshold.value=Math.max(.5,Math.min(3,v));},
   setExposure(v){composite.uniforms.uExposure.value=Math.max(.5,Math.min(2,v));},
-  setPixelMode(v){pixelMode=Boolean(v);resize();},
-  setQuality(v){quality=v==='quality'?'quality':'smooth';resize();},
+  setPixelMode(v){pixelMode=Boolean(v);wideFrame=0;resize();},
+  setQuality(v){quality=v==='quality'?'quality':'smooth';wideFrame=0;resize();},
   get state(){return {
    bloom:composite.uniforms.uBloom.value,
    threshold:bright.uniforms.uThreshold.value,
