@@ -58,6 +58,36 @@ export function mattePortraitBackground(rgba,width,height){
  if(tail<total*.06)return {pixels:new Uint8ClampedArray(rgba),stats:{
   detected:false,removed:0,feathered:0,padded:0,
   width,height,backgroundRgb:bg}};
+ // Foreground arms, a cane and ribbons can form CLOSED HOLES in an
+ // otherwise white studio background. These islands never touch the
+ // picture border, so flood fill alone misses a large white rectangle.
+ // Remove only LARGE, near-edge, same-white components; never white
+ // shirt/glove/skin in the center of the character.
+ const visited=new Uint8Array(total);
+ let enclosedRemoved=0,enclosedIslands=0;
+ for(let start=0;start<total;start++){
+  if(mask[start]||visited[start]||!whiteLike(start))continue;
+  let read=0,write=0,minX=width,maxX=-1,minY=height,maxY=-1;
+  queue[write++]=start;visited[start]=1;
+  while(read<write){
+   const p=queue[read++],x=p%width,y=(p/width)|0;
+   if(x<minX)minX=x;if(x>maxX)maxX=x;
+   if(y<minY)minY=y;if(y>maxY)maxY=y;
+   const next=[x>0?p-1:-1,x+1<width?p+1:-1,
+    y>0?p-width:-1,y+1<height?p+width:-1];
+   for(const q of next){
+    if(q<0||visited[q]||mask[q]||!whiteLike(q))continue;
+    visited[q]=1;queue[write++]=q;
+   }
+  }
+  const large=write>Math.max(280,total*.0018);
+  const sideGap=minX<width*.20||maxX>width*.80;
+  const tall=(maxY-minY)>height*.095||write>total*.017;
+  if(large&&sideGap&&tall){
+   for(let j=0;j<write;j++)mask[queue[j]]=1;
+   enclosedRemoved+=write;enclosedIslands++;
+  }
+ }
  // A small, pale edge transition is paper-scanner anti-alias, not a
  // deliberate white garment. Unmix white matting before compositing on red.
  let feathered=0;
@@ -114,6 +144,7 @@ export function mattePortraitBackground(rgba,width,height){
   out[i]=out[j];out[i+1]=out[j+1];out[i+2]=out[j+2];padded++;
  }
  return {pixels:out,stats:{
-  detected:tail>total*.06,removed:tail,feathered,padded,
+  detected:tail>total*.06,removed:tail+enclosedRemoved,
+  enclosedRemoved,enclosedIslands,feathered,padded,
   width,height,backgroundRgb:bg}};
 }
