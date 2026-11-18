@@ -161,24 +161,34 @@ function roundedCardAlpha(){
  const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.NoColorSpace;
  return tex;
 }
-const frontPaperMaterial=new THREE.MeshStandardMaterial({
- color:'#e9e1d4',roughness:.94,metalness:0,
+const frontPaperMaterial=new THREE.MeshPhysicalMaterial({
+ color:'#e9e1d4',metalness:0,roughness:.98,
+ sheen:.24,sheenRoughness:.94,sheenColor:'#ddd3c4',
+ specularIntensity:.22,envMapIntensity:.14,
  side:THREE.FrontSide,transparent:false,alphaMap:roundedCardAlpha(),alphaTest:.45
 });
 const frontPaper=sheet(front,frontPaperMaterial,0,0,0,cardW,cardH);
 frontPaper.receiveShadow=false;
-const portraitMaterial=new THREE.MeshStandardMaterial({
- color:'#ffffff',metalness:0,roughness:.76,envMapIntensity:.30,
+// A non-plastic matte fine-art print: cellulose sheen and reduced specular,
+// high roughness with per-pixel ink and fiber variation.
+const portraitMaterial=new THREE.MeshPhysicalMaterial({
+ color:'#ffffff',metalness:0,roughness:1,envMapIntensity:.17,
+ sheen:.17,sheenRoughness:.93,sheenColor:'#d6d0c5',
+ specularIntensity:.22,
  side:THREE.FrontSide,transparent:false,alphaTest:.018,
- normalScale:new THREE.Vector2(.78,.78)
+ normalScale:new THREE.Vector2(1.48,1.48)
 });
 const portrait=sheet(front,portraitMaterial,0,0,.003,cardW,cardH);
 portrait.receiveShadow=false;
-const cardBackMaterial=new THREE.MeshStandardMaterial({
- color:'#ffffff',metalness:1,roughness:1,envMapIntensity:.85,
+// Gold ink picks up localized metallic reflections; most burgundy is
+// diffuse textured paper, NOT a homogeneous shiny lacquer sheet.
+const cardBackMaterial=new THREE.MeshPhysicalMaterial({
+ color:'#ffffff',metalness:1,roughness:1,envMapIntensity:.66,
+ sheen:.10,sheenRoughness:.96,sheenColor:'#d4b7a6',
+ specularIntensity:.24,
  side:THREE.FrontSide,transparent:false,alphaTest:.060,
- normalScale:new THREE.Vector2(1.15,1.15),
- emissive:'#202020',emissiveIntensity:.20
+ normalScale:new THREE.Vector2(1.55,1.55),
+ emissive:'#080809',emissiveIntensity:.035
 });
 const cardBackPlane=sheet(back,cardBackMaterial,0,0,.002,cardW,cardH);
 cardBackPlane.receiveShadow=false;
@@ -206,8 +216,10 @@ function imageRelief(image,mode){
   t.magFilter=THREE.LinearFilter;t.generateMipmaps=true;
   t.anisotropy=4;t.needsUpdate=true;return t;
  }
+ const pigment=dataTexture(result.pigment);
+ pigment.colorSpace=THREE.SRGBColorSpace;
  const tex={normal:dataTexture(result.normals),
-  surface:dataTexture(result.surface),stats:result.stats};
+  surface:dataTexture(result.surface),pigment,stats:result.stats};
  return tex;
 }
 new THREE.TextureLoader().load(cardBackUrl,tex=>{
@@ -217,6 +229,7 @@ new THREE.TextureLoader().load(cardBackUrl,tex=>{
  try{
   const relief=imageRelief(tex.image,'back');
   cardBackMaterial.normalMap=relief.normal;
+  cardBackMaterial.map=relief.pigment;
   // Three.js reads METALNESS from blue, ROUGHNESS from green.
   cardBackMaterial.metalnessMap=relief.surface;
   cardBackMaterial.roughnessMap=relief.surface;
@@ -293,9 +306,11 @@ function updatePortrait(card,asset){
  portrait.material.map=asset.tex;
  if(!asset.relief){
   try{asset.relief=imageRelief(asset.tex.image,'portrait')}
-  catch(e){console.error('Portrait shading normals unavailable',e)}
+  catch(e){console.error('Portrait paper-grain maps unavailable',e)}
  }
  portrait.material.normalMap=asset.relief?.normal||null;
+ portrait.material.roughnessMap=asset.relief?.surface||null;
+ portrait.material.map=asset.relief?.pigment||asset.tex;
  reliefStats.portrait=asset.relief?.stats||null;
  portrait.material.needsUpdate=true;
  // Preserve the original 704:1024 portrait aspect ratio, without cropping
@@ -817,6 +832,15 @@ window.PaperchalkCharacterMachineQA={
   foilPixels:reliefStats.back?.goldPixels||0,
   backNormalPixels:reliefStats.back?.normalPixels||0,
   portraitNormalPixels:reliefStats.portrait?.normalPixels||0,
+  backPaperFiberPixels:reliefStats.back?.paperNormalPixels||0,
+  portraitPaperFiberPixels:reliefStats.portrait?.paperNormalPixels||0,
+  backRoughnessRange:[reliefStats.back?.roughnessMinimum||0,reliefStats.back?.roughnessMaximum||0],
+  portraitRoughnessRange:[reliefStats.portrait?.roughnessMinimum||0,reliefStats.portrait?.roughnessMaximum||0],
+  backPrintedPigment:!!cardBackMaterial.map?.isDataTexture,
+  portraitPrintedPigment:!!portraitMaterial.map?.isDataTexture,
+  frontPaperSheen:frontPaperMaterial.sheen||0,
+  backPaperSheen:cardBackMaterial.sheen||0,
+  portraitPaperSheen:portraitMaterial.sheen||0,
   frontSideCulling:cardBackMaterial.side===THREE.FrontSide &&
    portraitMaterial.side===THREE.FrontSide && frontPaperMaterial.side===THREE.FrontSide,
   studioLighting:inspector.active&&!!inspector.studioBackup,
