@@ -100,6 +100,15 @@ for(const device of [{name:'desktop',w:1440,h:900},{name:'portrait',w:390,h:844}
   assert.equal(large.overlappingCoins,0,'420 gold coins must remain physically separated when piled up');
   assert(large.contacts>1000,'dense 3D coin-to-coin contacts must still be solved');
   await page.screenshot({path:`${out}/${device.name}-07-420-heavy-coins-fast-3d.png`,animations:'disabled'});
+  // Rapid successive payouts must queue, never cancel an unfinished jackpot.
+  await page.evaluate(()=>window.PaperchalkPayoutQA.reset());
+  assert.equal(await page.evaluate(()=>window.PaperchalkPayoutQA.fire(24)),24);
+  assert.equal(await page.evaluate(()=>window.PaperchalkPayoutQA.fire(18)),18);
+  const queued=await page.evaluate(()=>window.PaperchalkPayoutQA.advanceFrames(140));
+  assert.equal(queued.count,42,'both wins must reach the same persistent basin');
+  assert.equal(queued.queuedCoins,0);
+  assert.equal(queued.overlappingCoins,0);
+  await page.screenshot({path:out+'/'+device.name+'-08-rapid-double-jackpot.png',animations:'disabled'});
   assert.deepEqual(errors,[], 'no fatal JS exception in live WebGL and physics');
   results.push({device:device.name,passed:true,before,frames,next,large});
   console.log('PASS',device.name,JSON.stringify({coins:next.count,contacts:next.contacts,peakHeight:next.peakHeight}));
