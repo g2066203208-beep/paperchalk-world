@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#171e20">
+<title>小像素低模金币 · 三维高速碰撞喷币</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,"Noto Sans SC",sans-serif}
+*{box-sizing:border-box}body{margin:0;background:#101619;color:#e7eae6;min-height:100dvh}
+main{max-width:1510px;margin:auto;padding:clamp(8px,1.35vw,18px);display:grid;gap:10px}
+header{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+h1{font-size:clamp(18px,2vw,29px);margin:0 0 5px}header p{font-size:11px;color:#a9b6b2;margin:0;max-width:750px}
+nav{display:flex;gap:10px}a{color:#d6c5a0;font-size:12px}
+.stage{position:relative;min-height:min(70dvh,780px);border:1px solid #4b5b5c;border-radius:10px;overflow:hidden;background:#181e20}
+#payout-view{display:block;width:100%;height:min(70dvh,780px);touch-action:none}
+.hud{position:absolute;top:12px;left:12px;pointer-events:none;font:600 11px ui-monospace,monospace;color:#f0e0a8;text-shadow:0 2px 4px #000b}
+#status{position:absolute;left:12px;bottom:10px;font-size:11px;color:#adbebb;pointer-events:none}
+.controls{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+button{font:700 12px system-ui,"Noto Sans SC",sans-serif;padding:10px 13px;min-height:44px;color:#eee;background:#2d3a3d;border:1px solid #56686a;border-radius:6px;cursor:pointer}
+button.primary{background:#bead74;border-color:#e9d69e;color:#191b17}
+button[aria-pressed=true]{background:#546d72;border-color:#e7dfb0}
+button:focus-visible{outline:2px solid #e6d19c;outline-offset:2px}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.metric{border:1px solid #38494b;border-radius:7px;background:#1c282b;padding:10px;min-width:0}
+.metric span{font-size:10px;color:#9daead}.metric strong{display:block;font:750 clamp(17px,2.5vw,25px) ui-monospace,monospace;color:#eee7c8;margin-top:5px}
+.note{font-size:11px;color:#91a29d;line-height:1.5;margin:0}
+@media(max-width:650px){main{padding:6px;gap:7px}header p{font-size:10px}.stage{min-height:55dvh}
+#payout-view{height:55dvh}.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+button{padding:8px 3px;font-size:10px;min-height:43px}.metrics{gap:5px}.metric{padding:6px}.metric strong{font-size:16px}
+.hud{font-size:9px;top:6px;left:6px}.note{font-size:10px}}
+</style></head>
+<body><main>
+<header><div><h1>低模像素金币 · 高速实体喷发</h1>
+<p>同一张 48px 像素金币素材，10 边超薄黑边模型；真实三维刚体引擎、互相挤压碰撞、撞地反弹、堆积休眠。不是 2D 粒子，也不生成新的金币图片。</p></div>
+<nav><a href="./coin-model-lab.html">单枚金币模型</a><a href="./coin-whitebox-lab.html">旧物理版</a></nav></header>
+<section class="stage"><canvas id="payout-view" aria-label="真实三维小像素金币从右侧机台高速射到左侧，互相碰撞反弹并堆积"></canvas>
+<div class="hud">SLOTS &amp; DAGGERS · ORIGINAL PHYSICS STUDY<br>LOW-POLY COINS · REAL XYZ CONTACTS<br><span id="meter">初始化真实物理场景…</span></div>
+<div id="status">载入金币素材与三维刚体引擎…</div></section>
+<div class="controls">
+<button class="primary" id="120">▶ 喷 120 枚</button><button class="primary" id="240">▶ 喷 240 枚</button>
+<button class="primary" id="420">▶ 喷 420 枚</button><button id="pause">Ⅱ 暂停</button>
+<button id="reset">清空重播</button><button id="frame">逐帧 +1</button><button id="slow">¼ 慢速</button>
+<button id="scene" aria-pressed="true">全景</button><button id="pile" aria-pressed="false">金币堆特写</button>
+<button id="side" aria-pressed="false">侧视检查堆叠</button>
+</div>
+<div class="metrics"><div class="metric"><span>真实金币刚体</span><strong id="coin-count">0 / 500</strong></div>
+<div class="metric"><span>金币间接触次数</span><strong id="hit-count">0</strong></div>
+<div class="metric"><span>已静止实体</span><strong id="sleep-count">0</strong></div>
+<div class="metric"><span>物理类型</span><strong style="font-size:15px">10 FACET · 3D</strong></div></div>
+<p class="note">碰撞和堆积由仓库内置 cannon-es 真实刚体求解，使用同一物理世界的 X/Y/Z 坐标和实际薄圆柱碰撞体；各金币有独立姿态、三维角速度与摩擦。默认从 240 枚开始；可持续补币到 500 枚上限。原版实机录像逐帧速度尚未完成标定，这里只验收真实动力学和视觉密度。</p>
+</main><script type="module" src="./motion/coin-payout-view.mjs?v=20261118-dense-rigid-v1"></script></body></html>
