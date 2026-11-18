@@ -1,3 +1,5 @@
+import {createCastleCourtyard} from './anima-courtyard-scene.js';
+
 /* Chapter I: genuinely playable 3D Fading Hall.
  * Original scene geometry and Anima paintings stay under their existing
  * WebGL engine; this module owns navigation, investigation and room routing.
@@ -30,7 +32,8 @@ export function createFadingHallGame({
  const temporary=new THREE.Vector3();
  const navStep=.36;
  const bounds={hall:{left:-6.5,right:6.5,near:-5.18,far:4.05},
-  corridor:{left:-3.48,right:3.48,near:-7.15,far:5.10}};
+  corridor:{left:-3.48,right:3.48,near:-7.15,far:5.10},
+  courtyard:{left:-6.58,right:6.55,near:-6.25,far:5.08}};
  const staticObstacles={
   hall:[
    [-2.40,.95,-4.6,-2.94], // desk has real world depth
@@ -40,6 +43,11 @@ export function createFadingHallGame({
   corridor:[
    [-3.3,-2.10,-3.6,-2.0],[2.15,3.3,-3.6,-2.0],
    [-3.5,-2.35,1.9,3.5],[2.35,3.5,1.9,3.5]
+  ],
+  courtyard:[
+   [-3.15,.78,-3.18,.78], // actual 3D fountain and outer stone rim
+   [2.38,4.38,-4.37,-2.15], // dead tree and roots
+   [-5.10,-2.78,-5.70,-3.78] // broken altar
   ]
  };
  const hotspotInfo=[
@@ -49,7 +57,11 @@ export function createFadingHallGame({
   {id:"companion",room:"hall",name:"猎人同伴",icon:"❖",world:[3.72,3.14,1.04],approach:[2.80,1.55]},
   {id:"return",room:"corridor",name:"返回会客厅",icon:"⌑",world:[0,2.15,4.82],approach:[0,3.80]},
   {id:"bell",room:"corridor",name:"走廊钟铃",icon:"✦",world:[1.8,1.25,-2.95],approach:[1.4,-1.85]},
-  {id:"sealed",room:"corridor",name:"封闭的石门",icon:"◇",world:[0,2.2,-7.16],approach:[0,-6.05]}
+  {id:"sealed",room:"corridor",name:"通往古堡庭院",icon:"⌑",world:[0,2.2,-7.16],approach:[0,-6.05]},
+  {id:"courtyardBack",room:"courtyard",name:"返回古堡长廊",icon:"⌑",world:[0,2.10,5.02],approach:[0,4.16]},
+  {id:"fountain",room:"courtyard",name:"干涸的喷泉",icon:"✦",world:[-1.20,1.45,-1.25],approach:[-1.55,1.58]},
+  {id:"tree",room:"courtyard",name:"庭院枯树",icon:"◇",world:[3.37,3.4,-3.30],approach:[2.06,-1.63]},
+  {id:"ruins",room:"courtyard",name:"倒塌的祭坛",icon:"✦",world:[-3.96,2.10,-4.72],approach:[-2.38,-3.70]}
  ];
  const hotspotMap=new Map(hotspotInfo.map(h=>[h.id,h]));
  const markers=new Map();
@@ -64,7 +76,9 @@ export function createFadingHallGame({
   item.dataset.quickAction=h.id;item.className="game-quick-action";
   item.textContent=h.icon+" "+(h.id==="table"?"手札":h.id==="window"?"彩窗":
    h.id==="door"?"古门":h.id==="companion"?"同伴":h.id==="return"?"返回":
-   h.id==="bell"?"钟铃":"石门");
+   h.id==="bell"?"钟铃":h.id==="sealed"?"庭院":
+   h.id==="courtyardBack"?"回长廊":h.id==="fountain"?"喷泉":
+   h.id==="tree"?"枯树":h.id==="ruins"?"遗迹":"石门");
   item.title="移动至"+h.name+"并调查";
   item.setAttribute("aria-label","前往调查："+h.name);
   item.addEventListener("click",()=>interact(h.id));
@@ -82,6 +96,9 @@ export function createFadingHallGame({
  }
  const corridor=new THREE.Group();corridor.name="playable-castle-corridor";
  corridor.visible=false;scene.add(corridor);
+ const {root:courtyard,update:updateCourtyard,propNames:courtyardPropNames}=createCastleCourtyard({
+  THREE,scene,materials,compact:matchMedia('(max-width:900px)').matches
+ });
  function addCorridor(geo,material,x,y,z,rotate=0){
   const mesh=new THREE.Mesh(geo,material);
   mesh.position.set(x,y,z);
@@ -282,6 +299,7 @@ export function createFadingHallGame({
  }
  function footHeight(x,z){
   if(room==="hall"&&z<-2.85&&Math.abs(x)<5.15)return .39;
+  if(room==="courtyard")return .11;
   return 0;
  }
  function save(){
@@ -305,12 +323,12 @@ export function createFadingHallGame({
  });
  function updateQuest(){
   const count=Number(clues.paper)+Number(clues.symbol);
-  progress.textContent=room==="hall"? "线索 "+count+" / 2":"长廊 · 已到达";
+  progress.textContent=room==="hall"?"线索 "+count+" / 2":room==="corridor"?"长廊 · 已到达":"庭院 · 已到达";
   mission.textContent=room==="hall"?
    (count===2?"两条线索都已找到。前往左侧古门。":"调查桌面与彩窗，找到离开的线索。"):
-   "探索古堡长廊，查看钟铃与尽头的石门。";
-  roomText.textContent=room==="hall"?"褪色的会客厅":"古堡长廊";
-  byId("game-location").textContent=room==="hall"?"褪色的会客厅":"古堡长廊";
+   room==="corridor"?"查看钟铃，打开尽头通往古堡庭院的石门。":
+   "探索古堡庭院，调查干涸喷泉、枯树和残破祭坛。";
+  roomText.textContent=room==="hall"?"褪色的会客厅":room==="corridor"?"古堡长廊":"月下古堡庭院";
   for(const h of hotspotInfo){
    const done=(h.id==="table"&&clues.paper)||(h.id==="window"&&clues.symbol);
    markers.get(h.id).classList.toggle("is-done",done);
@@ -344,9 +362,14 @@ export function createFadingHallGame({
    case "bell":
     say("长廊里的钟铃","冰冷的铜铃内侧刻着细小字迹：「第三声不是由人敲响的。」远处石门传来轻微的振动。");
     break;
-   case "sealed":
-    say("被封印的石门","厚重的门扇布满磨损的封印。它通向古堡深处——下一片区域尚未开放。");
-    break;
+   case "sealed":enterRoom("courtyard");break;
+   case "courtyardBack":enterRoom("corridor");break;
+   case "fountain":
+    say("干涸的喷泉","石盆里残留着薄薄的雨水。中央雕像断裂了，碎石上有新近留下的痕迹。");break;
+   case "tree":
+    say("庭院枯树","树根穿过石板，枝桠伸向没有星光的天空。远处仍有微弱的钟声。");break;
+   case "ruins":
+    say("倒塌的祭坛","曾被供奉的石像已经毁坏。石缝里长出的苔藓，遮住了几乎看不清的刻文。");break;
   }
  }
  function goTo(x,z,action=null){
@@ -383,24 +406,30 @@ export function createFadingHallGame({
   transitioning=true;moving=false;walkPath.length=0;nextAction=null;
   fade.classList.add("active");
   const ready=clues.paper&&clues.symbol;
+  if(!["hall","corridor","courtyard"].includes(which)){transitioning=false;fade.classList.remove("active");return}
   if(which==="corridor"&&!ready){transitioning=false;fade.classList.remove("active");return}
   setTimeout(()=>{
-   const parent=which==="hall"?hallRoot:corridor;
+   const previous=room;
+   const parent=which==="hall"?hallRoot:which==="corridor"?corridor:courtyard;
    parent.add(actorSlot);parent.add(groundShadow);
-   room=which;hallRoot.visible=which==="hall";corridor.visible=which==="corridor";
-   actorFoot=new THREE.Vector3(which==="hall"?-3.7:0,0,which==="hall"?-4.45:3.6);
+   room=which;hallRoot.visible=which==="hall";corridor.visible=which==="corridor";courtyard.visible=which==="courtyard";
+   actorFoot=new THREE.Vector3(which==="hall"?-3.7:0,0,
+    which==="hall"?-4.45:which==="courtyard"?4.12:previous==="courtyard"?-5.87:3.6);
    actorSlot.position.set(actorFoot.x,footHeight(actorFoot.x,actorFoot.z),actorFoot.z);
    groundShadow.position.set(actorFoot.x,.11+footHeight(actorFoot.x,actorFoot.z),actorFoot.z);
    floorMark.visible=which==="hall";portalMat.opacity=ready?1:0;
    for(const leaf of openLeaves){
     leaf.mesh.position.x=leaf.origin+(ready?leaf.dir*.79:0);
    }
-   target.set(which==="hall"?-1.0:0,2.2,which==="hall"?-2.2:-1.75);
+   target.set(which==="hall"?-1.0:0,which==="courtyard"?2.55:2.2,
+    which==="hall"?-2.2:which==="courtyard"?-1.45:-1.75);
    cameraUpdate();renderer.shadowMap.needsUpdate=true;
    transitions++;updateQuest();renderMarkers();
    setTimeout(()=>{
     fade.classList.remove("active");transitioning=false;
-    tip.textContent=which==="hall"?"回到了会客厅 · 点击发光标记调查":"已进入长廊 · 点击发光标记探索";
+    tip.textContent=which==="hall"?"回到了会客厅 · 点击发光标记调查":
+     which==="corridor"?"已进入长廊 · 点击发光标记探索":
+     "已进入月下庭院 · 调查喷泉、枯树与遗迹";
    },340);
   },520);
  }
@@ -445,8 +474,9 @@ export function createFadingHallGame({
   // Locked perspective with slow, readable character follow (never orbit on a
   // one-finger tap). Pinch and ?dev=1 retain user camera zoom/orbit functions.
   if(!debug){
-   const desiredX=(room==="hall"?-.1:0)+actorFoot.x*.22;
-   const desiredZ=(room==="hall"?-2.05:-1.65)+(actorFoot.z-(room==="hall"?-1.25:3.6))*.10;
+   const desiredX=(room==="hall"?-.1:0)+actorFoot.x*(room==="courtyard"?.15:.22);
+   const desiredZ=(room==="hall"?-2.05:room==="courtyard"?-1.45:-1.65)+
+    (actorFoot.z-(room==="hall"?-1.25:room==="courtyard"?2:3.6))*(room==="courtyard"?.08:.10);
    const alpha=Math.min(1,seconds*1.6);
    const oldX=target.x,oldZ=target.z;
    target.x+=(desiredX-target.x)*alpha;target.z+=(desiredZ-target.z)*alpha;
@@ -457,6 +487,7 @@ export function createFadingHallGame({
    // original Anima aspect ratio and remains rooted to its own floor spot.
    companion.children[0].rotation.y=.28;
   }
+  updateCourtyard(seconds);
   renderMarkers();
  }
  function resetProgress(){
@@ -472,6 +503,10 @@ export function createFadingHallGame({
   get position(){return {x:actorFoot.x,y:actorSlot.position.y,z:actorFoot.z}},
   get plannedPath(){return walkPath.map(p=>[p.x,p.z])},
   get markerCount(){return hotspotInfo.filter(h=>h.room===room).length},
+  get roomCount(){return 3},
+  get courtyardMeshCount(){let n=0;courtyard.traverse(o=>{if(o.isMesh)n++});return n},
+  get courtyardVisible(){return courtyard.visible},
+  get courtyardPropNames(){return courtyardPropNames.slice()},
   get debug(){return debug},
   get nav(){return {room,bounds:bounds[room]}}
  });
