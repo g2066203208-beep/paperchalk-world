@@ -177,7 +177,8 @@ export function makeIntegratedCharacterMaterial(THREE,texture,scenePreset="fores
  const material=new THREE.MeshStandardMaterial({
   color:"#ffffff",map:texture,transparent:true,alphaTest:.095,
   roughness:1,metalness:0,side:THREE.DoubleSide,depthWrite:true,
-  normalMap:normalTexture,normalScale:new THREE.Vector2(.28,.28)
+  emissive:"#ffffff",emissiveMap:texture,emissiveIntensity:.17,
+  normalMap:normalTexture,normalScale:new THREE.Vector2(.33,.33)
  });
  material.userData.generatedNormalMap=normalTexture;
  material.userData.portraitLighting=U;
@@ -210,11 +211,15 @@ export function makeIntegratedCharacterMaterial(THREE,texture,scenePreset="fores
     float luma=dot(diffuseColor.rgb,vec3(.2126,.7152,.0722));
     float shadowBias=1.0-smoothstep(.22,.76,luma);
     vec3 ambientTint=mix(vec3(1.0),atmospheric, .10+.18*shadowBias);
-    float sunlight=(lightSide-.5)*.27;
-    vec3 directTint=mix(vec3(1.0),uPortraitKey,.12);
+    // Broad directional painterly shading instead of a uniform color filter.
+    // Relighting is capped to protect the approved portrait's own highlights.
+    float broadLight=dot(vec2(.5-puv.x,(puv.y-.50)*.58),uPortraitLightDir);
+    float sunlight=clamp(broadLight*.53,-.24,.24);
+    float ankleAO=feet*.095;
+    float weight=clamp(1.0+sunlight-ankleAO,.72,1.22);
+    vec3 directTint=mix(vec3(1.0),uPortraitKey,.17);
     vec3 bounce=uPortraitGround*uPortraitBounce*feet*(.4+.6*shadowBias);
-    vec3 relit=diffuseColor.rgb*ambientTint*directTint*
-      clamp(1.0+sunlight,.87,1.12)+bounce*.14;
+    vec3 relit=diffuseColor.rgb*ambientTint*directTint*weight+bounce*.21;
     // Character identity/linework intact: never remap opacity or contours.
     diffuseColor.rgb=mix(diffuseColor.rgb,relit,uPortraitRelight);
     diffuseColor.rgb=mix(diffuseColor.rgb,uPortraitFog,
@@ -230,7 +235,7 @@ export function makeIntegratedCharacterMaterial(THREE,texture,scenePreset="fores
     normal=normalize(mix(normal,shaped,uPortraitCurvature));`
   );
  };
- material.customProgramCacheKey=()=>"paperchalk-character-integration-v2";
+ material.customProgramCacheKey=()=>"paperchalk-character-integration-v3";
  return material;
 }
 export function setIntegratedCharacterScene(material,THREE,presetName,day=true){
