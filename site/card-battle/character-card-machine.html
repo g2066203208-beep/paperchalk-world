@@ -27,6 +27,9 @@ header nav{display:flex;flex-wrap:wrap;gap:15px;font-size:12px}
 .stage[data-inspecting="true"]{cursor:grab}
 .stage[data-inspecting="true"]:active{cursor:grabbing}
 .stage[data-inspecting="true"] #announce,.stage[data-inspecting="true"] .led{display:none}
+/* Anima portraits must never be obscured by stage captions, especially on phones. */
+.stage[data-inspecting="true"] .hud,
+.stage[data-inspecting="true"] #inspect-hint{display:none!important}
 
 .hud{position:absolute;top:16px;left:18px;font:600 11px ui-monospace,monospace;letter-spacing:.085em;color:#cfbf9f;text-shadow:0 2px 8px #000;pointer-events:none;line-height:1.7}
 .hud strong{display:block;color:#f5f1dc;font-size:12px}
@@ -149,6 +152,6 @@ body.inspect-open .controls,body.inspect-open .library,body.inspect-open footer{
 </section>
 <footer>当前为角色抽取与电影演出的交互原型。使用 GitHub 已上传的原始人物立绘；未制定正式抽卡货币、概率、保底和人物强度，也不会据此修改已有七职业或角色设定。记录保存在当前浏览器。</footer>
 </main>
-<script type="module" src="./motion/character-card-machine.mjs?v=20261118-card-inspection-v4"></script>
+<script type="module" src="./motion/character-card-machine.mjs?v=20261118-tactile-paper-v5"></script>
 </body>
 </html>
