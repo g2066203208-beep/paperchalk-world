@@ -62,7 +62,18 @@ jobs:
           git add site/card-battle/qa/character-card-machine
           if ! git diff --cached --quiet; then
             git commit -m 'qa: archive actual character-card machine WebGL screenshots'
-            git push origin HEAD:main
+            # Other GitHub jobs may have written a newer HEAD. Rebase the
+            # already-tested PNG commit on latest main, never force push.
+            for attempt in 1 2 3; do
+              git fetch origin main
+              git rebase origin/main
+              if git push origin HEAD:main; then
+                exit 0
+              fi
+              sleep 3
+            done
+            echo 'Could not safely archive screenshots after three non-force retries' >&2
+            exit 1
           fi
       - name: Upload full desktop and phone PNG/WebM and test results
         if: always()
