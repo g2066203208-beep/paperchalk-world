@@ -12,6 +12,7 @@ on:
       - 'site/assets/characters/**'
       - 'site/index.html'
       - 'tests/character-card-machine*.mjs'
+      - 'tests/card-image-relief.test.mjs'
       - '.github/workflows/character-card-machine-qa.yml'
   workflow_dispatch:
 concurrency:
