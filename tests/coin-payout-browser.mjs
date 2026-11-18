@@ -1,5 +1,5 @@
 /* Actual Chromium output: desktop, mobile & sideways real 3D coin piles.
- * Screenshot/video and runtime rigid-body collider assertions, not a mockup.
+ * Real WebGL screenshot/video, thick 3D coin-disc impulse tests and HD bloom.
  */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -25,6 +25,10 @@ for(const device of [{name:'desktop',w:1440,h:900},{name:'portrait',w:390,h:844}
   assert.equal(before.facetCount,10);
   assert(before.geometryType.includes('CylinderGeometry'));
   assert.equal(before.real3D,true);
+  assert.match(before.actualPhysics,/spatial-hash/,
+    '500-coin gameplay must use the optimized XYZ spatial impulse engine, not SAT for every visible coin');
+  assert.equal(before.lighting.quality,'smooth','performance-friendly visual preset must be default');
+  assert.equal(before.lighting.shadowsThrottled,true,'do not rebuild real shadow maps every display frame');
   assert.equal(before.lighting.materialType,'MeshStandardMaterial','coin must receive real PBR lighting');
   assert.equal(before.lighting.pixelGoldMask,true,'gold and black ink on the original pixel coin require separate PBR metalness');
   assert.equal(before.lighting.coinReceivesShadows,true,'stacked coins should darken coins underneath, not only the basin');
@@ -85,8 +89,17 @@ for(const device of [{name:'desktop',w:1440,h:900},{name:'portrait',w:390,h:844}
   assert.equal(next.inBasin,next.count,'second burst must also remain inside the actual bowl');
   assert.equal(next.escapedEver,0,'all second-burst coins stay within the rim');
   await page.screenshot({path:`${out}/${device.name}-06-second-high-energy-burst.png`});
+  // The largest actual UI preset must finish with 420 separately rendered coins.
+  await page.evaluate(()=>window.PaperchalkPayoutQA.reset());
+  await page.evaluate(()=>window.PaperchalkPayoutQA.fire(420));
+  const large=await page.evaluate(()=>window.PaperchalkPayoutQA.advanceFrames(450));
+  assert.equal(large.count,420);
+  assert.equal(large.inBasin,420);
+  assert.equal(large.escapedEver,0);
+  assert(large.contacts>1000,'dense 3D coin-to-coin contacts must still be solved');
+  await page.screenshot({path:`${out}/${device.name}-07-420-heavy-coins-fast-3d.png`,animations:'disabled'});
   assert.deepEqual(errors,[], 'no fatal JS exception in live WebGL and physics');
-  results.push({device:device.name,passed:true,before,frames,next});
+  results.push({device:device.name,passed:true,before,frames,next,large});
   console.log('PASS',device.name,JSON.stringify({coins:next.count,contacts:next.contacts,peakHeight:next.peakHeight}));
  }catch(error){results.push({device:device.name,passed:false,error:String(error.stack||error),errors});
   console.error('FAIL',device.name,error);
