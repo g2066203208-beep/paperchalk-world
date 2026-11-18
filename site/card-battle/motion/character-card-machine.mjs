@@ -976,6 +976,8 @@ window.PaperchalkCharacterMachineQA={
   frontBackgroundBurgundyPaper:!!frontPaperMaterial.map?.isCanvasTexture,
   portraitWhiteBackgroundRemoved:portraitMatteStats.detected,
   portraitWhitePixelsRemoved:portraitMatteStats.removed,
+  portraitInnerWhitePixelsRemoved:portraitMatteStats.enclosedRemoved||0,
+  portraitInnerWhiteIslands:portraitMatteStats.enclosedIslands||0,
   portraitFeatheredPixels:portraitMatteStats.feathered,
   portraitRgbBleedPixels:portraitMatteStats.padded,
   portraitMaterialTransparent:portraitMaterial.transparent,
