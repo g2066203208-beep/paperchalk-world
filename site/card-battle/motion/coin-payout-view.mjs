@@ -1,25 +1,30 @@
 import * as THREE from '../vendor/three.module.js';
 import {prepareExtrudedSprite,buildLowPolyPixelCoin3D} from './sprite-extrusion.mjs';
 import {RigidCoinPayout,COIN,FIXED_DT,CAPS,BASIN} from './coin-payout-rigid.mjs';
+import {installPayoutLighting,createPayoutMaterialFactory,upgradeCoinMaterials,createPayoutBloom} from './coin-payout-lighting.mjs';
 
 const $=id=>document.getElementById(id);
 const canvas=$('payout-view');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(devicePixelRatio||1,window.innerWidth<700?1.25:1.65));
 renderer.outputColorSpace=THREE.SRGBColorSpace;
-renderer.toneMapping=THREE.NoToneMapping;
+// HDR bloom pipeline performs ONE scene-linear bloom composite and filmic output.
 renderer.setClearColor('#181e20',1);
 const scene=new THREE.Scene();
 scene.background=new THREE.Color('#181e20');
+const compact=window.innerWidth<700;
+const lighting=installPayoutLighting(THREE,renderer,scene,{compact});
+const materials=createPayoutMaterialFactory(THREE);
+const post=createPayoutBloom(THREE,renderer,{compact});
 const camera=new THREE.OrthographicCamera(-8,8,5,-5,.05,140);
 const dummy=new THREE.Object3D(),axisCorrection=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-Math.PI/2);
 let payout=new RigidCoinPayout({seed:20261118}),instance=null,sourceModel=null;
 let viewMode='scene',playing=true,speed=1,last=0,acc=0,spinPreview=false;
 const meter=$('meter'),coinCounter=$('coin-count'),hitCounter=$('hit-count'),sleepCounter=$('sleep-count');
 const colors={table:'#313d41',tableEdge:'#1c292f',metal:'#7f8b7e',dark:'#253438',recess:'#121c20'};
-function material(color){return new THREE.MeshBasicMaterial({color,side:THREE.DoubleSide,toneMapped:false});}
+function material(color){return materials.material(color);}
 function makeBox(center,size,color,parent=scene){
- const o=new THREE.Mesh(new THREE.BoxGeometry(...size),material(color));o.position.set(...center);parent.add(o);return o;
+ const o=new THREE.Mesh(new THREE.BoxGeometry(...size),material(color));o.position.set(...center);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o;
 }
 function makeEnvironment(){
  // Coins must exit machine chute INTO the physically modelled basin, never
@@ -33,7 +38,10 @@ function makeEnvironment(){
  // the pile visible while still depicting genuine physical containment.
  const rear=makeBox([-2.53,BASIN.wallTop*.5,BASIN.back-.105],[6.80,BASIN.wallTop,.21],'#414f51');
  const front=makeBox([-2.53,BASIN.wallTop*.5,BASIN.front+.105],[6.80,BASIN.wallTop,.21],'#414f51');
- front.material.transparent=true;front.material.opacity=.20;front.material.depthWrite=false;
+ // A separate material: changing front glass opacity MUST NOT alter the rear wall.
+ front.material=front.material.clone();
+ front.material.transparent=true;front.material.opacity=.25;front.material.depthWrite=false;
+ front.castShadow=false;front.renderOrder=3;
  // Visible physical inner fillets that guide the high-speed stream inward.
  makeBox([-5.51,.12,0],[.38,.24,3.76],'#59625d');
  makeBox([-2.52,.12,-1.68],[6.24,.24,.34],'#59625d');
@@ -64,8 +72,49 @@ function makeEnvironment(){
  makeBox([.58,BASIN.chute[1]+.19,0],[.15,.035,.82],'#c4ba84',unit);
  makeBox([.58,BASIN.chute[1]-.19,0],[.15,.035,.82],'#c4ba84',unit);
  makeBox([2.88,2.5,2.29],[3.0,.22,.05],'#ab9a65',unit);
+ // Small overbright geometric highlights create actual HDR bloom only at lit metal.
+ // Emissive strips stay tight to the actual machine, no fullscreen fake halo.
+ const luminousColor=new THREE.Color().setRGB(4.9,2.20,.53);
+ const luminousMat=new THREE.MeshBasicMaterial({color:luminousColor,toneMapped:false});
+ function thinGlow(p,size,parent=unit){
+  const m=new THREE.Mesh(new THREE.BoxGeometry(...size),luminousMat);
+  m.position.set(...p);m.castShadow=false;parent.add(m);return m;
+ }
+ thinGlow([2.88,2.62,2.29],[2.58,.027,.022]);
+ thinGlow([.578,BASIN.chute[1]+.196,0],[.026,.031,.80]);
+ thinGlow([.578,BASIN.chute[1]-.196,0],[.026,.031,.80]);
+ const basinHighlight=new THREE.Mesh(new THREE.BoxGeometry(5.65,.024,.03),luminousMat);
+ basinHighlight.position.set(-2.53,BASIN.wallTop+.062,BASIN.back-.105);
+ scene.add(basinHighlight);
 }
 makeEnvironment();
+// Sparks are a few REAL contact locations in the rigid-body world, not a spray of fake coins.
+const maxContactGlints=20;
+const glintCoordinates=new Float32Array(maxContactGlints*3);
+const glintGeometry=new THREE.BufferGeometry();
+glintGeometry.setAttribute('position',new THREE.BufferAttribute(glintCoordinates,3));
+glintGeometry.setDrawRange(0,0);
+const glintMaterial=new THREE.PointsMaterial({
+ color:new THREE.Color().setRGB(5.5,2.35,.62),
+ size:4.2,sizeAttenuation:false,transparent:true,opacity:.78,
+ blending:THREE.AdditiveBlending,depthWrite:false,toneMapped:false
+});
+const glints=new THREE.Points(glintGeometry,glintMaterial);glints.frustumCulled=false;scene.add(glints);
+function updateContactGlints(){
+ const collisions=payout.world.contacts;let n=0;
+ for(let i=0;i<collisions.length && n<maxContactGlints;i+=5){
+  const ct=collisions[i],b=ct.bi;
+  if(!b||b.mass<=0)continue;
+  if(b.velocity.length()<2.3)continue;
+  const p=b.position,r=ct.ri;
+  glintCoordinates[n*3]=p.x+(r?.x||0);
+  glintCoordinates[n*3+1]=p.y+(r?.y||0);
+  glintCoordinates[n*3+2]=p.z+(r?.z||0)+.03;
+  n++;
+ }
+ glintGeometry.setDrawRange(0,n);
+ glintGeometry.attributes.position.needsUpdate=true;
+}
 const isPhone=()=>window.innerWidth<700;
 function setCamera(mode=viewMode){
  viewMode=mode;
@@ -80,7 +129,7 @@ function setCamera(mode=viewMode){
  for(const n of ['scene','pile','side'])$(n).setAttribute('aria-pressed',String(n===mode));
 }
 function resize(){const w=Math.max(1,canvas.clientWidth),h=Math.max(1,canvas.clientHeight);
- renderer.setSize(w,h,false);setCamera(viewMode);}
+ renderer.setSize(w,h,false);post.resize();setCamera(viewMode);}
 addEventListener('resize',resize);
 new ResizeObserver(resize).observe(canvas);
 if(isPhone())viewMode='pile';
@@ -95,7 +144,8 @@ async function loadCoinModel(){
  sourceModel=buildLowPolyPixelCoin3D(profile,THREE,{sides:COIN.sides,
    thickness:COIN.visualThickness,edgeColor:0x10120e,pixelArt:true});
  const base=sourceModel.children[0];
- instance=new THREE.InstancedMesh(base.geometry,base.material,CAPS.max);
+ instance=new THREE.InstancedMesh(base.geometry,upgradeCoinMaterials(THREE,base.material),CAPS.max);
+ instance.castShadow=true;instance.receiveShadow=false;
  instance.name='physical-10-facet-pixel-coin-instances';
  instance.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
  instance.count=0;instance.frustumCulled=false;
@@ -121,7 +171,7 @@ function updateStats(){const s=payout.getSnapshot();
  meter.textContent=`盆内 ${s.inBasin}/${s.count} · 出币 ${s.emitted}/${s.target} · ${s.time.toFixed(2)}s`;
  window.__coinPayoutLastSnapshot=s;
 }
-function redraw(){updateCoins();updateStats();renderer.render(scene,camera);}
+function redraw(){updateCoins();updateContactGlints();updateStats();post.render(scene,camera);}
 function reset(){payout.destroy();payout=new RigidCoinPayout({seed:20261118});acc=0;playing=false;
  $('pause').textContent='▶ 继续';redraw();}
 function fire(count){if(!instance)return 0;
@@ -132,6 +182,20 @@ $('pause').addEventListener('click',()=>{playing=!playing;$('pause').textContent
 $('frame').addEventListener('click',()=>{playing=false;$('pause').textContent='▶ 继续';payout.step();redraw();});
 $('slow').addEventListener('click',()=>{speed=speed===1?.25:1;$('slow').textContent=speed===1?'¼ 慢速':'正常速度';});
 for(const mode of ['scene','pile','side'])$(mode).addEventListener('click',()=>{setCamera(mode);redraw();});
+let renderLook='filmic',pixelArtMode=false;
+function setRenderLook(mode){
+ renderLook=mode;
+ if(mode==='off'){post.setBloom(0);post.setExposure(.96);}
+ else if(mode==='strong'){post.setBloom(1.90);post.setThreshold(1.05);post.setExposure(.94);}
+ else {post.setBloom(1.22);post.setThreshold(1.15);post.setExposure(.95);}
+ for(const key of ['filmic','strong','off'])$(key)?.setAttribute('aria-pressed',String(key===mode));
+ redraw();
+}
+for(const key of ['filmic','strong','off'])$(key)?.addEventListener('click',()=>setRenderLook(key));
+$('pixel-render')?.addEventListener('click',()=>{
+ pixelArtMode=!pixelArtMode;post.setPixelMode(pixelArtMode);
+ $('pixel-render').setAttribute('aria-pressed',String(pixelArtMode));redraw();
+});
 // Optional drag to see 3D without corrupting physics bodies' XYZ transforms.
 let down=null;
 canvas.addEventListener('pointerdown',e=>{down=[e.clientX,e.clientY];canvas.setPointerCapture(e.pointerId);});
@@ -161,7 +225,10 @@ window.PaperchalkPayoutQA={
  snapshot(){return {...payout.getSnapshot(),facetCount:COIN.sides,
   renderInstances:instance.count,sourceName:'slots-style-pixel-coin.svg',
   actualPhysics:CANNON.Cylinder.name,geometryType:instance.geometry.type,
-  projectedExtent:[camera.left,camera.right]};},
+  projectedExtent:[camera.left,camera.right],
+   lighting:{...post.state,look:renderLook,realShadows:renderer.shadowMap.enabled,
+    materialType:instance.material[1].type,
+    environmentReflections:!!scene.environment}};},
  screenshotReady(){redraw();return true;}
 };
 fire(240);requestAnimationFrame(animate);
