@@ -158,3 +158,42 @@ https://80.lv/articles/check-out-coin-animation-sound-effect-in-this-slot-fantas
 实际检查 `site/card-battle/motion/slot-daggers-coins.js`：片元 Shader 中**没有 `sampler2D` 或 `texture2D` 调用**，没有原画金币贴图、法线贴图、金属遮罩、sprite atlas 或逐帧 flipbook；代码以硬编码顶点位置/法线 + 程序几何生成带厚度圆柱，在 Fragment Shader 中用径向 `rosette` / `brushed` 正弦噪声模拟浮雕，并单独通过 Canvas 叠加星芒。因而它与用户要求的**有手绘像素高光层的薄片式 2D/2.5D 金币**存在根本设计差异；继续微调旧几何的金属颜色/粗糙度/厚度不能代替更换素材表示。
 
 第一验收项明确为：改为真实二维姿态序列 + 反光贴图以后，逐个比较朝向正面、约 45° 斜面、窄边、反面四阶段的轮廓；随后核对高光扫过同一纹理位置的动态连贯性。禁止把单个固定斜杠 glint 当成“真实金属反光”。
+
+
+## 2026-11-18 白模 V2：依据实机左侧金币堆纠正空间与动态
+
+**触发背景**：用户明确拒绝此前自己想象的“机身中央喷币→横跨全屏底部 U 型接币盘”，要求真正看《Slots & Daggers》原版并直接改成一开始不带金属、光照、贴图的动力学白模。此次针对从 2025–2026 官方/玩家原版静帧可直接核实的**机台右侧主体、金币堆集中在机台左缘，以及金币堆随已有金币数量变化**重构，**不是**声称取得原版 WIP 逐帧视频。
+
+### 直接对照的原版证据
+
+- 原版金币大量聚于机器**左侧**，并在人物界面左缘遮住背景/沿机器高度延伸： https://cdn.playtester.io/screenshots/slots-and-daggers/slots-daggers-ritual-dagger-screen.webp
+- 另一个原版特写，左上桌面大量硬币、机台在右： https://assets.st-note.com/production/uploads/images/224807377/rectangle_large_type_2_3f697b50263642d1d3c051cc38795bab.jpeg?fit=bounds&height=2000&quality=85&width=2000
+- 2025-11-18 玩家评测明确写到左侧是可见金币堆，数量随货币变化，机器平卧在酒馆桌上： https://djmmtgamechangerdoc.wordpress.com/2025/11/18/slots-daggers-review-7-5-10/
+- 开发者明确强调完整金币动效+金币撞击声音： https://80.lv/articles/check-out-coin-animation-sound-effect-in-this-slot-fantasy-game
+- 其开发者亲述片段 00:43–00:52： https://www.dailymotion.com/video/x9sjabo
+
+**原版动态可访问状态：没有下载到可以逐帧检查的开发者原始金币 WIP 片段。前述来源是可核实的实机静态构图与开发者陈述，因此目前无法严谨量化原版发射速度、撞击频率、弹跳衰减的真实毫秒值。禁止声称已经逐帧/像素级复刻、也不能把自制测试 GIF 当原版参照。**
+
+### 已实际提交 main 的可运行白模 V2
+
+- 页面： `site/card-battle/coin-whitebox-lab.html`，提交 `e05e1482feb3a559f84a598ef826a79da412b182`
+- 引擎： `site/card-battle/motion/slot-whitebox-physics.js`，提交 `53f573b3c51633ed15410e575fd5d4d1e61c2533`
+- 120Hz 单测： `tests/slot-whitebox-physics.test.cjs`，提交 `2fe9a61201ddb2d966590ff076d9f064d0351b81`
+- 浏览器截图+视频： `tests/slot-whitebox-browser.mjs`，提交 `5bb8c9080f6ee06e5d2341bf44c3c06b3862ab28`
+- 托管目标： https://g2066203208-beep.github.io/paperchalk-world/card-battle/coin-whitebox-lab.html （是否完成 GitHub Pages 部署需另外核对 Actions；不能仅凭 GitHub commit 断言部署成功）
+
+### 此次与上版本质区别
+
+1. **坐标/构图**：固定 1000×600 原型坐标，游戏机主体在 `x=283..970`，金币物理区域 `x=62..271`；左翼机身出口 `(258,224)`，不是中央喷口/屏幕底部大 U 盘。
+2. **原有堆**：每次首次试玩存在 18 枚具有真实碰撞体、堆叠支撑的旧金币；新币加入时会撞醒旧币，**不是两个重叠的贴图层**。
+3. **连续喷发**：重力、每枚速度差/角速度差和连喷节拍，二维圆形接触代理，一维厚度靠翻面角体现。未作 3D 圆柱物理谎称。
+4. **可叠加下一次中奖**：新增 `append(count)` 保留之前全部已有金币，并将第二次中奖喷入同一堆；用户单击“从零重播”才真正重置。
+5. **反弹与安定**：固定 120 Hz，空间网格配对，9 轮冲量/位置纠正、桌面与侧界壁、法向反弹与切向摩擦、接触支撑与休眠；每枚金币只因真实接触被重新激活。
+6. **无材质**：只显示单色白模圆片和边线；未加入金属、反射、星芒、金币贴图，严格保持先运动后材质的用户指令。
+7. **手机**：游戏全景 + **同一物理世界**左侧金币堆二次放大镜头，不生成第二组假粒子。测试 1365×900、390×844、844×390。
+
+### 已运行的本地真实 Chrome 测试与限制
+
+`node tests/slot-whitebox-physics.test.cjs` 对 12/48/76 枚、初始 18 枚旧币、固定种子等价、后续累计喷发、最终不穿透桌面/左右边界、金币间接触全部通过；48 新币+18 原有在约 5.8s 完成静止，最终 66/66 都处于 sleeping，最终最大穿透校正误差约 `0.04` 画面单位。桌面/手机浏览器按 360/900/1800/3200/5800/10000ms 渲染并截图，未出现 JS 异常。具体 QA 录屏与截图依托上传后的 GitHub Actions workflow；**未确认 CI final success 之前不得称线上自动验收已通过**。
+
+**仍然待做**：真正找到并提取开发者出币 WIP 视频相邻帧，统一参照帧宽、FPS、起喷/触地/峰值/结束时间，以实机帧与我们的同帧画面对比反复改调；当前新白模是“有静态构图证据的物理布局纠正”，还不是完整原版动作重现。
