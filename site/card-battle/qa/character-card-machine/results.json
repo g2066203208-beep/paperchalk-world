@@ -2,8 +2,8 @@
   {
     "viewport": "desktop",
     "passed": true,
-    "character": "财务主管",
-    "id": "demon-merchant/finance-director.webp",
+    "character": "巨兽屠夫",
+    "id": "monster-hunters/06-beast-butcher.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
@@ -12,8 +12,8 @@
   {
     "viewport": "portrait",
     "passed": true,
-    "character": "店长",
-    "id": "demon-merchant/shop-owner.webp",
+    "character": "蔷薇血医",
+    "id": "crimson-vampires/rose-physician.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
@@ -22,8 +22,8 @@
   {
     "viewport": "landscape",
     "passed": true,
-    "character": "飞刀演员",
-    "id": "wonder-circus/knife-thrower.png",
+    "character": "血族小公主",
+    "id": "crimson-vampires/vampire-princess.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
