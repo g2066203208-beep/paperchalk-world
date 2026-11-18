@@ -1,5 +1,5 @@
 /* Actual game QA: source-controlled Three.js chapter, real Anima actor,
-   clickable spatial clues, pathfinding, door transition, second 3D scene,
+   clickable spatial clues, A* navigation, 3D hall/corridor/courtyard,
    desktop and mobile screenshots + real browser video. No DOM-mocked gameplay. */
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -85,12 +85,34 @@ for(const d of devices){
   assert.match(await page.locator("#game-message").textContent(),/钟铃|第三声/);
   await shot("06-corridor-bell-dialogue");
   await page.locator("#game-dialogue-next").click();
+  // From corridor stone gate into an ACTUAL independent Three.js courtyard.
+  await clickHotspot("sealed");
+  await page.waitForFunction(()=>window.HallGame.room==="courtyard"&&window.HallGame.courtyardVisible,null,{timeout:25000});
+  await page.waitForTimeout(650);
+  assert.equal(await page.evaluate(()=>window.HallGame.markerCount),4);
+  assert.equal(await page.locator("#game-location").textContent(),"月下古堡庭院");
+  const actualCourtyard=await page.evaluate(()=>({roomCount:window.HallGame.roomCount,
+   sceneMeshes:window.HallGame.courtyardMeshCount,
+   props:window.HallGame.courtyardPropNames}));
+  assert.equal(actualCourtyard.roomCount,3,"three actual playable 3D scene groups");
+  assert(actualCourtyard.sceneMeshes>45,"courtyard must be actual geometry, not a flat picture");
+  assert(actualCourtyard.props.includes("fountain")&&actualCourtyard.props.includes("dead-tree"));
+  await shot("07-real-3d-moonlit-courtyard");
+  await clickHotspot("fountain");
+  await page.waitForFunction(()=>window.HallGame.dialogueOpen,null,{timeout:25000});
+  assert.match(await page.locator("#game-message").textContent(),/喷泉|石盆/);
+  await shot("08-courtyard-fountain-investigation");
+  await page.locator("#game-dialogue-next").click();
+  await clickHotspot("courtyardBack");
+  await page.waitForFunction(()=>window.HallGame.room==="corridor",null,{timeout:25000});
+  await page.waitForTimeout(650);
+  await shot("09-return-from-courtyard-to-corridor");
   await clickHotspot("return");
   await page.waitForFunction(()=>window.HallGame.room==="hall",null,{timeout:25000});
   await page.waitForTimeout(650);
-  await shot("07-return-to-hall-persistent-clues");
+  await shot("10-return-to-hall-persistent-clues");
   assert.deepEqual(await page.evaluate(()=>window.HallGame.clues),{paper:true,symbol:true});
-  assert.equal(await page.evaluate(()=>window.HallGame.transitions),2);
+  assert.equal(await page.evaluate(()=>window.HallGame.transitions),4);
   assert.deepEqual(errors,[],"No WebGL/audio/JS runtime errors");
   console.log("PASS playable Fading Hall",d.id,first);
   results.push({device:d.id,pass:true,first,
