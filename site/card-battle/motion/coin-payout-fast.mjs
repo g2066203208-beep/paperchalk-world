@@ -8,7 +8,7 @@
  * Why: a 500-coin Cannon convex pile has an extreme CPU cost in a browser.
  * Contact resolution is constrained to near neighbours in the basin.
  */
-import {COIN,BASIN,CAPS} from './coin-payout-rigid.mjs';
+import {COIN,BASIN,CAPS} from './coin-payout-shared.mjs';
 export const FAST_DT=1/60;
 const R=COIN.radius,H=COIN.height;
 const DIAMETER=R*2;
