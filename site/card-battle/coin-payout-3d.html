@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#171e20">
-<title>小像素低模金币 · 高速喷入实体接币盆 · 三维碰撞</title>
+<title>像素低模金币 · HDR 金属光影与辉光 · 真实 3D 接币盆</title>
 <style>
 :root{color-scheme:dark;font-family:system-ui,-apple-system,"Noto Sans SC",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#101619;color:#e7eae6;min-height:100dvh}
@@ -29,8 +29,8 @@ button{padding:8px 3px;font-size:10px;min-height:43px}.metrics{gap:5px}.metric{p
 .hud{font-size:9px;top:6px;left:6px}.note{font-size:10px}}
 </style></head>
 <body><main>
-<header><div><h1>低模像素金币 · 强力吐入接币盆</h1>
-<p>同一张 48px 像素金币素材，10 边超薄黑边模型；真实三维刚体引擎、互相挤压碰撞、落入实体接币盆反弹、盆内堆叠休眠；禁止金币乱飞出盆。不是 2D 粒子，也不生成新的金币图片。</p></div>
+<header><div><h1>低模像素金币 · HDR 氛围光与碰撞辉光</h1>
+<p>保留 10 边像素金币与真实三维碰撞；新增 PBR 金属/旧漆、PMREM 环境反射、动态阴影、HDR 高亮提取和电影式辉光。可开关辉光做同镜头 A/B 对照，所有金币只进入接币盆。</p></div>
 <nav><a href="./coin-model-lab.html">单枚金币模型</a><a href="./coin-whitebox-lab.html">旧物理版</a></nav></header>
 <section class="stage"><canvas id="payout-view" aria-label="真实三维小像素金币从机器出币口强力连续射入左侧实体接币盆，在盆内碰撞反弹并堆积"></canvas>
 <div class="hud">SLOTS &amp; DAGGERS · ORIGINAL PHYSICS STUDY<br>LOW-POLY COINS · REAL XYZ CONTACTS<br><span id="meter">初始化真实物理场景…</span></div>
@@ -41,10 +41,14 @@ button{padding:8px 3px;font-size:10px;min-height:43px}.metrics{gap:5px}.metric{p
 <button id="reset">清空重播</button><button id="frame">逐帧 +1</button><button id="slow">¼ 慢速</button>
 <button id="scene" aria-pressed="true">全景</button><button id="pile" aria-pressed="false">金币堆特写</button>
 <button id="side" aria-pressed="false">侧视检查堆叠</button>
+<button id="filmic" aria-pressed="true" title="PBR 真实灯光 + HDR 有阈值辉光">电影光影</button>
+<button id="strong" aria-pressed="false" title="增强由真实高亮物体产生的辉光">强烈辉光</button>
+<button id="off" aria-pressed="false" title="保持 PBR 光照和电影色调，只关闭 Bloom">关闭辉光对照</button>
+<button id="pixel-render" aria-pressed="false" title="切换内部渲染分辨率，比较像素质感">低像素渲染</button>
 </div>
 <div class="metrics"><div class="metric"><span>真实金币刚体</span><strong id="coin-count">0 / 500</strong></div>
 <div class="metric"><span>金币间接触次数</span><strong id="hit-count">0</strong></div>
 <div class="metric"><span>已静止实体</span><strong id="sleep-count">0</strong></div>
 <div class="metric"><span>物理类型</span><strong style="font-size:15px">10 FACET · 3D</strong></div></div>
-<p class="note">碰撞和堆积由仓库内置 cannon-es 真实刚体求解，使用同一物理世界的 X/Y/Z 坐标和实际薄圆柱碰撞体；各金币有独立姿态、三维角速度与摩擦。全部金币必须从出币口进入接币盆内，左右前后由真实三维实体盆壁阻挡，禁止喷出舞台；默认从 240 枚开始，可在同一盆中继续补币到 500 枚。原版实机录像逐帧速度尚未完成标定，这里只验收真实动力学和视觉密度。</p>
-</main><script type="module" src="./motion/coin-payout-view.mjs?v=20261118-basin-rigid-v2"></script></body></html>
+<p class="note"><strong>渲染 A/B：</strong>电影光影、强辉光、关闭辉光对照使用相同的物理、模型、镜头；仅切换 HDR 阈值与 Bloom 强度。低像素渲染只改变内部渲染分辨率。金属与旧漆使用不同的 PBR 粗糙度，环境反射基于独立程序光室，接触位置由真实 Shadow Map 产生暗部。<br>碰撞和堆积由仓库内置 cannon-es 真实刚体求解，使用同一物理世界的 X/Y/Z 坐标和实际薄圆柱碰撞体；各金币有独立姿态、三维角速度与摩擦。全部金币必须从出币口进入接币盆内，左右前后由真实三维实体盆壁阻挡，禁止喷出舞台；默认从 240 枚开始，可在同一盆中继续补币到 500 枚。原版实机录像逐帧速度尚未完成标定，这里只验收真实动力学和视觉密度。</p>
+</main><script type="module" src="./motion/coin-payout-view.mjs?v=20261118-hdr-bloom-pbr-v1"></script></body></html>
