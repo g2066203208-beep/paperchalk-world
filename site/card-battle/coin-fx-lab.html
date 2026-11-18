@@ -139,7 +139,7 @@ function payout(n,{seed,skipSpin=false}={}){
   targetY:wallet.top+wallet.height*.5,sound});
  const from=balance,to=balance+n,begin=performance.now();
  const numberTick=t=>{
-  const x=Math.min(1,Math.max(0,(t-begin-1650)/780));
+  const x=Math.min(1,Math.max(0,(t-begin-2000)/740));
   balance=Math.round(from+(to-from)*x*x*(3-2*x));
   $("balance").textContent=String(balance).padStart(4,"0");
   if(x<1)requestAnimationFrame(numberTick);
