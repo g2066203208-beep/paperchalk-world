@@ -61,6 +61,12 @@ for(const d of [
   assert.equal(original.foilMetalnessReady,true,'gold foil is classified in a material map');
   assert(original.foilPixels>100,'image RGB should identify meaningful fine gold lines');
   assert(original.backNormalPixels>100,'color-derived relief MUST produce non-flat normals');
+  assert(original.backPaperFiberPixels>1000,'paper fibers must cover the whole burgundy plane');
+  assert(original.backRoughnessRange[0]<.55 && original.backRoughnessRange[1]>.9,
+   'foil and paper must NOT share one plastic-smooth roughness');
+  assert(original.backPrintedPigment,'backside uses a carefully grained copy of original paint pixels');
+  assert(original.frontPaperSheen>0 && original.backPaperSheen>0,
+   'front paper and reverse stock need physical cellulose sheen, not glossy plastic');
   assert(original.backImageUrl.endsWith('/assets/cards/shared/character-card-back-anima.webp'));
   assert.equal(original.textureWidth,480);
   assert(original.textureHeight>700);
@@ -93,6 +99,12 @@ for(const d of [
    'rear image MUST be culled as soon as the character turns toward camera');
   assert(frontState.portraitNormalsReady,'character portrait should receive subtle color-derived normal maps');
   assert(frontState.portraitNormalPixels>100,'actual portrait colors should generate real surface detail');
+  assert(frontState.portraitPaperFiberPixels>1000,'all portrait regions require fibrous press-paper normals');
+  assert(frontState.portraitRoughnessRange[0]>.75 &&
+   frontState.portraitRoughnessRange[1]-frontState.portraitRoughnessRange[0]>.03,
+   'portrait colors must stay MATTE while having variable printed-ink roughness');
+  assert(frontState.portraitPrintedPigment,'the whole illustrated front must receive fine non-plastic pigment stipple');
+  assert(frontState.portraitPaperSheen>0,'physical satin/cellulose sheen must exist on the card front');
   await page.screenshot({path:out+'/'+d.name+'-INSPECT-01-real-ringmaster-front.png'});
   await page.evaluate(()=>window.PaperchalkCharacterMachineQA.inspectRotate(Math.PI,0));
   await page.waitForTimeout(130);
