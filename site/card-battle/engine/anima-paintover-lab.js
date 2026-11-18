@@ -15,7 +15,7 @@ let drawerOpen=false;
 let cameraTouched=false;
 const isPortrait=()=>canvas.clientWidth<canvas.clientHeight*.86;
 const clockNow=()=>performance.now();
-const state={whitebox:false,day:false,actor:true,foreground:true,decals:true,shadows:true,weights:{base:1,grime:.70,wet:.55,growth:.65,ink:.64}};
+const state={whitebox:false,day:false,actor:true,relighting:true,foreground:true,decals:true,shadows:true,weights:{base:1,grime:.70,wet:.55,growth:.65,ink:.64}};
 const scene=new THREE.Scene();
 scene.background=new THREE.Color("#172932");
 scene.fog=new THREE.FogExp2("#263e42",.018);
@@ -84,10 +84,14 @@ const integratedMaterials=[];
 let activeSceneLight="hall";
 const sceneRelight=(room="hall")=>{
  activeSceneLight=room;
- for(const mat of integratedMaterials)setIntegratedCharacterScene(mat,THREE,room,state.day);
+ for(const mat of integratedMaterials){
+  setIntegratedCharacterScene(mat,THREE,room,state.day);
+  if(!state.relighting)mat.userData.portraitLighting.uPortraitRelight.value=0;
+ }
 };
 const makeActorMaterial=(texture)=>{
  const mat=makeIntegratedCharacterMaterial(THREE,texture,getCharacterScenePreset(activeSceneLight,state.day));
+ if(!state.relighting)mat.userData.portraitLighting.uPortraitRelight.value=0;
  integratedMaterials.push(mat);return mat;
 };
 const whiteMat=new THREE.MeshStandardMaterial({color:"#b5b8b7",roughness:.87,metalness:0});
@@ -544,6 +548,9 @@ for(const name of ["base","grime","wet","growth","ink"]){
  });
 }
 for(const id of ["actor","foreground","decals","shadows"])$(id).addEventListener("change",ev=>{state[id]=ev.target.checked;sync()});
+$("relight-enable").addEventListener("change",ev=>{
+ state.relighting=ev.target.checked;sceneRelight(gameplay.room);
+});
 $("whitebox").addEventListener("click",()=>{state.whitebox=true;sync()});
 $("finished").addEventListener("click",()=>{state.whitebox=false;sync()});
 $("day").addEventListener("click",()=>{state.day=true;relight();sync()});
@@ -572,10 +579,11 @@ $("mobile-light").addEventListener("click",()=>{state.day=!state.day;relight();s
 $("mobile-fit").addEventListener("click",()=>{setCameraPreset(true);resetCounter++});
 $("material-controls").setAttribute("aria-hidden",String(compact));
 $("reset").addEventListener("click",()=>{
- state.whitebox=false;state.day=false;state.actor=true;state.foreground=true;state.decals=true;state.shadows=true;
+ state.whitebox=false;state.day=false;state.actor=true;state.relighting=true;state.foreground=true;state.decals=true;state.shadows=true;
  state.weights={base:1,grime:.7,wet:.55,growth:.65,ink:.64};
  for(const [k,v] of Object.entries(state.weights)){$(k).value=String(v*100);$(k+"-value").value=Math.round(v*100)+"%"}
  for(const k of ["actor","foreground","decals","shadows"])$(k).checked=true;
+ $("relight-enable").checked=true;sceneRelight(gameplay.room);
  setCameraPreset(true);resetCounter++;requestMaterialRebuild();relight();sync();
 });
 // Genuine two-finger zoom; single-finger orbit. No page scrolling while
@@ -692,6 +700,16 @@ window.PaintoverStudio={
  get room(){return gameplay.room},
  get loadedActor(){return loadedActor},
  get relightReady(){return !!integratedMaterials.length},
+ get relightEnabled(){return state.relighting},
+ get relightUniforms(){return integratedMaterials.map(m=>({
+  strength:m.userData.portraitLighting.uPortraitRelight.value,
+  sky:m.userData.portraitLighting.uPortraitSky.value.getHexString(),
+  ground:m.userData.portraitLighting.uPortraitGround.value.getHexString()
+ }))},
+ setRelighting(v){
+  state.relighting=!!v;$("relight-enable").checked=state.relighting;
+  sceneRelight(gameplay.room);
+ },
  get relightPreset(){return activeSceneLight},
  get relightMaterialCount(){return integratedMaterials.length},
  get relightShadersInstalled(){return integratedMaterials.every(m=>typeof m.onBeforeCompile==="function")},
