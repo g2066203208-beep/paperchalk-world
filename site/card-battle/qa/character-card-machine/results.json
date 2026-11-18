@@ -2,8 +2,8 @@
   {
     "viewport": "desktop",
     "passed": true,
-    "character": "使魔魔女",
-    "id": "witch-workshop/familiar-witch.png",
+    "character": "小丑演员",
+    "id": "wonder-circus/clown-performer.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
@@ -12,8 +12,8 @@
   {
     "viewport": "portrait",
     "passed": true,
-    "character": "采购主管",
-    "id": "demon-merchant/purchasing-director.webp",
+    "character": "冰霜魔女",
+    "id": "witch-workshop/frost-witch.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
@@ -22,8 +22,8 @@
   {
     "viewport": "landscape",
     "passed": true,
-    "character": "大力士",
-    "id": "wonder-circus/strongwoman.png",
+    "character": "火焰魔女",
+    "id": "witch-workshop/fire-witch.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
