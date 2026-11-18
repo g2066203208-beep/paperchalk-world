@@ -1,0 +1,74 @@
+name: Character Card Dispenser - Real 3D Chrome QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/card-battle/character-card-machine.html'
+      - 'site/card-battle/motion/character-card-machine.mjs'
+      - 'site/card-battle/motion/character-card-sequence.mjs'
+      - 'site/card-battle/motion/coin-payout-lighting.mjs'
+      - 'site/data/art/seven-card-groups.v1.json'
+      - 'site/assets/characters/**'
+      - 'site/index.html'
+      - 'tests/character-card-machine*.mjs'
+      - '.github/workflows/character-card-machine-qa.yml'
+  workflow_dispatch:
+concurrency:
+  group: character-card-machine-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: write
+jobs:
+  real-card-gacha:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify actual uploaded characters and animation stages
+        run: |
+          node --check site/card-battle/motion/character-card-sequence.mjs
+          node --check site/card-battle/motion/character-card-machine.mjs
+          node --check tests/character-card-machine.test.mjs
+          node --check tests/character-card-machine-browser.mjs
+          node tests/character-card-machine.test.mjs
+      - name: Install Chromium
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Launch hosted site's static root locally
+        run: |
+          nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/character-cards.log 2>&1 &
+          sleep 2
+      - name: Test real 3D card draw with actual PNG/WebP art on three screens
+        run: node tests/character-card-machine-browser.mjs
+      - name: Keep actual verified game frames in repository
+        if: success() && github.event_name == 'push'
+        continue-on-error: true
+        run: |
+          mkdir -p site/card-battle/qa/character-card-machine
+          cp artifacts/character-card-machine/desktop-00-machine-standby.png site/card-battle/qa/character-card-machine/desktop-machine.png
+          cp artifacts/character-card-machine/desktop-03-card-back-exiting-chute.png site/card-battle/qa/character-card-machine/desktop-card-back.png
+          cp artifacts/character-card-machine/desktop-04-real-card-rotation.png site/card-battle/qa/character-card-machine/desktop-card-flip.png
+          cp artifacts/character-card-machine/desktop-05-hdr-reveal.png site/card-battle/qa/character-card-machine/desktop-reveal.png
+          cp artifacts/character-card-machine/desktop-06-portrait-on-card.png site/card-battle/qa/character-card-machine/desktop-character.png
+          cp artifacts/character-card-machine/portrait-06-portrait-on-card.png site/card-battle/qa/character-card-machine/phone-character.png
+          cp artifacts/character-card-machine/landscape-06-portrait-on-card.png site/card-battle/qa/character-card-machine/landscape-character.png
+          cp artifacts/character-card-machine/results.json site/card-battle/qa/character-card-machine/results.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add site/card-battle/qa/character-card-machine
+          if ! git diff --cached --quiet; then
+            git commit -m 'qa: archive actual character-card machine WebGL screenshots'
+            git push origin HEAD:main
+          fi
+      - name: Upload full desktop and phone PNG/WebM and test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: real-character-card-machine-3d-qa
+          path: artifacts/character-card-machine/
+          if-no-files-found: warn
+          retention-days: 14
