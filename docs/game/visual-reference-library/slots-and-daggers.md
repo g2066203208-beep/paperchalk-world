@@ -84,3 +84,70 @@
 2. 不擅自复制或镜像未授权的游戏图片、GIF、宣传片；如果原链接失效，只更新参考索引并标记失效。
 3. 自己拍摄的游戏工程测试截图/视频可留在 GitHub Actions artifact；在正式对比图中明确「原版参考（外链）」与「我们的实机输出」。
 4. 若后续 Anima 产出单独素材，则登记尺寸、透明度、源提示词、资产路径、材质槽和遮挡层，**不能**把程序占位纹理写成 Anima 成品。
+
+
+## 2026-11-18 用户明确纠正：金币应为卡片式 2D/2.5D 高光，不能继续以厚重 3D 圆柱为视觉基准
+
+### 一、证据与方法边界
+
+用户根据《Slots & Daggers》实机所见，要求金币更像**一张张很薄的卡片/精灵图**，翻转时有 3D 质感与强烈、短促的真实金属高光，而不是当前 `motion/slot-daggers-coins.js` 厚重挤出圆柱、浮雕塑料感。**这属于用户视觉目标，不是对原版引擎内实现的已证实判断**。原版具体是否使用 sprite / plane / mesh 仍未知，禁止宣称其采用某种未公开技术。
+
+原版主要动图出处仍为 80 Level 2025-08-15 开发者 WIP 动画专题：
+https://80.lv/articles/check-out-coin-animation-sound-effect-in-this-slot-fantasy-game
+
+原版开发者亲述 00:43–00:52 动画、金币声音与触感：https://www.dailymotion.com/video/x9sjabo
+
+原版 4K 实机：https://www.youtube.com/watch?v=oo73Xs0HcFg
+
+原版静帧：https://assets.st-note.com/production/uploads/images/224807377/rectangle_large_type_2_3f697b50263642d1d3c051cc38795bab.jpeg?fit=bounds&height=2000&quality=85&width=2000
+
+**注意**：80 Level 文章确认有展示 WIP 片段，但迄今未找到独立、可直接提取帧的官方 GIF/视频文件。上述不是已完成原版逐帧测量，更不可报出不存在的原版毫秒参数。
+
+### 二、可公开访问的类似技术案例与动态 GIF
+
+1. **DhafinFawwaz/Unity-Optimized-Coins-Shader — 最接近卡片金币批量翻转。**
+   仓库 https://github.com/DhafinFawwaz/Unity-Optimized-Coins-Shader
+   实际原作者 GIF https://github.com/DhafinFawwaz/Unity-Optimized-Coins-Shader/blob/main/Images/Optimized.gif
+   其他 GIF：
+   https://github.com/DhafinFawwaz/Unity-Optimized-Coins-Shader/blob/main/Images/MonobehaviourUpdate.gif
+   https://github.com/DhafinFawwaz/Unity-Optimized-Coins-Shader/blob/main/Images/SingleMaterial.gif
+   https://github.com/DhafinFawwaz/Unity-Optimized-Coins-Shader/blob/main/Images/MultiMaterial.gif
+   作者 README 可核对的具体算法：Sprite flipbook 8 帧例子、顶点偏移模拟跳跃、精灵顶点颜色 RGB 分别编码跳跃幅度/相位/起始帧、同材质单批次；阴影不随金币升起。该项目有 MIT license；参考算法，不直接导入素材。
+
+2. **traggett/UnitySpriteShaders — 2D Sprite 可用真实金属/法线/高光分层，而非厚 mesh。**
+   仓库 https://github.com/traggett/UnitySpriteShaders
+   动态示例 https://github.com/traggett/UnitySpriteShaders/blob/master/ReadmeAssets/Example.gif
+   具体技术：Normal Map、metallic gloss、smoothness、emission、rim light、view-space fixed normal；可以在只有一个 plane 的情况下保持类似厚度的受光。
+
+3. **Tim Chism / Coin Shimmer — 单靠 3D coin + 基础光照也会呆板；额外屏幕空间金属闪光蒙版。**
+   实际技术说明 https://www.timchism.com/coin-shimmer.html
+   原作者动画 GIF https://www.timchism.com/uploads/6/9/6/9/6969793/coinshimmerexamplesm_orig.gif
+   另一组 GIF https://www.timchism.com/uploads/6/9/6/9/6969793/coinshimmerexplosionsm_orig.gif
+   其方案是在屏幕位置上移动黑白亮斑遮罩，并用 AO/specular mask 屏蔽不该发亮的暗面。这是**独立于原版**的可学技术。
+
+4. **basementuniverse/world-2d — WebGL 2D 法线/高光层与高度照明范例。**
+   https://github.com/basementuniverse/world-2d
+   可结合当前浏览器游戏引擎，批量绘制 Sprite albedo + normal + specular mask，避免所有亮部都用无结构 additive bloom。
+
+5. **像素金币翻面美术的直接思路**：有独立 2D 开发者描述用 Illustrator 绘制翻面序列帧、Tween 缩放 https://www.reddit.com/r/IndieDev/comments/1x1wvo0/made_a_little_coin_flip_for_a_card_game_ive_been/ 。这是另一开发者经验，不代表原版实现。
+
+### 三、当前金币模块的具体设计替换（未动运行代码前禁止称完成）
+
+**先做 1 枚完整金币视觉单元，通不过对比就不能批量喷发：**
+
+- 金币外形使用带透明边的**薄 2D sprite quad / 程序生成贴图 atlas**，不要依赖当前 44-segment 挤出圆柱体外观。正/斜/边/背至少 8–16 个可观察姿态；侧边应是很细的暗金长条，不能在边沿出现过宽、厚塑胶圆柱的观感。
+- 每张 pose 有一致的金色像素轮廓、压印图案、暗金 AO、受控法线和金属/高光蒙版。颜色强调深褐-暗金-亮黄-接近白色四阶；不能一味全局提高 saturation 或 brightness。
+- 翻面用 atlas 帧选择或变形 quad（适当的 `abs(cos θ)` 水平宽度 + 侧边姿态贴图），按帧安排正/斜/边/反面的纹理转换；硬币的平面内滚动单独控制。
+- 第一层金属反光依照纹理法线与虚拟光源方向，第二层是**受蒙版控制的移动高亮软盒光带**；极亮白色星芒只在小面积、短时间、特定转向出现，不能每枚每帧都十字星泛滥。
+- 手绘/像素化轮廓优先；Shader 不应毁掉美术中有意设计的受光断面，减少现在的杂乱细碎几何和镜面噪声。
+- 多金币继续可复现 seed/seek、不同初始相位/尺寸/角速度、重力+衰减弹跳、接地阴影、叠层遮挡、逐币 clink、吸入零钱堆；但**不能把掉进钱包的 CG 演出当真正经济逻辑**。
+- 手机优先共享 atlas + WebGL instancing/batching；和桌面一样遵守原始横纵比例与 UI 区域，不允许为了手机把硬币绘制得肥厚。
+
+### 四、逐帧验收（必须有真实证据）
+
+1. 先取得能合法查看并逐帧定位的**原版金币 WIP/实机片段**，锁定有效起始帧和 FPS，再记录喷出相对时刻、转角、曝光/高光大小、首触地、收拢时刻；未取得之前原版时间码一律 `unverified`。
+2. 同时对比 `1920×1080`、`390×844`、`844×390` 三视口：同一点的原版参考截图（清楚标来源）与我们的浏览器实际截图；保存完整 WebM/GIF、关键帧序列和原样 GIF URL。
+3. QA 先只验收**单枚翻转轮廓 + 动态反光**，再加 12/48/76 枚发射、碰撞、阴影、音效；如截图缺失或 CI 失败，不准称已经还原。
+4. 未来重新制作完成后更新此节 `状态`、`commit`、`截图目录`、`视频目录`，保留旧版失败图做对比，避免反复回退到劣质 3D 金币。
+
+**当前状态：技术来源已查到，运行时代码仍是旧 3D V2，需要下一轮替换、浏览器实测、逐帧验收。**
