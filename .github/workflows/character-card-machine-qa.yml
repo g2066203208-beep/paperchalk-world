@@ -6,6 +6,7 @@ on:
       - 'site/card-battle/character-card-machine.html'
       - 'site/card-battle/motion/character-card-machine.mjs'
       - 'site/card-battle/motion/card-image-relief.mjs'
+      - 'site/card-battle/motion/card-physical-edge.mjs'
       - 'site/card-battle/motion/character-card-sequence.mjs'
       - 'site/card-battle/motion/coin-payout-lighting.mjs'
       - 'site/data/art/seven-card-groups.v1.json'
@@ -13,6 +14,7 @@ on:
       - 'site/index.html'
       - 'tests/character-card-machine*.mjs'
       - 'tests/card-image-relief.test.mjs'
+      - 'tests/card-physical-edge.test.mjs'
       - '.github/workflows/character-card-machine-qa.yml'
   workflow_dispatch:
 concurrency:
@@ -36,6 +38,9 @@ jobs:
           node --check site/card-battle/motion/card-image-relief.mjs
           node --check tests/card-image-relief.test.mjs
           node tests/card-image-relief.test.mjs
+          node --check site/card-battle/motion/card-physical-edge.mjs
+          node --check tests/card-physical-edge.test.mjs
+          node tests/card-physical-edge.test.mjs
           node --check tests/character-card-machine.test.mjs
           node --check tests/character-card-machine-browser.mjs
           node tests/character-card-machine.test.mjs
@@ -65,6 +70,8 @@ jobs:
           cp artifacts/character-card-machine/desktop-INSPECT-00-original-back.png site/card-battle/qa/character-card-machine/desktop-inspect-back.png
           cp artifacts/character-card-machine/desktop-INSPECT-01-real-ringmaster-front.png site/card-battle/qa/character-card-machine/desktop-inspect-front.png
           cp artifacts/character-card-machine/desktop-INSPECT-02-side-and-zoom.png site/card-battle/qa/character-card-machine/desktop-inspect-angled.png
+          cp artifacts/character-card-machine/desktop-INSPECT-EDGE-paper-cut-thickness.png site/card-battle/qa/character-card-machine/desktop-inspect-card-stock-edge.png
+          cp artifacts/character-card-machine/portrait-INSPECT-EDGE-paper-cut-thickness.png site/card-battle/qa/character-card-machine/phone-inspect-card-stock-edge.png
           cp artifacts/character-card-machine/desktop-INSPECT-04-zoomed-detail.png site/card-battle/qa/character-card-machine/desktop-inspect-detail-zoom.png
           cp artifacts/character-card-machine/portrait-INSPECT-00-original-back.png site/card-battle/qa/character-card-machine/phone-inspect-back.png
           cp artifacts/character-card-machine/portrait-INSPECT-01-real-ringmaster-front.png site/card-battle/qa/character-card-machine/phone-inspect-front.png
