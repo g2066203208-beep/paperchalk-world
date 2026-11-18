@@ -300,6 +300,7 @@ function applySequence(ms,quiet=false){
   cardRoot.position.set(p.card.x,p.card.y,p.card.z);
   cardRoot.quaternion.copy(camera.quaternion);
   cardRoot.rotateY(p.card.rotationY);
+  cardRoot.rotateX(p.card.rotationX);
   cardRoot.rotateZ(p.card.roll);
   cardRoot.scale.setScalar(p.card.scale);
  }
