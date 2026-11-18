@@ -1,0 +1,37 @@
+name: Character Scene Integration Portable QA Sources
+on:
+  push:
+    paths:
+      - .github/workflows/character-scene-integration-source-export.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check syntax and required real original images
+        run: |
+          node --check site/card-battle/engine/character-scene-integration.js
+          node --check site/card-battle/engine/anima-paintover-lab.js
+          node --check site/card-battle/engine/anima-hall-gameplay.js
+          test -s site/assets/characters/monster-hunters/02-blood-physician.png
+          test -s site/assets/characters/monster-hunters/03-trap-engineer.png
+      - name: Upload actual integrated browser-test files
+        uses: actions/upload-artifact@v4
+        with:
+          name: character-scene-qa-source-20261118
+          path: |
+            site/card-battle/engine/anima-paintover-lab.js
+            site/card-battle/engine/anima-hall-gameplay.js
+            site/card-battle/engine/anima-courtyard-scene.js
+            site/card-battle/engine/character-scene-integration.js
+            site/card-battle/anima-paintover-lab.html
+            site/card-battle/ui/anima-hall-gameplay.css
+            site/card-battle/ui/anima-paintover-lab.css
+            site/card-battle/vendor/three.module.js
+            site/assets/characters/monster-hunters/02-blood-physician.png
+            site/assets/characters/monster-hunters/03-trap-engineer.png
+          if-no-files-found: error
+          retention-days: 7
