@@ -81,7 +81,7 @@ export function mattePortraitBackground(rgba,width,height){
    }
   }
   const large=write>Math.max(280,total*.0018);
-  const sideGap=minX<width*.20||maxX>width*.80;
+  const sideGap=minX<width*.22||maxX>width*.78;
   const tall=(maxY-minY)>height*.095||write>total*.017;
   if(large&&sideGap&&tall){
    for(let j=0;j<write;j++)mask[queue[j]]=1;
