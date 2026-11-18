@@ -199,6 +199,7 @@ new THREE.TextureLoader().load(cardBackUrl,tex=>{
  const foil=buildGoldFoilMask(tex.image);
  if(foil){cardBackMaterial.metalness=1;cardBackMaterial.metalnessMap=foil;}
  cardBackMaterial.needsUpdate=true;cardBackReady=true;
+ if(drawState.ready)$('inspect').disabled=false;
 },undefined,error=>{
  cardBackFailed=true;console.error('Approved card-back texture failed to load',cardBackUrl,error);
  $('load-status').textContent='卡背原图加载失败，请检查 GitHub 素材路径';
@@ -380,7 +381,7 @@ function applySequence(ms,quiet=false){
  return p;
 }
 async function processQueue(){
- if(drawState.starting||drawState.busy||!drawState.queued.length)return;
+ if(inspector.active||drawState.starting||drawState.busy||!drawState.queued.length)return;
  drawState.starting=true;
  const faction=drawState.queued.shift();
  const candidates=drawState.all.filter(c=>faction==='all'||c.faction===faction);
@@ -405,13 +406,161 @@ async function processQueue(){
  }
 }
 function queueDraw(n){
- if(!drawState.ready)return;
+ if(!drawState.ready||inspector.active)return;
  if(drawState.queued.length+n>25){$('load-status').textContent='队列上限 25 张';return;}
  const key=$('faction').value;
  for(let i=0;i<n;i++)drawState.queued.push(key);
  $('load-status').textContent='已排队 '+drawState.queued.length+' 张';
  processQueue();
 }
+// Free examination is a genuine real-time 3D mode in the SAME slot machine.
+// No static screenshot, fake 2D flip, or alteration of approved portrait bytes.
+const inspector={
+ active:false,yaw:Math.PI,goalYaw:Math.PI,pitch:0,zoom:2.08,
+ spinning:false,pointers:new Map(),pinchStart:0,pinchZoom:2.08,
+ serial:0,chosen:'back'
+};
+const clampInspect=(n,min,max)=>Math.max(min,Math.min(max,n));
+function setInspectorFace(face){
+ inspector.spinning=false;
+ inspector.goalYaw=face==='back'?Math.PI:0;
+ $('inspect-spin').setAttribute('aria-pressed','false');
+ $('inspect-spin').textContent='自动转动';
+}
+function renderInspectorCard(){
+ if(!inspector.active)return;
+ cardRoot.visible=true;
+ cardRoot.position.copy(viewTarget);
+ cardRoot.quaternion.copy(camera.quaternion);
+ cardRoot.rotateY(inspector.yaw);
+ cardRoot.rotateX(inspector.pitch);
+ cardRoot.scale.setScalar(inspector.zoom);
+ aura.visible=false;
+ resultLight.intensity=5;
+ resultLight.position.copy(viewTarget).add(new THREE.Vector3(0,1.0,2.5));
+}
+function openInspector(){
+ if(!drawState.ready||!cardBackReady||inspector.active)return;
+ inspector.active=true;inspector.spinning=false;inspector.yaw=Math.PI;
+ inspector.goalYaw=Math.PI;inspector.pitch=0;inspector.zoom=2.08;
+ inspector.chosen='back';inspector.serial++;
+ $('inspect-character').value='back';
+ $('inspect-toolbar').hidden=false;$('inspect-hint').hidden=false;
+ $('inspect').setAttribute('aria-pressed','true');
+ $('inspect').textContent='正在自由观赏';
+ $('draw-one').disabled=true;$('draw-five').disabled=true;$('skip').disabled=true;
+ $('machine-canvas').style.cursor='grab';
+ document.querySelector('.stage').dataset.inspecting='true';
+ machine.visible=false;floor.visible=false;tile.visible=false;
+ $('stage-label').textContent='卡背原图 · 自由 3D 观赏';
+ $('stage-frame').textContent='DRAG · ROTATE · ZOOM';
+ $('load-status').textContent='正在观赏已上传的暗红金线卡背';
+ $('announce').hidden=true;
+ renderInspectorCard();
+}
+async function inspectChoose(id,showFront=true){
+ if(!inspector.active)return;
+ const serial=++inspector.serial;inspector.chosen=id;
+ if(id==='back'){
+  setInspectorFace('back');
+  $('stage-label').textContent='卡背原图 · 自由 3D 观赏';
+  return;
+ }
+ const card=drawState.all.find(x=>x.id===id);
+ if(!card)return;
+ $('load-status').textContent='正在读取 '+card.name+' 原画…';
+ try{
+  const asset=await getPortrait(card);
+  if(serial!==inspector.serial||!inspector.active)return;
+  updatePortrait(card,asset);
+  $('stage-label').textContent='自由观赏 · '+card.name;
+  $('load-status').textContent=card.group+' · '+card.name+' · 真实原图';
+  if(showFront)setInspectorFace('front');
+ }catch(e){if(serial===inspector.serial)$('load-status').textContent=String(e.message||e);}
+}
+function closeInspector(){
+ if(!inspector.active)return;
+ inspector.active=false;inspector.serial++;
+ inspector.pointers.clear();inspector.spinning=false;
+ $('inspect-toolbar').hidden=true;$('inspect-hint').hidden=true;
+ $('inspect').setAttribute('aria-pressed','false');$('inspect').textContent='自由观赏卡牌';
+ $('draw-one').disabled=false;$('draw-five').disabled=false;
+ $('skip').disabled=!drawState.busy;
+ $('machine-canvas').style.cursor='';
+ document.querySelector('.stage').dataset.inspecting='false';
+ machine.visible=true;floor.visible=true;tile.visible=true;
+ const restore=drawState.current;
+ if(restore)getPortrait(restore).then(asset=>{
+  if(!inspector.active)updatePortrait(restore,asset);
+ }).catch(console.warn);
+ if(drawState.current)applySequence(drawState.elapsed,true);
+ else{
+  cardRoot.visible=false;aura.visible=false;
+  $('stage-label').textContent='35 张真实立绘 · 可以开始抽取';
+  $('stage-frame').textContent='READY';
+  resultLight.intensity=0;
+ }
+ $('load-status').textContent=drawState.queued.length?'继续抽卡队列：'+drawState.queued.length+' 张':'返回实体出卡机';
+ if(!drawState.busy)processQueue();
+}
+$('inspect').addEventListener('click',openInspector);
+$('inspect-exit').addEventListener('click',closeInspector);
+$('inspect-back').addEventListener('click',()=>setInspectorFace('back'));
+$('inspect-front').addEventListener('click',()=>{
+ if(inspector.chosen==='back'){
+  const id=drawState.current?.id||drawState.all[0]?.id;
+  if(id){$('inspect-character').value=id;inspectChoose(id,true);}
+ }else setInspectorFace('front');
+});
+$('inspect-character').addEventListener('change',e=>inspectChoose(e.target.value,true));
+$('inspect-reset').addEventListener('click',()=>{
+ inspector.zoom=2.08;inspector.pitch=0;setInspectorFace(inspector.chosen==='back'?'back':'front');
+});
+$('inspect-spin').addEventListener('click',()=>{
+ inspector.spinning=!inspector.spinning;
+ inspector.goalYaw=inspector.yaw;
+ $('inspect-spin').setAttribute('aria-pressed',String(inspector.spinning));
+ $('inspect-spin').textContent=inspector.spinning?'停止转动':'自动转动';
+});
+function pointerGap(){
+ const a=[...inspector.pointers.values()];
+ return a.length<2?0:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);
+}
+canvas.addEventListener('pointerdown',e=>{
+ if(!inspector.active)return;
+ e.preventDefault();
+ canvas.setPointerCapture(e.pointerId);
+ inspector.pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(inspector.pointers.size===2){
+  inspector.pinchStart=pointerGap();inspector.pinchZoom=inspector.zoom;
+ }
+});
+canvas.addEventListener('pointermove',e=>{
+ if(!inspector.active||!inspector.pointers.has(e.pointerId))return;
+ e.preventDefault();
+ const last=inspector.pointers.get(e.pointerId);
+ const dx=e.clientX-last.x,dy=e.clientY-last.y;
+ inspector.pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(inspector.pointers.size>=2&&inspector.pinchStart>0){
+  inspector.zoom=clampInspect(inspector.pinchZoom*pointerGap()/inspector.pinchStart,1.12,2.75);
+ }else{
+  inspector.spinning=false;inspector.goalYaw=inspector.yaw+dx*.010;
+  inspector.pitch=clampInspect(inspector.pitch+dy*.008,-1.17,1.17);
+  $('inspect-spin').setAttribute('aria-pressed','false');$('inspect-spin').textContent='自动转动';
+ }
+});
+function endInspectPointer(e){
+ inspector.pointers.delete(e.pointerId);
+ if(inspector.pointers.size<2)inspector.pinchStart=0;
+}
+canvas.addEventListener('pointerup',endInspectPointer);
+canvas.addEventListener('pointercancel',endInspectPointer);
+canvas.addEventListener('wheel',e=>{
+ if(!inspector.active)return;
+ e.preventDefault();
+ inspector.zoom=clampInspect(inspector.zoom*Math.exp(-e.deltaY*.001),1.12,2.75);
+},{passive:false});
+
 $('draw-one').addEventListener('click',()=>{unlockAudio();queueDraw(1);});
 $('draw-five').addEventListener('click',()=>{unlockAudio();queueDraw(5);});
 $('skip').addEventListener('click',()=>{
@@ -452,7 +601,13 @@ async function init(){
   if(drawState.all.length!==35)throw new Error('角色登记不完整：预期 35 张，实际 '+drawState.all.length);
   drawState.pool=drawState.all;drawState.ready=true;
   $('draw-one').disabled=false;$('draw-five').disabled=false;
+  $('inspect').disabled=!cardBackReady;
   $('stage-label').textContent='35 张真实立绘，等待抽选';
+  for(const card of drawState.all){
+   const opt=document.createElement('option');opt.value=card.id;
+   opt.textContent=card.group+' · '+card.name;
+   $('inspect-character').append(opt);
+  }
   $('load-status').textContent='5 个已入库组织 / 35 张人物 · 就绪';
   renderInventory();
  }catch(e){$('load-status').textContent=e.message||'角色清单载入失败';$('stage-label').textContent='素材未就绪';}
@@ -461,7 +616,14 @@ const clock=new THREE.Clock();
 function animate(){
  requestAnimationFrame(animate);
  const dt=Math.min(.09,clock.getDelta());
- if(drawState.busy){
+ if(inspector.active){
+  if(inspector.spinning){
+   inspector.yaw+=dt*.83;inspector.goalYaw=inspector.yaw;
+  }else{
+   inspector.yaw+=(inspector.goalYaw-inspector.yaw)*Math.min(1,dt*11);
+  }
+  renderInspectorCard();
+ }else if(drawState.busy){
   drawState.elapsed=Math.min(CARD_DRAW_MS,drawState.elapsed+dt*1000);
   applySequence(drawState.elapsed);
  }else if(drawState.animationFinished&&drawState.queued.length){
@@ -483,6 +645,11 @@ window.PaperchalkCharacterMachineQA={
  get all(){return drawState.all.map(x=>({id:x.id,name:x.name,faction:x.faction,url:x.url}));},
  get state(){return {
   busy:drawState.busy,starting:drawState.starting,
+  inspecting:inspector.active,inspectionYaw:inspector.yaw,
+  inspectionPitch:inspector.pitch,inspectionZoom:inspector.zoom,
+  cardBackReady,cardBackFailed,backImageUrl:cardBackUrl,
+  inspectorCharacterId:inspector.chosen,
+  backsideUsesOriginalTexture:cardBackReady&&!!cardBackPlane.material.map,
   elapsed:drawState.elapsed,queued:drawState.queued.length,
   current:drawState.current?.name||null,currentId:drawState.current?.id||null,
   revealed:drawState.seen,items:drawState.collection.reduce((s,v)=>s+v.count,0),
@@ -495,6 +662,13 @@ window.PaperchalkCharacterMachineQA={
   stage:evaluateCardSequence(drawState.elapsed).phase
  };},
  draw(n=1){queueDraw(n);},
+ inspectOpen(){openInspector();},
+ inspectBack(){setInspectorFace('back');},
+ inspectFront(){if(inspector.chosen==='back')return inspectChoose(drawState.all[0].id,true);setInspectorFace('front');},
+ inspectSelect(id){return inspectChoose(id,true);},
+ inspectRotate(yaw,pitch){inspector.spinning=false;inspector.yaw=inspector.goalYaw=yaw;inspector.pitch=clampInspect(pitch,-1.17,1.17);renderInspectorCard();},
+ inspectZoom(value){inspector.zoom=clampInspect(value,1.12,2.75);renderInspectorCard();},
+ inspectClose(){closeInspector();},
  seek(ms){if(!drawState.current)throw new Error('draw a card first');
   drawState.elapsed=Math.min(CARD_DRAW_MS,Math.max(0,ms));return applySequence(drawState.elapsed,true);},
  redraw(){post.render(scene,camera);return true;}
