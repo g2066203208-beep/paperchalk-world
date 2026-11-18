@@ -3,6 +3,7 @@ import {installPayoutLighting,createPayoutBloom} from './coin-payout-lighting.mj
 import {CARD_DRAW_MS,evaluateCardSequence} from './character-card-sequence.mjs';
 import {deriveCardRelief} from './card-image-relief.mjs';
 import {sanitizeCardMatte,roundedPaperEdgeGeometry} from './card-physical-edge.mjs';
+import {mattePortraitBackground} from './card-portrait-matte.mjs';
 
 const $=id=>document.getElementById(id);
 const canvas=$('machine-canvas');
@@ -147,9 +148,8 @@ const cardRoot=new THREE.Group();scene.add(cardRoot);
 // Flat paper with two independent ONE-SIDED image surfaces. The printed foil
 // gets its relief from the source pixels, not from 3D ornamental geometry.
 const cardW=1.68,cardH=2.53;
-// 2.5% of card width: real printed cardboard thickness, NOT a metal frame.
-// This is one tiny strip around the edge, while the approved art stays 2D.
-const cardThickness=.042,cardCornerRadius=.078;
+// Collectible cardstock, just 1% of the card width: visible but NOT chunky.
+const cardThickness=.017,cardCornerRadius=.078;
 const front=new THREE.Group();front.position.z=cardThickness*.5;cardRoot.add(front);
 const back=new THREE.Group();back.position.z=-cardThickness*.5;
 back.rotation.y=Math.PI;cardRoot.add(back);
@@ -184,7 +184,7 @@ edgeGeometry.setAttribute('normal',new THREE.BufferAttribute(edgeData.normals,3)
 edgeGeometry.setAttribute('uv',new THREE.BufferAttribute(edgeData.uvs,2));
 edgeGeometry.setIndex(new THREE.BufferAttribute(edgeData.indices,1));
 const cutPaperMaterial=new THREE.MeshStandardMaterial({
- map:compressedPaperEdgeTexture(),color:'#f0e7db',
+ map:compressedPaperEdgeTexture(),color:'#d8ccbe',
  metalness:0,roughness:.97,envMapIntensity:.11,
  side:THREE.FrontSide
 });
@@ -206,8 +206,8 @@ function roundedCardAlpha(){
  return tex;
 }
 const frontPaperMaterial=new THREE.MeshPhysicalMaterial({
- color:'#e9e1d4',metalness:0,roughness:.98,
- sheen:.24,sheenRoughness:.94,sheenColor:'#ddd3c4',
+ color:'#ffffff',metalness:0,roughness:.98,
+ sheen:.21,sheenRoughness:.95,sheenColor:'#a77b72',
  specularIntensity:.22,envMapIntensity:.14,
  side:THREE.FrontSide,transparent:false,alphaMap:roundedCardAlpha(),alphaTest:.45
 });
@@ -219,7 +219,7 @@ const portraitMaterial=new THREE.MeshPhysicalMaterial({
  color:'#ffffff',metalness:0,roughness:1,envMapIntensity:.17,
  sheen:.17,sheenRoughness:.93,sheenColor:'#d6d0c5',
  specularIntensity:.22,
- side:THREE.FrontSide,transparent:false,alphaTest:.018,
+ side:THREE.FrontSide,transparent:true,depthWrite:false,alphaTest:.024,
  normalScale:new THREE.Vector2(1.48,1.48)
 });
 const portrait=sheet(front,portraitMaterial,0,0,.003,cardW,cardH);
@@ -239,6 +239,7 @@ cardBackPlane.receiveShadow=false;
 const cardBackUrl=new URL('../../assets/cards/shared/character-card-back-anima.webp',import.meta.url).href;
 let cardBackReady=false,cardBackFailed=false,cardBackMatteStats=null;
 const reliefStats={back:null,portrait:null};
+let portraitMatteStats={detected:false,removed:0,feathered:0,padded:0};
 // Keep only the last THREE derived portrait material sets resident. A
 // 35-character collection must not keep 35 x 3 GPU textures forever.
 const portraitReliefLRU=[];
@@ -293,6 +294,37 @@ function imageRelief(image,mode){
   stats:result.stats};
  return tex;
 }
+// One uninterrupted front card: soft antique wine-red paper around the
+// original full-body figure. No rectangular white portrait photo, no ugly
+// modeled gold trim, no drawn name panel. Edge color is sampled from the
+// user's approved back (around RGB 79,32,42); center is muted taupe to
+// preserve contrast against the ringmaster's burgundy costume.
+function createPrintedFrontStock(){
+ const w=384,h=576,cv=document.createElement('canvas');
+ cv.width=w;cv.height=h;
+ const ctx=cv.getContext('2d'),im=ctx.createImageData(w,h);
+ const edge=[78,32,43],center=[152,120,104];
+ for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+  const nx=(x/(w-1)-.5)*2,ny=(y/(h-1)-.48)*2;
+  const fade=Math.exp(-2.35*(nx*nx*.75+ny*ny*.88))*.79;
+  const fibers=Math.sin(x*.78+y*.043)*1.35+
+   Math.sin(y*.57-x*.062)+
+   Math.sin(x*13.7+y*27.8)*Math.sin(x*8.53-y*11.9)*3;
+  const p=(y*w+x)*4;
+  for(let k=0;k<3;k++)
+   im.data[p+k]=Math.round(Math.max(0,Math.min(255,
+    edge[k]+(center[k]-edge[k])*fade+fibers)));
+  im.data[p+3]=255;
+ }
+ ctx.putImageData(im,0,0);
+ return cv;
+}
+const frontStock=imageRelief(createPrintedFrontStock(),'portrait');
+frontPaperMaterial.map=frontStock.pigment;
+frontPaperMaterial.normalMap=frontStock.normal;
+frontPaperMaterial.roughnessMap=frontStock.surface;
+frontPaperMaterial.normalScale=new THREE.Vector2(1.1,1.1);
+frontPaperMaterial.needsUpdate=true;
 new THREE.TextureLoader().load(cardBackUrl,tex=>{
  tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=4;
  tex.minFilter=THREE.LinearMipmapLinearFilter;tex.magFilter=THREE.LinearFilter;
@@ -382,10 +414,24 @@ function getPortrait(card){
  const promise=new Promise((resolve,reject)=>{
   const img=new Image();img.decoding='async';
   img.onload=()=>{
-   const tex=new THREE.Texture(img);tex.colorSpace=THREE.SRGBColorSpace;
+   let artwork=img,matteStats={detected:false,removed:0,feathered:0,padded:0};
+   try{
+    const cv=document.createElement('canvas');
+    cv.width=img.naturalWidth;cv.height=img.naturalHeight;
+    const ctx=cv.getContext('2d',{willReadFrequently:true});
+    ctx.drawImage(img,0,0);
+    const frame=ctx.getImageData(0,0,cv.width,cv.height);
+    const matte=mattePortraitBackground(frame.data,cv.width,cv.height);
+    if(matte.stats.detected){
+     frame.data.set(matte.pixels);ctx.putImageData(frame,0,0);
+     artwork=cv;matteStats=matte.stats;
+    }
+   }catch(e){console.warn('Portrait white backdrop cleanup failed',card.id,e)}
+   const tex=new THREE.Texture(artwork);tex.colorSpace=THREE.SRGBColorSpace;
+   tex.wrapS=tex.wrapT=THREE.ClampToEdgeWrapping;
    tex.minFilter=THREE.LinearMipmapLinearFilter;tex.magFilter=THREE.LinearFilter;
-   tex.generateMipmaps=true;tex.anisotropy=2;tex.needsUpdate=true;
-   resolve({tex,w:img.naturalWidth,h:img.naturalHeight});
+   tex.generateMipmaps=true;tex.anisotropy=4;tex.needsUpdate=true;
+   resolve({tex,w:img.naturalWidth,h:img.naturalHeight,matteStats});
   };
   img.onerror=()=>reject(new Error('人物原图加载失败: '+card.name));
   img.src=card.url;
@@ -396,6 +442,7 @@ function getPortrait(card){
  return promise;
 }
 function updatePortrait(card,asset){
+ portraitMatteStats=asset.matteStats;
  portrait.material.map=asset.tex;
  if(!asset.relief){
   try{asset.relief=imageRelief(asset.tex.image,'portrait')}
@@ -925,6 +972,13 @@ window.PaperchalkCharacterMachineQA={
   cardDecorationMeshes:0,
   paperCutEdgeMesh:cardRoot.children.includes(cardCutEdge)&&cardCutEdge.isMesh,
   paperCutEdgeThickness:cardThickness,
+  thinPaperPercent:cardThickness/cardW*100,
+  frontBackgroundBurgundyPaper:!!frontPaperMaterial.map?.isCanvasTexture,
+  portraitWhiteBackgroundRemoved:portraitMatteStats.detected,
+  portraitWhitePixelsRemoved:portraitMatteStats.removed,
+  portraitFeatheredPixels:portraitMatteStats.feathered,
+  portraitRgbBleedPixels:portraitMatteStats.padded,
+  portraitMaterialTransparent:portraitMaterial.transparent,
   paperCutEdgeTriangles:edgeData.triangleCount,
   paperCutEdgeMaterial:{
    metalness:cutPaperMaterial.metalness,roughness:cutPaperMaterial.roughness,
