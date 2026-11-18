@@ -47,7 +47,8 @@ export class RigidCoinPayout {
     this.batchTarget=0;this.batchEmitted=0;this.nextEmission=0;
     this.contactCount=0;this.groundContacts=0;this.peakHeight=0;
     this.maxCoinOverlap=0;this.phase='ready';this.errors=[];
-    this.spawnShape=new CANNON.Cylinder(COIN.radius,COIN.radius,COIN.height,COIN.sides);
+    // The RENDER geometry can be shared, but Cannon assigns shape.body in addShape().
+    // A shared physics shape would point to the wrong coin; create one per rigid body.
     this.events=[];
   }
   addStaticBox(pos,size){
@@ -67,7 +68,7 @@ export class RigidCoinPayout {
     const body=new CANNON.Body({mass:.078,material:this.coinMaterial,
       linearDamping:.055,angularDamping:.15,allowSleep:true,
       sleepSpeedLimit:.30,sleepTimeLimit:.70});
-    body.addShape(this.spawnShape);
+    body.addShape(new CANNON.Cylinder(COIN.radius,COIN.radius,COIN.height,COIN.sides));
     body.position.set(...pos);
     body.velocity.set(...vel);
     const normal=new CANNON.Vec3(...axis);
