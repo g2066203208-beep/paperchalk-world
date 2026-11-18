@@ -17,7 +17,7 @@ for(const d of [{name:'desktop',w:1365,h:850},{name:'phone',w:390,h:844}]){
  try{
   const r=await page.goto('http://127.0.0.1:4173/card-battle/coin-model-lab.html',{waitUntil:'domcontentloaded'});
   assert.equal(r.status(),200);
-  await page.waitForFunction(()=>window.PaperchalkSpriteCoinQA?.loaded,{timeout:15000});
+  await page.waitForFunction(()=>window.PaperchalkSpriteCoinQA?.snapshot().imageLoads>=1,{timeout:15000});
   const initial=await page.evaluate(()=>window.PaperchalkSpriteCoinQA.snapshot());
   assert(initial.lowPoly,'true faceted coin not generic source contour extrusion');
   assert.equal(initial.facets,10,'10 hard flat segments are default');
@@ -58,7 +58,7 @@ for(const d of [{name:'desktop',w:1365,h:850},{name:'phone',w:390,h:844}]){
   // User-supplied only one image still makes the full polygon model.
   const custom='<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" shape-rendering="crispEdges"><rect x="5" y="5" width="38" height="38" rx="17" fill="#b8a474" stroke="#14150e" stroke-width="3"/><path d="M23 11h5v26h-5z" fill="#372d1e"/></svg>';
   await page.locator('#source').setInputFiles({name:'single-user-coin.svg',mimeType:'image/svg+xml',buffer:Buffer.from(custom)});
-  await page.waitForFunction(()=>window.PaperchalkSpriteCoinQA?.profile?.canvas?.width===48);
+  await page.waitForFunction(()=>window.PaperchalkSpriteCoinQA?.snapshot().imageLoads>=2);
   const uploaded=await page.evaluate(()=>window.PaperchalkSpriteCoinQA.snapshot());
   assert.equal(uploaded.facets,12);
   assert(uploaded.frontMapped);
