@@ -5,6 +5,7 @@ on:
     paths:
       - 'site/card-battle/motion/sprite-extrusion.mjs'
       - 'site/card-battle/coin-model-lab.html'
+      - 'site/card-battle/assets/slots-style-pixel-coin.svg'
       - 'tests/sprite-extrusion-unit.mjs'
       - 'tests/sprite-extrusion-browser.mjs'
       - '.github/workflows/coin-model-3d-qa.yml'
