@@ -38,6 +38,55 @@ export function getCharacterScenePreset(name="forest",day=true){
 }
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
 
+/**
+ * Extract a very low-amplitude pseudo-normal map from the EXISTING approved
+ * painting. No redraw, AI inference, network request, or authored secondary art.
+ * The input is the same opaque/alpha canvas already fed to the portrait map.
+ * It deliberately works at 160x240 (not per-frame) to reject ink-edge noise.
+ */
+export function makeIllustrativeNormalTexture(THREE,portraitCanvas){
+ if(!portraitCanvas||!portraitCanvas.width||!portraitCanvas.height)return null;
+ const w=160,h=240,off=document.createElement("canvas");
+ off.width=w;off.height=h;
+ const g=off.getContext("2d",{willReadFrequently:true});
+ g.fillStyle="#777777";g.fillRect(0,0,w,h);
+ g.filter="blur(2.6px)";
+ g.drawImage(portraitCanvas,0,0,w,h);
+ g.filter="none";
+ const src=g.getImageData(0,0,w,h).data;
+ const lum=new Float32Array(w*h);
+ for(let i=0;i<w*h;i++){
+  const k=i*4,a=src[k+3]/255;
+  lum[i]=((src[k]*.2126+src[k+1]*.7152+src[k+2]*.0722)/255)*a+
+   .48*(1-a);
+ }
+ const result=g.createImageData(w,h);
+ const output=result.data;
+ for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+  const i=y*w+x,k=i*4;
+  const left=lum[y*w+Math.max(0,x-2)],
+   right=lum[y*w+Math.min(w-1,x+2)],
+   above=lum[Math.max(0,y-2)*w+x],
+   below=lum[Math.min(h-1,y+2)*w+x];
+  // Low-pass illustration gradients are weak hints, not geometric truth.
+  const nx=clamp((left-right)*.90,-.21,.21);
+  const ny=clamp((below-above)*.90,-.21,.21);
+  const nz=Math.sqrt(Math.max(.91,1-nx*nx-ny*ny));
+  output[k]=Math.round((nx*.5+.5)*255);
+  output[k+1]=Math.round((ny*.5+.5)*255);
+  output[k+2]=Math.round((nz*.5+.5)*255);
+  output[k+3]=255;
+ }
+ g.putImageData(result,0,0);
+ const tex=new THREE.CanvasTexture(off);
+ tex.wrapS=tex.wrapT=THREE.ClampToEdgeWrapping;
+ tex.colorSpace=THREE.NoColorSpace;
+ tex.generateMipmaps=true;
+ tex.minFilter=THREE.LinearMipmapLinearFilter;
+ tex.magFilter=THREE.LinearFilter;
+ return tex;
+}
+
 export function makeIntegratedCharacterMaterial(THREE,texture,scenePreset="forest"){
  const p=typeof scenePreset==="string"?getCharacterScenePreset(scenePreset):scenePreset;
  const U={
@@ -51,10 +100,13 @@ export function makeIntegratedCharacterMaterial(THREE,texture,scenePreset="fores
   uPortraitAtmos:{value:clamp(p.atmosphere,0,.25)},
   uPortraitCurvature:{value:clamp(p.curvature,0,1)}
  };
+ const normalTexture=makeIllustrativeNormalTexture(THREE,texture.image);
  const material=new THREE.MeshStandardMaterial({
   color:"#ffffff",map:texture,transparent:true,alphaTest:.095,
-  roughness:1,metalness:0,side:THREE.DoubleSide,depthWrite:true
+  roughness:1,metalness:0,side:THREE.DoubleSide,depthWrite:true,
+  normalMap:normalTexture,normalScale:new THREE.Vector2(.28,.28)
  });
+ material.userData.generatedNormalMap=normalTexture;
  material.userData.portraitLighting=U;
  material.onBeforeCompile=shader=>{
   Object.assign(shader.uniforms,U);
