@@ -71,6 +71,7 @@ function resize(){const w=Math.max(1,canvas.clientWidth),h=Math.max(1,canvas.cli
  renderer.setSize(w,h,false);setCamera(viewMode);}
 addEventListener('resize',resize);
 new ResizeObserver(resize).observe(canvas);
+if(isPhone())viewMode='pile';
 resize();
 
 async function loadCoinModel(){
