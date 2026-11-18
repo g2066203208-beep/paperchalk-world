@@ -149,6 +149,7 @@ function payout(n,{seed,skipSpin=false}={}){
 }
 function playSlot(){
  if(spinning)return;
+ if(sound)fx.unlockAudio();
  spinning=true;spins++;
  machine.classList.remove("is-winning");
  machine.classList.add("is-spinning");
@@ -176,10 +177,12 @@ function playSlot(){
 $("payout").onclick=playSlot;
 $("few").onclick=()=>{
  if(spinning)return;
+ if(sound)fx.unlockAudio();
  spins++;payout(12,{seed:20261118+spins});
 };
 $("many").onclick=()=>{
  if(spinning)return;
+ if(sound)fx.unlockAudio();
  spins++;payout(76,{seed:20261118+spins});
 };
 $("sound").onclick=()=>{sound=!sound;fx.setSoundEnabled(()=>sound);
