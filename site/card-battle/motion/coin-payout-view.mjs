@@ -2,7 +2,7 @@ import * as THREE from '../vendor/three.module.js';
 import {prepareExtrudedSprite,buildLowPolyPixelCoin3D} from './sprite-extrusion.mjs';
 import {COIN,CAPS,BASIN} from './coin-payout-shared.mjs';
 import {FastCoinPayout,FAST_DT} from './coin-payout-fast.mjs';
-import {installPayoutLighting,createPayoutMaterialFactory,upgradeCoinMaterials,createPayoutBloom} from './coin-payout-lighting.mjs';
+import {installPayoutLighting,createPayoutMaterialFactory,upgradeCoinMaterials,createPayoutBloom} from './coin-payout-lighting.mjs?v=heavy-fast-gold-20261118';
 
 const $=id=>document.getElementById(id);
 const canvas=$('payout-view');
