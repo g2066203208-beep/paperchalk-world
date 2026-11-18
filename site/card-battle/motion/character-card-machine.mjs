@@ -141,7 +141,9 @@ const lever=new THREE.Group();lever.position.set(2.35,2.48,.18);machine.add(leve
 cylinder(lever,goldSoft,[0,.35,0],.055,.73,12);
 cylinder(lever,lamp,[0,.73,0],.17,.24,16);
 const cardRoot=new THREE.Group();scene.add(cardRoot);
-const cardW=1.68,cardH=2.32;
+// The APPROVED card-back art is 650:980 after trimming its white scan margin.
+// A 1.68 x 2.53 card has the same ratio, avoiding distorted gold engraving.
+const cardW=1.68,cardH=2.53;
 cube(cardRoot,iron,[0,0,0],[cardW,cardH,.075]);
 const front=new THREE.Group();front.position.z=.047;cardRoot.add(front);
 const back=new THREE.Group();back.position.z=-.047;back.rotation.y=Math.PI;cardRoot.add(back);
@@ -153,25 +155,54 @@ function trim(parent){
   rail(parent,gold,cardW*.49,0,z,.056,cardH*.982,.038);
  }
 }
-cube(front,rose,[0,0,.004],[1.57,2.22,.025],false);
-cube(back,rose,[0,0,.004],[1.57,2.22,.025],false);
+cube(front,rose,[0,0,.004],[1.57,2.43,.025],false);
+cube(back,rose,[0,0,.004],[1.57,2.43,.025],false);
 trim(front);trim(back);
-cube(front,slotBlack,[0,.14,.022],[1.48,1.84,.021],false);
+cube(front,slotBlack,[0,.075,.022],[1.49,2.11,.021],false);
 const portraitMaterial=new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,alphaTest:.013,
  depthWrite:false,side:THREE.DoubleSide,toneMapped:false});
-const portrait=new THREE.Mesh(new THREE.PlaneGeometry(1.39,1.78),portraitMaterial);
-portrait.position.set(0,.14,.041);front.add(portrait);
+const portrait=new THREE.Mesh(new THREE.PlaneGeometry(1.44,2.08),portraitMaterial);
+portrait.position.set(0,.075,.041);front.add(portrait);
 const labelMaterial=new THREE.MeshBasicMaterial({map:makeText('UNKNOWN',512,110,'#e2ca97','#20191b'),toneMapped:false});
-const labelPanel=sheet(front,labelMaterial,0,-.98,.042,1.46,.30);
-const archMat=new THREE.MeshBasicMaterial({color:'#d1af70',side:THREE.DoubleSide});
-const ring1=new THREE.Mesh(new THREE.RingGeometry(.56,.575,64),archMat);
-ring1.position.z=.03;back.add(ring1);
-const ring2=new THREE.Mesh(new THREE.RingGeometry(.37,.38,64),archMat);
-ring2.position.z=.032;back.add(ring2);
-const starMaterial=new THREE.MeshBasicMaterial({map:makeText('✦',256,256,'#e9d09b','#4c252e'),toneMapped:false});
-sheet(back,starMaterial,0,0,.031,.63,.63);
-const backing=makeText('PAPERCHALK',512,80,'#a68b63','#4c252e');
-sheet(back,new THREE.MeshBasicMaterial({map:backing,toneMapped:false}),0,-.87,.033,1.2,.20);
+const labelPanel=sheet(front,labelMaterial,0,-1.115,.042,1.47,.23);
+// The gold compass and fine corner ornament are THE USER'S REAL approved
+// Anima card-back image. Do not draw a fake star or printed text over it.
+const cardBackMaterial=new THREE.MeshStandardMaterial({
+ color:0xffffff,metalness:.07,roughness:.64,transparent:true,
+ alphaTest:.025,side:THREE.DoubleSide,envMapIntensity:1.25
+});
+const cardBackPlane=sheet(back,cardBackMaterial,0,0,.055,1.664,2.507);
+const cardBackUrl=new URL('../../assets/cards/shared/character-card-back-anima.webp',import.meta.url).href;
+let cardBackReady=false,cardBackFailed=false;
+function buildGoldFoilMask(image){
+ try{
+  const w=image.naturalWidth||image.width,h=image.naturalHeight||image.height;
+  const c=document.createElement('canvas');c.width=w;c.height=h;
+  const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(image,0,0);
+  const im=ctx.getImageData(0,0,w,h);
+  for(let i=0;i<im.data.length;i+=4){
+   const [r,g,b,a]=im.data.slice(i,i+4);
+   const goldInk=a>80&&r>120&&g>87&&r>g*.93&&g>b*1.09;
+   const val=goldInk?255:0;
+   im.data[i]=val;im.data[i+1]=val;im.data[i+2]=val;im.data[i+3]=255;
+  }
+  ctx.putImageData(im,0,0);
+  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.NoColorSpace;
+  t.minFilter=THREE.LinearMipmapLinearFilter;t.magFilter=THREE.LinearFilter;
+  return t;
+ }catch(e){console.warn('Card foil mask unavailable',e);return null}
+}
+new THREE.TextureLoader().load(cardBackUrl,tex=>{
+ tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=4;
+ tex.minFilter=THREE.LinearMipmapLinearFilter;tex.magFilter=THREE.LinearFilter;
+ cardBackMaterial.map=tex;
+ const foil=buildGoldFoilMask(tex.image);
+ if(foil){cardBackMaterial.metalness=1;cardBackMaterial.metalnessMap=foil;}
+ cardBackMaterial.needsUpdate=true;cardBackReady=true;
+},undefined,error=>{
+ cardBackFailed=true;console.error('Approved card-back texture failed to load',cardBackUrl,error);
+ $('load-status').textContent='卡背原图加载失败，请检查 GitHub 素材路径';
+});
 cardRoot.visible=false;
 const aura=new THREE.Group();scene.add(aura);
 const aureole=new THREE.Mesh(new THREE.RingGeometry(1.51,1.55,64),new THREE.MeshBasicMaterial({
@@ -221,10 +252,10 @@ function getPortrait(card){
 function updatePortrait(card,asset){
  portrait.material.map=asset.tex;portrait.material.needsUpdate=true;
  const ratio=asset.w/Math.max(1,asset.h);
- const w=Math.min(1.43,1.88*ratio),h=Math.min(1.88,1.43/ratio);
+ const w=Math.min(1.465,2.11*ratio),h=Math.min(2.11,1.465/ratio);
  portrait.geometry.dispose();
  portrait.geometry=new THREE.PlaneGeometry(w,h);
- portrait.position.y=.14;
+ portrait.position.y=.075;
  labelPanel.material.map?.dispose();
  const short=card.name.length>7?card.name.slice(0,7):card.name;
  labelPanel.material.map=makeText(short,512,100,'#ead4a8','#271f22');
