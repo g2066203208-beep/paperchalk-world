@@ -229,3 +229,76 @@ export function buildExtrudedSprite3D(profile,THREE,{
  group.dispose=()=>{geometry.dispose();planeGeometry.dispose();edgeMaterial.dispose();faceMaterial.dispose();texture.dispose();};
  return group;
 }
+
+
+/** Slots & Daggers-inspired tiny pixel coin, NOT a smooth traced silhouette.
+ * 8–12 actual planar edges, a very thin dark physical side wall, and the ONE
+ * uploaded/source pixel image mapped to BOTH disk caps. Independent original
+ * art is not represented as or claimed to be official Slots & Daggers assets.
+ * The image silhouette chooses the radius; transparent corners become near-
+ * black rim pigment (otherwise 10-sided polygon caps would appear perforated).
+ *
+ * Local diameter is `profile.size`, set GROUP SCALE for game-size coins.
+ * CylinderGeometry has only side triangles and flat top/bottom caps. No bevel,
+ * interpolated rim, normal/bump/metallic maps, bloom or smooth side normals.
+ */
+export function buildLowPolyPixelCoin3D(profile,THREE,{
+ sides=10,thickness=.045,edgeColor=0x10110c,
+ pixelArt=true,inkColor='#171811'
+}={}){
+ if(!THREE?.CylinderGeometry||!THREE?.CanvasTexture||!THREE?.MeshBasicMaterial){
+  throw new TypeError('THREE instance with CylinderGeometry, CanvasTexture and MeshBasicMaterial is required');
+ }
+ const facets=clamp(Math.round(Number(sides)||10),8,12);
+ const depth=clamp(Number(thickness)||.045,.012,.24);
+ const diameter=profile.size;
+ // Circumscribed decagon: at edge midpoints, radius equals the image silhouette.
+ // This retains more pixel-edge art than an inscribed polygon would.
+ const radius=diameter/(2*Math.cos(Math.PI/facets));
+ const indexed=new THREE.CylinderGeometry(radius,radius,depth,facets,1,false);
+ // Face UVs need individual cap vertices; make a non-indexed mesh so that
+ // geometry.groups[].start/count refer to attribute elements, not indices.
+ const geometry=indexed.toNonIndexed();indexed.dispose();
+ // Cylinder defaults to Y-up; turn it so its REAL thickness runs along Z.
+ geometry.rotateX(Math.PI/2);
+ // Rotate half an edge so that the faceted perimeter has a flat vertex alignment.
+ geometry.rotateZ(Math.PI/facets);
+ // Orient BOTH cap UVs to the source image's X/Y, not to the cylinder's X/Z.
+ // Its measured plane/bounds preserve padding and alpha-cropped input images.
+ const pos=geometry.getAttribute('position'),uv=geometry.getAttribute('uv');
+ for(const group of geometry.groups){
+  if(group.materialIndex===0)continue; // side uses no texture
+  for(let i=group.start;i<group.start+group.count;i++){
+   const x=pos.getX(i),y=pos.getY(i);
+   uv.setXY(i,
+    (x-profile.plane.x)/profile.plane.width+.5,
+    (y-profile.plane.y)/profile.plane.height+.5);
+  }
+ }
+ uv.needsUpdate=true;
+ geometry.computeBoundingBox();
+ const faceCanvas=document.createElement('canvas');
+ faceCanvas.width=profile.canvas.width;
+ faceCanvas.height=profile.canvas.height;
+ const ctx=faceCanvas.getContext('2d');
+ ctx.imageSmoothingEnabled=!pixelArt;
+ ctx.fillStyle=inkColor;ctx.fillRect(0,0,faceCanvas.width,faceCanvas.height);
+ ctx.drawImage(profile.canvas,0,0);
+ const texture=new THREE.CanvasTexture(faceCanvas);
+ texture.colorSpace=THREE.SRGBColorSpace;
+ texture.minFilter=pixelArt?THREE.NearestFilter:THREE.LinearMipmapLinearFilter;
+ texture.magFilter=pixelArt?THREE.NearestFilter:THREE.LinearFilter;
+ texture.generateMipmaps=!pixelArt;
+ texture.anisotropy=1;
+ const dark=new THREE.MeshBasicMaterial({color:edgeColor,side:THREE.DoubleSide,toneMapped:false});
+ const face=new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide,toneMapped:false});
+ const solid=new THREE.Mesh(geometry,[dark,face,face]);
+ solid.name=`faceted-${facets}-side-pixel-coin`;
+ const group=new THREE.Group();group.add(solid);
+ group.name='one-source-tiny-pixel-coin-3d';
+ group.userData={paperCut3D:true,lowPolyCoin:true,pixelArt,facets,thickness:depth,
+  diameter,edgeColor,sourceFaces:1,positionAxes:'XYZ',
+  outlines:profile.shapes.length,holes:profile.shapes.reduce((n,s)=>n+s.holes.length,0)};
+ group.dispose=()=>{geometry.dispose();texture.dispose();dark.dispose();face.dispose();};
+ return group;
+}
