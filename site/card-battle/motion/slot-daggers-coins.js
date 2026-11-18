@@ -135,7 +135,7 @@ function init(){
  Object.assign(glints.style,{position:"fixed",inset:"0",width:"100vw",height:"100dvh",
   pointerEvents:"none",zIndex:"2147483201",mixBlendMode:"screen"});
  document.body.append(glints);gctx=glints.getContext("2d");
- gl=cv.getContext("webgl",{alpha:true,antialias:true,depth:false,premultipliedAlpha:false,preserveDrawingBuffer:false});
+ gl=cv.getContext("webgl",{alpha:true,antialias:true,depth:false,premultipliedAlpha:false,preserveDrawingBuffer:location.pathname.endsWith("/coin-fx-lab.html")});
  if(!gl){status="webgl-unavailable";cv.remove();cv=null;return false;}
  try{
   p=link(gl);gl.useProgram(p);
@@ -313,6 +313,7 @@ function seek(ms){
  const steps=Math.min(600,Math.max(0,Math.round(Number(ms)/1000/PAYOUT.step)));
  for(let i=0;i<steps;i++)update(PAYOUT.step);
  silentPhysics=false;status="paused";render();
+ if(gl.flush)gl.flush();
  cv.dataset.coinPreviewMs=String(Math.round(steps*PAYOUT.step*1000));
  return true;
 }
