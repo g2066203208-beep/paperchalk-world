@@ -444,47 +444,82 @@ function queueDraw(n){
 }
 // Free examination is a genuine real-time 3D mode in the SAME slot machine.
 // No static screenshot, fake 2D flip, or alteration of approved portrait bytes.
+// Real arcball-style 3D inspection: unrestricted quaternion rotation around
+// every axis, no elevation lock, with continuous pan and deep zoom. The card
+// remains a THREE.Mesh/ExtrudeGeometry, never a 2D overlay or CSS transform.
 const inspector={
- active:false,yaw:Math.PI,goalYaw:Math.PI,pitch:0,zoom:2.08,
+ active:false,orientation:new THREE.Quaternion(),
+ yaw:Math.PI,pitch:0,roll:0,zoom:2.08,panX:0,panY:0,
  spinning:false,pointers:new Map(),pinchStart:0,pinchZoom:2.08,
- serial:0,chosen:'back'
+ pinchAngle:0,pinchCenter:null,serial:0,chosen:'back'
 };
+const ix=new THREE.Vector3(1,0,0),iy=new THREE.Vector3(0,1,0),iz=new THREE.Vector3(0,0,1);
 const clampInspect=(n,min,max)=>Math.max(min,Math.min(max,n));
-function setInspectorFace(face){
+const inspectDefaultZoom=()=>clampInspect(Math.min(
+ (camera.right-camera.left)*.82/cardW,
+ (camera.top-camera.bottom)*.83/cardH
+),.45,3);
+function inspectQuaternionRotate(axis,angle){
+ if(!angle)return;
+ inspector.orientation.premultiply(new THREE.Quaternion().setFromAxisAngle(axis,angle)).normalize();
+ if(axis===iy)inspector.yaw+=angle;
+ else if(axis===ix)inspector.pitch+=angle;
+ else if(axis===iz)inspector.roll+=angle;
+}
+function inspectStopSpin(){
  inspector.spinning=false;
- inspector.goalYaw=face==='back'?Math.PI:0;
  $('inspect-spin').setAttribute('aria-pressed','false');
  $('inspect-spin').textContent='自动转动';
+}
+function setInspectorFace(face){
+ inspectStopSpin();
+ inspector.orientation.setFromAxisAngle(iy,face==='back'?Math.PI:0);
+ inspector.yaw=face==='back'?Math.PI:0;
+ inspector.pitch=0;inspector.roll=0;
+}
+function inspectZoomBy(factor){
+ inspector.zoom=clampInspect(inspector.zoom*factor,.32,7.5);
+ renderInspectorCard();
+}
+function inspectPanByPixels(dx,dy){
+ const worldPerPixel=(camera.top-camera.bottom)/Math.max(1,canvas.clientHeight);
+ inspector.panX+=dx*worldPerPixel;
+ inspector.panY-=dy*worldPerPixel;
 }
 function renderInspectorCard(){
  if(!inspector.active)return;
  cardRoot.visible=true;
- cardRoot.position.copy(viewTarget);
- cardRoot.quaternion.copy(camera.quaternion);
- cardRoot.rotateY(inspector.yaw);
- cardRoot.rotateX(inspector.pitch);
+ const right=ix.clone().applyQuaternion(camera.quaternion);
+ const up=iy.clone().applyQuaternion(camera.quaternion);
+ cardRoot.position.copy(viewTarget)
+  .addScaledVector(right,inspector.panX)
+  .addScaledVector(up,inspector.panY);
+ cardRoot.quaternion.copy(camera.quaternion).multiply(inspector.orientation);
  cardRoot.scale.setScalar(inspector.zoom);
  aura.visible=false;
- resultLight.intensity=5;
- resultLight.position.copy(viewTarget).add(new THREE.Vector3(0,1.0,2.5));
+ resultLight.intensity=3.2;
+ resultLight.position.copy(viewTarget).addScaledVector(up,1.05).addScaledVector(iz,2.5);
 }
 function openInspector(){
  if(!drawState.ready||!cardBackReady||inspector.active)return;
- inspector.active=true;inspector.spinning=false;inspector.yaw=Math.PI;
- inspector.goalYaw=Math.PI;inspector.pitch=0;inspector.zoom=2.08;
+ inspector.active=true;
+ inspectStopSpin();
+ inspector.zoom=inspectDefaultZoom();
+ inspector.panX=0;inspector.panY=0;
+ inspector.pointers.clear();inspector.pinchStart=0;inspector.pinchCenter=null;
+ setInspectorFace('back');
  inspector.chosen='back';inspector.serial++;
  $('inspect-character').value='back';
  $('inspect-toolbar').hidden=false;$('inspect-hint').hidden=false;
  $('inspect').setAttribute('aria-pressed','true');
  $('inspect').textContent='正在自由观赏';
  $('draw-one').disabled=true;$('draw-five').disabled=true;$('skip').disabled=true;
- $('machine-canvas').style.cursor='grab';
  document.querySelector('.stage').dataset.inspecting='true';
  document.body.classList.add('inspect-open');
  machine.visible=false;floor.visible=false;tile.visible=false;
- $('stage-label').textContent='卡背原图 · 自由 3D 观赏';
- $('stage-frame').textContent='DRAG · ROTATE · ZOOM';
- $('load-status').textContent='正在观赏已上传的暗红金线卡背';
+ $('stage-label').textContent='卡背原图 · 360° 任意角度';
+ $('stage-frame').textContent='DRAG ROTATE · WHEEL ZOOM · SHIFT DRAG PAN';
+ $('load-status').textContent='已加载真实酒红金线卡背，拖动旋转、放大看细节';
  $('announce').hidden=true;
  renderInspectorCard();
 }
@@ -493,7 +528,8 @@ async function inspectChoose(id,showFront=true){
  const serial=++inspector.serial;inspector.chosen=id;
  if(id==='back'){
   setInspectorFace('back');
-  $('stage-label').textContent='卡背原图 · 自由 3D 观赏';
+  $('stage-label').textContent='卡背原图 · 360° 任意角度';
+  $('load-status').textContent='已加载原始 Anima 卡背纹理';
   return;
  }
  const card=drawState.all.find(x=>x.id===id);
@@ -504,19 +540,19 @@ async function inspectChoose(id,showFront=true){
   if(serial!==inspector.serial||!inspector.active)return;
   updatePortrait(card,asset);
   $('stage-label').textContent='自由观赏 · '+card.name;
-  $('load-status').textContent=card.group+' · '+card.name+' · 真实原图';
+  $('load-status').textContent=card.group+' · '+card.name+' · 真实人物立绘';
   if(showFront)setInspectorFace('front');
  }catch(e){if(serial===inspector.serial)$('load-status').textContent=String(e.message||e);}
 }
 function closeInspector(){
  if(!inspector.active)return;
  inspector.active=false;inspector.serial++;
- inspector.pointers.clear();inspector.spinning=false;
+ inspector.pointers.clear();inspectStopSpin();
  $('inspect-toolbar').hidden=true;$('inspect-hint').hidden=true;
- $('inspect').setAttribute('aria-pressed','false');$('inspect').textContent='自由观赏卡牌';
+ $('inspect').setAttribute('aria-pressed','false');
+ $('inspect').textContent='自由观赏卡牌';
  $('draw-one').disabled=false;$('draw-five').disabled=false;
  $('skip').disabled=!drawState.busy;
- $('machine-canvas').style.cursor='';
  document.querySelector('.stage').dataset.inspecting='false';
  document.body.classList.remove('inspect-open');
  machine.visible=true;floor.visible=true;tile.visible=true;
@@ -531,7 +567,8 @@ function closeInspector(){
   $('stage-frame').textContent='READY';
   resultLight.intensity=0;
  }
- $('load-status').textContent=drawState.queued.length?'继续抽卡队列：'+drawState.queued.length+' 张':'返回实体出卡机';
+ $('load-status').textContent=drawState.queued.length?
+ '继续抽卡队列：'+drawState.queued.length+' 张':'返回实体出卡机';
  if(!drawState.busy)processQueue();
 }
 $('inspect').addEventListener('click',openInspector);
@@ -545,52 +582,89 @@ $('inspect-front').addEventListener('click',()=>{
 });
 $('inspect-character').addEventListener('change',e=>inspectChoose(e.target.value,true));
 $('inspect-reset').addEventListener('click',()=>{
- inspector.zoom=2.08;inspector.pitch=0;setInspectorFace(inspector.chosen==='back'?'back':'front');
+ inspector.zoom=inspectDefaultZoom();inspector.panX=0;inspector.panY=0;
+ setInspectorFace(inspector.chosen==='back'?'back':'front');
 });
+$('inspect-zoom-in').addEventListener('click',()=>inspectZoomBy(1.28));
+$('inspect-zoom-out').addEventListener('click',()=>inspectZoomBy(1/1.28));
 $('inspect-spin').addEventListener('click',()=>{
  inspector.spinning=!inspector.spinning;
- inspector.goalYaw=inspector.yaw;
  $('inspect-spin').setAttribute('aria-pressed',String(inspector.spinning));
  $('inspect-spin').textContent=inspector.spinning?'停止转动':'自动转动';
 });
-function pointerGap(){
+function pointerGapAngleCenter(){
  const a=[...inspector.pointers.values()];
- return a.length<2?0:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);
+ if(a.length<2)return null;
+ const dx=a[1].x-a[0].x,dy=a[1].y-a[0].y;
+ return {distance:Math.hypot(dx,dy),angle:Math.atan2(dy,dx),
+  x:(a[0].x+a[1].x)/2,y:(a[0].y+a[1].y)/2};
 }
+function inspectStartPinch(){
+ const q=pointerGapAngleCenter();
+ if(q){
+  inspector.pinchStart=Math.max(1,q.distance);
+  inspector.pinchZoom=inspector.zoom;
+  inspector.pinchAngle=q.angle;
+  inspector.pinchCenter={x:q.x,y:q.y};
+ }
+}
+canvas.addEventListener('contextmenu',e=>{if(inspector.active)e.preventDefault();});
 canvas.addEventListener('pointerdown',e=>{
  if(!inspector.active)return;
  e.preventDefault();
  canvas.setPointerCapture(e.pointerId);
- inspector.pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
- if(inspector.pointers.size===2){
-  inspector.pinchStart=pointerGap();inspector.pinchZoom=inspector.zoom;
- }
+ inspector.pointers.set(e.pointerId,{x:e.clientX,y:e.clientY,
+  button:e.button,pan:e.button===2||e.shiftKey});
+ if(inspector.pointers.size===2)inspectStartPinch();
+ inspectStopSpin();
 });
 canvas.addEventListener('pointermove',e=>{
  if(!inspector.active||!inspector.pointers.has(e.pointerId))return;
  e.preventDefault();
  const last=inspector.pointers.get(e.pointerId);
  const dx=e.clientX-last.x,dy=e.clientY-last.y;
- inspector.pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
- if(inspector.pointers.size>=2&&inspector.pinchStart>0){
-  inspector.zoom=clampInspect(inspector.pinchZoom*pointerGap()/inspector.pinchStart,1.12,2.75);
+ last.x=e.clientX;last.y=e.clientY;
+ if(inspector.pointers.size>=2){
+  const q=pointerGapAngleCenter();
+  if(!q)return;
+  if(inspector.pinchStart>0)
+   inspector.zoom=clampInspect(inspector.pinchZoom*q.distance/inspector.pinchStart,.32,7.5);
+  // Two-finger twist rotates the card around the axis pointing at the viewer.
+  const turn=Math.atan2(Math.sin(q.angle-inspector.pinchAngle),
+   Math.cos(q.angle-inspector.pinchAngle));
+  inspectQuaternionRotate(iz,turn);
+  inspector.pinchAngle=q.angle;
+  if(inspector.pinchCenter){
+   inspectPanByPixels(q.x-inspector.pinchCenter.x,q.y-inspector.pinchCenter.y);
+  }
+  inspector.pinchCenter={x:q.x,y:q.y};
+ }else if(last.pan||e.shiftKey){
+  inspectPanByPixels(dx,dy);
  }else{
-  inspector.spinning=false;inspector.goalYaw=inspector.yaw+dx*.010;
-  inspector.pitch=clampInspect(inspector.pitch+dy*.008,-1.17,1.17);
-  $('inspect-spin').setAttribute('aria-pressed','false');$('inspect-spin').textContent='自动转动';
+  // No pitch clamp: full revolutions are valid along X and Y.
+  inspectQuaternionRotate(iy,dx*.013);
+  inspectQuaternionRotate(ix,dy*.013);
  }
+ renderInspectorCard();
 });
 function endInspectPointer(e){
  inspector.pointers.delete(e.pointerId);
- if(inspector.pointers.size<2)inspector.pinchStart=0;
+ if(inspector.pointers.size>=2)inspectStartPinch();
+ else{inspector.pinchStart=0;inspector.pinchCenter=null;}
 }
 canvas.addEventListener('pointerup',endInspectPointer);
 canvas.addEventListener('pointercancel',endInspectPointer);
 canvas.addEventListener('wheel',e=>{
  if(!inspector.active)return;
  e.preventDefault();
- inspector.zoom=clampInspect(inspector.zoom*Math.exp(-e.deltaY*.001),1.12,2.75);
+ inspectZoomBy(Math.exp(-e.deltaY*.0014));
 },{passive:false});
+canvas.addEventListener('dblclick',e=>{
+ if(!inspector.active)return;
+ e.preventDefault();
+ inspector.zoom=inspectDefaultZoom();inspector.panX=0;inspector.panY=0;
+ setInspectorFace(inspector.chosen==='back'?'back':'front');
+});
 
 $('draw-one').addEventListener('click',()=>{unlockAudio();queueDraw(1);});
 $('draw-five').addEventListener('click',()=>{unlockAudio();queueDraw(5);});
@@ -648,11 +722,7 @@ function animate(){
  requestAnimationFrame(animate);
  const dt=Math.min(.09,clock.getDelta());
  if(inspector.active){
-  if(inspector.spinning){
-   inspector.yaw+=dt*.83;inspector.goalYaw=inspector.yaw;
-  }else{
-   inspector.yaw+=(inspector.goalYaw-inspector.yaw)*Math.min(1,dt*11);
-  }
+  if(inspector.spinning)inspectQuaternionRotate(iy,dt*.84);
   renderInspectorCard();
  }else if(drawState.busy){
   drawState.elapsed=Math.min(CARD_DRAW_MS,drawState.elapsed+dt*1000);
@@ -677,7 +747,10 @@ window.PaperchalkCharacterMachineQA={
  get state(){return {
   busy:drawState.busy,starting:drawState.starting,
   inspecting:inspector.active,inspectionYaw:inspector.yaw,
-  inspectionPitch:inspector.pitch,inspectionZoom:inspector.zoom,
+  inspectionPitch:inspector.pitch,inspectionRoll:inspector.roll,
+  inspectionQuaternion:inspector.orientation.toArray(),
+  inspectionPan:[inspector.panX,inspector.panY],
+  inspectionZoom:inspector.zoom,
   cardBackReady,cardBackFailed,backImageUrl:cardBackUrl,
   inspectorCharacterId:inspector.chosen,
   backsideUsesOriginalTexture:cardBackReady&&!!cardBackPlane.material.map,
@@ -697,8 +770,14 @@ window.PaperchalkCharacterMachineQA={
  inspectBack(){setInspectorFace('back');},
  inspectFront(){if(inspector.chosen==='back')return inspectChoose(drawState.all[0].id,true);setInspectorFace('front');},
  inspectSelect(id){return inspectChoose(id,true);},
- inspectRotate(yaw,pitch){inspector.spinning=false;inspector.yaw=inspector.goalYaw=yaw;inspector.pitch=clampInspect(pitch,-1.17,1.17);renderInspectorCard();},
- inspectZoom(value){inspector.zoom=clampInspect(value,1.12,2.75);renderInspectorCard();},
+ inspectRotate(yaw,pitch,roll=0){
+  inspectStopSpin();
+  inspector.yaw=yaw;inspector.pitch=pitch;inspector.roll=roll;
+  inspector.orientation.setFromEuler(new THREE.Euler(pitch,yaw,roll,'YXZ'));
+  renderInspectorCard();
+ },
+ inspectZoom(value){inspector.zoom=clampInspect(value,.32,7.5);renderInspectorCard();},
+ inspectPan(dx,dy){inspector.panX=dx;inspector.panY=dy;renderInspectorCard();},
  inspectClose(){closeInspector();},
  seek(ms){if(!drawState.current)throw new Error('draw a card first');
   drawState.elapsed=Math.min(CARD_DRAW_MS,Math.max(0,ms));return applySequence(drawState.elapsed,true);},
