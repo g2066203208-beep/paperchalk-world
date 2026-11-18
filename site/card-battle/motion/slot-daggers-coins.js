@@ -361,6 +361,19 @@ function burst(options={}){
  if(!silentPhysics)clink(.85);
  start();return true;
 }
+// Exact GPU framebuffer checksum for developer frame QA. Called only
+// explicitly in tests: reading every pixel is too costly for live gameplay.
+function gpuFrameHash(){
+ if(!gl||!cv)return null;
+ gl.finish();
+ const w=cv.width,h=cv.height;
+ const px=new Uint8Array(w*h*4);
+ gl.readPixels(0,0,w,h,gl.RGBA,gl.UNSIGNED_BYTE,px);
+ if(gl.getError()!==gl.NO_ERROR)return null;
+ let hash=2166136261>>>0;
+ for(let i=0;i<px.length;i++)hash=Math.imul(hash^px[i],16777619)>>>0;
+ return w+"x"+h+":"+hash.toString(16).padStart(8,"0");
+}
 function stop(){particles.length=0;sparks.length=0;
  if(raf)cancelAnimationFrame(raf);raf=0;last=0;accumulator=0;phase="idle";status="idle";
  if(gl){gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT)}
@@ -368,7 +381,7 @@ function stop(){particles.length=0;sparks.length=0;
 }
 function soundFn(fn){soundEnabled=typeof fn==="function"?fn:()=>!!fn;}
 document.addEventListener("pointerdown",()=>{if(soundEnabled()&&ctx?.state==="suspended")audioContext()},{passive:true,capture:true});
-window.PaperchalkCoinCascade=Object.freeze({burst,stop,seek,play,unlockAudio:audioContext,setSoundEnabled:soundFn,
+window.PaperchalkCoinCascade=Object.freeze({burst,stop,seek,play,gpuFrameHash,unlockAudio:audioContext,setSoundEnabled:soundFn,
  get status(){return status},get count(){return particles.length},
  get played(){return played},get canvas(){return cv},get seed(){return seedUsed},
  get phase(){return phase},get simulatedMs(){return Math.round(simTime*1000)},
