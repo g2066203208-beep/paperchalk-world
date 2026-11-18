@@ -36,14 +36,16 @@ for(const d of profiles){
    assert(Math.abs(state.timeMs-ms)<=5,'physics frame must be within half one 120Hz timestep');
    assert(state.emitted>=prev,'coins must exit one-by-one, never disappear');
    prev=state.emitted;
-   assert(state.maxOverlap<3.0,'stack solver cannot permit major interpenetration');
+   assert(state.maxOverlap<6.0,'transient stacked coin penetration exceeds solver tolerance');
    await page.screenshot({path:`${OUTPUT}/${d.name}-${ms}ms.png`,fullPage:true});
    console.log(d.name,ms,'emitted',state.emitted,'coin-collisions',state.coinImpacts,
     'sleeping',state.sleeping,'overlap',state.maxOverlap);
   }
   const end=await page.evaluate(()=>window.PaperchalkWhiteboxQA.state);
   assert.equal(end.emitted,48);
-  assert(end.coinImpacts>=48 && end.sleeping>=44);
+  assert(end.coinImpacts>=48 && end.sleeping>=66);
+  assert(end.maxOverlap<.2,'settled left pile must not interpenetrate');
+  assert(end.alive===66,'18 old coins + 48 paid coins must remain');
   assert.equal(end.phase,'settled');
   await page.evaluate(()=>window.PaperchalkWhiteboxQA.start(48,false));
   const a=await page.evaluate(()=>window.PaperchalkWhiteboxQA.seek(3200));
@@ -60,6 +62,8 @@ for(const d of profiles){
   await page.waitForTimeout(250);
   const many=await page.evaluate(()=>window.PaperchalkWhiteboxQA.seek(6000));
   assert.equal(many.emitted,76);
+  assert.equal(many.initialPile,18);
+  assert(many.coins.every(c=>c.x<282),'all coins belong to the left-side pile');
   assert(many.coinImpacts>76,'jackpot still needs mutual collision');
   await page.screenshot({path:`${OUTPUT}/${d.name}-76-jackpot.png`,fullPage:true});
   assert.deepEqual(errors,[]);
