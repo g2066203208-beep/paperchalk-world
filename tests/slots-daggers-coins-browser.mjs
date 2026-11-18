@@ -51,8 +51,10 @@ for(const d of devices){
   for(const [ms,label] of checkpoints){
    assert(await page.evaluate(ms=>window.PaperchalkCoinLab.frame(ms),ms),
     "seek must allow true exact-timestamp screenshots");
+   await page.waitForTimeout(55); // let Chromium composite the flushed preserved WebGL frame
    const inspect=await page.evaluate(()=>window.PaperchalkCoinCascade.inspect());
    assert(Math.abs(inspect.timeMs-ms)<7, "cannot reproduce requested deterministic frame at "+ms);
+   if(ms===0)assert.equal(inspect.sparks,0,"0 ms payout must not show future collision sparks");
    const bytes=await page.screenshot({path:out+"/"+d.name+"-"+label+".png",animations:"disabled"});
    frames.push({ms,label,inspect,hash:sha(bytes)});
    hashes.push(sha(bytes));
@@ -63,18 +65,23 @@ for(const d of devices){
   // Browser compositor / text polling is not the GPU physics clock.
   // Compare the COMPLETE seeded particle simulation data at frame 480
   // rather than incorrectly asserting the whole HTML page's PNG bytes.
+  await page.addStyleTag({content:"#count{visibility:hidden!important}"});
   const physicsA=await page.evaluate(()=>{
    window.PaperchalkCoinLab.frame(480);
    return window.PaperchalkCoinCascade.inspect();
   });
-  await page.screenshot({path:out+"/"+d.name+"-13-repeatability-A-480ms.png",animations:"disabled"});
+  await page.waitForTimeout(70);
+  const savedA=await page.screenshot({path:out+"/"+d.name+"-13-repeatability-A-480ms.png",animations:"disabled"});
   const physicsB=await page.evaluate(()=>{
    window.PaperchalkCoinLab.frame(480);
    return window.PaperchalkCoinCascade.inspect();
   });
-  await page.screenshot({path:out+"/"+d.name+"-14-repeatability-B-480ms.png",animations:"disabled"});
+  await page.waitForTimeout(70);
+  const savedB=await page.screenshot({path:out+"/"+d.name+"-14-repeatability-B-480ms.png",animations:"disabled"});
   assert.deepEqual(physicsA,physicsB,
    "same seed & frame time must reproduce each coin coordinate, rotation, hit and highlight state");
+  assert.equal(sha(savedA),sha(savedB),
+   "preserved WebGL backbuffer and fixed-timestamp GPU screenshot must match pixel-for-pixel");
   const proof=await page.evaluate(()=>{
    const fx=window.PaperchalkCoinCascade;
    const c=fx.canvas,gl=c?.getContext("webgl");
