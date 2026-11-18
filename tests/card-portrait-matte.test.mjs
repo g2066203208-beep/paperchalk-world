@@ -36,6 +36,18 @@ assert.deepEqual(pixel(result.pixels,60,34),[241,194,166,255],
 assert.equal(pixel(result.pixels,50,60)[3],255,'dark red coat stays fully opaque');
 assert(pixel(result.pixels,31,100)[3]>0 && pixel(result.pixels,31,100)[3]<255,
  'soft anti-aliased subject contour gets proper partial alpha');
+// A hand/cane can trap a large disconnected pocket of white studio background
+// near the right edge. It must be removed without deleting the white shirt.
+const enclosed=new Uint8ClampedArray(original);
+for(let y=108;y<=163;y++)for(let x=79;x<=100;x++)
+ enclosed.set([250,249,248,255],(y*w+x)*4);
+const enclosedResult=mattePortraitBackground(enclosed,w,h);
+assert(enclosedResult.stats.enclosedRemoved>500,
+ 'a large near-right background hole needs second-pass island detection');
+assert.equal(pixel(enclosedResult.pixels,90,125)[3],0,
+ 'closed white studio island should be transparent');
+assert.deepEqual(pixel(enclosedResult.pixels,67,86),[246,242,237,255],
+ 'a central white shirt must NOT be mistaken for studio background');
 const notWhite=new Uint8ClampedArray(original);
 for(let y=0;y<h;y++)for(let x=0;x<w;x++){
  if(x===0||x===w-1||y===0||y===h-1){
