@@ -262,6 +262,15 @@ function renderInventory(){
  $('library-count').textContent=total+' 张 · '+drawState.collection.length+' 种';
 }
 let audio=null;
+function unlockAudio(){
+ if(drawState.muted)return;
+ try{
+  const AudioCtx=window.AudioContext||window.webkitAudioContext;
+  if(!AudioCtx)return;
+  audio=audio||new AudioCtx();
+  if(audio.state==='suspended')audio.resume();
+ }catch{}
+}
 function sound(tone=360,seconds=.12,kind='triangle',volume=.05){
  if(drawState.muted)return;
  try{
@@ -372,8 +381,8 @@ function queueDraw(n){
  $('load-status').textContent='已排队 '+drawState.queued.length+' 张';
  processQueue();
 }
-$('draw-one').addEventListener('click',()=>queueDraw(1));
-$('draw-five').addEventListener('click',()=>queueDraw(5));
+$('draw-one').addEventListener('click',()=>{unlockAudio();queueDraw(1);});
+$('draw-five').addEventListener('click',()=>{unlockAudio();queueDraw(5);});
 $('skip').addEventListener('click',()=>{
  if(!drawState.busy)return;
  drawState.elapsed=CARD_DRAW_MS;applySequence(CARD_DRAW_MS,true);
