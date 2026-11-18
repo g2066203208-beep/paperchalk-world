@@ -67,7 +67,8 @@ for(const token of ['draw-one','draw-five','faction','collection','machine-canva
 }
 assert(runtime.includes('THREE.WebGLRenderer'));
 assert(runtime.includes('cardRoot.rotateY'));
-assert(runtime.includes('new THREE.Texture(img)'));
+assert(runtime.includes('new THREE.Texture(artwork)'),'the preserved original character image or safely matted art must remain a real WebGL texture');
+assert(runtime.includes('mattePortraitBackground'),'an opaque white photo rectangle must not cover the antique burgundy card stock');
 assert(runtime.includes('post.render(scene,camera)'));
 assert(runtime.includes('queueDraw(5)'));
 assert(runtime.includes('paperchalk-character-pulls-v1'));
