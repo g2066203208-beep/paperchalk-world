@@ -2,8 +2,8 @@
   {
     "viewport": "desktop",
     "passed": true,
-    "character": "小丑演员",
-    "id": "wonder-circus/clown-performer.png",
+    "character": "火焰魔女",
+    "id": "witch-workshop/fire-witch.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
@@ -12,8 +12,8 @@
   {
     "viewport": "portrait",
     "passed": true,
-    "character": "冰霜魔女",
-    "id": "witch-workshop/frost-witch.png",
+    "character": "驯兽师",
+    "id": "wonder-circus/beast-tamer.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
@@ -22,8 +22,8 @@
   {
     "viewport": "landscape",
     "passed": true,
-    "character": "火焰魔女",
-    "id": "witch-workshop/fire-witch.png",
+    "character": "小丑演员",
+    "id": "wonder-circus/clown-performer.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
