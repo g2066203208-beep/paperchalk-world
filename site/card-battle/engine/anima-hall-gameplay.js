@@ -7,7 +7,7 @@ import {createCastleCourtyard} from './anima-courtyard-scene.js';
  */
 export function createFadingHallGame({
  THREE,scene,hallRoot,camera,renderer,actorSlot,groundShadow,materials,
- getPortraitTexture,groundCanvas,target,cameraUpdate,debug=false
+ getPortraitTexture,getPortraitMaterial,groundCanvas,target,cameraUpdate,debug=false
 }){
  const byId=id=>document.getElementById(id);
  const stage=groundCanvas.parentElement;
@@ -201,13 +201,17 @@ export function createFadingHallGame({
  }
  const companion=new THREE.Group();companion.position.set(3.72,0,1.04);
  hallRoot.add(companion);
- const npcMat=new THREE.MeshStandardMaterial({transparent:true,opacity:1,side:THREE.DoubleSide,alphaTest:.065,roughness:1,depthWrite:true,color:"#f2ebe0"});
+ let npcMat=null;
  let npcLoaded=false;
  const img=new Image();img.onload=()=>{
   try{
-   npcMat.map=getPortraitTexture(img);npcMat.needsUpdate=true;
+   const tex=getPortraitTexture(img);
+   npcMat=getPortraitMaterial?getPortraitMaterial(tex):new THREE.MeshStandardMaterial({
+    map:tex,transparent:true,alphaTest:.095,roughness:1,side:THREE.DoubleSide
+   });
    const sp=new THREE.Mesh(new THREE.PlaneGeometry(3.05,4.52),npcMat);
-   sp.position.y=2.26;sp.castShadow=false;sp.receiveShadow=false;
+   sp.position.y=2.26;sp.castShadow=true;sp.receiveShadow=true;
+   sp.customDepthMaterial=new THREE.MeshDepthMaterial({depthPacking:THREE.RGBADepthPacking,map:tex,alphaTest:.095});
    companion.add(sp);npcLoaded=true;
   }catch(e){console.warn("Optional hunter companion sprite unavailable",e)}
  };
