@@ -200,7 +200,7 @@ function renderGlints(){
 function render(){
  fit();gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);
  gl.useProgram(p);
- const t=performance.now()/1000;
+ const t=simTime;
  gl.uniform1f(loc.uTime,t);
  bind(sbuf);gl.uniform1f(loc.uShadow,1);
  for(const c of particles){
@@ -230,12 +230,15 @@ function render(){
  cv.dataset.coinEffectStatus="rendering";
 }
 function addImpactSparks(c){
- if(silentPhysics)return;
+ // Each collision chooses particles only from its seed + hit index, so
+ // replaying physics frame 120 produces the same image, no random drift.
  const brightness=.6+Math.min(1,c.size/22)*.4;
  for(let i=0;i<4;i++){
   const a=(-.75+i*.47)+c.hits*.31;
-  sparks.push({x:c.x,y:c.floor-3,vx:Math.cos(a)*rand(25,115),
-   vy:-rand(52,156),age:0,life:rand(.12,.24),brightness});
+  const r=(Math.sin(c.glintSeed*17.1+i*41.3+c.hits*71.5)*43758.5453)%1;
+  const q=Math.abs(r);
+  sparks.push({x:c.x,y:c.floor-3,vx:Math.cos(a)*(25+90*q),
+   vy:-(52+104*(1-q)),age:0,life:.12+.12*q,brightness});
  }
 }
 function update(dt){
