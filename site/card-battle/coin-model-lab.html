@@ -96,7 +96,7 @@ function rebuild(){
  mesh=next;mesh.rotation.set(pitch,yaw,0);scene.add(mesh);
  mesh.scale.setScalar(+$('scale').value);
  mesh.children[0].material[1].visible=mesh.children[0].material[2].visible=$('inkonly').getAttribute('aria-pressed')!=='true';
- const faces=mesh.children[0].geometry.attributes.position.count;
+ const faces=mesh.children[0].geometry.index.count;
  mesh.children[0].geometry.computeBoundingBox();
  $('solids').textContent=profile.shapes.length;
  $('triangles').textContent=String(Math.round(faces/3));
@@ -168,7 +168,7 @@ requestAnimationFrame(animate);
 window.PaperchalkSpriteCoinQA={get loaded(){return !!mesh;},get profile(){return profile;},get model(){return mesh;},
  setView,setThickness(t){$('thickness').value=t;syncValues();rebuild();},snapshot(){return {
  outlines:mesh?.userData.outlines,holes:mesh?.userData.holes,thickness:mesh?.userData.thickness,
- triangles:mesh?mesh.children[0].geometry.attributes.position.count/3:0,
+ triangles:mesh?mesh.children[0].geometry.index.count/3:0,
  frontMapped:!!mesh?.children[0].material[1].map,
  actualExtrusion:!!mesh?.children[0].isMesh,
  geometryType:mesh?.children[0].geometry.type,
