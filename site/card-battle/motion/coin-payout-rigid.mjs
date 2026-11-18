@@ -7,10 +7,10 @@
  */
 import * as CANNON from '../vendor/cannon-es.js';
 
-export const FIXED_DT = 1/120;
+export const FIXED_DT = 1/90; // sub-centimetre-thick coin moves < 0.22 m per step at 20 m/s
 export const COIN = Object.freeze({sides:10, imageDiameter:3, scale:.135,
-  visualThickness:.10, radius:3*.135/(2*Math.cos(Math.PI/10)),
-  height:.10*.135, gravity:24});
+  visualThickness:.31, radius:3*.135/(2*Math.cos(Math.PI/10)),
+  height:.31*.135, gravity:38});
 export const CAPS = Object.freeze({max:500, presets:[120,240,420]});
 // Coin chute is INSIDE the right rim. Every emitted rigid coin enters this
 // open 3D catch bowl; no sideways confetti, virtual teleport or particle FX.
@@ -26,20 +26,20 @@ export class RigidCoinPayout {
     this.seed=seed;this.random=seeded(seed);this.maxCoins=maxCoins;
     this.world=new CANNON.World({gravity:new CANNON.Vec3(0,-COIN.gravity,0),allowSleep});
     this.world.broadphase=new CANNON.SAPBroadphase(this.world);
-    this.world.solver.iterations=24;
-    this.world.solver.tolerance=1e-7;
-    this.world.defaultContactMaterial.friction=.58;
-    this.world.defaultContactMaterial.restitution=.20;
-    this.world.defaultContactMaterial.contactEquationStiffness=1e8;
+    this.world.solver.iterations=9; // 500 interacting convex bodies: do not solve 24 times per 90-Hz tick
+    this.world.solver.tolerance=.0002;
+    this.world.defaultContactMaterial.friction=.82;
+    this.world.defaultContactMaterial.restitution=.07;
+    this.world.defaultContactMaterial.contactEquationStiffness=2e7;
     this.world.defaultContactMaterial.contactEquationRelaxation=4;
-    this.world.defaultContactMaterial.frictionEquationStiffness=2e7;
+    this.world.defaultContactMaterial.frictionEquationStiffness=1e7;
     this.world.defaultContactMaterial.frictionEquationRelaxation=4;
     this.coinMaterial=new CANNON.Material('coin');
     this.deskMaterial=new CANNON.Material('dark-wood');
     this.world.addContactMaterial(new CANNON.ContactMaterial(this.coinMaterial,this.coinMaterial,
-      {friction:.62,restitution:.17,contactEquationStiffness:2e8,contactEquationRelaxation:3}));
+      {friction:.83,restitution:.055,contactEquationStiffness:2e7,contactEquationRelaxation:4}));
     this.world.addContactMaterial(new CANNON.ContactMaterial(this.coinMaterial,this.deskMaterial,
-      {friction:.65,restitution:.30,contactEquationStiffness:2e8,contactEquationRelaxation:3}));
+      {friction:.91,restitution:.095,contactEquationStiffness:2e7,contactEquationRelaxation:4}));
     // An actual CLOSED-PERIMETER, OPEN-TOP 3D catch bowl directly beneath
     // and left of the payout chute. The four physical walls use the same
     // coordinates/solids as the visual scene. A coin is never spawned outside.
@@ -65,6 +65,7 @@ export class RigidCoinPayout {
     // The RENDER geometry can be shared, but Cannon assigns shape.body in addShape().
     // A shared physics shape would point to the wrong coin; create one per rigid body.
     this.events=[];
+    this.pairKeys=new Set(); // reuse a numeric collision-pair set; no garbage per 90-Hz physics step
   }
   addStaticBox(pos,size){
     const body=new CANNON.Body({mass:0,material:this.deskMaterial});
@@ -80,9 +81,9 @@ export class RigidCoinPayout {
   }
   addCoin({pos,vel,axis,spin,initial=false}){
     if(this.coins.length>=this.maxCoins)return null;
-    const body=new CANNON.Body({mass:.078,material:this.coinMaterial,
-      linearDamping:.055,angularDamping:.15,allowSleep:true,
-      sleepSpeedLimit:.30,sleepTimeLimit:.70});
+    const body=new CANNON.Body({mass:.145,material:this.coinMaterial,
+      linearDamping:.14,angularDamping:.42,allowSleep:true,
+      sleepSpeedLimit:.62,sleepTimeLimit:.34});
     body.addShape(new CANNON.Cylinder(COIN.radius,COIN.radius,COIN.height,COIN.sides));
     body.position.set(...pos);
     body.velocity.set(...vel);
@@ -104,16 +105,16 @@ export class RigidCoinPayout {
     // in the open basin. No coin is ever born beyond the physical walls.
     const zlane=((slot%7)-3)*.062+(r()-.5)*.032;
     const ylane=((slot%3)-1)*.018;
-    const strength=.93+r()*.17;
+    const strength=.94+r()*.12;
     this.addCoin({
       pos:[BASIN.chute[0]+(r()-.5)*.012,BASIN.chute[1]+ylane,zlane],
-      vel:[-(18.1+r()*5.2)*strength,(-4.0-r()*2.4)*strength,(r()-.5)*3.0],
-      axis:[r()-.5,r()-.5,r()-.5],spin:[(r()-.5)*50,(r()-.5)*58,(r()-.5)*48]
+      vel:[-(17.5+r()*3.2)*strength,(-7.0-r()*2.2)*strength,(r()-.5)*1.8],
+      axis:[r()-.5,r()-.5,r()-.5],spin:[(r()-.5)*24,(r()-.5)*34,(r()-.5)*27]
     });
     this.batchEmitted++;this.totalEmitted++;
     const p=this.batchEmitted/this.batchTarget;
     // Front-loaded pressure spike, sustained shower, slowing tail.
-    const interval=p<.13?.0105:p<.82?.0148:p<.94?.019:.028;
+    const interval=p<.13?.0185:p<.82?.0215:p<.94?.023:.028;
     this.nextEmission=this.time+interval+(r()-.5)*.0014;
     if(this.batchEmitted>=this.batchTarget)this.phase='settling';
   }
@@ -123,12 +124,12 @@ export class RigidCoinPayout {
     }
     this.world.step(FIXED_DT);
     this.tick++;this.time=this.tick*FIXED_DT;
-    const pairs=new Set();
+    const pairs=this.pairKeys;pairs.clear();
     for(const eq of this.world.contacts||[]){
       const a=eq.bi,b=eq.bj;
       if(a.userData?.kind==='coin'&&b.userData?.kind==='coin'){
-        const k=a.id<b.id?`${a.id}/${b.id}`:`${b.id}/${a.id}`;
-        pairs.add(k);
+        const ai=a.userData.id,bi=b.userData.id;
+        pairs.add(ai<bi?ai*this.maxCoins+bi:bi*this.maxCoins+ai);
       }else if(a.userData?.kind==='coin'||b.userData?.kind==='coin')this.groundContacts++;
     }
     this.contactCount+=pairs.size;
