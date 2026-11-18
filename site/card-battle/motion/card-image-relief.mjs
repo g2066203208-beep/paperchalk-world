@@ -10,6 +10,31 @@
  * burgundy paper pixel (high red, low green) MUST NOT become metal.
  */
 const clamp01=x=>Math.max(0,Math.min(1,x));
+// Stable, coordinate-locked fiber/grain: no animated glitter, random redraw,
+// procedural gold borders, GPU shimmer or user art modification.
+function hash2(x,y,salt=0){
+ let v=Math.imul(x,374761393)^Math.imul(y,668265263)^Math.imul(salt+17,2246822519);
+ v=Math.imul(v^(v>>>13),1274126177);
+ return ((v^(v>>>16))>>>0)/4294967295;
+}
+function softNoise(x,y,size,salt){
+ const gx=x/size,gy=y/size,ix=Math.floor(gx),iy=Math.floor(gy);
+ const u=gx-ix,v=gy-iy;
+ const sx=u*u*(3-2*u),sy=v*v*(3-2*v);
+ const a=hash2(ix,iy,salt),b=hash2(ix+1,iy,salt);
+ const c=hash2(ix,iy+1,salt),d=hash2(ix+1,iy+1,salt);
+ return (a+(b-a)*sx)*(1-sy)+(c+(d-c)*sx)*sy;
+}
+function paperFiber(x,y,mode){
+ // Short pulp fibers and two orthogonal softly embossed woven directions.
+ // This spans the entire card, including otherwise flat dark burgundy areas.
+ const a=hash2(x,y,mode==='back'?3:13)-.5;
+ const b=softNoise(x,y,7,23)-.5;
+ const threads=softNoise(x,Math.floor(y/5)*5,3,31)-.5;
+ const fleck=(hash2(Math.floor(x/2),Math.floor(y/9),41)-.5);
+ return a*.030+b*.065+threads*.037+fleck*.028+
+  Math.sin(x*.83+y*.054)*.010+Math.sin(y*.78-x*.030)*.007;
+}
 export function goldInkWeight(r,g,b,a=255){
  if(a<20)return 0;
  const yellow=clamp01((g-b-7)/27);
@@ -26,6 +51,8 @@ export function deriveCardRelief(rgba,width,height,mode='back'){
   gold=new Float32Array(count),heightMap=new Float32Array(count);
  const normals=new Uint8Array(count*4),surface=new Uint8Array(count*4);
  let goldPixels=0,normalPixels=0,minL=1,maxL=0;
+ let paperNormalPixels=0,roughnessMinimum=1,roughnessMaximum=0;
+ const roughSamples=[];
  for(let p=0;p<count;p++){
   const i=p*4,r=rgba[i],g=rgba[i+1],b=rgba[i+2],a=rgba[i+3];
   const value=(.2126*r+.7152*g+.0722*b)/255;
@@ -56,7 +83,9 @@ export function deriveCardRelief(rgba,width,height,mode='back'){
      Math.min(rgba[k*4],rgba[k*4+1],rgba[k*4+2]))/255*.085;
    local+=h*w;weight+=w;
   }
-  heightMap[p]=local/weight;
+  const goldMix=gold[p];
+  const fiber=paperFiber(x,y,mode);
+  heightMap[p]=local/weight+fiber*(mode==='back'?(1-goldMix*.65):.78);
  }
  const scale=mode==='back'?5.8:2.1;
  for(let y=0;y<height;y++)for(let x=0;x<width;x++){
@@ -79,15 +108,31 @@ export function deriveCardRelief(rgba,width,height,mode='back'){
   normals[i+2]=Math.round((nz*.5+.5)*255);
   normals[i+3]=255;
   if(Math.abs(nx)+Math.abs(ny)>.035)normalPixels++;
-  const m=gold[p];
+  const m=gold[p],roughGrain=hash2(x,y,71)-.5,
+   blotch=softNoise(x,y,17,89)-.5;
+  // Cellulose has high, NONUNIFORM roughness; the entire surface scatters
+  // reflections. Foil is smoother but still scratched/micro-embossed.
+  // Dark burgundy paper never picks up metallic highlights.
+  const printInk=clamp01((.7-lum[p])*.85);
+  let rough=mode==='back'?
+   (.925+.075*roughGrain+.07*blotch)*(1-m)+
+   (.39+.08*roughGrain+.12*blotch)*m:
+   .94-.075*printInk+.058*roughGrain+.066*blotch;
+  // Tiny cut-paper edge wears matte, never a modeled gold border.
+  const border=Math.min(x,y,width-1-x,height-1-y);
+  if(border<4)rough+=.038*(1-border/4);
+  rough=Math.max(.27,Math.min(.995,rough));
+  if(Math.abs(nx)+Math.abs(ny)>.035&&m<.08)paperNormalPixels++;
+  roughnessMinimum=Math.min(roughnessMinimum,rough);
+  roughnessMaximum=Math.max(roughnessMaximum,rough);
   // Three.js: roughness is GREEN, metalness is BLUE, both linear.
-  const rough=mode==='back'?.82-.55*m:.83;
   surface[i]=255;
   surface[i+1]=Math.round(255*rough);
   surface[i+2]=Math.round(255*m);
   surface[i+3]=255;
  }
  return {width,height,normals,surface,
-  stats:{goldPixels,normalPixels,totalPixels:count,minimumLuminance:minL,
-   maximumLuminance:maxL,mode}};
+  stats:{goldPixels,normalPixels,paperNormalPixels,totalPixels:count,
+   roughnessMinimum,roughnessMaximum,
+   minimumLuminance:minL,maximumLuminance:maxL,mode}};
 }
