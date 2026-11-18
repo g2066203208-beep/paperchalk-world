@@ -1,6 +1,6 @@
 import * as THREE from "../vendor/three.module.js";
 import {createFadingHallGame} from "./anima-hall-gameplay.js?v=scene03-20261118";
-import {makeIntegratedCharacterMaterial,setIntegratedCharacterScene,createIntegratedGroundShadows,getCharacterScenePreset}
+import {makeIntegratedCharacterMaterial,setIntegratedCharacterScene,createIntegratedGroundShadows,getCharacterScenePreset,inferThreeSceneLighting}
  from "./character-scene-integration.js?v=20261118-v2";
 
 /* 3D whitebox / paintover study. Original Anima actor from the user's repo.
@@ -82,10 +82,14 @@ const root=new THREE.Group();scene.add(root);
 const architecture=[],masks=[],foreground=[],shadows=[],actors=[],anim=[],surfaceBundles=[];
 const integratedMaterials=[];
 let activeSceneLight="hall";
+let activeLightingPreset=getCharacterScenePreset("hall",false);
 const sceneRelight=(room="hall")=>{
  activeSceneLight=room;
+ activeLightingPreset=inferThreeSceneLighting(THREE,{
+  sun,hemisphere:ambient,camera,fill:state.day?sun:lamp
+ },getCharacterScenePreset(room,state.day));
  for(const mat of integratedMaterials){
-  setIntegratedCharacterScene(mat,THREE,room,state.day);
+  setIntegratedCharacterScene(mat,THREE,activeLightingPreset,state.day);
   if(!state.relighting)mat.userData.portraitLighting.uPortraitRelight.value=0;
  }
 };
@@ -685,7 +689,7 @@ function animate(t){
  if(actors.length)actors[0].rotation.y=yaw*.42;
  if(!devMode)gameplay.update(elapsed);
  if(gameplay.room!==activeSceneLight)sceneRelight(gameplay.room);
- dynamicGrounding.update(actorSlot,getCharacterScenePreset(activeSceneLight,state.day),state.shadows&&!state.whitebox&&state.actor);
+ dynamicGrounding.update(actorSlot,activeLightingPreset,state.shadows&&!state.whitebox&&state.actor);
  renderer.render(scene,camera);
  frames++;
  if(t-framesAt>1000){
