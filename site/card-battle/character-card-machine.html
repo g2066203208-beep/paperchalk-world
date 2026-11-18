@@ -54,6 +54,27 @@ footer{font-size:11px;color:#968e83;line-height:1.55}
  #announce{bottom:12px;left:12px}#announce strong{font-size:21px}
  .hud{font-size:9px;top:8px;left:10px}.led{right:8px;top:8px;font-size:9px}
 }
+/* The actual 844×390 phone viewport must show BOTH the full machine and
+   controls without Playwright (or touch) auto-scrolling the machine away. */
+@media (orientation:landscape) and (max-height:470px) and (min-width:650px){
+ main{padding:4px 8px;gap:4px}
+ header{gap:4px;min-height:29px}
+ header h1{font-size:17px;line-height:1.1}
+ header p{display:none}
+ header nav{font-size:10px;gap:8px}
+ #machine-canvas{height:calc(100dvh - 111px);min-height:210px}
+ .stage{border-radius:9px}
+ .hud{top:5px;left:9px;font-size:9px}
+ .led{top:6px;right:8px;font-size:9px}
+ #announce{bottom:8px;left:10px}
+ #announce strong{font-size:19px}
+ #announce small{font-size:10px}
+ .controls{gap:5px;padding:0;flex-wrap:nowrap}
+ .controls button,.controls select{min-height:38px;padding:6px 9px;font-size:11px}
+ .controls select{min-width:130px}
+ .controls .status{display:none}
+ .library,footer{display:none}
+}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 </style>
 </head>
