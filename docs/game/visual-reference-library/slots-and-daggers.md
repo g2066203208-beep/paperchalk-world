@@ -231,3 +231,18 @@ https://80.lv/articles/check-out-coin-animation-sound-effect-in-this-slot-fantas
 ### 下一轮严格原版动态对比缺口
 
 开发者公开说明自己打磨了机械吐币、碰撞声音、动画的物理手感： https://80.lv/articles/check-out-coin-animation-sound-effect-in-this-slot-fantasy-game 以及 https://www.dailymotion.com/video/x9sjabo 00:43–00:52。现在**仍缺独立可下载、能逐帧测时间戳的原版吐币 WIP 视频**，目前白模的喷射速度是按用户描述的“强力老虎机弹币”建立的改进，并非已经确认的原版精确速度。后续取得官方片段必须对起喷、首撞、币流密度、反弹/滚动、落堆 5 个时间段同帧实机对照，不得再次凭主观速度称“逐帧完成”。
+
+## 2026-11-18 V4 单张素材自动挤出剪纸金币（从一个模型开始）
+
+**用户最新明确要求**：先停止弹币物理及整机演出。只验证单独一个金币——剪纸画片外观，**薄薄的实体厚度和黑色侧边**；程序化处理是“一张素材输入即自动拥有 3D 厚度”，而不是 GPT 画一张 3D 效果图，更不能让所有金属币使用写死半径的圆柱。
+
+**已提交 main 的代码**：
+
+- `site/card-battle/motion/sprite-extrusion.mjs`：`prepareExtrudedSprite(image)` 自动分析 PNG/WebP/SVG/JPG alpha 轮廓（纯白单色边框尝试 flood-fill 清除），轮廓边缘跟踪、RDP 降点、多个实体轮廓和镂空洞分类；`buildExtrudedSprite3D(profile,THREE,{thickness,outlineScale})` 实际创建 `THREE.ExtrudeGeometry` 的封闭黑色外轮廓侧壁 + 原始**同一张**图片正反两面贴图。厚度、外围墨线可调，无固定圆形金币 mesh。
+- `site/card-battle/coin-model-lab.html`：可上传 1 张素材；单枚金币拖拽旋转、侧视/正面/背面/斜视、厚度滑杆、黑边滑杆、隐藏贴图只观察实体、手机自适应。内置一张示意 SVG 仅为验证工具，允许用户替换；并非已获批准的原始金币美术。
+- `tests/sprite-extrusion-unit.mjs`：真实本地 Node 已通过圆形、环形镂空、两块分离、对角触碰、凹多边形、空图片错误、轮廓边缘简化测试。
+- `tests/sprite-extrusion-browser.mjs` 及 `.github/workflows/coin-model-3d-qa.yml`：线上 CI 的 Chrome/WebGL 测试脚本会检查真正 `ExtrudeGeometry` 的 Z 厚度、上传非圆形 SVG 后的网格、穿孔、桌面与手机截图和视频；**目前不能声称 CI 已完成或截图已由本地浏览器实际验收**，需读取 GitHub Actions 日志/工件。
+
+**技术参考**： https://github.com/shaoruu/three-extruded-image （单张透明 PNG -> ThreeJS mesh 的参考范式，不是直接复制代码）；原版开发者展示中奖金币动画的 https://80.lv/articles/check-out-coin-animation-sound-effect-in-this-slot-fantasy-game （未公布具体网格算法，不能宣称原版技术实现被证实）。
+
+**下一步门禁**：等用户实际审查金币单枚厚度、黑边和朝向后，再把此 mesh 作为可复用视觉组件接回金币碰撞和堆叠系统；绝不能用之前假三维 Canvas 圆片替换这个模型。
