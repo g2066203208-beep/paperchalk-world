@@ -1,0 +1,42 @@
+name: Export authentic Anima character source images for preview
+on:
+  push:
+    paths:
+      - .github/workflows/original-character-sources-preview.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export-originals:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - name: Check exact original assets
+        shell: bash
+        run: |
+          set -eu
+          for f in \
+            site/assets/characters/monster-hunters/02-blood-physician.png \
+            site/assets/characters/crimson-vampires/pureblood-empress.png \
+            site/assets/characters/wonder-circus/ringmaster.png \
+            site/assets/characters/witch-workshop/grand-witch.png \
+            site/assets/characters/demon-merchant/shop-owner.webp; do
+            test -s "$f"
+            file "$f"
+          done
+      - name: Bundle original pixels without modification
+        uses: actions/upload-artifact@v4
+        with:
+          name: authentic-characters-source-20261118
+          if-no-files-found: error
+          retention-days: 7
+          path: |
+            site/assets/characters/monster-hunters/02-blood-physician.png
+            site/assets/characters/crimson-vampires/pureblood-empress.png
+            site/assets/characters/wonder-circus/ringmaster.png
+            site/assets/characters/witch-workshop/grand-witch.png
+            site/assets/characters/demon-merchant/shop-owner.webp
