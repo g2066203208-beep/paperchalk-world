@@ -1,9 +1,10 @@
-name: Single-image Paper-Cut Coin 3D Model - Mesh and Browser QA
+name: Slots & Daggers-inspired Tiny Pixel 8-12 Facet 3D Coin QA
 on:
   push:
     branches: [main]
     paths:
       - 'site/card-battle/motion/sprite-extrusion.mjs'
+      - 'site/card-battle/assets/slots-style-pixel-coin.svg'
       - 'site/card-battle/coin-model-lab.html'
       - 'site/card-battle/assets/slots-style-pixel-coin.svg'
       - 'tests/sprite-extrusion-unit.mjs'
@@ -41,7 +42,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coin-model-single-image-real-3d-mesh-desktop-mobile
+          name: coin-model-tiny-8-12-facet-real-3d-desktop-mobile
           path: artifacts/coin-model-3d/
           if-no-files-found: warn
           retention-days: 14
