@@ -1,6 +1,6 @@
 /** Node/CI mechanical verification of the real vendored Cannon-ES world. */
 import assert from 'node:assert/strict';
-import {RigidCoinPayout,COIN,FIXED_DT} from '../site/card-battle/motion/coin-payout-rigid.mjs';
+import {RigidCoinPayout,COIN,FIXED_DT,BASIN} from '../site/card-battle/motion/coin-payout-rigid.mjs';
 const scenes=[];
 function validate(count,frames){
  const a=new RigidCoinPayout({seed:20261118,maxCoins:500});
@@ -19,13 +19,23 @@ function validate(count,frames){
  assert(snap.contacts>0,'actual real 3D coin-on-coin contact equations');
  assert(snap.peakHeight>1.0,'powerful toss arc');
  assert(snap.groundContacts>=0);
+ assert(snap.inBasin===snap.count,
+   `all ${count} emitted coins must remain inside physical basin at ${snap.time}s, got ${snap.inBasin}/${snap.count}`);
+ assert.equal(snap.escapedEver,0,'no coins can scatter outside the receiving basin');
+ assert(a.coins.every(b=>b.position.x>=BASIN.left-.25&&b.position.x<=BASIN.right+.25&&
+   b.position.z>=BASIN.back-.25&&b.position.z<=BASIN.front+.25),
+   'physical bowl walls must contain all XYZ rigid bodies');
+ assert(BASIN.chute[0]>BASIN.left&&BASIN.chute[0]<BASIN.right&&
+   BASIN.chute[2]>BASIN.back&&BASIN.chute[2]<BASIN.front,
+   'slot chute must eject INSIDE the real coin catch bowl');
  assert(Math.abs(COIN.radius-3*COIN.scale/(2*Math.cos(Math.PI/10)))<1e-9,'visual and collision radius are identical');
  assert(COIN.height>0 && COIN.height<COIN.radius*.13,'true thin disk collider');
  scenes.push({count,frames,snap});
  a.destroy();
 }
-validate(120,140);
-validate(240,180);
+validate(120,80); // early strong jet inside the basin
+validate(120,140); // first impact and bounces must stay in basin
+validate(240,180); // denser heap still never crosses side walls
 // 420-coin preset must respect max, retain previous pile when fired again.
 const accum=new RigidCoinPayout({seed:101,maxCoins:500});
 accum.fire(120);accum.advanceFrames(160);
@@ -34,6 +44,7 @@ assert(prev>30);
 assert.equal(accum.fire(420),420,'allow adding a large burst to same pile');
 accum.advanceFrames(90);
 assert(accum.coins.length>prev && accum.coins.length<=500);
+assert.equal(accum.getSnapshot().escapedEver,0,'second jackpot also has to stay inside the same 3D basin');
 assert(accum.coins.slice(0,prev).every(x=>x.userData.id<prev),'old rigid bodies survive second payout');
 scenes.push({added:true,before:prev,after:accum.coins.length,snapshot:accum.getSnapshot()});
 accum.destroy();
