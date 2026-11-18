@@ -6,16 +6,10 @@
  * Original implementation; Slots & Daggers is only the visual reference.
  */
 import * as CANNON from '../vendor/cannon-es.js';
+import {COIN,CAPS,BASIN} from './coin-payout-shared.mjs';
+export {COIN,CAPS,BASIN} from './coin-payout-shared.mjs';
 
-export const FIXED_DT = 1/90; // sub-centimetre-thick coin moves < 0.22 m per step at 20 m/s
-export const COIN = Object.freeze({sides:10, imageDiameter:3, scale:.135,
-  visualThickness:.31, radius:3*.135/(2*Math.cos(Math.PI/10)),
-  height:.31*.135, gravity:38});
-export const CAPS = Object.freeze({max:500, presets:[120,240,420]});
-// Coin chute is INSIDE the right rim. Every emitted rigid coin enters this
-// open 3D catch bowl; no sideways confetti, virtual teleport or particle FX.
-export const BASIN=Object.freeze({left:-5.78,right:.72,front:1.92,back:-1.92,
-  floor:0,wallTop:2.55,chute:[.39,1.22,0]});
+export const FIXED_DT = 1/90; // Precise Cannon comparison only; production uses FAST_DT=1/60.
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
 function seeded(seed){let a=seed>>>0;return ()=>{a=(a+0x6d2b79f5)>>>0;let t=a;
   t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);
