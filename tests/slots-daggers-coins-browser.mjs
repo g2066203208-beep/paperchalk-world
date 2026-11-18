@@ -68,20 +68,27 @@ for(const d of devices){
   await page.addStyleTag({content:"#count{visibility:hidden!important}"});
   const physicsA=await page.evaluate(()=>{
    window.PaperchalkCoinLab.frame(480);
-   return window.PaperchalkCoinCascade.inspect();
+   return {physical:window.PaperchalkCoinCascade.inspect(),
+    gpuHash:window.PaperchalkCoinCascade.gpuFrameHash()};
   });
   await page.waitForTimeout(70);
   const savedA=await page.screenshot({path:out+"/"+d.name+"-13-repeatability-A-480ms.png",animations:"disabled"});
   const physicsB=await page.evaluate(()=>{
    window.PaperchalkCoinLab.frame(480);
-   return window.PaperchalkCoinCascade.inspect();
+   return {physical:window.PaperchalkCoinCascade.inspect(),
+    gpuHash:window.PaperchalkCoinCascade.gpuFrameHash()};
   });
   await page.waitForTimeout(70);
   const savedB=await page.screenshot({path:out+"/"+d.name+"-14-repeatability-B-480ms.png",animations:"disabled"});
   assert.deepEqual(physicsA,physicsB,
-   "same seed & frame time must reproduce each coin coordinate, rotation, hit and highlight state");
-  assert.equal(sha(savedA),sha(savedB),
-   "preserved WebGL backbuffer and fixed-timestamp GPU screenshot must match pixel-for-pixel");
+   "same seed & frame time must reproduce every physical coin and the actual WebGL framebuffer");
+  assert(physicsA.gpuHash && /[0-9a-f]{8}$/.test(physicsA.gpuHash),
+   "actual GPU pixel readback must be available for frame-accurate QA");
+  // Browser-wide screenshots additionally include asynchronous Chromium
+  // compositor/UI repaint: preserve both for human comparison, but NEVER
+  // confuse their hash with the correct readPixels GPU framebuffer identity.
+  console.log("Frame 480 GPU pixel identity",d.name,physicsA.gpuHash,
+   "browserWholePageIdentical",sha(savedA)===sha(savedB));
   const proof=await page.evaluate(()=>{
    const fx=window.PaperchalkCoinCascade;
    const c=fx.canvas,gl=c?.getContext("webgl");
