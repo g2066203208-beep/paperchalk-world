@@ -26,6 +26,8 @@ for(const device of [{name:'desktop',w:1440,h:900},{name:'portrait',w:390,h:844}
   assert(before.geometryType.includes('CylinderGeometry'));
   assert.equal(before.real3D,true);
   assert.equal(before.lighting.materialType,'MeshStandardMaterial','coin must receive real PBR lighting');
+  assert.equal(before.lighting.pixelGoldMask,true,'gold and black ink on the original pixel coin require separate PBR metalness');
+  assert.equal(before.lighting.coinReceivesShadows,true,'stacked coins should darken coins underneath, not only the basin');
   assert.equal(before.lighting.HDR,true,'scene should preserve highlights above display white');
   assert.equal(before.lighting.linearSource,true,'bloom must work before output sRGB conversion');
   assert.equal(before.lighting.realShadows,true,'machine and piled coins need actual shadow maps');
