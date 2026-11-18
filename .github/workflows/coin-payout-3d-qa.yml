@@ -1,0 +1,52 @@
+name: High-Velocity Real 3D Pixel Coin Payout - Visual and Physics QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/card-battle/vendor/cannon-es.js'
+      - 'site/card-battle/motion/coin-payout-rigid.mjs'
+      - 'site/card-battle/motion/coin-payout-view.mjs'
+      - 'site/card-battle/motion/sprite-extrusion.mjs'
+      - 'site/card-battle/assets/slots-style-pixel-coin.svg'
+      - 'site/card-battle/coin-payout-3d.html'
+      - 'tests/coin-payout-physics.mjs'
+      - 'tests/coin-payout-browser.mjs'
+      - '.github/workflows/coin-payout-3d-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  stacked-coin-rigidbody-qa:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JS and 3D collision engine
+        run: |
+          node --check site/card-battle/vendor/cannon-es.js
+          node --check site/card-battle/motion/coin-payout-rigid.mjs
+          node --check site/card-battle/motion/coin-payout-view.mjs
+          node --check tests/coin-payout-physics.mjs
+          node --check tests/coin-payout-browser.mjs
+          node tests/coin-payout-physics.mjs
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve game source
+        run: |
+          nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/payout3d-web.log 2>&1 &
+          sleep 2
+      - name: Capture actual 3D payouts on desktop portrait and landscape
+        run: node tests/coin-payout-browser.mjs
+      - name: Upload screenshot and gameplay recording evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: slot-inspired-3d-pixel-coin-fast-rigidbody-payout
+          path: artifacts/coin-payout-3d/
+          if-no-files-found: warn
+          retention-days: 14
