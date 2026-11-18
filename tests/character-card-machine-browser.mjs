@@ -44,6 +44,40 @@ for(const d of [
     'landscape draw buttons must remain visible without a scroll');
   }
   await page.screenshot({path:out+'/'+d.name+'-00-machine-standby.png'});
+  // The exact user-supplied burgundy-gold artwork must be a real GitHub
+  // WebP texture on the rear face, not procedurally redrawn geometry.
+  await page.waitForFunction(()=>window.PaperchalkCharacterMachineQA?.state?.cardBackReady,{timeout:16000});
+  const original=await page.evaluate(async()=>{
+   const state=window.PaperchalkCharacterMachineQA.state;
+   const image=new Image();image.src=state.backImageUrl;
+   await image.decode();
+   return {...state,textureWidth:image.naturalWidth,textureHeight:image.naturalHeight};
+  });
+  assert.equal(original.backsideUsesOriginalTexture,true);
+  assert(original.backImageUrl.endsWith('/assets/cards/shared/character-card-back-anima.webp'));
+  assert.equal(original.textureWidth,480);
+  assert(original.textureHeight>700);
+  await page.locator('#inspect').click();
+  await page.waitForFunction(()=>window.PaperchalkCharacterMachineQA?.state?.inspecting);
+  assert.equal(await page.locator('#inspect-toolbar').isVisible(),true);
+  await page.screenshot({path:out+'/'+d.name+'-INSPECT-00-original-back.png'});
+  await page.locator('#inspect-character').selectOption('wonder-circus/ringmaster.png');
+  await page.waitForFunction(()=>window.PaperchalkCharacterMachineQA?.state?.inspectorCharacterId==='wonder-circus/ringmaster.png'&&
+   window.PaperchalkCharacterMachineQA?.state?.portraitLoaded,{timeout:10000});
+  await page.locator('#inspect-front').click();
+  await page.waitForTimeout(320);
+  await page.screenshot({path:out+'/'+d.name+'-INSPECT-01-real-ringmaster-front.png'});
+  await page.evaluate(()=>{window.PaperchalkCharacterMachineQA.inspectRotate(.82,.27);
+   window.PaperchalkCharacterMachineQA.inspectZoom(2.40);});
+  await page.screenshot({path:out+'/'+d.name+'-INSPECT-02-side-and-zoom.png'});
+  const tilted=await page.evaluate(()=>window.PaperchalkCharacterMachineQA.state);
+  assert(tilted.inspectionZoom>=2.35);
+  assert(Math.abs(tilted.inspectionYaw)>.75);
+  await page.locator('#inspect-back').click();
+  await page.waitForTimeout(340);
+  await page.screenshot({path:out+'/'+d.name+'-INSPECT-03-back-after-flip.png'});
+  await page.locator('#inspect-exit').click();
+  assert.equal((await page.evaluate(()=>window.PaperchalkCharacterMachineQA.state)).inspecting,false);
   await page.locator('#draw-one').click();
   await page.waitForFunction(()=>window.PaperchalkCharacterMachineQA?.state?.current &&
    window.PaperchalkCharacterMachineQA?.state?.portraitLoaded,{timeout:22000});
