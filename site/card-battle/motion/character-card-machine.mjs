@@ -464,7 +464,7 @@ function queueDraw(n){
 // every axis, no elevation lock, with continuous pan and deep zoom. The card
 // remains a THREE.Mesh/ExtrudeGeometry, never a 2D overlay or CSS transform.
 const inspector={
- active:false,orientation:new THREE.Quaternion(),
+ active:false,studioBackup:null,orientation:new THREE.Quaternion(),
  yaw:Math.PI,pitch:0,roll:0,zoom:2.08,panX:0,panY:0,
  spinning:false,pointers:new Map(),pinchStart:0,pinchZoom:2.08,
  pinchAngle:0,pinchCenter:null,serial:0,chosen:'back'
@@ -494,6 +494,34 @@ function setInspectorFace(face){
  inspector.pitch=0;inspector.roll=0;
  if(inspector.active)renderInspectorCard();
 }
+// Reel-payout spotlights reach 28 candela units and are intentionally
+// theatrical. They MUST NOT wash out approved painted portraits or turn the
+// matte burgundy paper orange during close inspection.
+function setCardInspectionLighting(enabled){
+ const all=lighting.lights;
+ if(enabled){
+  if(inspector.studioBackup)return;
+  inspector.studioBackup={
+   key:all.key.intensity,fill:all.fill.intensity,
+   warm:all.warm.intensity,gold:all.gold.intensity,sky:all.sky.intensity,
+   keyColor:all.key.color.clone(),fillColor:all.fill.color.clone()
+  };
+  all.key.intensity=1.35;all.key.color.set('#f7f8ff');
+  all.fill.intensity=1.20;all.fill.color.set('#d7e4f2');
+  all.sky.intensity=.85;
+  all.warm.intensity=.35;all.gold.intensity=.35;
+  post.setBloom(drawState.renderBloom?.13:0);
+ }else if(inspector.studioBackup){
+  const prev=inspector.studioBackup;
+  all.key.intensity=prev.key;all.key.color.copy(prev.keyColor);
+  all.fill.intensity=prev.fill;all.fill.color.copy(prev.fillColor);
+  all.warm.intensity=prev.warm;all.gold.intensity=prev.gold;
+  all.sky.intensity=prev.sky;
+  post.setBloom(drawState.renderBloom?1.25:0);
+  inspector.studioBackup=null;
+ }
+ renderer.shadowMap.needsUpdate=true;
+}
 function inspectZoomBy(factor){
  inspector.zoom=clampInspect(inspector.zoom*factor,.32,7.5);
  renderInspectorCard();
@@ -514,7 +542,8 @@ function renderInspectorCard(){
  cardRoot.quaternion.copy(camera.quaternion).multiply(inspector.orientation);
  cardRoot.scale.setScalar(inspector.zoom);
  aura.visible=false;
- resultLight.intensity=3.2;
+ resultLight.color.set('#f5f4ee');
+ resultLight.intensity=.60;
  resultLight.position.copy(viewTarget).addScaledVector(up,1.05).addScaledVector(iz,2.5);
  updateCardFaceCulling(); // immediate same-frame front/back visibility
 }
@@ -534,6 +563,7 @@ function openInspector(){
  $('draw-one').disabled=true;$('draw-five').disabled=true;$('skip').disabled=true;
  document.querySelector('.stage').dataset.inspecting='true';
  document.body.classList.add('inspect-open');
+ setCardInspectionLighting(true);
  machine.visible=false;floor.visible=false;tile.visible=false;
  $('stage-label').textContent='卡背原图 · 360° 任意角度';
  $('stage-frame').textContent='DRAG ROTATE · WHEEL ZOOM · SHIFT DRAG PAN';
@@ -573,6 +603,7 @@ function closeInspector(){
  $('skip').disabled=!drawState.busy;
  document.querySelector('.stage').dataset.inspecting='false';
  document.body.classList.remove('inspect-open');
+ setCardInspectionLighting(false);
  machine.visible=true;floor.visible=true;tile.visible=true;
  const restore=drawState.current;
  if(restore)getPortrait(restore).then(asset=>{
@@ -788,6 +819,9 @@ window.PaperchalkCharacterMachineQA={
   portraitNormalPixels:reliefStats.portrait?.normalPixels||0,
   frontSideCulling:cardBackMaterial.side===THREE.FrontSide &&
    portraitMaterial.side===THREE.FrontSide && frontPaperMaterial.side===THREE.FrontSide,
+  studioLighting:inspector.active&&!!inspector.studioBackup,
+  inspectWarmIntensity:lighting.lights.warm.intensity,
+  inspectBloom:post.state.bloom,
   frontVisible:front.visible,backVisible:back.visible,
   visibleArtworkFace:visibleFace,faceDot:frontFacing,
   reelMeshes:reelGroup.length,
