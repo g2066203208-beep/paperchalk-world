@@ -43,3 +43,25 @@
 2. **只参考材质、光影、氛围、动效，不要照搬老虎机 UI/玩法/布局。** 此页面是物理/灯光实验室，不代表游戏最终玩法。
 3. 优先看 GitHub Actions 最新结果与上传的真实 PNG/WebM；如果未跑通，先查浏览器 Shader 编译日志、GL 扩展和色彩空间。
 4. 调参须 A/B 不动相机，不动金币坐标，保存真实画面；避免只写 prompt 或用 AI 概念图。
+
+
+## 官方原文画面证据（逐项截图复核 2026-11-18）
+
+以下图片属于技术资料**原版的图或演讲 PDF 页面**，不是自己生成的示意图，也不是游戏目前的截图。打开链接即可精确对照。
+
+| 主题 | 原文截图/原始插图 | 解读和程序对应点 |
+|---|---|---|
+| NVIDIA GPU Gems 1 Ch 21 Real-Time Glow | [原始 Figure 21-3：普通画面、提亮源、模糊与合成](https://developer.download.nvidia.com/books/gpugems/fig21-03.jpg)；[原始 Figure 21-5：水平、垂直卷积分离](https://developer.download.nvidia.com/books/gpugems/fig21-05.jpg) | HDR scene -> extract -> 1/4 RT H+V blur -> 1/9 RT H+V blur -> 加到原场景，局部发光源是关键 |
+| NVIDIA GTC 2012 HDR Rendering With Glow | [原始报告 PDF 第 9 页](https://developer.download.nvidia.com/GTC/PDF/GTC2012/PresentationPDF/SB117-nvFX-OpenGL-DirectX.pdf#page=9) | 实际流程图：HDR 原画 → 降采样 → 两方向模糊 → 合成后色调映射 |
+| Google Filament 材质教学 | [原始材料速查表 PDF 全页](https://developers.google.com/sceneform/develop/standard_properties.pdf) | 金属与油漆不是一类表面；纯金属 metallic=1、纯非金属 metallic=0、反射的宽窄交给 roughness |
+| Three.js MeshStandardMaterial 精确规则 | [官方 API](https://threejs.org/docs/pages/MeshStandardMaterial.html) | 金属应该使用 0 或 1；`metalnessMap` 使用蓝色通道，因此原来把金币整个表面设置成 metallic=.30 不合逻辑 |
+| Bart Wronski / SIGGRAPH 2014 Atmospheric Scattering | [官方幻灯第 52 页：雾使阴影不正常变暗](https://www.advances.realtimerendering.com/s2014/wronski/bwronski_volumetric_fog_siggraph2014.pdf#page=52)；[第 53 页：补天光后重建雾体积明暗](https://www.advances.realtimerendering.com/s2014/wronski/bwronski_volumetric_fog_siggraph2014.pdf#page=53) | 强氛围并非单纯给画面罩雾；需要空气中的光照散射和环境补光，且不可当成现有 Fog 的已实现功能 |
+| Unreal Engine 官方后处理 | [Post Process Effects 文档](https://dev.epicgames.com/documentation/en-us/unreal-engine/post-process-effects-in-unreal-engine) | Bloom 是相机高亮外溢，还需要曝光、镜头污迹、颜色分级和明暗稳定 |
+| NVIDIA 官方 Simple Glow 示例 | [2007 年原始 PDF 第 4 页](https://developer.download.nvidia.com/SDK/10/opengl/src/simple_glow/doc/simple_glow.pdf#page=4) | FBO 两通道横/纵 blur，只对有意指定的像素发光，避免所有像素一同泛光 |
+
+### 本次从 Filament 原文立即修正的实现
+- `motion/coin-payout-lighting.mjs`: 机身涂漆、深色油墨等非金属：`metalness=0`；特定裸露金属边框：`metalness=1`；各自保留不同粗糙度和环境反射。
+- `upgradeCoinMaterials()`: 自动从当前原版 48px 金币的 CanvasTexture 获取像素，生成**专用蓝通道 metalnessMap**：金黄区域是金属，黑色像素轮廓/暗部是非金属；`NearestFilter` 保留像素清晰度。不修改金币美术、不额外画 AI 金币。副作用/局限：极暗金属在近似阈值下可能被判成非金属，需截图检验。
+- `motion/coin-payout-view.mjs`：开启 `InstancedMesh.receiveShadow`，让堆叠金币互相遮蔽并呈现暗部；`tests/coin-payout-browser.mjs` 增加像素 mask 和真实接收阴影的浏览器断言。
+- **验证仍不足**：GitHub 提交与 JS 语法不等于 PBR 效果已达到参考质量；需要取回真实 Chromium 帧图、错误日志和手机 GPU 测试，再优化强辉光与材质纹理。
+
