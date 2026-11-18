@@ -6,8 +6,8 @@ import {installPayoutLighting,createPayoutMaterialFactory,upgradeCoinMaterials,c
 
 const $=id=>document.getElementById(id);
 const canvas=$('payout-view');
-const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(devicePixelRatio||1,window.innerWidth<700?1.25:1.65));
+const renderer=new THREE.WebGLRenderer({canvas,antialias:false,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,window.innerWidth<700?.78:.92));
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 // HDR bloom pipeline performs ONE scene-linear bloom composite and filmic output.
 renderer.setClearColor('#181e20',1);
@@ -15,12 +15,18 @@ const scene=new THREE.Scene();
 scene.background=new THREE.Color('#181e20');
 const compact=window.innerWidth<700;
 const lighting=installPayoutLighting(THREE,renderer,scene,{compact});
+// Coin physics is already CPU-intensive; do NOT rebuild moving-coin shadows
+// on every display frame. Retain real Shadows and update at a perceptual cadence.
+renderer.shadowMap.autoUpdate=false;
+renderer.shadowMap.needsUpdate=true;
 const materials=createPayoutMaterialFactory(THREE);
 const post=createPayoutBloom(THREE,renderer,{compact});
 const camera=new THREE.OrthographicCamera(-8,8,5,-5,.05,140);
 const dummy=new THREE.Object3D(),axisCorrection=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-Math.PI/2);
 let payout=new RigidCoinPayout({seed:20261118}),instance=null,sourceModel=null;
 let viewMode='scene',playing=true,speed=1,last=0,acc=0,spinPreview=false;
+let renderQuality='smooth',lastDraw=0,lastShadow=0,lastStats=0;
+let displayFrames=0,displayFps=0,displayWindowStart=0;
 const meter=$('meter'),coinCounter=$('coin-count'),hitCounter=$('hit-count'),sleepCounter=$('sleep-count');
 const colors={table:'#313d41',tableEdge:'#1c292f',metal:'#7f8b7e',dark:'#253438',recess:'#121c20'};
 function material(color){return materials.material(color);}
@@ -165,15 +171,19 @@ function updateCoins(){if(!instance)return;
  }
  instance.instanceMatrix.needsUpdate=true;
 }
-function updateStats(){const s=payout.getSnapshot();
+function updateStats(force=false){
+ const now=performance.now();
+ if(!force&&now-lastStats<135)return;
+ lastStats=now;
+ const s=payout.getSnapshot();
  coinCounter.textContent=`${s.count} / ${CAPS.max}`;
  hitCounter.textContent=s.contacts.toLocaleString('en-US');
  sleepCounter.textContent=String(s.asleep);
- meter.textContent=`盆内 ${s.inBasin}/${s.count} · 出币 ${s.emitted}/${s.target} · ${s.time.toFixed(2)}s`;
+ meter.textContent=`盆内 ${s.inBasin}/${s.count} · 出币 ${s.emitted}/${s.target} · ${s.time.toFixed(2)}s · ${displayFps}FPS`;
  window.__coinPayoutLastSnapshot=s;
 }
-function redraw(){updateCoins();updateContactGlints();updateStats();post.render(scene,camera);}
-function reset(){payout.destroy();payout=new RigidCoinPayout({seed:20261118});acc=0;playing=false;
+function redraw(force=false){updateCoins();updateContactGlints();updateStats(force);post.render(scene,camera);}
+function reset(){payout.destroy();payout=new RigidCoinPayout({seed:20261118});acc=0;playing=false;renderer.shadowMap.needsUpdate=true;
  $('pause').textContent='▶ 继续';redraw();}
 function fire(count){if(!instance)return 0;
  const n=payout.fire(count);playing=true;$('pause').textContent='Ⅱ 暂停';return n;}
@@ -182,7 +192,19 @@ $('reset').addEventListener('click',reset);
 $('pause').addEventListener('click',()=>{playing=!playing;$('pause').textContent=playing?'Ⅱ 暂停':'▶ 继续';});
 $('frame').addEventListener('click',()=>{playing=false;$('pause').textContent='▶ 继续';payout.step();redraw();});
 $('slow').addEventListener('click',()=>{speed=speed===1?.25:1;$('slow').textContent=speed===1?'¼ 慢速':'正常速度';});
-for(const mode of ['scene','pile','side'])$(mode).addEventListener('click',()=>{setCamera(mode);redraw();});
+for(const mode of ['scene','pile','side'])$(mode).addEventListener('click',()=>{setCamera(mode);redraw(true);});
+function setRenderQuality(mode){
+ renderQuality=mode==='quality'?'quality':'smooth';
+ renderer.setPixelRatio(Math.min(devicePixelRatio||1,
+  renderQuality==='quality'?(compact?1.0:1.20):(compact?.78:.92)));
+ renderer.shadowMap.needsUpdate=true;
+ resize();
+ $('perf-smooth')?.setAttribute('aria-pressed',String(renderQuality==='smooth'));
+ $('perf-quality')?.setAttribute('aria-pressed',String(renderQuality==='quality'));
+ redraw(true);
+}
+$('perf-smooth')?.addEventListener('click',()=>setRenderQuality('smooth'));
+$('perf-quality')?.addEventListener('click',()=>setRenderQuality('quality'));
 let renderLook='filmic',pixelArtMode=false;
 function setRenderLook(mode){
  renderLook=mode;
@@ -209,25 +231,43 @@ canvas.addEventListener('pointermove',e=>{if(!down)return;
 });
 canvas.addEventListener('pointerup',()=>down=null);
 canvas.addEventListener('pointercancel',()=>down=null);
-function animate(t){const dt=Math.min(.045,Math.max(0,(t-last)/1000));last=t;
- if(playing){acc+=dt*speed;let steps=0;
-  while(acc>=FIXED_DT&&steps<6){payout.step();acc-=FIXED_DT;steps++;}
-  if(steps===6)acc=Math.min(acc,FIXED_DT*2);
+function animate(t){
+ const dt=Math.min(.050,Math.max(0,(t-last)/1000));last=t;
+ if(playing){
+  acc+=dt*speed;let steps=0;
+  // Don't accumulate unbounded physics debt when the device slows down.
+  while(acc>=FIXED_DT&&steps<5){payout.step();acc-=FIXED_DT;steps++;}
+  if(steps===5)acc=Math.min(acc,FIXED_DT*1.1);
  }
- redraw();requestAnimationFrame(animate);
+ const targetFrameMs=renderQuality==='smooth'?(compact?1000/42:1000/55):0;
+ if(targetFrameMs===0||t-lastDraw>=targetFrameMs){
+  // Real light/shadow mapping is refreshed ~8Hz smooth / every frame quality.
+  if(renderQuality==='quality'||t-lastShadow>(compact?175:125)){
+   renderer.shadowMap.needsUpdate=true;lastShadow=t;
+  }
+  redraw();lastDraw=t;
+  displayFrames++;
+  if(t-displayWindowStart>=1000){
+   displayFps=Math.round(displayFrames*1000/(t-displayWindowStart));
+   displayFrames=0;displayWindowStart=t;
+  }
+ }
+ requestAnimationFrame(animate);
 }
 await loadCoinModel();
 window.PaperchalkPayoutQA={
  get loaded(){return !!instance;},
  get world(){return payout.world;},
  get coins(){return payout.coins;},
- fire,reset,setCamera,
+ fire,reset,setCamera,setRenderQuality,
+  get renderQuality(){return renderQuality;},
  advanceFrames(n){playing=false;payout.advanceFrames(n);redraw();return payout.getSnapshot();},
  snapshot(){return {...payout.getSnapshot(),facetCount:COIN.sides,
   renderInstances:instance.count,sourceName:'slots-style-pixel-coin.svg',
   actualPhysics:CANNON.Cylinder.name,geometryType:instance.geometry.type,
   projectedExtent:[camera.left,camera.right],
-   lighting:{...post.state,look:renderLook,realShadows:renderer.shadowMap.enabled,
+   lighting:{...post.state,look:renderLook,quality:renderQuality,
+    realShadows:renderer.shadowMap.enabled,shadowsThrottled:renderer.shadowMap.autoUpdate===false,
     materialType:instance.material[1].type,
     pixelGoldMask:!!instance.material[1].userData.pixelGoldMask,
     coinReceivesShadows:instance.receiveShadow,
