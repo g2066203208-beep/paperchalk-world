@@ -2,16 +2,6 @@
   {
     "viewport": "desktop",
     "passed": true,
-    "character": "逃脱术师",
-    "id": "wonder-circus/escape-artist.png",
-    "portraits": 35,
-    "beforeCount": 0,
-    "afterCount": 1,
-    "errors": []
-  },
-  {
-    "viewport": "portrait",
-    "passed": true,
     "character": "夜宴夫人",
     "id": "crimson-vampires/midnight-hostess.png",
     "portraits": 35,
@@ -20,10 +10,20 @@
     "errors": []
   },
   {
+    "viewport": "portrait",
+    "passed": true,
+    "character": "大力士",
+    "id": "wonder-circus/strongwoman.png",
+    "portraits": 35,
+    "beforeCount": 0,
+    "afterCount": 1,
+    "errors": []
+  },
+  {
     "viewport": "landscape",
     "passed": true,
-    "character": "契约经理",
-    "id": "demon-merchant/contract-manager.webp",
+    "character": "血族小公主",
+    "id": "crimson-vampires/vampire-princess.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
