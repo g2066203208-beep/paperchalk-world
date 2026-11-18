@@ -35,13 +35,15 @@ assert(s1770.card.visible,'physical cardstock emerges AFTER door unlock');
 assert(s1770.card.rotationY>3,'card exits BACK-FIRST, no leaked character identity');
 assert(s1770.card.rotationX< -1.3,'card leaves the narrow opening nearly FLAT, not as a vertical teleport');
 assert(s2120.card.z>s1770.card.z,'card moves physically away from cabinet');
+assert(s2120.card.scale>.95,'coin-like tiny pop-out is forbidden: card back must be visibly large during ejection');
+assert(s2120.card.rotationX>s1770.card.rotationX,'card visibly lifts from near-horizontal into the reveal');
 assert(s2500.card.rotationY<s1770.card.rotationY,'flips toward the viewer');
 assert(s2990.card.rotationY<.001,'reveal must finish facing the viewer');
 assert(s3200.card.reveal>.9,'glow happens on actual reveal, not before');
 assert.equal(s3800.phase,'hold');
 assert.equal(s3800.complete,true);
 assert.equal(s3800.card.visible,true);
-assert(s3800.card.scale>1.3,'final portrait must be large and legible');
+assert(s3800.card.scale>1.4,'final portrait must be large and legible');
 for(let ms=0;ms<=CARD_DRAW_MS;ms+=10){
  const a=evaluateCardSequence(ms);
  assert(a.reels.every(Number.isFinite));
