@@ -60,6 +60,13 @@ for(const d of [
   await page.locator('#inspect').click();
   await page.waitForFunction(()=>window.PaperchalkCharacterMachineQA?.state?.inspecting);
   assert.equal(await page.locator('#inspect-toolbar').isVisible(),true);
+  // Inspect toolbar must not obscure the artwork: it's in its own layout row.
+  const layout=await page.evaluate(()=>({
+   cardRect:document.querySelector('#machine-canvas').getBoundingClientRect().toJSON(),
+   toolbarRect:document.querySelector('#inspect-toolbar').getBoundingClientRect().toJSON()
+  }));
+  assert(layout.toolbarRect.y>=layout.cardRect.bottom-2,
+    'inspection toolbar must sit BELOW canvas rather than cover the card');
   await page.screenshot({path:out+'/'+d.name+'-INSPECT-00-original-back.png'});
   await page.locator('#inspect-character').selectOption('wonder-circus/ringmaster.png');
   await page.waitForFunction(()=>window.PaperchalkCharacterMachineQA?.state?.inspectorCharacterId==='wonder-circus/ringmaster.png'&&
@@ -67,12 +74,48 @@ for(const d of [
   await page.locator('#inspect-front').click();
   await page.waitForTimeout(320);
   await page.screenshot({path:out+'/'+d.name+'-INSPECT-01-real-ringmaster-front.png'});
-  await page.evaluate(()=>{window.PaperchalkCharacterMachineQA.inspectRotate(.82,.27);
+  // Real pointer drag, not only a test-helper angle setter.
+  const bounds=await page.locator('#machine-canvas').boundingBox();
+  assert(bounds&&bounds.width>100&&bounds.height>150);
+  const x=bounds.x+bounds.width*.51,y=bounds.y+bounds.height*.51;
+  const yawBefore=await page.evaluate(()=>window.PaperchalkCharacterMachineQA.state.inspectionQuaternion);
+  await page.mouse.move(x,y);
+  await page.mouse.down();
+  await page.mouse.move(x+Math.min(85,bounds.width*.24),y+Math.min(56,bounds.height*.19),{steps:7});
+  await page.mouse.up();
+  const afterDrag=await page.evaluate(()=>window.PaperchalkCharacterMachineQA.state);
+  assert.notDeepEqual(afterDrag.inspectionQuaternion,yawBefore,'actual mouse drag must rotate true THREE.Quaternion');
+  assert(Math.abs(afterDrag.inspectionPitch)>.10,'vertical drag must rotate freely about X');
+  // Buttons, wheel and mouse must all change REAL model zoom.
+  const zoomBefore=afterDrag.inspectionZoom;
+  await page.locator('#inspect-zoom-in').click();
+  assert((await page.evaluate(()=>window.PaperchalkCharacterMachineQA.state.inspectionZoom))>zoomBefore);
+  await page.locator('#inspect-zoom-out').click();
+  await page.mouse.move(x,y);
+  await page.mouse.wheel(0,-270);
+  const wheelZoom=await page.evaluate(()=>window.PaperchalkCharacterMachineQA.state.inspectionZoom);
+  assert(wheelZoom>zoomBefore,'wheel must enlarge the card, not scroll the page');
+  await page.evaluate(()=>{window.PaperchalkCharacterMachineQA.inspectRotate(.82,.27,.47);
    window.PaperchalkCharacterMachineQA.inspectZoom(2.40);});
   await page.screenshot({path:out+'/'+d.name+'-INSPECT-02-side-and-zoom.png'});
   const tilted=await page.evaluate(()=>window.PaperchalkCharacterMachineQA.state);
   assert(tilted.inspectionZoom>=2.35);
   assert(Math.abs(tilted.inspectionYaw)>.75);
+  assert(Math.abs(tilted.inspectionRoll)>.45,'Z-axis tilt should work in addition to yaw/pitch');
+  // This was NOT possible in the old +/- 1.17 radian version.
+  await page.evaluate(()=>window.PaperchalkCharacterMachineQA.inspectRotate(Math.PI*5,Math.PI*3,Math.PI*.8));
+  const spins=await page.evaluate(()=>window.PaperchalkCharacterMachineQA.state);
+  assert(spins.inspectionYaw>14 && spins.inspectionPitch>8,'rotation must remain unrestricted beyond 360 degrees');
+  const qnorm=Math.hypot(...spins.inspectionQuaternion);
+  assert(Math.abs(qnorm-1)<.0001,'free-rotation quaternion must stay normalized');
+  await page.evaluate(()=>{window.PaperchalkCharacterMachineQA.inspectZoom(6.5);
+   window.PaperchalkCharacterMachineQA.inspectPan(1.2,-.70);});
+  const deep=await page.evaluate(()=>window.PaperchalkCharacterMachineQA.state);
+  assert(deep.inspectionZoom>6,'deep magnification must be possible');
+  assert(deep.inspectionPan[0]>1,'viewer must support panning while zoomed');
+  await page.screenshot({path:out+'/'+d.name+'-INSPECT-04-zoomed-detail.png'});
+  await page.locator('#inspect-reset').click();
+  await page.screenshot({path:out+'/'+d.name+'-INSPECT-05-recentered.png'});
   await page.locator('#inspect-back').click();
   await page.waitForTimeout(340);
   await page.screenshot({path:out+'/'+d.name+'-INSPECT-03-back-after-flip.png'});
