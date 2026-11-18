@@ -300,7 +300,11 @@ aura.visible=false;
 const resultLight=new THREE.PointLight('#f7c880',0,6,2);scene.add(resultLight);
 function resize(){
  const w=Math.max(1,canvas.clientWidth),h=Math.max(1,canvas.clientHeight);
- renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,w<700?.78:1));
+ // Reward the viewer's expensive full-size art with sharp sampling.
+ // Reel animation can run lower-res, but inspection is only one flat card.
+ const inspecting=document.body.classList.contains('inspect-open');
+ renderer.setPixelRatio(inspecting?Math.min(window.devicePixelRatio||1,1.5):
+  Math.min(window.devicePixelRatio||1,w<700?.78:1));
  renderer.setSize(w,h,false);
  const aspect=w/h,halfHeight=w<700?3.55:3.20;
  camera.left=-halfHeight*aspect;camera.right=halfHeight*aspect;
@@ -553,7 +557,8 @@ function setCardInspectionLighting(enabled){
   all.fill.intensity=1.20;all.fill.color.set('#d7e4f2');
   all.sky.intensity=.85;
   all.warm.intensity=.35;all.gold.intensity=.35;
-  post.setBloom(drawState.renderBloom?.13:0);
+  // The texture's microscopic roughness, not HDR halo, should define paper.
+  post.setBloom(0);
  }else if(inspector.studioBackup){
   const prev=inspector.studioBackup;
   all.key.intensity=prev.key;all.key.color.copy(prev.keyColor);
@@ -606,6 +611,7 @@ function openInspector(){
  $('draw-one').disabled=true;$('draw-five').disabled=true;$('skip').disabled=true;
  document.querySelector('.stage').dataset.inspecting='true';
  document.body.classList.add('inspect-open');
+ resize(); // allocate sharper framebuffer only while studying the artwork
  setCardInspectionLighting(true);
  machine.visible=false;floor.visible=false;tile.visible=false;
  $('stage-label').textContent='卡背原图 · 360° 任意角度';
@@ -646,6 +652,7 @@ function closeInspector(){
  $('skip').disabled=!drawState.busy;
  document.querySelector('.stage').dataset.inspecting='false';
  document.body.classList.remove('inspect-open');
+ resize(); // restore normal slot-machine performance when leaving
  setCardInspectionLighting(false);
  machine.visible=true;floor.visible=true;tile.visible=true;
  const restore=drawState.current;
@@ -870,6 +877,7 @@ window.PaperchalkCharacterMachineQA={
    (!portraitMaterial.map||portraitMaterial.map.flipY===true),
   portraitReliefResident:portraitReliefLRU.length,
   normalMapMaxDimension:small?448:640,
+  inspectionPixelRatio:renderer.getPixelRatio(),
   frontPaperSheen:frontPaperMaterial.sheen||0,
   backPaperSheen:cardBackMaterial.sheen||0,
   portraitPaperSheen:portraitMaterial.sheen||0,
