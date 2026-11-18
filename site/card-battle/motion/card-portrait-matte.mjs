@@ -53,6 +53,11 @@ export function mattePortraitBackground(rgba,width,height){
   if(p>=width)enqueue(p-width);
   if(p<total-width)enqueue(p+width);
  }
+ // Do not modify deliberately light clothing or light-colored scenery
+ // when the outside white area is only a tiny disconnected patch.
+ if(tail<total*.06)return {pixels:new Uint8ClampedArray(rgba),stats:{
+  detected:false,removed:0,feathered:0,padded:0,
+  width,height,backgroundRgb:bg}};
  // A small, pale edge transition is paper-scanner anti-alias, not a
  // deliberate white garment. Unmix white matting before compositing on red.
  let feathered=0;
