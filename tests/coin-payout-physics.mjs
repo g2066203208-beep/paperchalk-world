@@ -7,7 +7,8 @@ function validate(count,frames){
  const n=a.fire(count);assert.equal(n,count);
  a.advanceFrames(frames);
  const snap=a.getSnapshot();
- assert.equal(a.world.gravity.y,-24,'gravity is a real Y-axis acceleration');
+ assert.equal(a.world.gravity.y,-38,'strong gravity gives coins a fast weighted fall');
+ assert(a.world.solver.iterations<=10,'do not solve 500 convex coins with a 24-iteration CPU solver');
  assert(a.coins.length>=Math.min(18,count),'coins physically emitted over time');
  assert(snap.count===a.coins.length);
  assert(a.coins.every(b=>b.shapes.length===1 && b.shapes[0].constructor.name==='Cylinder' && b.shapes[0].body===b), 'each coin needs its OWN true 3D convex cylinder collision shape');
@@ -29,7 +30,7 @@ function validate(count,frames){
    BASIN.chute[2]>BASIN.back&&BASIN.chute[2]<BASIN.front,
    'slot chute must eject INSIDE the real coin catch bowl');
  assert(Math.abs(COIN.radius-3*COIN.scale/(2*Math.cos(Math.PI/10)))<1e-9,'visual and collision radius are identical');
- assert(COIN.height>0 && COIN.height<COIN.radius*.13,'true thin disk collider');
+ assert(COIN.height>COIN.radius*.17 && COIN.height<COIN.radius*.25,'coin needs readable edge thickness, 8-12% of its diameter');
  scenes.push({count,frames,snap});
  a.destroy();
 }
