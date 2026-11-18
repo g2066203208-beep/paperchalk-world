@@ -43,7 +43,7 @@ for(let i=0;i<g.positions.length;i+=6){
 }
 assert(zTop.every(z=>Math.abs(z-thickness/2)<1e-6));
 assert(zBottom.every(z=>Math.abs(z+thickness/2)<1e-6));
-assert(g.positions.every(Number.isFinite)&&g.normals.every(Number.is));
+assert(g.positions.every(Number.isFinite)&&g.normals.every(Number.isFinite));
 assert(Math.abs(g.positions[0]-g.positions[g.positions.length-6])<1e-6,
  'closed rounded edge mesh repeats its first endpoint');
 assert.equal(g.uvs[0],0);
