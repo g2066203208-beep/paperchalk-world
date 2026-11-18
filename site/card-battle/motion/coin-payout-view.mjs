@@ -1,6 +1,6 @@
 import * as THREE from '../vendor/three.module.js';
 import {prepareExtrudedSprite,buildLowPolyPixelCoin3D} from './sprite-extrusion.mjs';
-import {COIN,CAPS,BASIN} from './coin-payout-rigid.mjs';
+import {COIN,CAPS,BASIN} from './coin-payout-shared.mjs';
 import {FastCoinPayout,FAST_DT} from './coin-payout-fast.mjs';
 import {installPayoutLighting,createPayoutMaterialFactory,upgradeCoinMaterials,createPayoutBloom} from './coin-payout-lighting.mjs';
 
