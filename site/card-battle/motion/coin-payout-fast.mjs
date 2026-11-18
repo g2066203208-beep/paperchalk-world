@@ -16,7 +16,10 @@ const CONTACT_XZ=DIAMETER*.995; // full visible disc footprint; previous .89 mea
 const CONTACT_XZ2=CONTACT_XZ*CONTACT_XZ;
 const FLOOR=H*.5;
 const CELL=DIAMETER;
-const POSITION_PASSES=5;
+// Two impulse/separation passes handle motion; the final deterministic support
+// constraint independently enforces zero visible coin intersections. Five
+// passes cost ~2x CPU and lifted resting piles into artificial tall stacks.
+const POSITION_PASSES=2;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function rng(seed){let x=seed>>>0;return ()=>{x=(x+0x6d2b79f5)>>>0;let t=x;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296}}
 function vec(x=0,y=0,z=0){return {x,y,z,length(){return Math.hypot(this.x,this.y,this.z)}}}
