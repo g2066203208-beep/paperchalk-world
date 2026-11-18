@@ -204,7 +204,7 @@ export function installPayoutLighting(THREE,renderer,scene,{compact=false}={}){
  const sky=new THREE.HemisphereLight('#a5c8c5','#241b18',.66);
  const key=new THREE.DirectionalLight('#ffe0a8',3.0);
  key.position.set(-4,8,6);key.castShadow=true;
- key.shadow.mapSize.set(compact?512:1024,compact?512:1024);
+ key.shadow.mapSize.set(compact?256:512,compact?256:512); // responsive default, high quality opt-in
  key.shadow.camera.left=-11;key.shadow.camera.right=11;
  key.shadow.camera.top=9;key.shadow.camera.bottom=-9;
  key.shadow.camera.near=.1;key.shadow.camera.far=36;
@@ -259,16 +259,18 @@ export function createPayoutBloom(THREE,renderer,{compact=false}={}){
   uVignette:{value:.24},uGrain:{value:.008}
  });
  const size=new THREE.Vector2();
- let width=4,height=4,smallW=4,smallH=4,wideW=4,wideH=4,pixelMode=false;
+ let width=4,height=4,smallW=4,smallH=4,wideW=4,wideH=4,pixelMode=false,quality='smooth';
  function resize(){
   renderer.getDrawingBufferSize(size);
   const renderScale=pixelMode?.7:1;
   width=Math.max(2,Math.floor(size.x*renderScale));
   height=Math.max(2,Math.floor(size.y*renderScale));
-  smallW=Math.max(8,Math.ceil(width/(compact?5:4)));
-  smallH=Math.max(8,Math.ceil(height/(compact?5:4)));
-  wideW=Math.max(8,Math.ceil(width/(compact?10:9)));
-  wideH=Math.max(8,Math.ceil(height/(compact?10:9)));
+  const sharpDiv=quality==='smooth'?(compact?7:6):(compact?5:4);
+  const wideDiv=quality==='smooth'?(compact?14:12):(compact?10:9);
+  smallW=Math.max(8,Math.ceil(width/sharpDiv));
+  smallH=Math.max(8,Math.ceil(height/sharpDiv));
+  wideW=Math.max(8,Math.ceil(width/wideDiv));
+  wideH=Math.max(8,Math.ceil(height/wideDiv));
   sceneRT.setSize(width,height);
   for(const rt of [brightRT,blurRT1,blurRT2])rt.setSize(smallW,smallH);
   wideRT1.setSize(wideW,wideH);wideRT2.setSize(wideW,wideH);
@@ -304,11 +306,12 @@ export function createPayoutBloom(THREE,renderer,{compact=false}={}){
   setThreshold(v){bright.uniforms.uThreshold.value=Math.max(.5,Math.min(3,v));},
   setExposure(v){composite.uniforms.uExposure.value=Math.max(.5,Math.min(2,v));},
   setPixelMode(v){pixelMode=Boolean(v);resize();},
+  setQuality(v){quality=v==='quality'?'quality':'smooth';resize();},
   get state(){return {
    bloom:composite.uniforms.uBloom.value,
    threshold:bright.uniforms.uThreshold.value,
    exposure:composite.uniforms.uExposure.value,
-   pixelMode,width,height,smallW,smallH,wideW,wideH,
+   pixelMode,quality,width,height,smallW,smallH,wideW,wideH,
    HDR:sceneRT.texture.type===THREE.HalfFloatType,
    linearSource:sceneRT.texture.colorSpace===THREE.LinearSRGBColorSpace
   };},
