@@ -40,4 +40,17 @@ for(let i=0;i<28;i++)packed.step();
 const pp=packed.getSnapshot();
 assert.equal(pp.overlappingCoins,0,'overlapped resting disks must be separated rather than left as ghosts');
 assert.equal(pp.inBasin,6);
+// Different deterministic reels and lane patterns must remain intersection-free.
+for(const seed of [1,13,101,987654321]){
+ const sim=new FastCoinPayout({seed});sim.fire(420);
+ for(let frame=0;frame<760;frame++){
+  sim.step();
+  if(frame%20!==0)continue;
+  const snapshot=sim.getSnapshot();
+  assert.equal(snapshot.overlappingCoins,0,`seed ${seed}, frame ${frame}: overlapping gold`);
+  assert.equal(snapshot.escapedEver,0,`seed ${seed}, frame ${frame}: escape`);
+ }
+ assert.equal(sim.getSnapshot().count,420);
+ results.push({seed,coins:420,overlapping:0});
+}
 console.log('PASS 3D ORIENTED COIN ANTI-INTERPENETRATION',JSON.stringify(results));
