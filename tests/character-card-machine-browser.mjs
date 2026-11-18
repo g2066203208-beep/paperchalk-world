@@ -75,6 +75,12 @@ for(const d of [
   await page.locator('#inspect').click();
   await page.waitForFunction(()=>window.PaperchalkCharacterMachineQA?.state?.inspecting);
   assert.equal(await page.locator('#inspect-toolbar').isVisible(),true);
+  assert.equal(await page.locator('.hud').isVisible(),false,
+   'character illustration cannot be covered by debug/caption text');
+  assert.equal(await page.locator('#inspect-hint').isVisible(),false,
+   'phone art must not be covered by gesture hints');
+  assert((await page.evaluate(()=>window.PaperchalkCharacterMachineQA.state.inspectionPixelRatio))>=1,
+   'inspection needs native-resolution art, not the normal low-resolution reel mode');
   await page.waitForTimeout(130);
   let cull=await page.evaluate(()=>window.PaperchalkCharacterMachineQA.state);
   assert(cull.backVisible&&!cull.frontVisible&&cull.visibleArtworkFace==='back',
@@ -167,6 +173,8 @@ for(const d of [
   assert.equal(restored.inspecting,false);
   assert.equal(restored.studioLighting,false);
   assert(restored.inspectWarmIntensity>10,'original slot machine dramatic lighting must return on exit');
+  if(d.name==='portrait')assert(restored.inspectionPixelRatio<1,
+   'phone must restore cheaper reel rendering after closing the texture viewer');
   await page.locator('#draw-one').click();
   await page.waitForFunction(()=>window.PaperchalkCharacterMachineQA?.state?.current &&
    window.PaperchalkCharacterMachineQA?.state?.portraitLoaded,{timeout:22000});
