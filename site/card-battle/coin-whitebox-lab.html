@@ -163,7 +163,7 @@ function draw(){scene();
  g.fillText(`FRAME ${sim.tick}    ${sim.time.toFixed(3)}s    ${sim.phase.toUpperCase()}`,28,63);
  const snap=sim.snapshot();
  const values={emitted:`${snap.emitted} / ${snap.requested}`,'coin-hits':snap.coinContacts,
-  'wall-hits':snap.planeContacts,speed:`${snap.peakSpeed.toFixed(1)}m/s`,height:`${snap.peakHeight.toFixed(2)}m`,total:snap.total};
+  'wall-hits':snap.planeContacts,speed:`${snap.peakSpeed.toFixed(1)}u/s`,height:`${snap.peakHeight.toFixed(2)}u`,total:snap.total};
  for(const [id,value] of Object.entries(values))if($(id).textContent!==String(value))$(id).textContent=value;
 }
 function fire(n){count=n;seed++;if(sim.phase==='ready'){sim=new Simulation({count:n,seed,initialPile:18});sim.start();}
