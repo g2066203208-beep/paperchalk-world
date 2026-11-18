@@ -146,7 +146,7 @@ async function loadCoinModel(){
    thickness:COIN.visualThickness,edgeColor:0x10120e,pixelArt:true});
  const base=sourceModel.children[0];
  instance=new THREE.InstancedMesh(base.geometry,upgradeCoinMaterials(THREE,base.material),CAPS.max);
- instance.castShadow=true;instance.receiveShadow=false;
+ instance.castShadow=true;instance.receiveShadow=true; // coin-on-coin light occlusion in real pile
  instance.name='physical-10-facet-pixel-coin-instances';
  instance.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
  instance.count=0;instance.frustumCulled=false;
@@ -229,6 +229,8 @@ window.PaperchalkPayoutQA={
   projectedExtent:[camera.left,camera.right],
    lighting:{...post.state,look:renderLook,realShadows:renderer.shadowMap.enabled,
     materialType:instance.material[1].type,
+    pixelGoldMask:!!instance.material[1].userData.pixelGoldMask,
+    coinReceivesShadows:instance.receiveShadow,
     environmentReflections:!!scene.environment}};},
  screenshotReady(){redraw();return true;}
 };
