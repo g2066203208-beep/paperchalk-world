@@ -58,8 +58,10 @@ for(const d of [
   assert.equal(original.cardDecorationMeshes,0,'must not use chunky procedural gold frame');
   assert.equal(original.artworkPlanesOnly,true,'only two image planes plus neutral cut-paper sidewalls');
   assert.equal(original.paperCutEdgeMesh,true,'must have a REAL rounded cardboard sidewall mesh');
-  assert(original.paperCutEdgeThickness>=.035 && original.paperCutEdgeThickness<=.052,
-    'the edge must be a visible but THIN cardstock profile');
+  assert(original.paperCutEdgeThickness>=.014 && original.paperCutEdgeThickness<=.022,
+    'refined card edge must be approximately one percent of width, not thick cardboard');
+  assert(original.thinPaperPercent>=.8 && original.thinPaperPercent<=1.3,
+    'card stock may NOT look like thick molded plastic');
   assert(original.paperCutEdgeTriangles>=90,'paper sidewall must wrap rounded corners');
   assert.equal(original.paperCutEdgeMaterial.metalness,0,'NEVER reintroduce the gold modeled border');
   assert(original.paperCutEdgeMaterial.roughness>.9,'edge should be matte compressed paper, not plastic');
@@ -122,6 +124,14 @@ for(const d of [
    'portrait colors must stay MATTE while having variable printed-ink roughness');
   assert(frontState.portraitPrintedPigment,'the whole illustrated front must receive fine non-plastic pigment stipple');
   assert(frontState.portraitPaperSheen>0,'physical satin/cellulose sheen must exist on the card front');
+  assert(frontState.frontBackgroundBurgundyPaper,'front must be integrated onto burgundy matte printed paper');
+  assert(frontState.portraitMaterialTransparent,'portrait must have a cut-out silhouette, not an opaque white photo rectangle');
+  assert(frontState.portraitWhiteBackgroundRemoved,
+   'recognizable white Anima background must be cut out along its outer connected matte');
+  assert(frontState.portraitWhitePixelsRemoved>1500,
+   'white background extraction needs to remove REAL pixels, not return a white rectangular image');
+  assert(frontState.portraitRgbBleedPixels>1500,
+   'transparent areas need extended foreground RGB to avoid white halos');
   await page.screenshot({path:out+'/'+d.name+'-INSPECT-01-real-ringmaster-front.png'});
   // True edge-on look: both artwork faces MUST disappear but the rounded
   // neutral cardstock edge MUST remain visible. No fake thick metal frame.
