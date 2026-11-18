@@ -375,7 +375,7 @@ window.PaperchalkCoinCascade=Object.freeze({burst,stop,seek,play,unlockAudio:aud
  get reflectionGlints(){return glintCount},get impacts(){return hitCount},
  get timeline(){return {...PAYOUT}},get lastBurst(){return lastBurst&&{...lastBurst}},
  inspect(){return {status,seed:seedUsed,phase,timeMs:Math.round(simTime*1000),liveCoins:particles.length,
-  impacts:hitCount,glints:glintCount,particles:particles.slice(0,5).map(c=>({
+  impacts:hitCount,glints:glintCount,sparks:sparks.length,particles:particles.slice(0,5).map(c=>({
    x:Math.round(c.x),y:Math.round(c.y),spin:c.spin,roll:c.roll,hits:c.hits}))}}
 });
 })();
