@@ -1,0 +1,39 @@
+/** Node/CI mechanical verification of the real vendored Cannon-ES world. */
+import assert from 'node:assert/strict';
+import {RigidCoinPayout,COIN,FIXED_DT} from '../site/card-battle/motion/coin-payout-rigid.mjs';
+const scenes=[];
+function validate(count,frames){
+ const a=new RigidCoinPayout({seed:20261118,maxCoins:500});
+ const n=a.fire(count);assert.equal(n,count);
+ a.advanceFrames(frames);
+ const snap=a.getSnapshot();
+ assert.equal(a.world.gravity.y,-24,'gravity is a real Y-axis acceleration');
+ assert(a.coins.length>=Math.min(18,count),'coins physically emitted over time');
+ assert(snap.count===a.coins.length);
+ assert(a.coins.every(b=>b.shapes.length===1 && b.shapes[0]===a.spawnShape), 'shared actual convex 3D coin colliders');
+ assert(a.coins.every(b=>Number.isFinite(b.position.x)&&Number.isFinite(b.position.y)&&Number.isFinite(b.position.z)));
+ assert(a.coins.some(b=>Math.abs(b.position.z)>.11), 'true depth axis spray');
+ assert(a.coins.some(b=>Math.abs(b.quaternion.x)>.1 || Math.abs(b.quaternion.z)>.1),'true 3D coin tumbling');
+ assert(a.coins.some(b=>Math.abs(b.angularVelocity.x)>.1 || Math.abs(b.angularVelocity.z)>.1), 'real angular velocity');
+ assert(snap.contacts>0,'actual real 3D coin-on-coin contact equations');
+ assert(snap.peakHeight>1.0,'powerful toss arc');
+ assert(snap.groundContacts>=0);
+ assert(Math.abs(COIN.radius-3*COIN.scale/(2*Math.cos(Math.PI/10)))<1e-9,'visual and collision radius are identical');
+ assert(COIN.height>0 && COIN.height<COIN.radius*.13,'true thin disk collider');
+ scenes.push({count,frames,snap});
+ a.destroy();
+}
+validate(120,140);
+validate(240,180);
+// 420-coin preset must respect max, retain previous pile when fired again.
+const accum=new RigidCoinPayout({seed:101,maxCoins:500});
+accum.fire(120);accum.advanceFrames(160);
+const prev=accum.coins.length;
+assert(prev>30);
+assert.equal(accum.fire(420),420,'allow adding a large burst to same pile');
+accum.advanceFrames(90);
+assert(accum.coins.length>prev && accum.coins.length<=500);
+assert(accum.coins.slice(0,prev).every(x=>x.userData.id<prev),'old rigid bodies survive second payout');
+scenes.push({added:true,before:prev,after:accum.coins.length,snapshot:accum.getSnapshot()});
+accum.destroy();
+console.log('PASS Cannon-ES physical 3D coin cylinders, XYZ high velocity, persistent pile, collisions',JSON.stringify(scenes));
