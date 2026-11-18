@@ -12,6 +12,10 @@ export const COIN = Object.freeze({sides:10, imageDiameter:3, scale:.135,
   visualThickness:.10, radius:3*.135/(2*Math.cos(Math.PI/10)),
   height:.10*.135, gravity:24});
 export const CAPS = Object.freeze({max:500, presets:[120,240,420]});
+// Coin chute is INSIDE the right rim. Every emitted rigid coin enters this
+// open 3D catch bowl; no sideways confetti, virtual teleport or particle FX.
+export const BASIN=Object.freeze({left:-5.78,right:.72,front:1.92,back:-1.92,
+  floor:0,wallTop:2.55,chute:[.39,1.22,0]});
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
 function seeded(seed){let a=seed>>>0;return ()=>{a=(a+0x6d2b79f5)>>>0;let t=a;
   t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);
@@ -36,17 +40,28 @@ export class RigidCoinPayout {
       {friction:.62,restitution:.17,contactEquationStiffness:2e8,contactEquationRelaxation:3}));
     this.world.addContactMaterial(new CANNON.ContactMaterial(this.coinMaterial,this.deskMaterial,
       {friction:.65,restitution:.30,contactEquationStiffness:2e8,contactEquationRelaxation:3}));
-    // Real static slabs: left pile sits on a shallow wooden table, not a CSS tray.
+    // An actual CLOSED-PERIMETER, OPEN-TOP 3D catch bowl directly beneath
+    // and left of the payout chute. The four physical walls use the same
+    // coordinates/solids as the visual scene. A coin is never spawned outside.
     this.staticBodies=[];
-    this.addStaticBox([-2.82,-.14,0],[7.0,.26,4.65]); // desk surface y=-.01
-    this.addStaticBox([-6.19,.70,0],[.20,1.42,4.65]); // left retaining wall
-    this.addStaticBox([.80,.63,0],[.20,1.25,4.65]);  // slot machine left face
-    this.addStaticBox([-2.83,.32,-2.34],[7.0,.66,.16]);
-    this.addStaticBox([-2.83,.32,2.34],[7.0,.66,.16]);
+    this.addStaticBox([-2.53,-.16,0],[6.75,.32,3.94]); // recessed metal bowl floor, top exactly y=0
+    this.addStaticBox([BASIN.left-.115,BASIN.wallTop*.5,0],
+      [.23,BASIN.wallTop,4.20]); // left stopping wall for high-speed stream
+    this.addStaticBox([BASIN.right+.10,BASIN.wallTop*.5,0],
+      [.20,BASIN.wallTop,4.20]); // machine-side return wall
+    this.addStaticBox([-2.53,BASIN.wallTop*.5,BASIN.back-.105],
+      [6.80,BASIN.wallTop,.21]); // rear retaining wall
+    this.addStaticBox([-2.53,BASIN.wallTop*.5,BASIN.front+.105],
+      [6.80,BASIN.wallTop,.21]); // front retaining wall
+    // Slanted inner fillets break up wall bounces and settle the coins inward
+    // without fake velocity damping or invisible screen-edge colliders.
+    this.addStaticBox([-5.51,.12,0],[.38,.24,3.76]);
+    this.addStaticBox([-2.52,.12,-1.68],[6.24,.24,.34]);
+    this.addStaticBox([-2.52,.12,1.68],[6.24,.24,.34]);
     this.coins=[];this.tick=0;this.time=0;this.totalEmitted=0;
     this.batchTarget=0;this.batchEmitted=0;this.nextEmission=0;
     this.contactCount=0;this.groundContacts=0;this.peakHeight=0;
-    this.maxCoinOverlap=0;this.phase='ready';this.errors=[];
+    this.maxCoinOverlap=0;this.phase='ready';this.errors=[];this.escapedEver=0;
     // The RENDER geometry can be shared, but Cannon assigns shape.body in addShape().
     // A shared physics shape would point to the wrong coin; create one per rigid body.
     this.events=[];
@@ -84,13 +99,16 @@ export class RigidCoinPayout {
   emit(){
     if(this.coins.length>=this.maxCoins)return;
     const r=this.random,slot=this.batchEmitted;
-    const zlane=((slot%5)-2)*.115+(r()-.5)*.035;
-    const ylane=((slot%3)-1)*.065+(r()-.5)*.03;
-    const strength=.90+r()*.29;
+    // Mechanical payout: STRONG forward jet, aiming *down into the bowl*,
+    // not upward/outward like fireworks. Narrow 3D lanes let coins collide
+    // in the open basin. No coin is ever born beyond the physical walls.
+    const zlane=((slot%7)-3)*.062+(r()-.5)*.032;
+    const ylane=((slot%3)-1)*.018;
+    const strength=.93+r()*.17;
     this.addCoin({
-      pos:[.47+(r()-.5)*.022,1.42+ylane,zlane],
-      vel:[-(18.8+r()*7.3)*strength,(4.0+r()*5.3)*strength,(r()-.5)*8.5],
-      axis:[r()-.5,r()-.5,r()-.5],spin:[(r()-.5)*53,(r()-.5)*67,(r()-.5)*58]
+      pos:[BASIN.chute[0]+(r()-.5)*.012,BASIN.chute[1]+ylane,zlane],
+      vel:[-(18.1+r()*5.2)*strength,(-4.0-r()*2.4)*strength,(r()-.5)*3.0],
+      axis:[r()-.5,r()-.5,r()-.5],spin:[(r()-.5)*50,(r()-.5)*58,(r()-.5)*48]
     });
     this.batchEmitted++;this.totalEmitted++;
     const p=this.batchEmitted/this.batchTarget;
@@ -114,7 +132,13 @@ export class RigidCoinPayout {
       }else if(a.userData?.kind==='coin'||b.userData?.kind==='coin')this.groundContacts++;
     }
     this.contactCount+=pairs.size;
-    for(const b of this.coins){if(b.position.y>this.peakHeight)this.peakHeight=b.position.y;}
+    for(const b of this.coins){
+      if(b.position.y>this.peakHeight)this.peakHeight=b.position.y;
+      if(b.position.x<BASIN.left-.25||b.position.x>BASIN.right+.25||
+        b.position.z<BASIN.back-.25||b.position.z>BASIN.front+.25){
+        this.escapedEver++;
+      }
+    }
     if(this.phase==='settling'&&this.coins.every(b=>b.sleepState===CANNON.Body.SLEEPING))this.phase='settled';
     return this;
   }
@@ -129,6 +153,9 @@ export class RigidCoinPayout {
       supportContacts:this.groundContacts,peakHeight:+this.peakHeight.toFixed(3),
       pileY:[minY===Infinity?0:minY,maxY===-Infinity?0:maxY],
       real3D:true,collisionShape:'10-sided convex cylinder',
+      escapedEver:this.escapedEver,
+      inBasin:this.coins.filter(b=>b.position.x>=BASIN.left-.25&&b.position.x<=BASIN.right+.25&&b.position.z>=BASIN.back-.25&&b.position.z<=BASIN.front+.25).length,
+      bowl:BASIN,
       radius:COIN.radius,height:COIN.height,phase:this.phase};
   }
   destroy(){for(const b of [...this.coins,...this.staticBodies])this.world.removeBody(b);}
