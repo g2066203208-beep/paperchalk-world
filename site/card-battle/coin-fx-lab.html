@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>金属金币实验室 · Slots & Daggers 参考研究</title>
+<title>金属老虎机 · 中奖喷金币与真实反光演示</title>
 <style>
 :root{color-scheme:dark;--brass:#baa579;--ink:#131c1e}
 *{box-sizing:border-box}
@@ -41,38 +41,160 @@ header p{color:#a9b6b1;font-size:11px;margin:5px 0;max-width:390px;text-align:ri
 .controls button:focus-visible{outline:3px solid #e6b859}
 #count{font:12px ui-monospace,monospace;color:#b7baad;min-width:150px;text-align:right}
 @media(max-width:650px){header{display:block}header p{text-align:left}.display{left:22%;right:5%;top:20%;bottom:40%}.slot{left:6%;min-width:49px}.tray{bottom:9%;height:26%}.controls{gap:6px}.controls button{font-size:11px;padding:9px 11px}#count{width:100%;text-align:center}}
+
+/* Reel surfaces with real depth cues and a warm brass win bloom. */
+.display{left:19%;right:10%;gap:9px}
+.display strong{font-size:clamp(24px,4vw,61px);letter-spacing:.06em;color:#ffe3a4}
+.reels{display:flex;gap:clamp(7px,1.5vw,18px);align-items:center;justify-content:center;min-height:72px;width:100%}
+.reel{position:relative;width:clamp(52px,7vw,90px);height:clamp(64px,8vw,103px);
+ display:grid;place-items:center;background:linear-gradient(145deg,#181f1d,#4d4934 40%,#2d3029 70%,#131a1a);
+ border:5px solid #13191a;border-radius:11px;
+ box-shadow:0 0 0 2px #8a784f,inset 0 5px 16px #000c,inset 0 -2px 3px #e0bd704f,
+ 0 4px 10px #0009;color:#e9c279;text-shadow:0 -1px #fff1af,0 2px 1px #7e5816;
+ font:bold clamp(29px,4vw,54px) Georgia,serif}
+.reel:before{content:"";position:absolute;left:10%;right:10%;top:6%;height:19%;
+ background:linear-gradient(#fff6c562,transparent);border-radius:6px;pointer-events:none}
+.reel.moving{filter:brightness(1.26) blur(.6px)}
+.slot-win-label{font:700 clamp(10px,1.4vw,16px) ui-monospace,monospace;letter-spacing:.1em;color:#c7bd9c;min-height:22px}
+.machine-wallet{position:absolute;z-index:2;left:5%;bottom:33%;min-width:100px;
+ padding:9px 11px;border:2px solid #8b7b53;border-radius:9px;color:#ffe4a5;
+ background:linear-gradient(145deg,#101a1c,#363a30);
+ box-shadow:inset 0 2px #e1c9883d,0 5px 10px #000b;
+ display:flex;gap:8px;align-items:center;font:700 clamp(13px,1.65vw,20px) ui-monospace,monospace}
+.machine-wallet span{font-size:clamp(19px,2.4vw,32px);color:#ffe6a8;text-shadow:0 0 12px #ffdd7944}
+.machine.is-spinning .reel{animation:reel-pulse .12s steps(2) infinite}
+.machine.is-winning .display{border-color:#e7c47b;
+ box-shadow:0 0 0 2px #d6a858,inset 0 0 45px #000a,0 0 64px #ffce6b35}
+.machine.is-winning .reel{color:#fff1b5;border-color:#9c6d35;
+ box-shadow:0 0 0 2px #e2bd6c,inset 0 2px 14px #ffdf7355,0 0 22px #f8d67a59}
+.machine.is-winning .slot-win-label{color:#fff1ae;text-shadow:0 0 15px #ffd47a88}
+.machine.is-winning .machine-wallet{border-color:#e4bc69}
+@keyframes reel-pulse{50%{filter:brightness(1.22)}}
+.controls button:disabled{opacity:.62;cursor:wait}
+@media(max-width:650px){
+ .display{left:23%;right:3%;top:17%;bottom:41%;gap:4px;border-width:4px}
+ .display .machine-kicker{font-size:7px;letter-spacing:.12em}
+ .reels{gap:5px;min-height:48px}
+ .reel{width:clamp(37px,11vw,52px);height:clamp(48px,15vw,70px);
+  font-size:clamp(23px,7vw,35px);border-width:3px}
+ .slot-win-label{font-size:9px;min-height:18px;letter-spacing:0}
+ .machine-wallet{left:4%;bottom:36%;min-width:70px;padding:6px;
+  font-size:12px;gap:3px}
+ .machine-wallet span{font-size:16px}
+ .controls button{font-size:11px}
+}
 </style>
 </head>
 <body>
 <main>
-<header><h1>金属金币 · 物理与反光实验</h1><p>独立原创 WebGL 实验。参考《Slots & Daggers》的金属感与金币吐出节奏；不是其源代码或素材。</p></header>
+<header><h1>金币机 · 中奖演出</h1><p>可操作的独立机台，真实 WebGL 旋转硬币、金属反光、弹跳和清脆碰撞音；参考《Slots & Daggers》，不包含原版游戏资产。</p></header>
 <div class="machine" aria-label="机械金币吐出演示">
 <div class="bolts"></div><div class="heading">THE GOLD MACHINE</div>
 <div class="slot" id="chute" aria-hidden="true"></div>
-<div class="display"><small>PHYSICAL PAYOUT</small><strong>◈ +48</strong><small>ROTATION / REFLECTION / COLLISION</small></div>
+<div class="display">
+ <small class="machine-kicker">GOLDEN REELS · GOLD PAYOUT</small>
+ <div class="reels" id="reels" role="group" aria-label="老虎机三个转轮">
+  <div class="reel" id="reel-0" aria-label="第一列">◈</div>
+  <div class="reel" id="reel-1" aria-label="第二列">◈</div>
+  <div class="reel" id="reel-2" aria-label="第三列">◈</div>
+ </div>
+ <div class="slot-win-label" id="slot-win-label" aria-live="polite">点击旋转，触发中奖喷金币</div>
+ <strong id="reward" aria-live="polite">◈ 000</strong>
+ <small class="machine-kicker">EXTRUDED COINS · MOVING METAL REFLECTIONS</small>
+ </div>
+ <div class="machine-wallet" aria-label="已获得游戏金币"><span>◈</span><b id="balance">0000</b></div>
+ <div class="payout-spark" aria-hidden="true"></div>
 <div class="tray" id="tray" aria-hidden="true"></div></div>
 <div class="controls">
-<button type="button" id="payout">吐出 48 枚金币</button>
-<button type="button" id="few">12 枚 · 精看</button>
-<button type="button" id="many">76 枚 · 满屏</button>
+<button type="button" id="payout">旋转老虎机 · 中奖 +48</button>
+<button type="button" id="few">12 枚 · 慢镜观察</button>
+<button type="button" id="many">76 枚 · JACKPOT</button>
 <button type="button" id="sound">音效：开启</button>
 <span id="count">WebGL 未启动</span></div>
 </main>
-<script src="./motion/slot-daggers-coins.js?v=20261117-gold-metal-v1"></script>
+<script src="./motion/slot-daggers-coins.js?v=20261118-reflective-v2"></script>
 <script>
-(()=>{"use strict";const fx=window.PaperchalkCoinCascade;let sound=true;
+(()=>{"use strict";
+const fx=window.PaperchalkCoinCascade;
 const $=id=>document.getElementById(id);
-function run(n){
+let sound=true,balance=0,spinning=false,spins=0,timer=null;
+const machine=document.querySelector(".machine");
+const glyphs=["◈","✦","⌑","◆","♠","⚔"];
+const nextGlyph=()=>{
+ let n=(spins*19+Math.floor(performance.now()/64))>>>0;
+ n=Math.imul(n^(n>>>15),2246822519);
+ return glyphs[(n>>>0)%glyphs.length];
+};
+function payout(n,{seed,skipSpin=false}={}){
  const ch=$("chute").getBoundingClientRect(),tray=$("tray").getBoundingClientRect();
- fx.burst({count:n,x:ch.left+ch.width*.67,y:ch.top+ch.height*.64,
-  floorY:tray.top+tray.height*.47,
-  minX:tray.left+22,maxX:tray.right-22,sound});
+ const wallet=$("balance").getBoundingClientRect();
+ machine.classList.add("is-winning");
+ $("reward").textContent="◈ +"+n;
+ $("slot-win-label").textContent=n>=72?"JACKPOT · 金币满溢":"WIN! · 金币连续吐出";
+ fx.burst({count:n,seed:seed??20261118+spins,
+  x:ch.left+ch.width*.67,y:ch.top+ch.height*.64,
+  floorY:tray.top+tray.height*.40,
+  minX:tray.left+12,maxX:tray.right-10,
+  targetX:wallet.left+wallet.width*.5,
+  targetY:wallet.top+wallet.height*.5,sound});
+ const from=balance,to=balance+n,begin=performance.now();
+ const numberTick=t=>{
+  const x=Math.min(1,Math.max(0,(t-begin-1650)/780));
+  balance=Math.round(from+(to-from)*x*x*(3-2*x));
+  $("balance").textContent=String(balance).padStart(4,"0");
+  if(x<1)requestAnimationFrame(numberTick);
+  else setTimeout(()=>machine.classList.remove("is-winning"),420);
+ };
+ requestAnimationFrame(numberTick);
 }
-$("payout").onclick=()=>run(48);$("few").onclick=()=>run(12);$("many").onclick=()=>run(76);
-$("sound").onclick=()=>{sound=!sound;fx.setSoundEnabled(()=>sound);$("sound").textContent="音效："+(sound?"开启":"关闭");};
+function playSlot(){
+ if(spinning)return;
+ spinning=true;spins++;
+ machine.classList.remove("is-winning");
+ machine.classList.add("is-spinning");
+ $("payout").disabled=true;
+ $("reward").textContent="◈ ???";
+ $("slot-win-label").textContent="转轮旋转中…";
+ for(let i=0;i<3;i++)$("reel-"+i).classList.add("moving");
+ let elapsed=0;
+ timer=setInterval(()=>{
+  elapsed+=56;
+  for(let i=0;i<3;i++){
+   if(elapsed<540+i*220)$("reel-"+i).textContent=nextGlyph();
+   else{$("reel-"+i).textContent="◈";$("reel-"+i).classList.remove("moving")}
+  }
+  if(elapsed>=1040){
+   clearInterval(timer);timer=null;
+   machine.classList.remove("is-spinning");
+   $("slot-win-label").textContent="三连金币 · 中奖";
+   machine.classList.add("is-winning");
+   spinning=false;$("payout").disabled=false;
+   payout(48,{seed:20261118+spins});
+  }
+ },56);
+}
+$("payout").onclick=playSlot;
+$("few").onclick=()=>{
+ if(spinning)return;
+ spins++;payout(12,{seed:20261118+spins});
+};
+$("many").onclick=()=>{
+ if(spinning)return;
+ spins++;payout(76,{seed:20261118+spins});
+};
+$("sound").onclick=()=>{sound=!sound;fx.setSoundEnabled(()=>sound);
+ $("sound").textContent="音效："+(sound?"开启":"关闭")};
 fx.setSoundEnabled(()=>sound);
-setInterval(()=>{$("count").textContent="GPU: "+fx.status+" · 当前金币 "+fx.count+" · 播放 "+fx.played;},160);
-window.PaperchalkCoinLab={run,fx};
+setInterval(()=>{$("count").textContent=
+ "GPU: "+fx.status+" · "+fx.phase+" · 金币 "+fx.count+" · 金属亮斑 "+fx.reflectionGlints+
+ " · 碰撞 "+fx.impacts},140);
+window.PaperchalkCoinLab={
+ run:n=>{spins++;payout(n,{seed:20261118+spins})},
+ spin:playSlot,fx,
+ get balance(){return balance},get spinning(){return spinning},
+ // QA-only frame-seek uses the actual fixed-step WebGL physics.
+ frame:ms=>fx.seek(ms)
+};
 })();
 </script>
 </body>
