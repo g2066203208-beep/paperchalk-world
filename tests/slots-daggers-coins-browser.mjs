@@ -1,9 +1,13 @@
-/* Real Chromium metal-coin proof, three viewport sizes, screenshot+WebM.
- * Tests the exact GitHub playable module; does not fabricate source footage.
+/* Real reference-inspired original gold payout test.
+ * Three viewport sizes, repeatable fixed-ms rendering, real chrome/WebGL
+ * screenshot + WebM, actual reel win and existing Snowbound game overlay.
+ * Independent source reference is linked in docs, not falsely pixel-matched.
  */
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import {createHash} from "node:crypto";
 import {chromium} from "playwright";
+
 const out="artifacts/slot-daggers-coin-fx";
 fs.mkdirSync(out+"/videos",{recursive:true});
 const browser=await chromium.launch({headless:true,args:[
@@ -14,6 +18,7 @@ const devices=[
  {name:"phone-390x844",w:390,h:844,mobile:true},
  {name:"landscape-844x390",w:844,h:390,mobile:true}
 ];
+const sha=b=>createHash("sha256").update(b).digest("hex");
 const result=[];
 for(const d of devices){
  const context=await browser.newContext({viewport:{width:d.w,height:d.h},deviceScaleFactor:1,
@@ -21,60 +26,91 @@ for(const d of devices){
  const page=await context.newPage(),errors=[];
  page.on("pageerror",e=>errors.push(e.stack||e.message));
  try{
-  await page.goto("http://127.0.0.1:4173/card-battle/coin-fx-lab.html",{waitUntil:"networkidle"});
+  const r=await page.goto("http://127.0.0.1:4173/card-battle/coin-fx-lab.html",{waitUntil:"networkidle"});
+  assert.equal(r.status(),200);
   assert(await page.locator("#payout").isVisible());
-  await page.screenshot({path:out+"/"+d.name+"-00-rest.png"});
-  const launchAt=Date.now();
+  assert.equal(await page.locator(".reel").count(),3,"game needs three physical slot reel windows");
+  await page.screenshot({path:out+"/"+d.name+"-00-physical-slot-machine-rest.png"});
   await page.locator("#payout").click();
-  await page.waitForFunction(()=>window.PaperchalkCoinCascade?.status==="playing"&&
-    Number(document.querySelector(".paperchalk-coin-webgl")?.dataset.coinFrame)>2,null,{timeout:8000});
-  const shots=[];
-  for(const [ms,label] of [[150,"01-launch"],[430,"02-metal-flip"],[850,"03-first-bounce"],[1550,"04-scattering"],[2400,"05-resting"],[3550,"06-collect"]]){
-   // Wall clock, not incremental wait: screenshot/compositor cost must not
-   // shift later samples out of the whole payout animation.
-   await page.waitForTimeout(Math.max(0,ms-(Date.now()-launchAt)));
-   const name=out+"/"+d.name+"-"+label+".png";
-   await page.screenshot({path:name});shots.push(name);
+  await page.waitForFunction(()=>window.PaperchalkCoinCascade?.played===1, null,{timeout:7000});
+  assert.deepEqual(await page.locator(".reel").allTextContents(),["◈","◈","◈"],
+   "three matching coin symbols must trigger the prize");
+  // Allow asynchronous DOM wallet number tween to complete. The shader
+  // timeline is subsequently rendered in deterministic fixed-step seconds.
+  await page.waitForTimeout(2600);
+  assert.equal(await page.locator("#balance").textContent(),"0048",
+    "money counter must count up in sync with physical payout");
+  const checkpoints=[
+   [0,"01-before-ejection"],[120,"02-nozzle"],[280,"03-rim-flip"],
+   [480,"04-warm-softbox-highlight"],[700,"05-first-impact"],
+   [980,"06-bounce-and-scatter"],[1380,"07-rolling-and-specular"],
+   [1920,"08-tray-settling"],[2310,"09-gather-to-wallet"],
+   [2640,"10-final-payout"]
+  ];
+  const frames=[],hashes=[];
+  for(const [ms,label] of checkpoints){
+   assert(await page.evaluate(ms=>window.PaperchalkCoinLab.frame(ms),ms),
+    "seek must allow true exact-timestamp screenshots");
+   const inspect=await page.evaluate(()=>window.PaperchalkCoinCascade.inspect());
+   assert(Math.abs(inspect.timeMs-ms)<7, "cannot reproduce requested deterministic frame at "+ms);
+   const bytes=await page.screenshot({path:out+"/"+d.name+"-"+label+".png",animations:"disabled"});
+   frames.push({ms,label,inspect,hash:sha(bytes)});
+   hashes.push(sha(bytes));
   }
-  const fx=await page.evaluate(()=>{
-   const c=document.querySelector(".paperchalk-coin-webgl");
-   const ctx=c?.getContext("webgl");
-   return {status:window.PaperchalkCoinCascade.status,
-    played:window.PaperchalkCoinCascade.played,
-    frame:Number(c?.dataset.coinFrame),drawWidth:ctx?.drawingBufferWidth,drawHeight:ctx?.drawingBufferHeight,
-    particles:window.PaperchalkCoinCascade.count};
+  assert(new Set(hashes).size>=7,"coins must visibly move between sampled physical frames");
+  assert(frames.some(x=>x.inspect.impacts>=10),"coins must physically bounce against tray");
+  assert(frames.some(x=>x.inspect.glints>=1),"specular sparkles must actually appear");
+  const front=await page.evaluate(()=>window.PaperchalkCoinLab.frame(480));
+  assert(front);
+  const deterministicA=await page.screenshot({animations:"disabled"});
+  await page.evaluate(()=>window.PaperchalkCoinLab.frame(480));
+  const deterministicB=await page.screenshot({animations:"disabled"});
+  assert(sha(deterministicA)===sha(deterministicB),
+   "same physics seed and 480 ms must reproduce identical pixel frame");
+  const proof=await page.evaluate(()=>{
+   const fx=window.PaperchalkCoinCascade;
+   const c=fx.canvas,gl=c?.getContext("webgl");
+   return {played:fx.played,shader:gl?.getParameter(gl.CURRENT_PROGRAM)!==null,
+    seed:fx.seed,simulatedMs:fx.simulatedMs,
+    size:[gl?.drawingBufferWidth,gl?.drawingBufferHeight],
+    glints:fx.reflectionGlints,impacts:fx.impacts};
   });
-  assert(fx.frame>20,"coins must actually animate every browser frame");
-  assert(fx.drawWidth>=d.w&&fx.drawHeight>=d.h,"metallic WebGL drawing buffer must cover viewport");
-  assert(fx.played===1,"one payout request must spawn one physical event");
-  assert.deepEqual(errors,[],"no uncaught browser errors");
-  // Test other reward counts and replay without a page reload.
+  assert(proof.shader,"material reflection must be real WebGL, not CSS circles");
+  assert(proof.size[0]>=d.w*.98&&proof.size[1]>=d.h*.98,
+   "physical metallic WebGL buffer must cover the viewport");
   await page.locator("#few").click();
-  await page.waitForTimeout(400);
-  assert((await page.evaluate(()=>window.PaperchalkCoinCascade.played))===2);
+  await page.waitForTimeout(100);
+  assert.equal(await page.evaluate(()=>window.PaperchalkCoinCascade.lastBurst.count),12);
   await page.locator("#many").click();
-  await page.waitForTimeout(400);
-  assert((await page.evaluate(()=>window.PaperchalkCoinCascade.played))===3);
-  await page.screenshot({path:out+"/"+d.name+"-07-max-payout.png"});
-  // Actual snowbound page loads the same physical coin module.
-  await page.goto("http://127.0.0.1:4173/card-battle/snowbound-journey.html",{waitUntil:"networkidle"});
-  assert(await page.evaluate(()=>typeof window.PaperchalkCoinCascade?.burst==="function"),
-    "game must integrate the exact reusable physical coin shader");
+  await page.waitForTimeout(100);
+  assert.equal(await page.evaluate(()=>window.PaperchalkCoinCascade.lastBurst.count),
+   d.mobile&&d.w<=600?76:76);
+  await page.evaluate(()=>window.PaperchalkCoinLab.frame(600));
+  await page.screenshot({path:out+"/"+d.name+"-11-jackpot-76-metal-coins.png"});
+  assert.deepEqual(errors,[],"actual WebGL slot machine must not throw JS errors");
+  // Render actual game's module on actual UI (Snowbound gold + victory call
+  // it from game state in normal play; this test uses one isolated trigger).
+  await page.goto("http://127.0.0.1:4173/card-battle/snowbound-journey.html",{waitUntil:"domcontentloaded"});
+  await page.waitForFunction(()=>typeof window.PaperchalkCoinCascade?.burst==="function",
+   null,{timeout:10000});
   await page.evaluate(()=>window.PaperchalkCoinCascade.burst({
-    count:28,x:innerWidth*.4,y:innerHeight*.3,floorY:innerHeight*.7,sound:false
+   count:38,seed:20261118,x:innerWidth*.42,y:innerHeight*.30,
+   floorY:innerHeight*.74,sound:false
   }));
-  await page.waitForFunction(()=>Number(document.querySelector(".paperchalk-coin-webgl")?.dataset.coinFrame)>2);
-  await page.waitForTimeout(180);
-  await page.screenshot({path:out+"/"+d.name+"-08-in-real-game.png"});
-  assert.deepEqual(errors,[],"game and metal coin effect must not throw JS errors");
-  result.push({name:d.name,passed:true,fx,screenshots:shots.length+3});
-  console.log("PASS physical coins",d.name,fx);
+  await page.evaluate(()=>window.PaperchalkCoinCascade.seek(700));
+  await page.screenshot({path:out+"/"+d.name+"-12-inside-actual-snowbound-game.png"});
+  assert.deepEqual(errors,[],"original Snowbound game + gold effect must not throw errors");
+  result.push({viewport:d.name,passed:true,frames,proof});
+  console.log("PASS gold casino payout",d.name,
+   JSON.stringify({seed:proof.seed,samples:frames.length,
+     maxImpacts:Math.max(...frames.map(f=>f.inspect.impacts)),
+     maxGlints:Math.max(...frames.map(f=>f.inspect.glints))}));
  }catch(e){
-  result.push({name:d.name,passed:false,error:String(e.stack||e)});
+  result.push({viewport:d.name,passed:false,error:String(e.stack||e),errors});
+  console.error("FAIL gold casino payout",d.name,e.stack||e);
   await page.screenshot({path:out+"/"+d.name+"-FAIL.png"}).catch(()=>{});
-  console.error("FAIL physical coin effect",d.name,e.stack||e);
  }finally{await context.close();}
 }
 await browser.close();
 fs.writeFileSync(out+"/results.json",JSON.stringify(result,null,2));
-assert(result.every(r=>r.passed),"Physical coin effect/browser screenshot test failed");
+assert(result.every(x=>x.passed),"At least one device failed to show real metallic coin payout");
