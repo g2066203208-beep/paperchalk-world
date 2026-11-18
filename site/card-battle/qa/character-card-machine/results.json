@@ -2,8 +2,8 @@
   {
     "viewport": "desktop",
     "passed": true,
-    "character": "飞刀演员",
-    "id": "wonder-circus/knife-thrower.png",
+    "character": "炼金魔女",
+    "id": "witch-workshop/alchemy-witch.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
@@ -12,8 +12,8 @@
   {
     "viewport": "portrait",
     "passed": true,
-    "character": "血族守卫",
-    "id": "crimson-vampires/crimson-guardian.png",
+    "character": "首席魔女",
+    "id": "witch-workshop/grand-witch.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
@@ -22,8 +22,8 @@
   {
     "viewport": "landscape",
     "passed": true,
-    "character": "月下剑姬",
-    "id": "crimson-vampires/moonlight-duelist.png",
+    "character": "财务主管",
+    "id": "demon-merchant/finance-director.webp",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
