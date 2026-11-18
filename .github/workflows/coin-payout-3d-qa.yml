@@ -14,6 +14,7 @@ on:
       - 'site/card-battle/coin-payout-3d.html'
       - 'tests/coin-payout-physics.mjs'
       - 'tests/coin-payout-fast.mjs'
+      - 'tests/coin-payout-anti-overlap.mjs'
       - 'tests/coin-payout-browser.mjs'
       - '.github/workflows/coin-payout-3d-qa.yml'
   workflow_dispatch:
@@ -38,9 +39,11 @@ jobs:
           node --check site/card-battle/motion/coin-payout-lighting.mjs
           node --check tests/coin-payout-physics.mjs
           node --check tests/coin-payout-fast.mjs
+          node --check tests/coin-payout-anti-overlap.mjs
           node --check tests/coin-payout-browser.mjs
           node tests/coin-payout-physics.mjs
           node tests/coin-payout-fast.mjs
+          node tests/coin-payout-anti-overlap.mjs
       - name: Install Playwright Chromium
         run: |
           npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
