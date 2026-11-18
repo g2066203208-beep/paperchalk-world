@@ -126,7 +126,7 @@ export function analyzeAlphaMask(alpha,width,height,{
  * (e.g. white), only the border-connected region matching the corners is
  * cleared. This does not erase white features enclosed by a black outline.
  */
-export function prepareImageCanvas(image,{maxTextureSize=1024,autoRemoveBackground=true,backgroundTolerance=34}={}){
+export function prepareImageCanvas(image,{maxTextureSize=1024,autoRemoveBackground=true,backgroundTolerance=34,pixelArt=false}={}){
  if(typeof document==='undefined')throw new Error('Canvas APIs are required to load a browser image');
  const naturalWidth=image.naturalWidth||image.videoWidth||image.width;
  const naturalHeight=image.naturalHeight||image.videoHeight||image.height;
@@ -134,7 +134,8 @@ export function prepareImageCanvas(image,{maxTextureSize=1024,autoRemoveBackgrou
  const ratio=Math.min(1,maxTextureSize/Math.max(naturalWidth,naturalHeight));
  const width=Math.max(1,Math.round(naturalWidth*ratio)),height=Math.max(1,Math.round(naturalHeight*ratio));
  const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
- const g=canvas.getContext('2d',{willReadFrequently:true});g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';
+ const g=canvas.getContext('2d',{willReadFrequently:true});g.imageSmoothingEnabled=!pixelArt;
+ if(!pixelArt)g.imageSmoothingQuality='high';
  g.clearRect(0,0,width,height);g.drawImage(image,0,0,width,height);
  const pixels=g.getImageData(0,0,width,height),data=pixels.data;
  let alreadyTransparent=false;
@@ -171,19 +172,20 @@ export function prepareImageCanvas(image,{maxTextureSize=1024,autoRemoveBackgrou
  */
 export function prepareExtrudedSprite(image,{
  size=2.6,alphaThreshold=110,outlineResolution=256,
- autoRemoveBackground=true,backgroundTolerance=34,simplify=.65
+ autoRemoveBackground=true,backgroundTolerance=34,simplify=.65,pixelArt=false
 }={}){
- const prepared=prepareImageCanvas(image,{autoRemoveBackground,backgroundTolerance});
+ const prepared=prepareImageCanvas(image,{autoRemoveBackground,backgroundTolerance,pixelArt});
  const canvas=document.createElement('canvas');
  const factor=Math.min(1,outlineResolution/Math.max(prepared.width,prepared.height));
  canvas.width=Math.max(2,Math.round(prepared.width*factor));
  canvas.height=Math.max(2,Math.round(prepared.height*factor));
- const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(prepared.canvas,0,0,canvas.width,canvas.height);
+ const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.imageSmoothingEnabled=!pixelArt;
+ ctx.drawImage(prepared.canvas,0,0,canvas.width,canvas.height);
  const rgba=ctx.getImageData(0,0,canvas.width,canvas.height).data;
  const alpha=new Uint8Array(canvas.width*canvas.height);
  for(let i=0;i<alpha.length;i++)alpha[i]=rgba[i*4+3];
  const mask=analyzeAlphaMask(alpha,canvas.width,canvas.height,{threshold:alphaThreshold,size,simplify});
- return {...mask,canvas:prepared.canvas,removedBackground:prepared.removedBackground};
+ return {...mask,canvas:prepared.canvas,removedBackground:prepared.removedBackground,pixelArt};
 }
 
 /** Build *actual* THREE.ExtrudeGeometry with the silhouette and hole edges;
@@ -191,7 +193,7 @@ export function prepareExtrudedSprite(image,{
  */
 export function buildExtrudedSprite3D(profile,THREE,{
  thickness=.085,edgeColor=0x101014,outlineScale=1.016,
- alphaTest=.10,flipBack=false
+ alphaTest=.10,flipBack=false,pixelArt=profile.pixelArt===true
 }={}){
  if(!THREE?.ExtrudeGeometry||!THREE?.Shape||!THREE?.CanvasTexture)throw new TypeError('THREE instance with ExtrudeGeometry is required');
  const depth=clamp(Number(thickness)||.085,.012,.45);
@@ -207,8 +209,11 @@ export function buildExtrudedSprite3D(profile,THREE,{
  const edgeMesh=new THREE.Mesh(geometry,edgeMaterial);
  edgeMesh.name='actual-extruded-contour-and-black-edge';edgeMesh.position.z=-depth/2;
  const texture=new THREE.CanvasTexture(profile.canvas);texture.colorSpace=THREE.SRGBColorSpace;
- texture.minFilter=THREE.LinearMipmapLinearFilter;texture.magFilter=THREE.LinearFilter;
- texture.generateMipmaps=true;texture.anisotropy=4;
+ // Pixel-art source: preserve hard pixel boundaries while turning a *real*
+ // extruded silhouette in 3D. Painted hi-res sources retain smooth sampling.
+ texture.minFilter=pixelArt?THREE.NearestFilter:THREE.LinearMipmapLinearFilter;
+ texture.magFilter=pixelArt?THREE.NearestFilter:THREE.LinearFilter;
+ texture.generateMipmaps=!pixelArt;texture.anisotropy=pixelArt?1:4;
  const faceMaterial=new THREE.MeshBasicMaterial({map:texture,transparent:true,alphaTest,depthWrite:true,side:THREE.DoubleSide,toneMapped:false});
  const planeGeometry=new THREE.PlaneGeometry(profile.plane.width,profile.plane.height);
  const front=new THREE.Mesh(planeGeometry,faceMaterial);
@@ -219,7 +224,7 @@ export function buildExtrudedSprite3D(profile,THREE,{
  const group=new THREE.Group();group.name='procedural-one-image-cutout-3D';
  group.add(edgeMesh,front,back);
  group.userData={paperCut3D:true,thickness:depth,diameter:profile.size,
-  outlines:profile.shapes.length,holes:profile.shapes.reduce((n,s)=>n+s.holes.length,0),
+  outlines:profile.shapes.length,holes:profile.shapes.reduce((n,s)=>n+s.holes.length,0),pixelArt,
   tracedEdges:profile.edges,removedBackground:profile.removedBackground};
  group.dispose=()=>{geometry.dispose();planeGeometry.dispose();edgeMaterial.dispose();faceMaterial.dispose();texture.dispose();};
  return group;
