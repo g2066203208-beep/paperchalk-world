@@ -137,13 +137,15 @@ export function createPayoutMaterialFactory(THREE){
   if(cache.has(color))return cache.get(color);
   const c=new THREE.Color(color);
   const brightness=(c.r+c.g+c.b)/3;
-  const yellow=c.r>c.b*1.55&&c.g>c.b*1.2;
   const shadow=brightness<.03;
-  const metal=yellow?0.82:shadow?0.14:0.52;
-  const roughness=yellow?.35:shadow?.86:.65;
+  // Filament / Three.js PBR: a uniform surface is a conductor (1) or
+  // a dielectric (0). Painted metal is DIELECTRIC; exposed trim is metal.
+  const exposedMetal=new Set(['#a09d7f','#c4ba84','#ab9a65','#66746b','#9da98c','#59625d']);
+  const metal=exposedMetal.has(color.toLowerCase())?1:0;
+  const roughness=metal?.40:shadow?.91:.73;
   const m=new THREE.MeshStandardMaterial({
    color,metalness:metal,roughness,
-   map:shadow?null:wear,envMapIntensity:yellow?1.8:1.25,
+   map:shadow?null:wear,envMapIntensity:metal?1.7:1.10,
    side:THREE.DoubleSide
   });
   cache.set(color,m);return m;
@@ -155,16 +157,44 @@ export function createPayoutMaterialFactory(THREE){
 }
 export function upgradeCoinMaterials(THREE,original){
  const material=Array.isArray(original)?original:[original];
+ const originalTexture=material[1]?.map||material[0]?.map;
+ // Physically distinct ink & gold regions from the EXISTING 48px artwork.
+ // Three.js MeshStandardMaterial uses the BLUE channel of metalnessMap.
+ let pixelMetalnessMap=null;
+ if(originalTexture?.image&&typeof document!=='undefined'){
+  try{
+   const image=originalTexture.image;
+   const w=image.width||48,h=image.height||48;
+   const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+   const context=canvas.getContext('2d',{willReadFrequently:true});
+   context.drawImage(image,0,0,w,h);
+   const src=context.getImageData(0,0,w,h);
+   for(let i=0;i<src.data.length;i+=4){
+    const r=src.data[i],g=src.data[i+1],b=src.data[i+2];
+    const isGold=(r>78&&g>56&&r>=g*.85&&g>b*1.12);
+    const v=isGold?255:0;
+    src.data[i]=v;src.data[i+1]=v;src.data[i+2]=v;src.data[i+3]=255;
+   }
+   context.putImageData(src,0,0);
+   pixelMetalnessMap=new THREE.CanvasTexture(canvas);
+   pixelMetalnessMap.colorSpace=THREE.NoColorSpace;
+   pixelMetalnessMap.minFilter=THREE.NearestFilter;
+   pixelMetalnessMap.magFilter=THREE.NearestFilter;
+   pixelMetalnessMap.generateMipmaps=false;
+  }catch(e){console.warn('Pixel metalness mask unavailable; using homogeneous metal fallback',e)}
+ }
  const side=new THREE.MeshStandardMaterial({
-  color:'#272219',metalness:.72,roughness:.38,envMapIntensity:2.2,
+  color:'#68502e',metalness:1,roughness:.40,envMapIntensity:1.9,
   side:THREE.DoubleSide,flatShading:true
  });
  const face=new THREE.MeshStandardMaterial({
-  map:material[1]?.map||material[0]?.map,
-  color:'#ffedc0',metalness:.30,roughness:.40,envMapIntensity:1.5,
+  map:originalTexture,
+  metalness:1,metalnessMap:pixelMetalnessMap,
+  color:'#ffedc9',roughness:.43,envMapIntensity:1.65,
   side:THREE.DoubleSide,flatShading:true
  });
- // Preserve the hand-authored 48px sprite texture and facet topology.
+ face.userData.pixelGoldMask=!!pixelMetalnessMap;
+ // Keep original texture, topology and black-ink contour in place.
  return [side,face,face];
 }
 export function installPayoutLighting(THREE,renderer,scene,{compact=false}={}){
