@@ -144,7 +144,24 @@ const cardRoot=new THREE.Group();scene.add(cardRoot);
 // The APPROVED card-back art is 650:980 after trimming its white scan margin.
 // A 1.68 x 2.53 card has the same ratio, avoiding distorted gold engraving.
 const cardW=1.68,cardH=2.53;
-cube(cardRoot,iron,[0,0,0],[cardW,cardH,.075]);
+// Rounded, physically thick stock matching the silhouette of the user-supplied art.
+const cardShape=new THREE.Shape(),rad=.075,w2=cardW/2,h2=cardH/2;
+cardShape.moveTo(-w2+rad,-h2);
+cardShape.lineTo(w2-rad,-h2);
+cardShape.quadraticCurveTo(w2,-h2,w2,-h2+rad);
+cardShape.lineTo(w2,h2-rad);
+cardShape.quadraticCurveTo(w2,h2,w2-rad,h2);
+cardShape.lineTo(-w2+rad,h2);
+cardShape.quadraticCurveTo(-w2,h2,-w2,h2-rad);
+cardShape.lineTo(-w2,-h2+rad);
+cardShape.quadraticCurveTo(-w2,-h2,-w2+rad,-h2);
+const stockGeo=new THREE.ExtrudeGeometry(cardShape,{
+ depth:.055,bevelEnabled:true,bevelThickness:.012,bevelSize:.012,
+ bevelSegments:2,steps:1,curveSegments:8
+});
+stockGeo.translate(0,0,-.0275);
+const cardStock=new THREE.Mesh(stockGeo,iron);
+cardStock.castShadow=true;cardStock.receiveShadow=false;cardRoot.add(cardStock);
 const front=new THREE.Group();front.position.z=.047;cardRoot.add(front);
 const back=new THREE.Group();back.position.z=-.047;back.rotation.y=Math.PI;cardRoot.add(back);
 function trim(parent){
@@ -157,7 +174,7 @@ function trim(parent){
 }
 cube(front,rose,[0,0,.004],[1.57,2.43,.025],false);
 cube(back,rose,[0,0,.004],[1.57,2.43,.025],false);
-trim(front);trim(back);
+trim(front); // Back already includes the user's thin, ORIGINAL engraved gold outline.
 cube(front,slotBlack,[0,.075,.022],[1.49,2.11,.021],false);
 const portraitMaterial=new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,alphaTest:.013,
  depthWrite:false,side:THREE.DoubleSide,toneMapped:false});
@@ -167,11 +184,20 @@ const labelMaterial=new THREE.MeshBasicMaterial({map:makeText('UNKNOWN',512,110,
 const labelPanel=sheet(front,labelMaterial,0,-1.115,.042,1.47,.23);
 // The gold compass and fine corner ornament are THE USER'S REAL approved
 // Anima card-back image. Do not draw a fake star or printed text over it.
-const cardBackMaterial=new THREE.MeshStandardMaterial({
- color:0xffffff,metalness:.07,roughness:.64,transparent:true,
- alphaTest:.025,side:THREE.DoubleSide,envMapIntensity:1.25
+// Preserve the ORIGINAL dark burgundy pigment under strong theatre spotlights.
+// Only the printed gold ink receives metallic PBR, using a second foil layer.
+const cardBackMaterial=new THREE.MeshBasicMaterial({
+ color:0xffffff,transparent:true,alphaTest:.025,
+ side:THREE.DoubleSide,toneMapped:false
 });
 const cardBackPlane=sheet(back,cardBackMaterial,0,0,.055,1.664,2.507);
+cardBackPlane.receiveShadow=false;
+const foilMaterial=new THREE.MeshStandardMaterial({
+ color:'#c4b59a',metalness:1,roughness:.42,transparent:true,
+ alphaTest:.018,depthWrite:false,side:THREE.DoubleSide,envMapIntensity:1.15
+});
+const foilPlane=sheet(back,foilMaterial,0,0,.059,1.664,2.507);
+foilPlane.receiveShadow=false;
 const cardBackUrl=new URL('../../assets/cards/shared/character-card-back-anima.webp',import.meta.url).href;
 let cardBackReady=false,cardBackFailed=false;
 function buildGoldFoilMask(image){
@@ -197,7 +223,10 @@ new THREE.TextureLoader().load(cardBackUrl,tex=>{
  tex.minFilter=THREE.LinearMipmapLinearFilter;tex.magFilter=THREE.LinearFilter;
  cardBackMaterial.map=tex;
  const foil=buildGoldFoilMask(tex.image);
- if(foil){cardBackMaterial.metalness=1;cardBackMaterial.metalnessMap=foil;}
+ if(foil){
+  foilMaterial.map=tex;foilMaterial.alphaMap=foil;
+  foilMaterial.needsUpdate=true;
+ }else foilPlane.visible=false;
  cardBackMaterial.needsUpdate=true;cardBackReady=true;
  if(drawState.ready)$('inspect').disabled=false;
 },undefined,error=>{
@@ -451,6 +480,7 @@ function openInspector(){
  $('draw-one').disabled=true;$('draw-five').disabled=true;$('skip').disabled=true;
  $('machine-canvas').style.cursor='grab';
  document.querySelector('.stage').dataset.inspecting='true';
+ document.body.classList.add('inspect-open');
  machine.visible=false;floor.visible=false;tile.visible=false;
  $('stage-label').textContent='卡背原图 · 自由 3D 观赏';
  $('stage-frame').textContent='DRAG · ROTATE · ZOOM';
@@ -488,10 +518,11 @@ function closeInspector(){
  $('skip').disabled=!drawState.busy;
  $('machine-canvas').style.cursor='';
  document.querySelector('.stage').dataset.inspecting='false';
+ document.body.classList.remove('inspect-open');
  machine.visible=true;floor.visible=true;tile.visible=true;
  const restore=drawState.current;
  if(restore)getPortrait(restore).then(asset=>{
-  if(!inspector.active)updatePortrait(restore,asset);
+  if(!inspector.active&&drawState.current?.id===restore.id)updatePortrait(restore,asset);
  }).catch(console.warn);
  if(drawState.current)applySequence(drawState.elapsed,true);
  else{
