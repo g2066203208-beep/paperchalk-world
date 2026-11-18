@@ -103,13 +103,13 @@ let cv=null,gl=null,p=null,buf=null,sbuf=null,meshCount=0,shadowCount=0,loc=null
 let particles=[],sparks=[],raf=0,last=0,accumulator=0,simTime=0,frame=0,played=0,ctx=null,soundEnabled=()=>true,lastClink=0;
 let startParticles=[],lastBurst=null,pausedForFrame=false,silentPhysics=false;
 let glints=null,gctx=null,glintCount=0,hitCount=0,phase="idle",seedUsed=0,glowStrength=0;
-let status="idle",fallingActive=false;
+let status="idle",fallingActive=false,burstSound=true;
 const reduce=()=>window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
 function audioContext(){
  try{if(!ctx){const C=window.AudioContext||window.webkitAudioContext;if(C)ctx=new C();}if(ctx&&ctx.state==="suspended")ctx.resume().catch(()=>{});}catch(_){}
 }
 function clink(weight=1){
- if(!soundEnabled()||!ctx||ctx.state!=="running")return;
+ if(!burstSound||!soundEnabled()||!ctx||ctx.state!=="running")return;
  const now=performance.now();if(now-lastClink<24)return;lastClink=now;
  try{
   const t=ctx.currentTime,base=rand(870,1460);
@@ -335,6 +335,7 @@ function burst(options={}){
  const targetX=Number.isFinite(options.targetX)?options.targetX:tar[0];
  const targetY=Number.isFinite(options.targetY)?options.targetY:tar[1];
  const direction=options.direction||"reward";
+ burstSound=options.sound!==false;
  if(raf)cancelAnimationFrame(raf);raf=0;last=0;accumulator=0;
  particles=[];sparks=[];simTime=0;hitCount=0;glintCount=0;phase="eject";
  for(let i=0;i<count;i++){
@@ -366,7 +367,7 @@ function stop(){particles.length=0;sparks.length=0;
 }
 function soundFn(fn){soundEnabled=typeof fn==="function"?fn:()=>!!fn;}
 document.addEventListener("pointerdown",()=>{if(soundEnabled()&&ctx?.state==="suspended")audioContext()},{passive:true,capture:true});
-window.PaperchalkCoinCascade=Object.freeze({burst,stop,seek,play,setSoundEnabled:soundFn,
+window.PaperchalkCoinCascade=Object.freeze({burst,stop,seek,play,unlockAudio:audioContext,setSoundEnabled:soundFn,
  get status(){return status},get count(){return particles.length},
  get played(){return played},get canvas(){return cv},get seed(){return seedUsed},
  get phase(){return phase},get simulatedMs(){return Math.round(simTime*1000)},
