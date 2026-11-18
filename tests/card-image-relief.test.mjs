@@ -11,7 +11,13 @@ assert(goldInkWeight(211,170,95)>.95);
 assert(goldInkWeight(83,33,43)===0,'dark burgundy must stay nonmetallic');
 assert(goldInkWeight(255,255,255)===0,'white paper is not gold');
 assert(goldInkWeight(211,170,95,0)===0,'transparent edge must not receive foil');
+const snapshot=rgba.slice();
 const relief=deriveCardRelief(rgba,w,h,'back');
+assert.deepEqual(rgba,snapshot,'source artwork bytes must remain unchanged');
+assert(relief.pigment.length===w*h*4,'full card must have pixel-aware ink grain');
+assert(relief.stats.paperNormalPixels>w*h*.55,'paper microfibers must cover flat burgundy, not just gold contours');
+assert(relief.stats.roughnessMaximum-relief.stats.roughnessMinimum>.4,
+ 'paper and stamped foil require distinguishable roughness');
 assert(relief.stats.goldPixels>400,'actual gold line pixels classified');
 assert(relief.stats.normalPixels>500,'edges create genuine non-flat tangent normals');
 const pix=(x,y,arr)=>[...arr.slice((y*w+x)*4,(y*w+x)*4+4)];
@@ -19,13 +25,31 @@ assert(pix(22,55,relief.surface)[2]===0,'burgundy metalness must be zero');
 assert(pix(43,55,relief.surface)[2]>245,'gold uses PBR blue-channel metalness');
 assert(pix(43,55,relief.surface)[1]<pix(22,55,relief.surface)[1],
  'gold should be smoother than burgundy paper');
-assert(pix(43,55,relief.normals)[2]>252,'flat center of gold should point outward');
+assert(pix(43,55,relief.normals)[2]>246,'gold center should mostly point outward; with real microtexture it cannot be perfectly flat');
+const paperNormals=[];
+const paperRoughness=new Set();
+let paperStipplePixels=0;
+for(let y=8;y<h-8;y++)for(let x=8;x<30;x++){
+ const k=(y*w+x)*4;
+ const n=relief.normals[k],g=relief.normals[k+1];
+ paperNormals.push(Math.abs(n-128)+Math.abs(g-128));
+ paperRoughness.add(relief.surface[k+1]);
+ if(relief.pigment[k]!==rgba[k]||relief.pigment[k+1]!==rgba[k+1])paperStipplePixels++;
+}
+assert(paperNormals.filter(n=>n>3).length>paperNormals.length*.5,
+ 'uniform burgundy cardstock must show paper fiber NORMAL variation');
+assert(paperRoughness.size>16,'non-metallic cardstock must have microscopically varied roughness');
+assert(paperStipplePixels>paperNormals.length*.15,'ink grain must be visible even on a visually flat burgundy area');
 assert(pix(40,55,relief.normals)[0]!==128,'ridge must tilt the geometric surface normal');
 assert(relief.normals.length===w*h*4);
 assert(relief.surface.length===w*h*4);
 const portrait=deriveCardRelief(rgba,w,h,'portrait');
 assert.equal(portrait.stats.goldPixels,0,'gold tagging must be back-only');
 assert(portrait.stats.normalPixels>100,'portrait image gradients produce subtle fold normals');
+assert(portrait.stats.paperNormalPixels>100,'front artwork must also have paper microfibers');
+assert(portrait.stats.roughnessMaximum-portrait.stats.roughnessMinimum>.03,
+ 'front print must not have a single uniform glossy roughness');
+assert(portrait.pigment.length===w*h*4);
 assert(pix(43,55,portrait.surface)[2]===0,'do not turn blonde hair into gold foil');
 const transparent=rgba.slice();transparent[(55*w+43)*4+3]=0;
 const clear=deriveCardRelief(transparent,w,h,'back');
