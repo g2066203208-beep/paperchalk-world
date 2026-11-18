@@ -2,8 +2,8 @@
   {
     "viewport": "desktop",
     "passed": true,
-    "character": "血族守卫",
-    "id": "crimson-vampires/crimson-guardian.png",
+    "character": "星象魔女",
+    "id": "witch-workshop/astral-witch.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
@@ -12,8 +12,8 @@
   {
     "viewport": "portrait",
     "passed": true,
-    "character": "诅咒魔女",
-    "id": "witch-workshop/curse-witch.png",
+    "character": "重斧清道夫",
+    "id": "monster-hunters/07-axe-scout.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
@@ -22,8 +22,8 @@
   {
     "viewport": "landscape",
     "passed": true,
-    "character": "炼金魔女",
-    "id": "witch-workshop/alchemy-witch.png",
+    "character": "持剑指挥官",
+    "id": "monster-hunters/01-legendary-hunter.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
