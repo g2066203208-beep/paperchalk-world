@@ -228,17 +228,25 @@ function imageRelief(image,mode){
  ctx.drawImage(image,0,0,w,h);
  const rgba=ctx.getImageData(0,0,w,h).data;
  const result=deriveCardRelief(rgba,w,h,mode);
- function dataTexture(data){
-  const t=new THREE.DataTexture(data,w,h,THREE.RGBAFormat);
-  t.colorSpace=THREE.NoColorSpace;t.flipY=true;t.unpackAlignment=1;
+ function imageTexture(data,colorSpace=THREE.NoColorSpace){
+  // DataTexture uploads may ignore UNPACK_FLIP_Y_WEBGL for typed arrays.
+  // CanvasTexture follows the SAME top-left origin / flipY path as
+  // THREE.Texture(img), so derived pigment can never invert the art.
+  const surfaceCanvas=document.createElement('canvas');
+  surfaceCanvas.width=w;surfaceCanvas.height=h;
+  const g=surfaceCanvas.getContext('2d');
+  const pixels=g.createImageData(w,h);pixels.data.set(data);
+  g.putImageData(pixels,0,0);
+  const t=new THREE.CanvasTexture(surfaceCanvas);
+  t.colorSpace=colorSpace;t.flipY=true;
   t.minFilter=THREE.LinearMipmapLinearFilter;
   t.magFilter=THREE.LinearFilter;t.generateMipmaps=true;
-  t.anisotropy=4;t.needsUpdate=true;return t;
+  t.anisotropy=4;return t;
  }
- const pigment=dataTexture(result.pigment);
- pigment.colorSpace=THREE.SRGBColorSpace;
- const tex={normal:dataTexture(result.normals),
-  surface:dataTexture(result.surface),pigment,stats:result.stats};
+ const tex={normal:imageTexture(result.normals),
+  surface:imageTexture(result.surface),
+  pigment:imageTexture(result.pigment,THREE.SRGBColorSpace),
+  stats:result.stats};
  return tex;
 }
 new THREE.TextureLoader().load(cardBackUrl,tex=>{
@@ -856,8 +864,10 @@ window.PaperchalkCharacterMachineQA={
   portraitPaperFiberPixels:reliefStats.portrait?.paperNormalPixels||0,
   backRoughnessRange:[reliefStats.back?.roughnessMinimum||0,reliefStats.back?.roughnessMaximum||0],
   portraitRoughnessRange:[reliefStats.portrait?.roughnessMinimum||0,reliefStats.portrait?.roughnessMaximum||0],
-  backPrintedPigment:!!cardBackMaterial.map?.isDataTexture,
-  portraitPrintedPigment:!!portraitMaterial.map?.isDataTexture,
+  backPrintedPigment:!!cardBackMaterial.map?.isCanvasTexture,
+  portraitPrintedPigment:!!portraitMaterial.map?.isCanvasTexture,
+  correctArtworkTextureOrientation:cardBackMaterial.map?.flipY===true&&
+   (!portraitMaterial.map||portraitMaterial.map.flipY===true),
   portraitReliefResident:portraitReliefLRU.length,
   normalMapMaxDimension:small?448:640,
   frontPaperSheen:frontPaperMaterial.sheen||0,
