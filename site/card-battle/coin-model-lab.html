@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#1b2026">
-<title>单图自动挤出 · 剪纸 3D 金币建模器</title>
+<title>Slots & Daggers 风格研究 · 像素剪纸金币 3D 建模</title>
 <style>
-:root{color-scheme:dark;font-family:system-ui,-apple-system,"Noto Sans SC",sans-serif;--bg:#171d22;--panel:#252d34;--line:#495661}
+:root{color-scheme:dark;font-family:system-ui,-apple-system,"Noto Sans SC",sans-serif;--bg:#1a1b17;--panel:#292a23;--line:#4a4838}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:#e9edef;min-height:100dvh}
 main{max-width:1260px;margin:0 auto;padding:clamp(10px,2vw,24px);display:grid;gap:13px}
 header{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
 h1{font-size:clamp(19px,2.5vw,28px);margin:0 0 5px}header p{font-size:12px;color:#abb8c3;margin:0;max-width:690px;line-height:1.6}
 a{color:#d7e9f6;font-size:12px}
 .app{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:14px;min-height:590px}
-.viewer{position:relative;border:1px solid var(--line);border-radius:13px;background:radial-gradient(circle at 45% 38%,#526071 0%,#313c49 43%,#1b252e 100%);overflow:hidden;min-height:500px}
+.viewer{position:relative;border:1px solid var(--line);border-radius:13px;background:radial-gradient(circle at 47% 37%,#494536 0%,#302f27 43%,#171a18 100%);overflow:hidden;min-height:500px}
 #model{width:100%;height:100%;min-height:500px;display:block;touch-action:none;cursor:grab}#model:active{cursor:grabbing}
 .hint{pointer-events:none;position:absolute;top:15px;left:15px;color:#d6e0e5b8;font:600 11px ui-monospace,monospace;letter-spacing:.06em}
 .viewer-bottom{position:absolute;bottom:14px;left:15px;right:15px;display:flex;gap:8px;align-items:end;justify-content:space-between;pointer-events:none}
@@ -39,29 +39,29 @@ footer{font-size:11px;color:#9aabb5;line-height:1.6}
 </head>
 <body>
 <main>
-<header><div><h1>单图自动挤出 · 剪纸 3D 金币</h1><p>真正的 3D 网格：一张素材 → 读取透明轮廓 → 自动生成正反面 + 少量厚度 + 黑色侧壁。下方内置示例仅供验证，上传即可替换。可拖动观察厚度，不是背后放一个固定圆柱。</p></div><nav><a href="./coin-whitebox-lab.html">返回旧物理实验</a>　<a href="./snowbound-journey.html">返回游戏</a></nav></header>
+<header><div><h1>单枚金币 · 像素剪纸 3D 模型</h1><p>按《Slots &amp; Daggers》的低分彩像素风格重做：米金色方块高光、深褐近黑的硬边，薄薄的黑色实体侧壁。默认素材是独立绘制的风格练习，不是原版美术。上传你的一张原图仍可自动挤出。</p></div><nav><a href="./coin-whitebox-lab.html">返回旧物理实验</a>　<a href="./snowbound-journey.html">返回游戏</a></nav></header>
 <div class="app">
  <section class="viewer" aria-label="真实三维挤出金币可旋转预览">
   <canvas id="model" aria-label="可拖动旋转的三维剪纸金币，实际生成多边形几何体"></canvas>
-  <div class="hint">REAL 3D MESH · SINGLE SOURCE IMAGE · BLACK PAPER EDGE</div>
+  <div class="hint">PIXEL CUTOUT · REAL THIN 3D · DARK SIDE WALL</div>
   <div class="viewer-bottom"><span id="status" role="status">正在加载 Three.js 和轮廓生成器…</span><span>拖动 / 触摸旋转 · 滚轮缩放</span></div>
  </section>
  <aside class="panel">
-  <section><h2>01 / 唯一素材</h2><input id="source" type="file" accept="image/png,image/webp,image/jpeg,image/svg+xml" aria-label="上传一张金币素材，自动生成三维轮廓"><p>上传你自己的金币 PNG / WebP / JPG / SVG。透明区域自动识别；纯白等单色背景会尝试只移除与画布外缘相连的背景。</p></section>
-  <section><h2>02 / 程序建模参数</h2>
-   <div class="setting"><label for="thickness">侧边厚度 <output id="thick-value">2.8%</output></label><input id="thickness" type="range" min="0.018" max="0.25" step="0.002" value="0.084"></div>
-   <div class="setting"><label for="rim">黑边宽度 <output id="rim-value">1.6%</output></label><input id="rim" type="range" min="1.000" max="1.050" step="0.002" value="1.016"></div>
+  <section><h2>01 / 原版风格 · 单张素材</h2><p>参照原版：<a href="https://note.com/stanfied/n/na3ee30bc900a" target="_blank" rel="noopener noreferrer">查看《Slots &amp; Daggers》实际金币堆截图</a>。默认币为自制像素风格参考，不复制原版图像。</p><input id="source" type="file" accept="image/png,image/webp,image/jpeg,image/svg+xml" aria-label="上传一张金币素材，自动生成三维轮廓"><p>上传你自己的金币 PNG / WebP / JPG / SVG。透明区域自动识别；纯白等单色背景会尝试只移除与画布外缘相连的背景。</p></section>
+  <section><h2>02 / 程序建模参数</h2><div class="setting"><label for="pixel">像素边缘（最近邻） <output id="pixel-value">开启</output></label><input id="pixel" type="checkbox" checked></div>
+   <div class="setting"><label for="thickness">侧边厚度 <output id="thick-value">2.8%</output></label><input id="thickness" type="range" min="0.018" max="0.16" step="0.002" value="0.064"></div>
+   <div class="setting"><label for="rim">黑边宽度 <output id="rim-value">1.6%</output></label><input id="rim" type="range" min="1.000" max="1.034" step="0.002" value="1.012"></div>
    <div class="setting"><label for="alpha">轮廓阈值 <output id="alpha-value">110</output></label><input id="alpha" type="range" min="30" max="220" step="5" value="110"></div>
   </section>
   <section><h2>03 / 直接检查 3D 模型</h2>
-   <div class="buttons"><button id="front" type="button">正面</button><button id="side" type="button">侧面</button><button id="back" type="button">背面</button><button id="angled" type="button">3/4 斜视</button><button id="spin" type="button" aria-pressed="true">停止自转</button><button id="inkonly" type="button" aria-pressed="false">仅看黑色实体</button></div>
+   <div class="buttons"><button id="front" type="button">正面</button><button id="side" type="button">侧面</button><button id="back" type="button">背面</button><button id="angled" type="button">3/4 斜视</button><button id="spin" type="button" aria-pressed="false">开始自转</button><button id="inkonly" type="button" aria-pressed="false">仅看黑色实体</button></div>
    <p>黑边是沿原图轮廓挤出的实体侧壁；原图同时贴在正反两面。切到侧面就能看到网格厚度。</p>
   </section>
   <section><h2>04 / 几何检查</h2><small id="diagnostics">等待构建…</small></section>
  </aside>
 </div>
 <div class="stats"><div class="stat"><strong id="solids">—</strong><span>实体轮廓数量</span></div><div class="stat"><strong id="triangles">—</strong><span>生成三角形面片</span></div><div class="stat"><strong id="texture">—</strong><span>素材像素分辨率</span></div></div>
-<footer>使用项目原有 Three.js，实际的 THREE.ExtrudeGeometry，支持透明非圆形轮廓、穿孔和多个分离区域。当前只建模一枚金币，不实现喷射、物理、金属材质和光影；测试通过后才接入金币刚体系统。</footer>
+<footer>原版风格依据公开游戏截图的低分彩像素、米金/橄榄色亮面和深棕黑描边。模型使用原有 Three.js：一张图片自动生成真正的封闭三维薄片，黑色侧壁随轮廓改变。当前只有单金币视觉验收，没有喷射、碰撞或原版逐帧证明。</footer>
 </main>
 <script type="module">
 import * as THREE from './vendor/three.module.js';
@@ -73,20 +73,23 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 renderer.toneMapping=THREE.NoToneMapping;
 const camera=new THREE.PerspectiveCamera(37,1,.05,100);
-let distance=7.4,drag=false,pointer=null,yaw=.54,pitch=-.16,spin=true,profile=null,mesh=null,currentImage=null;
-const sample=`<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><circle cx="256" cy="256" r="214" fill="#f7bd33" stroke="#181310" stroke-width="20"/><circle cx="256" cy="256" r="177" fill="#ed9e25" stroke="#d07714" stroke-width="14"/><circle cx="256" cy="256" r="152" fill="#f8c94a"/><path d="M256 141 L286 225 375 225 303 282 331 374 256 317 181 374 209 282 137 225 226 225Z" fill="#fff1a4" stroke="#a05b15" stroke-width="12" stroke-linejoin="round"/></svg>`;
-const previewUrl='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(sample);
+let distance=7.4,drag=false,pointer=null,yaw=.42,pitch=-.12,spin=false,profile=null,mesh=null,currentImage=null;
+// Real source file, not an SVG star or a procedural cartoon bevel.
+// A 48x48 original pixel-art STUDY based on the reference's color/outline
+// language; it does not reproduce or claim to contain official game assets.
+const previewUrl='./assets/slots-style-pixel-coin.svg';
 const q={};
 function setStatus(message){$('status').textContent=message;}
 function syncValues(){const thickness=+$('thickness').value,rim=+$('rim').value;
  $('thick-value').textContent=(thickness/3*100).toFixed(1)+'%';
  $('rim-value').textContent=((rim-1)*100).toFixed(1)+'%';
  $('alpha-value').textContent=$('alpha').value;
+ $('pixel-value').textContent=$('pixel').checked?'开启':'关闭';
 }
 function rebuild(){
  if(!profile)return;
  const thickness=+$('thickness').value,outlineScale=+$('rim').value;
- const next=buildExtrudedSprite3D(profile,THREE,{thickness,outlineScale});
+ const next=buildExtrudedSprite3D(profile,THREE,{thickness,outlineScale,pixelArt:$('pixel').checked,edgeColor:0x171811});
  if(mesh){scene.remove(mesh);mesh.dispose();}
  mesh=next;mesh.rotation.set(pitch,yaw,0);scene.add(mesh);
  mesh.children[1].visible=mesh.children[2].visible=!$('inkonly').getAttribute('aria-pressed').includes('true');
@@ -113,7 +116,7 @@ async function load(source){
 async function rebuildProfile(){
  if(!currentImage)return;
  try{
-  profile=prepareExtrudedSprite(currentImage,{size:3,alphaThreshold:+$('alpha').value,outlineResolution:256,autoRemoveBackground:true});
+  profile=prepareExtrudedSprite(currentImage,{size:3,alphaThreshold:+$('alpha').value,outlineResolution:256,autoRemoveBackground:true,pixelArt:$('pixel').checked,simplify:$('pixel').checked?.14:.65});
   syncValues();rebuild();
  }catch(e){setStatus('建模失败：'+e.message);console.error(e);throw e;}
 }
@@ -137,6 +140,7 @@ $('inkonly').addEventListener('click',()=>{
 });
 for(const id of ['thickness','rim'])$(id).addEventListener('input',()=>{syncValues();rebuild();});
 $('alpha').addEventListener('change',rebuildProfile);
+$('pixel').addEventListener('change',rebuildProfile);
 $('source').addEventListener('change',async()=>{
  const f=$('source').files?.[0];if(!f)return;
  if(f.size>12*1024*1024){setStatus('请使用 12MB 以下的单张素材');return;}
