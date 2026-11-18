@@ -191,7 +191,7 @@ function resize(){
  const w=Math.max(1,canvas.clientWidth),h=Math.max(1,canvas.clientHeight);
  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,w<700?.78:1));
  renderer.setSize(w,h,false);
- const aspect=w/h,halfHeight=w<700?3.55:3.45;
+ const aspect=w/h,halfHeight=w<700?3.55:3.20;
  camera.left=-halfHeight*aspect;camera.right=halfHeight*aspect;
  camera.top=halfHeight;camera.bottom=-halfHeight;
  camera.updateProjectionMatrix();post.resize();
