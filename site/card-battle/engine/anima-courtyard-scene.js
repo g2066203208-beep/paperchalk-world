@@ -150,12 +150,26 @@ export function createCastleCourtyard({THREE,scene,materials,compact=false}){
   const sh=box(x,.15,z,.22+rand()*.38,.20+rand()*.22,.23+rand()*.32,i%2?stoneDark:wornStone);
   sh.rotation.y=rand()*Math.PI;sh.rotation.z=(rand()-.5)*.25;
  }
- // Moss tufts over broken flagstones, fine planes with real 3D Z depth.
- for(let i=0;i<(compact?75:132);i++){
+ // Moss and ivy are real ground planes, batched into two GPU instancing draws.
+ // This avoids hundreds of draw calls on phones while retaining 3D positions.
+ const growth=[[],[]];
+ for(let i=0;i<(compact?100:170);i++){
   const x=-6.8+rand()*13.65,z=-6.65+rand()*11.12;
   if((x-fx)**2+(z-fz)**2<2.45**2||x>6.7||z>5)continue;
-  const t=put(new THREE.PlaneGeometry(.17+rand()*.40,.22+rand()*.32),rand()<.35?ivy:moss,x,.20,z,{shadow:false,receive:false});
-  t.rotation.x=-Math.PI/2;t.rotation.z=rand()*Math.PI;
+  growth[rand()<.35?1:0].push({x,z,w:.17+rand()*.40,d:.22+rand()*.32,rot:rand()*Math.PI});
+ }
+ for(let j=0;j<2;j++){
+  const tuples=growth[j];if(!tuples.length)continue;
+  const im=new THREE.InstancedMesh(new THREE.PlaneGeometry(1,1),j?ivy:moss,tuples.length);
+  im.name=j?'courtyard-ivy':'courtyard-moss';
+  const o=new THREE.Object3D();
+  for(let i=0;i<tuples.length;i++){
+   const q=tuples[i];o.position.set(q.x,.21,q.z);
+   o.rotation.set(-Math.PI/2,0,q.rot);
+   o.scale.set(q.w,q.d,1);o.updateMatrix();im.setMatrixAt(i,o.matrix);
+  }
+  im.instanceMatrix.needsUpdate=true;im.castShadow=false;im.receiveShadow=false;
+  courtyard.add(im);
  }
  // Two architectural sconces with physically placed point light and emissive flame.
  const sconces=[];
