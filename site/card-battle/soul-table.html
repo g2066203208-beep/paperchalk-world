@@ -41,6 +41,12 @@ function row(id,hand,own){const r=el(id);r.replaceChildren();const pile=button('
 function draw(){if(busy||phase!=='play'||pending)return;pending=deck.pop();log='抽到 '+badge(pending)+pending.s+'，点下排空位落牌。';render()}
 let busy = false;
 let exchanged = false;
+function lockTable(value) {
+  busy=value;
+  const field=document.querySelector('.field');
+  field.inert=value;
+  field.setAttribute('aria-busy',String(value));
+}
 const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const frameMs = 1001 / 30;
 function animate(node, frames, duration, delay = 0) {
@@ -93,13 +99,13 @@ async function opponentTurn(standing) {
     el('theirScore').textContent = total(previous);
     await pulse('theirScore');
   }
-  busy=false;
+  lockTable(false);
   render();
   if (!added.length && oldScore!==total(theirs)) await pulse('theirScore');
 }
 async function exchange() {
   if (busy || exchanged || pending || phase!=='play') return;
-  busy=true;exchanged=true;
+  lockTable(true);exchanged=true;
   const p=mine.findLastIndex(Boolean), e=theirs.findLastIndex(Boolean);
   const a=el('player').children[p+1], b=el('enemy').children[e+1];
   const pa=center(a), pb=center(b);
@@ -116,7 +122,7 @@ async function exchange() {
 }
 async function place(i) {
   if (busy || !pending || mine[i] || phase!=='play') return;
-  busy=true;
+  lockTable(true);
   const row=el('player'), start=center(row.firstElementChild), end=center(row.children[i+1]);
   const selected=pending;pending=null;mine[i]=selected;insight=i===1;
   const node=card(selected,i);
@@ -143,6 +149,6 @@ function settle(){let a=total(mine),b=total(theirs);let diff=a>21?-1:b>21?1:Math
 function reward(type){if(type==='ash')ash+=2;else if(type==='coin')coins+=2;else ward=true;stage++;rival=3+stage;round=0;begin()}
 function reset(){stage=0;coins=4;rival=3;round=0;ash=2;ward=false;begin()}
 function render(){row('enemy',theirs,false);row('player',mine,true);el('myScore').textContent=total(mine);el('theirScore').textContent=total(theirs);el('journey').textContent=places[stage]+' · 第 '+round+' 局';el('progress').textContent='渡程 '+(stage+1)+' / 3';el('message').textContent=log;const a=el('actions');a.replaceChildren();
- if(phase==='play'&&!pending)a.append(button('停牌',async()=>{if(busy)return;busy=true;await opponentTurn(true)}));if(phase==='play'&&!pending&&!exchanged)a.append(button('换位',exchange));if(phase==='next')a.append(button('下一局',begin));if(phase==='reward'){a.append(button('取两枚魂币',()=>reward('coin')),button('强化灰烬位',()=>reward('ash')));if(!ward)a.append(button('护符 · 22点免败',()=>reward('ward')))}if(['lost','won'].includes(phase))a.append(button('再渡一次',reset))}
+ if(phase==='play'&&!pending)a.append(button('停牌',async()=>{if(busy)return;lockTable(true);await opponentTurn(true)}));if(phase==='play'&&!pending&&!exchanged)a.append(button('换位',exchange));if(phase==='next')a.append(button('下一局',begin));if(phase==='reward'){a.append(button('取两枚魂币',()=>reward('coin')),button('强化灰烬位',()=>reward('ash')));if(!ward)a.append(button('护符 · 22点免败',()=>reward('ward')))}if(['lost','won'].includes(phase))a.append(button('再渡一次',reset))}
 el('help').onclick=()=>el('rules').showModal();el('closeRules').onclick=()=>el('rules').close();begin();
 </script></html>
