@@ -170,6 +170,18 @@ for(const d of [
   assert.equal(await page.locator('#owner-fan').count(),1,
    'only one focused character fan may be unfolded at a time');
   await page.screenshot({path:out+'/'+d.name+'-05-two-owners-two-independent-decks.png',fullPage:true});
+  await page.waitForFunction(()=>window.SevenSeatBattleQA.cardPhysics.coinSpriteReady,{
+   timeout:25000
+  });
+  const award=await page.evaluate(()=>window.SevenSeatBattleQA.triggerWinCoins());
+  assert.equal(award,true,'battle must call actual slot FastCoinPayout physics, not fake particles');
+  await page.waitForTimeout(680);
+  const gold=await page.evaluate(()=>window.SevenSeatBattleQA.cardPhysics);
+  assert.equal(gold.reusedSlotCoinPhysics,true);
+  assert(gold.actualCoinBodies>=8,'real 3D coin bodies must spawn in win burst');
+  assert(gold.coinPhysicsModel.includes('spatial-hash'),'reuse the exact proven slot coin collision engine');
+  await page.screenshot({path:out+'/'+d.name+'-06-real-physical-ten-sided-gold-reward.png',fullPage:true});
+
   await page.locator('#restart').click();
   const restarted=await page.evaluate(()=>window.SevenSeatBattleQA.snapshot);
   assert.equal(restarted.hand.length,0);
@@ -180,7 +192,7 @@ for(const d of [
   assert.equal(errors.length,0,'JavaScript page errors: '+errors.join('\n'));
   console.log('PASS',d.name,'real portraits and functional 7+7 tableau: deploy, draw, target both sides, turns, reset');
   results.push({viewport:d.name,passed:true,slots:14,characters:7,
-   screenshotCount:6,issues:errors});
+   screenshotCount:7,issues:errors});
  }catch(err){
   console.error('FAIL',d.name,err.stack||err);
   results.push({viewport:d.name,passed:false,error:String(err.stack||err),issues:errors});
