@@ -141,6 +141,8 @@ function renderOwnerFan(){
  fan.hidden=false;
  $('owner-fan-name').textContent=h.name+' · 专属手牌';
  $('owner-fan-count').textContent=cards.length+' 张在手 · 剩余 '+state.decks[h.id].drawPile.length+' 张';
+ $('owner-fan-draw').disabled=!unit.alive||state.phase!=='player'||state.hand.length>=HAND_LIMIT;
+ $('owner-fan-draw').title=h.name+' 的个人牌堆，剩余 '+state.decks[h.id].drawPile.length+' 张';
  const index=state.allySeats.findIndex(x=>x?.id===`ally:${h.id}`);
  fan.style.setProperty('--owner-origin',((index+.5)/7*100).toFixed(1)+'%');
  $('owner-fan-cards').innerHTML=cards.length?cards.map((c,j)=>
@@ -351,6 +353,12 @@ app.addEventListener('click',e=>{
  }
 });
 app.addEventListener('error',imageAssetError,true);
+$('owner-fan-draw').addEventListener('click',()=>{
+ if(!focusedOwnerId)return;
+ const deck=[...document.querySelectorAll('[data-deck-id]')]
+  .find(x=>x.dataset.deckId===focusedOwnerId);
+ apply(()=>drawFromHero(state,focusedOwnerId),{from:deck?.getBoundingClientRect()});
+});
 $('owner-fan-close').addEventListener('click',()=>{focusedOwnerId=null;selection=null;render();});
 $('restart').addEventListener('click',restart);
 $('end-turn').addEventListener('click',()=>apply(()=>endRound(state)));
