@@ -138,6 +138,11 @@ for(const d of [
    'worn dark felt, material and impact layer actually integrated into hosted game');
   assert(flourish.motion.tableMotionTimings.action<=500,
    'battle uses reference-inspired brisk card rhythm, NOT the old 1.65 sec elastic flight');
+  // Impact starts at opacity 0; measure/record the PEAK luminous frame,
+  // not the blank initial animation event frame. ~110ms after contact.
+  await page.waitForTimeout(110);
+  assert.equal(await page.locator('#battle-sparks .battle-floating-number').count(),1,
+   'a readable damage number should still be visible 110ms after collision');
   await page.screenshot({path:out+'/'+d.name+'-08-amber-edge-hit-flare.png',fullPage:true});
   const hit=await page.evaluate(()=>window.SevenSeatBattleQA.snapshot);
   assert.equal(hit.hand.length,0);
