@@ -152,8 +152,9 @@ export function createSevenSeatCardMotion({backUrl,canvas}){
     body.y=boundaryY;body.vy=-body.vy*.30;
     if(!flyer.hit){flyer.hit=true;flyer.onLand?.();}
    }
-   body.spin+=((0-body.spin)*88-body.spinVelocity*15)*dt;
-   body.spinVelocity+=((0-body.spin)*88-body.spinVelocity*15)*dt;
+   const torque=-body.spin*88-body.spinVelocity*15;
+   body.spinVelocity+=torque*dt;
+   body.spin+=body.spinVelocity*dt;
    // Reuse the ORIGINAL slot's 2350–2990 ms three-axis reveal beat.
    const reveal=smooth(limit((flyer.age-.12)/.62,0,1));
    const slotBeat=evaluateCardSequence(2350+reveal*640);
