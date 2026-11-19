@@ -87,7 +87,7 @@ for(const d of [
   assert.equal(await page.locator('#ally-seats .pocket-mini').count(),0);
   assert.equal((await page.evaluate(()=>window.SevenSeatBattleQA.ownerStacks))[3].ownerId,
    (await page.evaluate(()=>window.SevenSeatBattleQA.state.heroes[0].id)),
-   'the ringmaster's stack belongs ONLY under the ringmaster seat');
+   "ringmaster stack belongs ONLY under the ringmaster seat");
   assert.equal(await page.locator('#owner-fan[hidden]').count(),1);
   assert.equal(deployed.energy,3);
   await page.waitForTimeout(980);
@@ -156,10 +156,10 @@ for(const d of [
    'each hero unlocks its own DECK, not the whole roster');
   assert.equal(await page.locator('#ally-seats .pocket-deck').count(),2);
   await page.locator('#ally-seats [data-owner-open]').last().click();
-  assert((await page.locator('#owner-fan-name').textContent()).includes('魔术师')||
-   (await page.evaluate(()=>window.SevenSeatBattleQA.focusedOwner))===
-    (await page.evaluate(()=>window.SevenSeatBattleQA.state.heroes[1].id)),
-   'the second character fan opens from HER OWN card-position pocket');
+  assert.equal(
+   await page.evaluate(()=>window.SevenSeatBattleQA.focusedOwner),
+   await page.evaluate(()=>window.SevenSeatBattleQA.state.heroes[1].id),
+   'second character expands HER own pocket, not another hero card');
   await page.locator('#owner-fan-close').click();
   assert.equal(await page.locator('#owner-fan[hidden]').count(),1,
    'closing a hand must tuck the fan back under the owner character');
