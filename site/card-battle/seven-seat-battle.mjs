@@ -3,6 +3,7 @@ import {
  playAction,endRound,getPlayableTarget,getSnapshot
 } from './engine/seven-seat-duel.mjs';
 import {mattePortraitBackground} from './motion/card-portrait-matte.mjs';
+import {createSevenSeatCardMotion} from './motion/seven-seat-card-physics.mjs';
 
 const $=id=>document.getElementById(id);
 const escape=s=>String(s??'').replace(/[&<>"']/g,ch=>({
@@ -14,6 +15,28 @@ const imageByUrl=new Map();
 const processedArt=new Map();
 let state=null,selection=null,previewEntry=null,notice='请选择候补人物，再点击下方七席中的空卡位';
 let selectedUnit=null,referenceHeroes=[],referenceEnemies=[];
+let focusedOwnerId=null;
+const motion=createSevenSeatCardMotion({
+ backUrl:new URL('../assets/cards/shared/character-card-back-anima.webp',import.meta.url).href,
+ canvas:$('physical-card-fx')
+});
+let audio=null;
+function cardSound(kind='deal'){
+ try{
+  const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+  audio=audio||new AC();if(audio.state==='suspended')audio.resume().catch(()=>{});
+  const o=audio.createOscillator(),g=audio.createGain();
+  const hz=kind==='impact'?180:kind==='draw'?440:310;
+  const duration=kind==='impact'?.18:.12;
+  o.type=kind==='impact'?'triangle':'sine';
+  o.frequency.setValueAtTime(hz,audio.currentTime);
+  o.frequency.exponentialRampToValueAtTime(hz*.7,audio.currentTime+duration);
+  g.gain.setValueAtTime(.025,audio.currentTime);
+  g.gain.exponentialRampToValueAtTime(.0001,audio.currentTime+duration);
+  o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+duration);
+ }catch(e){console.warn('Audio blocked',e)}
+}
+
 const markupArt=(url,alt)=>`<img src="${escape(processedArt.get(url)||url)}" alt="${escape(alt)}" loading="lazy" data-origin="${escape(url)}" data-matted="${processedArt.has(url)}">`;
 function rosterFromGroup(g){
  return g.roster.map(r=>({
@@ -31,6 +54,46 @@ function resolveSelectedHero(){
  return selectedUnit?{name:selectedUnit.name,art:selectedUnit.art}:null;
 }
 function occupiedCount(side){return state[side==='ally'?'allySeats':'enemySeats'].filter(Boolean).length}
+const heroForSeat=unit=>unit&&state.heroes.find(h=>unit.id===`ally:${h.id}`);
+const cardsOwnedBy=ownerId=>state.hand.filter(c=>c.ownerId===ownerId);
+// ONE physical stack per deployed character: person portrait in front,
+// personal back-deck and individually owned drawn cards underneath.
+function renderPocket(unit,index){
+ if(!unit)return `<div class="person-pocket" data-empty="true" aria-label="第${index+1}席未上场，牌堆锁定"></div>`;
+ const hero=heroForSeat(unit);if(!hero)return '';
+ const d=state.decks[hero.id],owned=cardsOwnedBy(hero.id);
+ const alive=unit.alive&&unit.hp>0;
+ const minis=owned.slice(-3).map((c,j)=>`<button type="button"
+    class="pocket-mini" data-action-id="${escape(c.id)}"
+    draggable="${alive&&state.phase==='player'}"
+    data-selected="${selection?.type==='action'&&selection.id===c.id}"
+    style="--offset:${34+j*10}%;--angle:${(j-1)*5}deg;--depth:${4+j}"
+    title="${escape(hero.name+' · '+c.description)}" aria-label="${escape(hero.name)}的${escape(c.name)}">
+    <span class="pip">${c.cost}</span><b>${escape(c.name)}</b>
+   </button>`).join('');
+ return `<div class="person-pocket" data-empty="false" data-owner-id="${escape(hero.id)}"
+  aria-label="${escape(hero.name)}人物卡下面叠放${owned.length}张行动手牌">
+  <button type="button" class="pocket-deck" data-deck-id="${escape(hero.id)}"
+   ${!alive||state.hand.length>=HAND_LIMIT||state.phase!=='player'?'disabled':''}
+   title="${escape(hero.name)}专属牌堆：点击摸一张，剩余${d.drawPile.length}张"
+   aria-label="${escape(hero.name)}酒红金线专属牌堆，剩余${d.drawPile.length}张">
+    <img src="${escape(backUrl)}" alt="" loading="lazy">
+    <span class="pocket-count">${d.drawPile.length}</span>
+  </button>
+  ${minis}
+  <button type="button" class="pocket-open" data-owner-open="${escape(hero.id)}"
+   data-focused="${focusedOwnerId===hero.id}"
+   aria-label="展开${escape(hero.name)}的${owned.length}张行动牌">${owned.length}张▴</button>
+ </div>`;
+}
+function renderEnemyPocket(unit,index){
+ if(!unit)return '<div class="enemy-pocket"></div>';
+ // One closed card corresponds to one actual attack per enemy on endRound.
+ return `<div class="enemy-pocket" aria-label="敌方第${index+1}席隐藏行动卡">
+  <div class="enemy-pile"><img src="${escape(backUrl)}" alt=""></div>
+  <span class="enemy-label">行动</span>
+ </div>`;
+}
 function renderSeats(side){
  const seats=side==='ally'?state.allySeats:state.enemySeats;
  const targetId=side==='ally'?'ally-seats':'enemy-seats';
@@ -41,7 +104,7 @@ function renderSeats(side){
   const last=state.turnEvents.find(x=>x.side===side&&x.index===i);
   const effect=last?.type==='damage'?'被击中':last?.type==='heal'?'已治疗':
    last?.type==='shield'?'护盾增加':'';
-  return `<button type="button" class="seat${unit&&!unit.alive?' is-fallen':''}" data-side="${side}"
+  const card=`<button type="button" class="seat${unit&&!unit.alive?' is-fallen':''}" data-side="${side}"
    data-seat="${i}" data-occupied="${!!unit}" data-selectable="${!!selectable}" data-target="${!!valid}"
    aria-label="${escape(side==='enemy'?'敌方':'我方')}第${i+1}卡位${unit?'，'+unit.name+'，生命'+unit.hp+'，护盾'+unit.shield:'，空位'}"
    title="${escape(unit?unit.name+' · HP '+unit.hp+'/'+unit.maxHp+(effect?' · '+effect:''):'第'+(i+1)+'号空位')}">
@@ -51,6 +114,10 @@ function renderSeats(side){
     `<span class="seat-empty">${side==='ally'?'放置':'空位'}</span>`}
    <span class="seat-num">${i+1}</span>
    </button>`;
+  return `<div class="seat-column" data-card-column="${side}-${i}">
+    ${card}
+    ${side==='ally'?renderPocket(unit,i):renderEnemyPocket(unit,i)}
+   </div>`;
  }).join('');
 }
 function renderReserve(){
