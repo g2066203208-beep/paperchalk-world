@@ -179,6 +179,7 @@ function render(){
  $('enemy-count').textContent='已上场 '+occupiedCount('enemy')+' / 7';
  $('ally-count').textContent='已上场 '+occupiedCount('ally')+' / 7';
  $('battle-status').textContent=state.result==='victory'?'胜利':state.result==='defeat'?'失败':'敌我各七席 · '+(state.phase==='player'?'玩家行动':'敌方行动');
+ document.querySelector('.board').dataset.result=state.result||'ongoing';
  const cue=selectedInstruction();
  $('cue-title').textContent=cue[0];$('cue-sub').textContent=cue[1];
  renderSeats('enemy');renderSeats('ally');renderReserve();renderOwnerFan();
@@ -237,6 +238,7 @@ function apply(action,{from=null}={}){
  const result=action();notice=result.message||'无法完成这次行动';
  if(!result.ok){render();return result}
  const events=state.turnEvents.map(x=>({...x}));
+ const victory=state.result==='victory';
  selection=null;selectedUnit=null;
  if(events.some(x=>x.type==='draw'))focusedOwnerId=events[0].ownerId;
  render();
@@ -244,6 +246,7 @@ function apply(action,{from=null}={}){
   if(i>2)return; // lightweight, even when 3 enemy actions resolve
   animateEvent(ev,i===0?from:null);
  });
+ if(victory)motion.payout(36);
  return result;
 }
 function clickSeat(side,index){
@@ -425,6 +428,7 @@ async function init(){
    get snapshot(){return getSnapshot(state);},
    get actualAssets(){return {ally:referenceHeroes.map(x=>x.art),enemy:referenceEnemies.map(x=>x.art)};},
    get cardPhysics(){return motion.state;},
+   triggerWinCoins:()=>motion.payout(36),
    get ownerStacks(){return state.allySeats.map((unit,index)=>{
     const hero=heroForSeat(unit);return {seat:index,ownerId:hero?.id||null,
      hand:hero?cardsOwnedBy(hero.id).map(c=>c.id):[],
