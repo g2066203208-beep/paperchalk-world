@@ -26,7 +26,7 @@ jobs:
           python3 -c "import imageio_ffmpeg;print(imageio_ffmpeg.get_ffmpeg_exe())" > /tmp/ffmpeg_path
       - name: Extract motion sample contact sheets at 5 fps with timestamp
         run: |
-          ffmpeg -nostdin -hide_banner -loglevel error -i /tmp/black-jacket-gameplay.mp4             -vf "fps=5,scale=480:-2:flags=lanczos,drawtext=text='%{pts\\:hms}':x=12:y=12:fontsize=24:fontcolor=white:box=1:boxcolor=black@0.6,tile=4x3"             -vsync vfr artifacts/black-jacket-reference/real-source-frames-%02d.png
+          $(cat /tmp/ffmpeg_path) -nostdin -hide_banner -loglevel error -i /tmp/black-jacket-gameplay.mp4             -vf "fps=5,scale=480:-2:flags=lanczos,drawtext=text='%{pts\\:hms}':x=12:y=12:fontsize=24:fontcolor=white:box=1:boxcolor=black@0.6,tile=4x3"             -vsync vfr artifacts/black-jacket-reference/real-source-frames-%02d.png
           ls -lah artifacts/black-jacket-reference
       - name: Upload short reference contact sheets (no full video redistribution)
         if: always()
