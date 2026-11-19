@@ -170,6 +170,9 @@ for(const d of [
    'all three drawn cards must overlap THEIR OWN character, not the global hand rail');
   await page.waitForTimeout(1050);
   await page.screenshot({path:out+'/'+d.name+'-05-two-owners-two-independent-decks.png',fullPage:true});
+  // Drawing from the second deck auto-focuses that owner. Clicking its
+  // same pocket toggles COLLAPSE, so first switch to ringmaster, then back.
+  await page.locator('#ally-seats [data-owner-open]').first().click();
   await page.locator('#ally-seats [data-owner-open]').last().click();
   assert.equal(
    await page.evaluate(()=>window.SevenSeatBattleQA.focusedOwner),
