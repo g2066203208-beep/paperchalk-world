@@ -2,8 +2,8 @@
   {
     "viewport": "desktop",
     "passed": true,
-    "character": "纯血女皇",
-    "id": "crimson-vampires/pureblood-empress.png",
+    "character": "采购主管",
+    "id": "demon-merchant/purchasing-director.webp",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
@@ -12,8 +12,8 @@
   {
     "viewport": "portrait",
     "passed": true,
-    "character": "血族守卫",
-    "id": "crimson-vampires/crimson-guardian.png",
+    "character": "纯血女皇",
+    "id": "crimson-vampires/pureblood-empress.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
@@ -22,8 +22,8 @@
   {
     "viewport": "landscape",
     "passed": true,
-    "character": "大力士",
-    "id": "wonder-circus/strongwoman.png",
+    "character": "小丑演员",
+    "id": "wonder-circus/clown-performer.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
