@@ -1,0 +1,140 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {chromium} from 'playwright';
+
+const out='artifacts/seven-seat-battle';
+fs.mkdirSync(out+'/videos',{recursive:true});
+const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+const results=[];
+for(const d of [
+ {name:'desktop',width:1440,height:900,touch:false},
+ {name:'phone-portrait',width:390,height:844,touch:true},
+ {name:'phone-landscape',width:844,height:390,touch:true}
+]){
+ const context=await browser.newContext({
+  viewport:{width:d.width,height:d.height},deviceScaleFactor:1,
+  isMobile:d.touch,hasTouch:d.touch,
+  recordVideo:{dir:out+'/videos',size:{width:d.width,height:d.height}}
+ });
+ const page=await context.newPage(),errors=[];
+ page.on('pageerror',err=>errors.push(String(err.stack||err)));
+ try{
+  const response=await page.goto('http://127.0.0.1:4173/card-battle/character-card-machine.html',
+   {waitUntil:'domcontentloaded',timeout:20000});
+  assert.equal(response.status(),200,'the ORIGINAL slot-machine URL must host the NEW seven-seat game');
+  await page.waitForFunction(()=>window.SevenSeatBattleQA?.state?.heroes?.length===7,{timeout:30000});
+  const first=await page.evaluate(()=>window.SevenSeatBattleQA.snapshot);
+  assert.equal(first.seats.enemy.length,7);
+  assert.equal(first.seats.ally.length,7);
+  assert.equal(first.hand.length,0,'DO NOT automatically draw the action hand');
+  assert.equal(first.round,1);
+  assert.deepEqual(first.seats.enemy.map(Boolean),[false,true,false,true,false,true,false]);
+  assert.equal(await page.locator('#enemy-seats > .seat').count(),7);
+  assert.equal(await page.locator('#ally-seats > .seat').count(),7);
+  assert.equal(await page.locator('#hero-reserve .reserve').count(),7);
+  assert.equal(await page.locator('#owner-decks .deck').count(),0,
+   'undeployed heroes must not unlock character decks');
+  assert((await page.evaluate(()=>window.SevenSeatBattleQA.actualAssets.ally))
+   .every(url=>url.includes('/assets/characters/wonder-circus/')&&/\.(png|webp)$/.test(url)),
+   'the user-approved REAL character artwork must be loaded from GitHub');
+  const geometry=await page.evaluate(()=>{
+   const bb=document.querySelector('.board').getBoundingClientRect();
+   const ally=[...document.querySelectorAll('#ally-seats .seat')].map(el=>el.getBoundingClientRect().toJSON());
+   const foe=[...document.querySelectorAll('#enemy-seats .seat')].map(el=>el.getBoundingClientRect().toJSON());
+   return {board:bb.toJSON(),ally,foe,bodyScroll:document.documentElement.scrollWidth,
+    viewport:window.innerWidth};
+  });
+  for(const [label,seats] of Object.entries({ally:geometry.ally,foe:geometry.foe})){
+   assert.equal(seats.length,7);
+   assert(seats.every(x=>x.width>=29 && x.height>=43),
+    label+' must show all seven real tappable card-sized positions on '+d.name);
+   assert(seats.every(x=>x.left>=geometry.board.left-2&&x.right<=geometry.board.right+2),
+    label+' positions must not clip beyond board container');
+  }
+  assert(geometry.bodyScroll<=geometry.viewport+4,'no horizontal page overflow on '+d.name);
+  await page.waitForFunction(()=>{
+   const img=document.querySelector('#hero-reserve img');
+   return img?.complete&&img.naturalWidth>=320;
+  },{timeout:18000});
+  await page.screenshot({path:out+'/'+d.name+'-00-first-game-seven-vs-seven.png',fullPage:true});
+  await page.locator('#hero-reserve .reserve').first().click();
+  assert.equal(await page.locator('#ally-seats [data-selectable="true"]').count(),7);
+  await page.locator('#ally-seats .seat').nth(3).click();
+  let deployed=await page.evaluate(()=>window.SevenSeatBattleQA.snapshot);
+  assert(deployed.seats.ally[3]?.includes('团长'),'actual ringmaster should deploy into player seat 4');
+  assert.equal(deployed.decks[Object.keys(deployed.decks)[0]].unlocked,true);
+  assert.equal(await page.locator('#owner-decks .deck').count(),1);
+  assert.equal(deployed.energy,3);
+  await page.screenshot({path:out+'/'+d.name+'-01-real-ringmaster-deployed.png',fullPage:true});
+  await page.locator('#owner-decks .deck').first().click();
+  assert.equal(await page.locator('#action-hand .action').count(),1,
+   'manual draw from deployed ringmaster's OWN deck');
+  assert.equal((await page.evaluate(()=>window.SevenSeatBattleQA.snapshot)).hand.length,1);
+  await page.locator('#action-hand .action').first().click();
+  const noValid=await page.locator('#enemy-seats [data-target="true"]').count();
+  assert.equal(noValid,3,'target hints must exclude all four empty enemy seats');
+  const before=await page.evaluate(()=>window.SevenSeatBattleQA.snapshot);
+  await page.locator('#enemy-seats .seat').first().click();
+  const refused=await page.evaluate(()=>window.SevenSeatBattleQA.snapshot);
+  assert.equal(refused.energy,before.energy,'illegal target does not spend energy');
+  assert.equal(refused.hand.length,before.hand.length,'illegal target does not burn the card');
+  await page.locator('#enemy-seats .seat').nth(1).click();
+  const hit=await page.evaluate(()=>window.SevenSeatBattleQA.snapshot);
+  assert.equal(hit.hand.length,0);
+  assert(hit.health.enemy[1]<before.health.enemy[1],'actual enemy HP decreases on damage');
+  await page.screenshot({path:out+'/'+d.name+'-02-first-attack-on-enemy.png',fullPage:true});
+  // A newly drawn friendly shield can target our own character card.
+  await page.locator('#owner-decks .deck').first().click();
+  await page.locator('#action-hand .action').first().click();
+  await page.locator('#ally-seats .seat').nth(3).click();
+  const shield=await page.evaluate(()=>window.SevenSeatBattleQA.state.allySeats[3]?.shield);
+  assert(shield>0,'playing onto an ally must apply a real shield');
+  await page.screenshot({path:out+'/'+d.name+'-03-support-ally-card.png',fullPage:true});
+  await page.locator('#owner-decks .deck').first().click();
+  await page.locator('#action-hand .action').first().click();
+  await page.locator('#enemy-seats .seat').nth(1).click();
+  assert((await page.evaluate(()=>window.SevenSeatBattleQA.snapshot)).health.enemy[1]>
+   hit.health.enemy[1],'healing an enemy is deliberately allowed for any-target cards');
+  const oldRound=await page.evaluate(()=>window.SevenSeatBattleQA.snapshot);
+  await page.locator('#end-turn').click();
+  const next=await page.evaluate(()=>window.SevenSeatBattleQA.snapshot);
+  assert.equal(next.round,2);
+  assert.equal(next.energy,4);
+  assert.equal(next.hand.length,oldRound.hand.length,'no automatic draws on next turn');
+  assert(next.health.ally[3]<=oldRound.health.ally[3],
+   'enemy turn should apply real combat changes');
+  await page.screenshot({path:out+'/'+d.name+'-04-enemy-turn-and-next-round.png',fullPage:true});
+  // Touch tap and desktop pointer drag use same deployment engine.
+  if(d.touch){
+   await page.locator('#hero-reserve .reserve').nth(1).tap();
+   await page.locator('#ally-seats .seat').nth(5).tap();
+  }else{
+   await page.locator('#hero-reserve .reserve').nth(1).dragTo(
+    page.locator('#ally-seats .seat').nth(5),{timeout:15000});
+  }
+  const second=await page.evaluate(()=>window.SevenSeatBattleQA.snapshot);
+  assert(second.seats.ally[5], 'second hero must be deployable by pointer/touch');
+  assert.equal(Object.values(second.decks).filter(x=>x.unlocked).length,2,
+   'each hero unlocks its own DECK, not the whole roster');
+  assert.equal(await page.locator('#owner-decks .deck').count(),2);
+  await page.screenshot({path:out+'/'+d.name+'-05-two-owners-two-independent-decks.png',fullPage:true});
+  await page.locator('#restart').click();
+  const restarted=await page.evaluate(()=>window.SevenSeatBattleQA.snapshot);
+  assert.equal(restarted.hand.length,0);
+  assert.equal(restarted.seats.ally.filter(Boolean).length,0);
+  assert.equal(restarted.round,1);
+  assert.equal(await page.locator('#ally-seats .seat').count(),7);
+  assert.equal(await page.locator('#enemy-seats .seat').count(),7);
+  assert.equal(errors.length,0,'JavaScript page errors: '+errors.join('\n'));
+  console.log('PASS',d.name,'real portraits and functional 7+7 tableau: deploy, draw, target both sides, turns, reset');
+  results.push({viewport:d.name,passed:true,slots:14,characters:7,
+   screenshotCount:6,issues:errors});
+ }catch(err){
+  console.error('FAIL',d.name,err.stack||err);
+  results.push({viewport:d.name,passed:false,error:String(err.stack||err),issues:errors});
+  await page.screenshot({path:out+'/'+d.name+'-FAIL.png',fullPage:true}).catch(()=>{});
+ }finally{await context.close();}
+}
+await browser.close();
+fs.writeFileSync(out+'/results.json',JSON.stringify(results,null,2));
+assert(results.every(x=>x.passed),'Seven-seat Black Jacket-style real browser QA did not pass all three screens');
