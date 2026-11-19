@@ -23,6 +23,12 @@ export function createSevenSeatCardMotion({backUrl,canvas}){
    coinAcc=0,coinAge=0,coinProduced=0,coinInitError='';
  const coinDummy=new THREE.Object3D();
  const coinAxis=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-Math.PI/2);
+ // Original slot camera looked DOWN into the coin basin. The new card
+ // table overlay looks straight at it, which made FACE-UP coins appear as
+ // edge-on black sticks. Reorient the *rendered basin* toward this camera,
+ // not the underlying 3D physics/collisions.
+ const coinViewTilt=new THREE.Quaternion().setFromAxisAngle(
+  new THREE.Vector3(1,0,0),Math.PI*.36);
  const reduce=window.matchMedia('(prefers-reduced-motion:reduce)');
  const center=r=>r?{x:r.left+r.width*.5,y:r.top+r.height*.5,width:r.width,height:r.height}:
    {x:innerWidth/2,y:innerHeight/2,width:60,height:90};
@@ -166,8 +172,16 @@ export function createSevenSeatCardMotion({backUrl,canvas}){
     edgeColor:0x10120e,pixelArt:true
    });
    const base=coinModel.children[0];
-   coinMesh=new THREE.InstancedMesh(base.geometry,
-    upgradeCoinMaterials(THREE,base.material),40);
+   const originalMaterials=upgradeCoinMaterials(THREE,base.material);
+   for(const m of (Array.isArray(originalMaterials)?originalMaterials:[originalMaterials])){
+    if(!m?.isMeshStandardMaterial)continue;
+    m.envMapIntensity=Math.max(1.7,m.envMapIntensity||1);
+    m.roughness=Math.min(.43,m.roughness);
+    m.emissive=new THREE.Color('#69410e');
+    m.emissiveIntensity=.20;
+    m.needsUpdate=true;
+   }
+   coinMesh=new THREE.InstancedMesh(base.geometry,originalMaterials,40);
    coinMesh.name='old-slot-10-facet-real-3d-gold-win-burst';
    coinMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
    coinMesh.count=0;coinMesh.frustumCulled=false;
@@ -181,9 +195,10 @@ export function createSevenSeatCardMotion({backUrl,canvas}){
   for(let i=0;i<coinPayout.coins.length;i++){
    const c=coinPayout.coins[i],p=c.position,q=c.quaternion;
    coinDummy.position.set((p.x+2.55)*scale,
-    -innerHeight*.22+p.y*scale,
+    innerHeight*.07+p.y*scale,
     30+p.z*scale*.27);
-   coinDummy.quaternion.set(q.x,q.y,q.z,q.w).multiply(coinAxis);
+   coinDummy.quaternion.set(q.x,q.y,q.z,q.w).multiply(coinAxis)
+    .premultiply(coinViewTilt);
    coinDummy.scale.setScalar(COIN.scale*scale);
    coinDummy.updateMatrix();coinMesh.setMatrixAt(i,coinDummy.matrix);
   }
@@ -301,6 +316,7 @@ export function createSevenSeatCardMotion({backUrl,canvas}){
   physicalIntegrator:'semi-implicit-euler-spring-impulse',
   realCardGeometry:enabled,pbrBackReady:!!cardBackMap,
   reusedSlotCoinPhysics:true,coinSpriteReady:coinReady,
+  coinFaceFacingCamera:true,coinViewCameraTiltRadians:Math.PI*.36,
   coinArtworkError:coinInitError,coinActive:coinRunning,
   actualCoinBodies:coinPayout?.coins.length||0,
   coinPayoutEmitted:coinProduced,coinPhysicsModel:coinPayout?.physicsModel||'3D spatial-hash oriented-disc separation (non-SAT)'
