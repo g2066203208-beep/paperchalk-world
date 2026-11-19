@@ -119,6 +119,7 @@ export function createSevenSeatCardMotion({backUrl,canvas}){
      backMaterial.needsUpdate=true;
     }catch(e){console.warn('Using unlit gold card back instead of derived PBR',e)}
    },{once:true});
+   prepareCardMaterials();
    resize();enabled=true;
    prepareVictoryCoins().catch(console.warn);
    return true;
@@ -131,13 +132,63 @@ export function createSevenSeatCardMotion({backUrl,canvas}){
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth,innerHeight,false);
  }
+ // Small laminated-paper normal map: printed color stays untouched,
+ // surface fibers modulate reflection rather than adding a plastic overlay.
+ function paperMicroTexture(){
+  const w=128,h=128,c=document.createElement('canvas');
+  c.width=w;c.height=h;const g=c.getContext('2d'),im=g.createImageData(w,h);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+   const i=(y*w+x)*4,
+    fiber=Math.sin(x*1.68+y*.13)*5+Math.cos(y*.73+x*.04)*4,
+    fleck=(Math.sin(x*21.31+y*13.1)*Math.cos(y*7.77-x*9.13))*5;
+   im.data[i]=128+fiber+fleck;im.data[i+1]=128-fiber*.65+fleck;
+   im.data[i+2]=251;im.data[i+3]=255;
+  }
+  g.putImageData(im,0,0);
+  const tex=new THREE.CanvasTexture(c);
+  tex.colorSpace=THREE.NoColorSpace;tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+  tex.repeat.set(3.5,5.2);tex.anisotropy=2;return tex;
+ }
+ let microNormal=null,frontStockMaterial=null,shadowTexture=null;
+ function prepareCardMaterials(){
+  microNormal=paperMicroTexture();
+  const cv=document.createElement('canvas');cv.width=128;cv.height=192;
+  const g=cv.getContext('2d'),pixels=g.createImageData(128,192);
+  for(let y=0;y<192;y++)for(let x=0;x<128;x++){
+   const i=(y*128+x)*4,rx=(x-64)/64,ry=(y-96)/96;
+   const glow=Math.max(0,1-(rx*rx*.8+ry*ry*.7));
+   const fiber=Math.sin(x*.63+y*.14)*2.5+Math.sin(y*.88-x*.06)*2.1;
+   pixels.data[i]=90+glow*45+fiber;
+   pixels.data[i+1]=48+glow*40+fiber;
+   pixels.data[i+2]=57+glow*30+fiber;
+   pixels.data[i+3]=255;
+  }
+  g.putImageData(pixels,0,0);
+  const color=new THREE.CanvasTexture(cv);color.colorSpace=THREE.SRGBColorSpace;
+  frontStockMaterial=new THREE.MeshPhysicalMaterial({
+   color:'#ffffff',map:color,roughness:.93,metalness:0,
+   normalMap:microNormal,normalScale:new THREE.Vector2(.12,.12),
+   sheen:.16,sheenRoughness:.92,sheenColor:'#d4b7a7',
+   specularIntensity:.22,envMapIntensity:.26,side:THREE.FrontSide
+  });
+  const sh=document.createElement('canvas');sh.width=64;sh.height=64;
+  const q=sh.getContext('2d'),gr=q.createRadialGradient(32,32,4,32,32,31);
+  gr.addColorStop(0,'rgba(0,0,0,.75)');gr.addColorStop(.6,'rgba(0,0,0,.28)');
+  gr.addColorStop(1,'rgba(0,0,0,0)');
+  q.fillStyle=gr;q.fillRect(0,0,64,64);
+  shadowTexture=new THREE.CanvasTexture(sh);
+ }
  function physicalCard(frontTexture){
   const node=new THREE.Group(),w=1.68,h=2.53,t=.017;
+  const paper=new THREE.Mesh(new THREE.PlaneGeometry(w,h),frontStockMaterial);
+  paper.position.z=t/2+.0002;node.add(paper);
   const face=new THREE.Mesh(new THREE.PlaneGeometry(w,h),
    new THREE.MeshPhysicalMaterial({map:frontTexture,side:THREE.FrontSide,
-    roughness:.88,metalness:0,sheen:.12,sheenRoughness:.95,specularIntensity:.27,
-    transparent:true,alphaTest:.025}));
-  face.position.z=t/2+.0003;node.add(face);
+    roughness:.93,metalness:0,sheen:.16,sheenRoughness:.96,
+    sheenColor:'#d3bdb1',specularIntensity:.20,envMapIntensity:.3,
+    normalMap:microNormal,normalScale:new THREE.Vector2(.12,.12),
+    transparent:true,depthWrite:false,alphaTest:.028}));
+  face.position.z=t/2+.001;node.add(face);
   const back=new THREE.Mesh(new THREE.PlaneGeometry(w,h),backMaterial);
   back.rotation.y=Math.PI;back.position.z=-t/2-.0003;node.add(back);
   const geometryData=roundedPaperEdgeGeometry({
@@ -150,7 +201,11 @@ export function createSevenSeatCardMotion({backUrl,canvas}){
   const edge=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({
    color:'#d6c5aa',metalness:0,roughness:.95,side:THREE.FrontSide}));
   node.add(edge);scene.add(node);
-  return {node,face,edge};
+  const shadow=new THREE.Mesh(new THREE.PlaneGeometry(w*1.26,h*1.26),
+   new THREE.MeshBasicMaterial({map:shadowTexture,color:'#10120f',
+    transparent:true,opacity:.28,depthWrite:false,side:THREE.FrontSide}));
+  scene.add(shadow);
+  return {node,face,edge,shadow};
  }
  function notifyGPU(){
   // The actual DOM artwork stays readable even if WebGL is unavailable.
@@ -301,6 +356,8 @@ export function createSevenSeatCardMotion({backUrl,canvas}){
   stop();lighting?.dispose();backMaterial?.dispose();
   if(cardBackMap)Object.values(cardBackMap).forEach(t=>t?.dispose());
   [...cachedFront.values()].forEach(t=>t?.dispose());cachedFront.clear();
+  microNormal?.dispose();shadowTexture?.dispose();
+  frontStockMaterial?.map?.dispose();frontStockMaterial?.dispose();
   renderer?.dispose();
  }
  init();
