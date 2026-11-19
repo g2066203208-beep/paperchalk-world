@@ -25,10 +25,20 @@ async function verify(f){
    await until(()=>decks[i].classList.contains('open')&&!decks[i].disabled);
    assert(!decks[1].classList.contains('open'),'其他牌堆误解锁');
    decks[i].click();if(i===0)enemy[0].click();else field.click();
-   await until(()=>!decks[i].disabled&&!decks[i].querySelector('.drawn'));
+   await until(()=>!decks[i].querySelector('.drawn'));
   }
   assert(field.textContent.includes('篝火'),'场地牌未落位');
-  if(f===frame)out.textContent=width+' × '+height+' · 七列对齐、同尺寸公共位、人物部署及独立解锁通过';
+  let rounds=0;
+  const resolve=d.getElementById('resolve');
+  while(resolve.textContent!=='再战'&&rounds++<12){
+    for(const i of [1,3,4,5,6]){
+      if(decks[i].classList.contains('open')||decks[i].disabled)continue;
+      decks[i].click();ally[i].click();await until(()=>decks[i].classList.contains('open'));
+    }
+    resolve.click();await until(()=>!resolve.disabled);
+  }
+  assert(d.getElementById('turn-label').textContent==='胜利','战斗未胜利');
+  if(f===frame)out.textContent=width+' × '+height+' · 七列对齐、同尺寸公共位、专属牌及交锋胜利通过';
  }catch(e){if(f===frame)out.textContent='检查失败 · '+e.message}
 }
 function openSize(dim){[width,height]=dim.split(',').map(Number);const f=document.createElement('iframe');f.title='真实游戏视口';frame=f;f.width=width;f.height=height;f.onload=()=>verify(f);f.src='../soul-table.html';host.replaceChildren(f);out.textContent='检查中…';fit()}
