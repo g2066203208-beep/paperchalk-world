@@ -8,6 +8,11 @@ on:
       - 'site/card-battle/seven-seat-battle.html'
       - 'site/card-battle/seven-seat-battle.mjs'
       - 'site/card-battle/engine/seven-seat-duel.mjs'
+      - 'site/card-battle/motion/seven-seat-card-physics.mjs'
+      - 'site/card-battle/motion/character-card-sequence.mjs'
+      - 'site/card-battle/motion/coin-payout-lighting.mjs'
+      - 'site/card-battle/motion/card-image-relief.mjs'
+      - 'site/card-battle/motion/card-physical-edge.mjs'
       - 'site/card-battle/motion/card-portrait-matte.mjs'
       - 'site/data/art/seven-card-groups.v1.json'
       - 'site/assets/characters/**'
@@ -35,6 +40,7 @@ jobs:
         run: |
           node --check site/card-battle/engine/seven-seat-duel.mjs
           node --check site/card-battle/seven-seat-battle.mjs
+          node --check site/card-battle/motion/seven-seat-card-physics.mjs
           node --check site/card-battle/motion/card-portrait-matte.mjs
           node --check tests/seven-seat-duel.test.mjs
           node --check tests/seven-seat-battle-browser.mjs
