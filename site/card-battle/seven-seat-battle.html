@@ -152,6 +152,143 @@ main>.board,main>.bottom,main>.top,.board-status,.board-label,.seats{min-width:0
  .tool-label>span{text-align:right}
  .reserve-section,.deck-section,.hand-section{overflow:hidden}
 }
+
+/* Seven-character tabletop, inheriting the original slot's burgundy ink,
+   finely grained paper, thin cardstock and neutral-gold PBR lighting. */
+.board{background:
+ radial-gradient(ellipse at 51% 46%,#3b4340 0,#272d2e 37%,#171a21 88%),
+ repeating-linear-gradient(107deg,#ffffff02 0,#ffffff02 1px,transparent 2px,transparent 9px);
+ border-color:#88765a80;box-shadow:0 20px 70px #000a,inset 0 0 26px #f4ca6240,
+ inset 0 0 0 2px #100d15}
+.board:before{opacity:.23;background:repeating-linear-gradient(87deg,transparent 0,transparent 18px,#ccb38b12 19px,transparent 21px)}
+.board:after{content:"";position:absolute;inset:7px;pointer-events:none;border:1px solid #b3a47a20;border-radius:9px}
+.board-label{color:#e2d6bc;filter:drop-shadow(0 1px 1px #0009)}
+.mid{background:radial-gradient(ellipse,#a7a17b10,transparent 66%);border-color:#aeb8a63c}
+.seat{box-shadow:inset 0 0 0 1px #cebea829,0 9px 15px #0007;transform-style:preserve-3d;will-change:transform}
+.seat[data-occupied="true"]{background:linear-gradient(135deg,#78565a,#322a30);
+ border-color:#bba584;border-bottom-color:#433136}
+.seat[data-occupied="true"]:before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+ background:linear-gradient(116deg,transparent 9%,#ffffff13 23%,transparent 38%,#f9d8a30b 66%,transparent 83%);
+ mix-blend-mode:screen}
+.seat img{background:linear-gradient(138deg,#aa8680,#554044 56%,#352b34);
+ filter:contrast(1.035) saturate(.95)}
+.seat:active{transform:translateY(2px) scale(.985)}
+.seat[data-target="true"]{border-color:#d5f5c6;box-shadow:0 0 13px #6dc9c669,0 4px 13px #000c}
+.seat[data-selectable="true"]{border-color:#e9cf94;box-shadow:0 0 17px #e2aa655e}
+.enemy-row,.ally-row{align-items:start}
+.seat-column{position:relative;display:flex;flex-direction:column;align-items:center;min-width:0;width:100%;isolation:isolate}
+.seat-column>.seat{width:100%;z-index:3;flex:0 0 auto}
+.person-pocket,.enemy-pocket{position:relative;width:100%;height:clamp(40px,6.7vw,87px);margin-top:-6px;
+ padding:0;z-index:1;contain:layout style;filter:drop-shadow(0 6px 5px #000a)}
+.enemy-pocket{height:clamp(22px,3.7vw,46px);margin-top:-4px;pointer-events:none;opacity:.78}
+.person-pocket[data-empty="true"]{border:1px dashed #aea08b33;border-radius:0 0 7px 7px;
+ background:linear-gradient(#f2d8a006,#070b100a)}
+.pocket-deck,.pocket-mini,.pocket-open,.enemy-pile{position:absolute;border:1px solid #af946d;background:#5b3644;
+ border-radius:3px;box-shadow:0 2px 3px #000a,inset 0 0 0 1px #edcc9830;min-width:0}
+.pocket-deck{width:47%;height:85%;left:3%;top:4%;z-index:3;overflow:hidden;transform:rotate(-5deg);padding:0}
+.pocket-deck:before,.enemy-pile:before{content:"";position:absolute;inset:auto 2px -2px 2px;height:5px;
+ box-shadow:0 2px 0 #ead4b683,0 4px 0 #65574de0;z-index:-1}
+.pocket-deck img,.enemy-pile img{height:100%;width:100%;object-fit:cover;display:block}
+.pocket-deck .pocket-count{position:absolute;top:0;right:0;background:#131016d9;
+ color:#f2e0bd;font-size:10px;padding:2px 4px;line-height:1.1;border-radius:0 0 0 3px}
+.pocket-mini{width:46%;height:82%;top:8%;left:var(--offset,32%);padding:2px;
+ transform:rotate(var(--angle,0deg));z-index:var(--depth,4);
+ display:flex;align-items:end;justify-content:center;color:#fff3db;font-size:clamp(8px,.87vw,12px);
+ overflow:hidden;line-height:1;cursor:pointer;
+ background:linear-gradient(160deg,#6e4757,#2f2733 67%,#231e29)}
+.pocket-mini b{background:#141018cc;border-radius:2px;padding:3px 1px;max-width:100%;
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pocket-mini[data-selected="true"]{border:2px solid #f4d99e;transform:translateY(-5px) rotate(0)}
+.pocket-mini .pip{position:absolute;top:2px;left:2px;font-size:9px;color:#eed3a4}
+.pocket-open{width:29%;height:52%;top:47%;right:0;z-index:10;padding:1px 0;
+ color:#ead8b0;font-size:clamp(9px,.9vw,12px);background:#1f2427eb;border-color:#9e8e70}
+.pocket-open[data-focused="true"]{background:#76604c;border-color:#eccf9c}
+.person-pocket .pocket-help{position:absolute;top:47%;left:55%;font-size:clamp(7px,.78vw,10px);color:#c1b49c;
+ white-space:nowrap;pointer-events:none}
+.enemy-pile{width:38%;height:82%;left:32%;top:6%;transform:rotate(3deg);border-color:#a88f73;overflow:hidden}
+.enemy-pile:nth-child(2){left:38%;top:10%;transform:rotate(-5deg);opacity:.78}
+.enemy-pocket .enemy-label{position:absolute;top:18%;left:2%;font-size:clamp(6px,.7vw,9px);
+ color:#c8b9a0;writing-mode:vertical-rl}
+.owner-fan[hidden]{display:none!important}
+.owner-fan{width:min(100%,720px);margin:10px auto 2px;padding:10px 13px 13px;
+ background:linear-gradient(165deg,#372d35f2,#171a20f6);border:1px solid #a69175ad;
+ border-radius:9px;box-shadow:0 14px 25px #0008,inset 0 0 0 1px #ffffff0a;
+ position:relative;z-index:12;animation:owner-fan-rise .2s cubic-bezier(.2,.74,.2,1) both;
+ transform-origin:var(--owner-origin,50%) top}
+.owner-fan:before{content:"";position:absolute;top:-7px;left:var(--owner-origin,50%);
+ width:12px;height:12px;transform:rotate(45deg);background:#372d35;
+ border-top:1px solid #a69175;border-left:1px solid #a69175}
+.owner-fan-header{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:space-between;
+ font-size:12px;color:#c9bda6;position:relative}
+.owner-fan-header strong{font-size:14px;color:#f0dcc2}
+.owner-fan-header button{background:#28252a;border:1px solid #8b7f71;border-radius:4px;
+ font-size:11px;padding:5px 8px;min-height:30px}
+.owner-fan-cards{display:flex;align-items:center;gap:8px;padding:12px 2px 4px;overflow-x:auto;
+ max-width:100%;scrollbar-width:thin}
+.owner-fan-cards .action{height:145px;flex-basis:114px;border-radius:5px;
+ transform:rotate(var(--card-tilt,0deg));transform-origin:50% 92%;
+ box-shadow:0 9px 12px #0008}
+.owner-fan-cards .action:hover,.owner-fan-cards .action[data-selected="true"]{
+ transform:translateY(-6px) rotate(0);box-shadow:0 14px 20px #000b}
+.owner-fan-cards .action:before{content:"";position:absolute;inset:3px;pointer-events:none;
+ border:1px solid #d0b18a5c;border-radius:3px}
+.owner-fan-cards .rail-empty{padding:16px;color:#a9a395}
+@keyframes owner-fan-rise{from{opacity:0;transform:translateY(-12px) scale(.96)}to{opacity:1;transform:none}}
+.layout-legend{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;color:#bdbaae;font-size:11px}
+.layout-legend b{display:inline-grid;place-items:center;background:#564b49;color:#f6e0b1;
+ width:19px;height:19px;border-radius:50%;margin-right:4px}
+.bottom{grid-template-columns:minmax(0,1fr)!important;gap:8px}
+.reserve-section{width:100%;min-width:0}
+.rail{justify-content:center;gap:clamp(4px,1vw,14px)}
+.reserve{border-color:#a78b73;background:linear-gradient(140deg,#60414c,#342d36);
+ box-shadow:0 6px 10px #0009;transform-style:preserve-3d}
+.reserve:hover{transform:translateY(-6px) rotate(-2deg)}
+.reserve img{filter:saturate(.96)}
+/* Fullscreen transparent real WebGL physics layer; pointer-through so
+   all 14 interactive target cards remain usable while a 3D card flies. */
+#physical-card-fx{position:fixed;inset:0;width:100vw;height:100dvh;z-index:35;
+ pointer-events:none;display:block;opacity:0;transition:opacity .1s}
+#physical-card-fx[data-active="true"]{opacity:1}
+.seat.hit-shock{animation:card-hit-physical .44s cubic-bezier(.2,.8,.2,1) both}
+.seat.healed{animation:card-heal-pulse .62s ease-out both}
+.seat.shielded{animation:card-shield-pulse .6s ease-out both}
+.seat.deployed{animation:card-landing .5s cubic-bezier(.15,.8,.3,1) both}
+@keyframes card-landing{0%{transform:translateY(-18px) scale(1.10);filter:brightness(1.65)}
+ 45%{transform:translateY(4px) scale(.98)}73%{transform:translateY(-2px) scale(1.01)}
+ 100%{transform:none;filter:none}}
+@keyframes card-hit-physical{0%{transform:none;filter:none}
+ 24%{transform:translate(-6px,3px) rotate(-3deg);filter:brightness(2)}
+ 44%{transform:translate(4px,-2px) rotate(2deg)}
+ 65%{transform:translate(-1px,1px) rotate(-1deg)}100%{transform:none;filter:none}}
+@keyframes card-heal-pulse{25%{transform:translateY(-4px);box-shadow:0 0 30px #7df8bcac}
+ 100%{transform:none;box-shadow:0 4px 12px #0008}}
+@keyframes card-shield-pulse{35%{transform:scale(1.045);box-shadow:0 0 30px #80d7ffb5}
+ 100%{transform:none}}
+@media(max-width:600px){
+ .person-pocket{height:clamp(33px,10vw,48px);margin-top:-3px}
+ .enemy-pocket{height:22px;margin-top:-3px}
+ .pocket-deck .pocket-count,.pocket-mini .pip{font-size:8px;padding:1px}
+ .pocket-mini b{font-size:8px;writing-mode:vertical-rl}
+ .pocket-help{display:none}
+ .pocket-open{font-size:9px;min-width:20px}
+ .owner-fan{padding:8px 7px}
+ .owner-fan-cards .action{flex-basis:97px;height:122px}
+ .layout-legend{font-size:9px;justify-content:start;gap:4px}
+ .layout-legend b{width:14px;height:14px;font-size:9px}
+ .rail{justify-content:start}
+ .reserve{width:54px;flex-basis:54px;height:78px}
+}
+@media(orientation:landscape) and (max-height:480px){
+ .person-pocket{height:28px;margin-top:-3px}
+ .enemy-pocket{height:16px}
+ .owner-fan-cards .action{height:108px}
+ .layout-legend{font-size:9px}
+}
+@media(prefers-reduced-motion:reduce){
+ .seat.hit-shock,.seat.healed,.seat.shielded,.seat.deployed{animation:none!important}
+ #physical-card-fx{transition:none}
+}
+
 </style>
 </head>
 <body>
@@ -169,25 +306,30 @@ main>.board,main>.bottom,main>.top,.board-status,.board-label,.seats{min-width:0
   <div class="seats enemy-row" id="enemy-seats" aria-label="敌方七个可选人物卡位"></div>
   <div class="mid" aria-live="polite"><div class="cue"><strong id="cue-title">先从下方候补打出一张人物卡</strong><small id="cue-sub">之后点击人物专属牌堆摸行动牌，可打队友或敌人</small></div></div>
   <div class="board-label ally"><span>我方 · 七个卡位</span><span id="ally-count">已上场 0 / 7</span></div>
-  <div class="seats ally-row" id="ally-seats" aria-label="我方七个部署卡位"></div>
+  <div class="seats ally-row" id="ally-seats" aria-label="我方七个部署卡位，每张人物卡下面叠放其个人牌堆和手牌"></div>
+  <div id="owner-fan" class="owner-fan" hidden aria-label="从所选人物卡下方展开的专属手牌">
+   <div class="owner-fan-header">
+    <strong id="owner-fan-name">人物专属手牌</strong>
+    <span id="owner-fan-count">0 张</span>
+    <button id="owner-fan-close" type="button" aria-label="把手牌叠回人物卡下面">收拢手牌 <span aria-hidden="true">⌄</span></button>
+   </div>
+   <div id="owner-fan-cards" class="owner-fan-cards"></div>
+  </div>
  </section>
  <section class="bottom" aria-label="人物部署与行动手牌">
   <div class="reserve-section">
-   <div class="tool-label"><strong>候补人物卡 · 先部署才能解锁卡组</strong><span>点击人物 → 点击己方空位</span></div>
+   <div class="tool-label"><strong>候补人物卡</strong><span>点击 / 拖到我方空席上场</span></div>
    <div class="rail" id="hero-reserve" aria-label="七张候补人物卡"></div>
   </div>
-  <div class="deck-section">
-   <div class="tool-label"><strong>已解锁的专属牌堆</strong><span>手动摸牌 · 不自动摸</span></div>
-   <div class="decks" id="owner-decks" aria-label="已经上场人物各自独立的抽牌堆"></div>
-  </div>
-  <div class="hand-section">
-   <div class="tool-label"><strong>共享行动手牌</strong><span>选择行动卡 → 点击任意己方或敌方角色</span></div>
-   <div class="hand" id="action-hand" aria-label="已抽取的人物专属行动牌"></div>
+  <div class="layout-legend" aria-label="卡牌玩法说明">
+   <span><b>1</b> 候补人物卡放入我方空席</span>
+   <span><b>2</b> 点击人物卡下的酒红卡背抽其专属卡</span>
+   <span><b>3</b> 点击叠牌展开，选行动牌施放到敌我任一目标</span>
   </div>
   <div class="controls">
    <button class="primary" id="end-turn" type="button">结束回合</button>
    <button id="inspect-selected" type="button" disabled>放大查看所选人物</button>
-   <small>可拖人物/行动牌到目标卡位；手机也可两次点按完成操作。</small>
+   <small>每位人物的牌堆和手牌都收在该人物卡下面；展开单人手牌不会打乱其他六席。</small>
   </div>
   <div id="notification" role="status" aria-live="polite">加载人物卡组…</div>
   <div class="log" aria-label="实时战斗记录"><strong>行动记录</strong><ul id="action-log"></ul></div>
@@ -197,6 +339,7 @@ main>.board,main>.bottom,main>.top,.board-status,.board-label,.seats{min-width:0
  <div class="preview-card"><img id="preview-img" alt=""><h2 id="preview-name"></h2><div class="preview-actions"><button id="preview-close" type="button">关闭预览</button></div></div>
 </div>
 <img id="ghost" hidden alt="" aria-hidden="true">
-<script type="module" src="./seven-seat-battle.mjs?v=20261119-seven-seats-v1"></script>
+<canvas id="physical-card-fx" aria-hidden="true"></canvas>
+<script type="module" src="./seven-seat-battle.mjs?v=20261120-owner-pockets-real-3d-physics-v2"></script>
 </body>
 </html>
