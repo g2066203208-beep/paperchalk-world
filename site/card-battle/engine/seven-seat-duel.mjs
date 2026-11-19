@@ -115,7 +115,14 @@ export function playAction(s,cardId,side,index){
 }
 export function endRound(s){
  if(!canPlay(s))return fail('现在不能结束回合');
- if(!live(s,'ally').length)return fail('请先部署至少一名队友');
+ if(!live(s,'ally').length && s.heroes.every(x=>!x.deployed))
+  return fail('请先部署至少一名队友');
+ if(!live(s,'ally').length && s.heroes.every(x=>x.deployed)){
+  s.result='defeat';s.phase='done';
+  return message(s,'所有七位队友都已倒下，战斗失败');
+ }
+ // If every CURRENT hero was defeated but reserves remain, allow passing
+ // to restore energy. Otherwise the player soft-locks at 0 energy forever.
  const events=[],allies=live(s,'ally');
  // The enemy never displays fake next-turn intentions, matching legacy rules.
  for(const [index,unit] of s.enemySeats.entries()){
