@@ -29,11 +29,22 @@ for(const d of [
   assert.equal(first.hand.length,0,'DO NOT automatically draw the action hand');
   assert.equal(first.round,1);
   assert.deepEqual(first.seats.enemy.map(Boolean),[false,true,false,true,false,true,false]);
-  assert.equal(await page.locator('#enemy-seats > .seat').count(),7);
-  assert.equal(await page.locator('#ally-seats > .seat').count(),7);
+  assert.equal(await page.locator('#enemy-seats .seat').count(),7);
+  assert.equal(await page.locator('#ally-seats .seat').count(),7);
   assert.equal(await page.locator('#hero-reserve .reserve').count(),7);
-  assert.equal(await page.locator('#owner-decks .deck').count(),0,
-   'undeployed heroes must not unlock character decks');
+  assert.equal(await page.locator('#ally-seats .pocket-deck').count(),0,
+   'undeployed heroes have NO unlocked physical action decks under their cards');
+  assert.equal(await page.locator('#ally-seats .pocket-mini').count(),0,
+   'all seven ally card-position pockets must begin empty');
+  assert.equal(await page.locator('#ally-seats .seat-column').count(),7);
+  assert.equal(await page.locator('#enemy-seats .seat-column').count(),7);
+  assert.equal(await page.locator('#enemy-seats .enemy-pile').count(),3,
+   'each live enemy has a real face-down action cue under its character');
+  const oldSlotSources=await page.evaluate(()=>window.SevenSeatBattleQA.cardPhysics);
+  assert(oldSlotSources.legacyLighting&&oldSlotSources.legacyRevealTiming,
+   'the new battle must REUSE the existing slot PBR lighting and card-reveal timing');
+  assert.equal(oldSlotSources.physicalIntegrator,'semi-implicit-euler-spring-impulse');
+  assert(oldSlotSources.realCardGeometry,'battle card flights must use real Three.js 3D mesh, not CSS-only fades');
   assert((await page.evaluate(()=>window.SevenSeatBattleQA.actualAssets.ally))
    .every(url=>url.includes('/assets/characters/wonder-circus/')&&/\.(png|webp)$/.test(url)),
    'the user-approved REAL character artwork must be loaded from GitHub');
@@ -72,14 +83,31 @@ for(const d of [
   let deployed=await page.evaluate(()=>window.SevenSeatBattleQA.snapshot);
   assert(deployed.seats.ally[3]?.includes('团长'),'actual ringmaster should deploy into player seat 4');
   assert.equal(deployed.decks[Object.keys(deployed.decks)[0]].unlocked,true);
-  assert.equal(await page.locator('#owner-decks .deck').count(),1);
+  assert.equal(await page.locator('#ally-seats .pocket-deck').count(),1);
+  assert.equal(await page.locator('#ally-seats .pocket-mini').count(),0);
+  assert.equal((await page.evaluate(()=>window.SevenSeatBattleQA.ownerStacks))[3].ownerId,
+   (await page.evaluate(()=>window.SevenSeatBattleQA.state.heroes[0].id)),
+   'the ringmaster's stack belongs ONLY under the ringmaster seat');
+  assert.equal(await page.locator('#owner-fan[hidden]').count(),1);
   assert.equal(deployed.energy,3);
+  await page.waitForTimeout(980);
   await page.screenshot({path:out+'/'+d.name+'-01-real-ringmaster-deployed.png',fullPage:true});
-  await page.locator('#owner-decks .deck').first().click();
-  assert.equal(await page.locator('#action-hand .action').count(),1,
+  await page.locator('#ally-seats .pocket-deck').first().click();
+  assert.equal(await page.locator('#owner-fan-cards .action').count(),1,
    "manual draw from deployed ringmaster-owned deck");
   assert.equal((await page.evaluate(()=>window.SevenSeatBattleQA.snapshot)).hand.length,1);
-  await page.locator('#action-hand .action').first().click();
+  assert.equal(await page.locator('#ally-seats .pocket-mini').count(),1,
+   'the drawn card must be visibly STACKED UNDER ITS OWNER, not in a detached action rail');
+  assert.equal(await page.locator('#owner-fan').isVisible(),true,
+   'clicking own card back should physically unfold only this hero\'s hand');
+  assert.equal(await page.locator('.hand-section').count(),0,
+   'previous global hand strip must be removed altogether');
+  assert.equal(await page.locator('.deck-section').count(),0,
+   'previous global deck strip must be removed altogether');
+  await page.waitForTimeout(1200);
+  const realPhysics=await page.evaluate(()=>window.SevenSeatBattleQA.cardPhysics);
+  assert(realPhysics.cardFlights>=2,'real Three.js flights must run on both deployment and manual draw');
+  await page.locator('#owner-fan-cards .action').first().click();
   const noValid=await page.locator('#enemy-seats [data-target="true"]').count();
   assert.equal(noValid,3,'target hints must exclude all four empty enemy seats');
   const before=await page.evaluate(()=>window.SevenSeatBattleQA.snapshot);
@@ -93,14 +121,15 @@ for(const d of [
   assert(hit.health.enemy[1]<before.health.enemy[1],'actual enemy HP decreases on damage');
   await page.screenshot({path:out+'/'+d.name+'-02-first-attack-on-enemy.png',fullPage:true});
   // A newly drawn friendly shield can target our own character card.
-  await page.locator('#owner-decks .deck').first().click();
-  await page.locator('#action-hand .action').first().click();
+  await page.locator('#ally-seats .pocket-deck').first().click();
+  await page.locator('#owner-fan-cards .action').first().click();
   await page.locator('#ally-seats .seat').nth(3).click();
   const shield=await page.evaluate(()=>window.SevenSeatBattleQA.state.allySeats[3]?.shield);
   assert(shield>0,'playing onto an ally must apply a real shield');
+  await page.waitForTimeout(770);
   await page.screenshot({path:out+'/'+d.name+'-03-support-ally-card.png',fullPage:true});
-  await page.locator('#owner-decks .deck').first().click();
-  await page.locator('#action-hand .action').first().click();
+  await page.locator('#ally-seats .pocket-deck').first().click();
+  await page.locator('#owner-fan-cards .action').first().click();
   await page.locator('#enemy-seats .seat').nth(1).click();
   assert((await page.evaluate(()=>window.SevenSeatBattleQA.snapshot)).health.enemy[1]>
    hit.health.enemy[1],'healing an enemy is deliberately allowed for any-target cards');
@@ -125,7 +154,21 @@ for(const d of [
   assert(second.seats.ally[5], 'second hero must be deployable by pointer/touch');
   assert.equal(Object.values(second.decks).filter(x=>x.unlocked).length,2,
    'each hero unlocks its own DECK, not the whole roster');
-  assert.equal(await page.locator('#owner-decks .deck').count(),2);
+  assert.equal(await page.locator('#ally-seats .pocket-deck').count(),2);
+  await page.locator('#ally-seats [data-owner-open]').last().click();
+  assert((await page.locator('#owner-fan-name').textContent()).includes('魔术师')||
+   (await page.evaluate(()=>window.SevenSeatBattleQA.focusedOwner))===
+    (await page.evaluate(()=>window.SevenSeatBattleQA.state.heroes[1].id)),
+   'the second character fan opens from HER OWN card-position pocket');
+  await page.locator('#owner-fan-close').click();
+  assert.equal(await page.locator('#owner-fan[hidden]').count(),1,
+   'closing a hand must tuck the fan back under the owner character');
+  assert.equal(await page.locator('#ally-seats .seat-column').count(),7);
+  const owners=await page.evaluate(()=>window.SevenSeatBattleQA.ownerStacks);
+  assert.equal(owners[3].ownerId===owners[5].ownerId,false,
+   'two separate characters must NOT share one visible hand stack');
+  assert.equal(await page.locator('#owner-fan').count(),1,
+   'only one focused character fan may be unfolded at a time');
   await page.screenshot({path:out+'/'+d.name+'-05-two-owners-two-independent-decks.png',fullPage:true});
   await page.locator('#restart').click();
   const restarted=await page.evaluate(()=>window.SevenSeatBattleQA.snapshot);
