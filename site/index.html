@@ -839,8 +839,8 @@ body.mobile-mode.virtual-landscape #view{
       <nav id="scene-menu-main" class="scene-menu-options" aria-label="主菜单选项">
         <button id="menu-start" type="button">开始游戏</button>
         <button id="menu-dungeon-elevator" type="button" title="进入地牢电梯经营游戏">地牢电梯 · 开始经营</button>
-        <button id="menu-card-battle" type="button" title="打开独立森林教学关卡：敌我各3×3方格">森林试炼 · 第一关</button>
-        <button id="menu-character-card-machine" type="button" title="3D 人物抽卡机：真实立绘、滚轮抽选、出卡、翻面和图鉴">人物卡抽选机 · 3D 出卡</button>
+        <button id="menu-card-battle" type="button" title="新七席人物卡牌战斗：敌我各七位，可部署人物并使用专属卡组">七席人物卡 · 对战</button>
+        <button id="menu-character-card-machine" type="button" title="进入全新七席牌桌；旧抽卡机可从游戏页归档入口访问">七席牌桌 · 进入战斗</button>
         <button id="menu-anima-paintover" type="button" title="第一章：会客厅 → 古堡长廊 → 月下庭院，真实 3D 走动、调查与往返">古堡探索 · 三场景</button>
         <button id="menu-snowbound" type="button" title="雪境行旅：村庄、路线、双排卡牌战斗、商店与完整冒险">雪境行旅 · 卡牌远征</button>
         <button id="menu-continue" type="button" disabled>继续游戏</button>
@@ -3548,7 +3548,7 @@ void main(){
 <script>
 document.addEventListener('DOMContentLoaded',()=>{
  document.getElementById('menu-dungeon-elevator')?.addEventListener('click',()=>window.location.assign('./dungeon-elevator/'));
- document.getElementById('menu-card-battle')?.addEventListener('click',()=>window.location.assign('./card-battle/forest-level-01.html'));
+ document.getElementById('menu-card-battle')?.addEventListener('click',()=>window.location.assign('./card-battle/character-card-machine.html'));
  document.getElementById('menu-character-card-machine')?.addEventListener('click',()=>window.location.assign('./card-battle/character-card-machine.html'));
  document.getElementById('menu-anima-paintover')?.addEventListener('click',()=>window.location.assign('./card-battle/anima-paintover-lab.html'));
  document.getElementById('menu-snowbound')?.addEventListener('click',()=>window.location.assign('./card-battle/snowbound-journey.html'));
