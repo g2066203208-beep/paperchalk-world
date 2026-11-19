@@ -145,7 +145,7 @@ for(const d of [
   await page.waitForFunction(()=>{
    const card=[...document.querySelectorAll('#enemy-seats .seat')][1];
    return Number(getComputedStyle(card,'::after').opacity)>.60;
-  },{timeout:1300});
+  },null,{timeout:2200,polling:'raf'});
   assert.equal(await page.locator('#battle-sparks .battle-floating-number').count(),1,
    'a readable floating damage number must overlap the bright rim beat');
   const flareCss=await page.evaluate(()=>{
