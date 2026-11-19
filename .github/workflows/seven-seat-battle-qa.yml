@@ -69,6 +69,8 @@ jobs:
           cp artifacts/seven-seat-battle/desktop-03-support-ally-card.png site/card-battle/qa/seven-seat/desktop-03-ally-shield.png
           cp artifacts/seven-seat-battle/desktop-05-two-owners-two-independent-decks.png site/card-battle/qa/seven-seat/desktop-05-owner-stacks.png
           cp artifacts/seven-seat-battle/desktop-06-real-physical-ten-sided-gold-reward.png site/card-battle/qa/seven-seat/desktop-06-original-slot-coins.png
+          cp artifacts/seven-seat-battle/desktop-07-physical-owner-hand-unfold.png site/card-battle/qa/seven-seat/desktop-07-character-hand-expanded.png
+          cp artifacts/seven-seat-battle/phone-portrait-07-physical-owner-hand-unfold.png site/card-battle/qa/seven-seat/phone-portrait-07-character-hand-expanded.png
           cp artifacts/seven-seat-battle/phone-portrait-06-real-physical-ten-sided-gold-reward.png site/card-battle/qa/seven-seat/phone-portrait-06-original-slot-coins.png
           cp artifacts/seven-seat-battle/phone-portrait-00-first-game-seven-vs-seven.png site/card-battle/qa/seven-seat/phone-portrait-00-table.png
           cp artifacts/seven-seat-battle/phone-portrait-05-two-owners-two-independent-decks.png site/card-battle/qa/seven-seat/phone-portrait-05-decks.png
