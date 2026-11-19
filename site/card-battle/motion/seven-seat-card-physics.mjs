@@ -9,12 +9,20 @@ import * as THREE from '../vendor/three.module.js';
 import {installPayoutLighting} from './coin-payout-lighting.mjs';
 import {evaluateCardSequence,smooth} from './character-card-sequence.mjs';
 import {deriveCardRelief} from './card-image-relief.mjs';
-import {roundedPaperEdgeGeometry} from './card-physical-edge.mjs';
+import {roundedPaperEdgeGeometry,sanitizeCardMatte} from './card-physical-edge.mjs';
+import {FastCoinPayout,FAST_DT} from './coin-payout-fast.mjs';
+import {COIN} from './coin-payout-shared.mjs';
+import {prepareExtrudedSprite,buildLowPolyPixelCoin3D} from './sprite-extrusion.mjs';
+import {upgradeCoinMaterials} from './coin-payout-lighting.mjs';
 const limit=(x,a,b)=>Math.max(a,Math.min(b,x));
 export function createSevenSeatCardMotion({backUrl,canvas}){
  let renderer,scene,camera,lighting,backMaterial,cardBackMap;
  let enabled=false,disabledReason='',prev=0,raf=0,plays=0;
- const flyers=new Set(),cachedFront=new Map(),lightParts=[];
+ const flyers=new Set(),cachedFront=new Map();
+ let coinPayout=null,coinMesh=null,coinReady=false,coinRunning=false,
+   coinAcc=0,coinAge=0,coinProduced=0,coinInitError='';
+ const coinDummy=new THREE.Object3D();
+ const coinAxis=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-Math.PI/2);
  const reduce=window.matchMedia('(prefers-reduced-motion:reduce)');
  const center=r=>r?{x:r.left+r.width*.5,y:r.top+r.height*.5,width:r.width,height:r.height}:
    {x:innerWidth/2,y:innerHeight/2,width:60,height:90};
@@ -23,7 +31,13 @@ export function createSevenSeatCardMotion({backUrl,canvas}){
   const c=document.createElement('canvas');c.width=w;c.height=h;
   const g=c.getContext('2d',{willReadFrequently:true});g.drawImage(image,0,0,w,h);
   const src=g.getImageData(0,0,w,h);
-  const maps=deriveCardRelief(src.data,w,h,'back');
+  const clean=sanitizeCardMatte(src.data,w,h);
+  const maps=deriveCardRelief(clean.pixels,w,h,'back');
+  const cleanCanvas=document.createElement('canvas');
+  cleanCanvas.width=w;cleanCanvas.height=h;
+  const cleanCtx=cleanCanvas.getContext('2d');
+  const cleanImg=cleanCtx.createImageData(w,h);
+  cleanImg.data.set(clean.pixels);cleanCtx.putImageData(cleanImg,0,0);
   const texture=pixels=>{
    const cv=document.createElement('canvas');cv.width=w;cv.height=h;
    const ctx=cv.getContext('2d'),id=ctx.createImageData(w,h);
@@ -31,8 +45,8 @@ export function createSevenSeatCardMotion({backUrl,canvas}){
    const t=new THREE.CanvasTexture(cv);
    t.colorSpace=THREE.NoColorSpace;t.anisotropy=3;return t;
   };
-  const base=new THREE.Texture(image);base.colorSpace=THREE.SRGBColorSpace;
-  base.minFilter=THREE.LinearMipmapLinearFilter;base.needsUpdate=true;
+  const base=new THREE.CanvasTexture(cleanCanvas);base.colorSpace=THREE.SRGBColorSpace;
+  base.minFilter=THREE.LinearMipmapLinearFilter;
   return {base,normal:texture(maps.normals),surface:texture(maps.surface)};
  }
  function createFace(url,label,kind){
