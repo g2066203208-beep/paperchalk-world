@@ -281,7 +281,9 @@ body{
 .battle-lightpool{
  position:absolute;left:var(--x);top:var(--y);width:150px;height:150px;
  transform:translate(-50%,-50%);border-radius:50%;
- background:radial-gradient(circle,#fff1b45a 0%,var(--spark-color,#f6c884)36 16%,transparent 72%);
+ background:radial-gradient(circle,
+   rgba(255,242,180,.52) 0%,rgba(250,178,98,.32) 21%,
+   rgba(230,136,55,.12) 45%,transparent 73%);
  mix-blend-mode:screen;opacity:0;filter:blur(7px);
  animation:bj-lightpool .44s ease-out both;
 }
