@@ -65,5 +65,14 @@ assert.equal(snap.seats.ally.length,7);
 assert.equal(snap.seats.enemy.length,7);
 assert.equal(snap.decks[allies[2].id].unlocked,false);
 assert.equal(snap.hand.length,handBefore-1);
+const locked=makeDuel(allies,enemies);
+assert.equal(deployHero(locked,allies[0].id,0).ok,true);
+locked.allySeats[0].hp=0;locked.allySeats[0].alive=false;
+locked.energy=0;
+assert.equal(endRound(locked).ok,true,
+ 'party can pass with all ACTIVE heroes dead and zero energy if undeployed reserves remain');
+assert.equal(locked.energy,4);
+assert.equal(deployHero(locked,allies[1].id,1).ok,true,
+ 'reserves can still join after restoring next turn energy');
 assert.throws(()=>makeDuel(allies.slice(1),enemies),/seven-character/);
 console.log('PASS 7+7 seats, deploy-to-unlock individual decks, no automatic draw, 10 hand, ally/enemy targets, real HP and turns');
