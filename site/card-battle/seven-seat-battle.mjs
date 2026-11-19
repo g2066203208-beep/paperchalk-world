@@ -201,12 +201,61 @@ function seatWidget(side,index){
  return [...document.querySelectorAll(`#${side}-seats .seat`)]
   .find(x=>+x.dataset.seat===index);
 }
+// Fine woven felt makes the TABLE catch light as a material rather than
+// being a sterile CSS enterprise-dashboard gradient.
+function installFeltWeave(){
+ const cv=document.createElement('canvas');cv.width=256;cv.height=256;
+ const ctx=cv.getContext('2d'),im=ctx.createImageData(256,256);
+ for(let y=0;y<256;y++)for(let x=0;x<256;x++){
+  const i=(y*256+x)*4;
+  const grain=Math.sin(x*5.17+y*8.37)*Math.cos(x*7.21-y*2.29);
+  const warp=Math.sin(y*.79+x*.09)*6+Math.sin(x*.93-y*.03)*5;
+  const fleck=(Math.sin(x*22.51+y*19.31)*Math.cos(y*17.11-x*14.37))*7;
+  im.data[i]=Math.max(0,Math.min(255,87+warp+grain*12+fleck));
+  im.data[i+1]=Math.max(0,Math.min(255,100+warp+grain*16+fleck));
+  im.data[i+2]=Math.max(0,Math.min(255,84+warp+grain*9+fleck));
+  im.data[i+3]=170;
+ }
+ ctx.putImageData(im,0,0);
+ document.querySelector('.board')?.style.setProperty('--felt-noise',
+  'url("'+cv.toDataURL('image/png')+'")');
+}
+function emitImpactParticles(node,type){
+ const container=$('battle-sparks');
+ if(!container||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ const rect=node.getBoundingClientRect(),x=rect.left+rect.width*.5,
+  y=rect.top+rect.height*.55;
+ const color=type==='damage'?'#f8b26d':type==='heal'?'#9de7b9':
+  type==='shield'?'#9cd7e5':'#eac189';
+ const count=type==='damage'?12:8;
+ for(let i=0;i<count;i++){
+  const angle=(i/count)*Math.PI*2+(i%3)*.12;
+  const radius=type==='damage'?40:28;
+  const span=document.createElement('span');
+  span.className='battle-spark';
+  span.style.setProperty('--x',x+'px');
+  span.style.setProperty('--y',y+'px');
+  span.style.setProperty('--dx',Math.cos(angle)*(radius+i%4*6)+'px');
+  span.style.setProperty('--dy',Math.sin(angle)*(radius*.68+i%3*5)+'px');
+  span.style.setProperty('--spark-color',color);
+  span.style.setProperty('--size',(2+i%3)+'px');
+  container.appendChild(span);
+  span.addEventListener('animationend',()=>span.remove(),{once:true});
+ }
+ const ring=document.createElement('span');ring.className='battle-impact-ring';
+ ring.style.setProperty('--x',x+'px');
+ ring.style.setProperty('--y',y+'px');
+ ring.style.setProperty('--spark-color',color);
+ container.appendChild(ring);
+ ring.addEventListener('animationend',()=>ring.remove(),{once:true});
+}
 function impactEffect(ev){
  const el=seatWidget(ev.side,ev.index);if(!el)return;
  const cls=ev.type==='damage'?'hit-shock':ev.type==='heal'?'healed':
   ev.type==='shield'?'shielded':'deployed';
  el.classList.remove('hit-shock','healed','shielded','deployed');
  void el.offsetWidth;el.classList.add(cls);
+ emitImpactParticles(el,ev.type);
  el.addEventListener('animationend',()=>el.classList.remove(cls),{once:true});
 }
 function animateEvent(ev,origin){
@@ -216,24 +265,45 @@ function animateEvent(ev,origin){
    .filter(x=>state.hand.some(c=>c.id===x.dataset.actionId&&c.ownerId===ev.ownerId));
   target=cards.at(-1)||document.querySelector('.person-pocket[data-owner-id="'+ev.ownerId+'"]');
   label=state.hand.find(x=>x.id===ev.cardId)?.name||'行动';
+  kind='draw';
  }else if(ev.side){
   target=seatWidget(ev.side,ev.index);
   if(ev.type==='deploy'){
-   kind='hero';frontUrl=state.allySeats[ev.index]?.art||'';
+   kind='deploy';frontUrl=state.allySeats[ev.index]?.art||'';
+   const processed=processedArt.get(frontUrl);
+   if(processed)frontUrl=processed;
    label=state.allySeats[ev.index]?.name||'人物';
-  }else label=ev.type==='damage'?'突击':ev.type==='heal'?'治疗':'架势';
+  }else{
+   label=ev.type==='damage'?'突击':ev.type==='heal'?'治疗':'架势';
+   kind=ev.attacker?'enemy':'action';
+  }
  }
  if(!target)return;
  if(!origin&&ev.attacker){
   const attacker=state.enemySeats.findIndex(x=>x?.name===ev.attacker);
   origin=seatWidget('enemy',attacker)?.getBoundingClientRect();
  }
- const to=target.getBoundingClientRect();
- motion.fly({from:origin||to,to,frontUrl,label,kind,
+ const destination=target.getBoundingClientRect();
+ // The card is now drawn by real PBR WebGL. Suppress the underlying DOM
+ // duplicate until paper touches the table (old code showed BOTH together).
+ const suppress=ev.type==='deploy'||ev.type==='draw';
+ if(suppress)target.style.visibility='hidden';
+ let restored=false;
+ function restore(){
+  if(restored)return;
+  restored=true;
+  if(suppress)target.style.visibility='';
+ }
+ const ok=motion.fly({
+  from:origin||destination,to:destination,frontUrl,label,kind,
   onLand:()=>{
+   restore();
    if(ev.type!=='draw')impactEffect(ev);
    cardSound(ev.type==='damage'?'impact':ev.type==='draw'?'draw':'deal');
-  }});
+  },
+  onFinish:restore
+ });
+ if(!ok)restore();
 }
 function apply(action,{from=null}={}){
  if(!state)return;
@@ -420,6 +490,29 @@ app.addEventListener('pointerup',e=>{
  else{selection=drag.card;render()}
 });
 app.addEventListener('pointercancel',()=>{touchDrag=null;$('ghost').hidden=true});
+// A subtle physically plausible ink/specular tilt on hover, not a
+// thick metallic border or large floating photo-card wobble.
+app.addEventListener('pointermove',e=>{
+ if(e.pointerType==='touch'||e.pointerType==='pen')return;
+ const card=e.target.closest('.seat[data-occupied="true"],.reserve');
+ if(!card)return;
+ const rect=card.getBoundingClientRect();
+ const u=Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width));
+ const v=Math.max(0,Math.min(1,(e.clientY-rect.top)/rect.height));
+ card.style.setProperty('--tilt-x',((.5-v)*5).toFixed(2)+'deg');
+ card.style.setProperty('--tilt-y',((u-.5)*6.5).toFixed(2)+'deg');
+ card.style.setProperty('--glint-x',(u*100).toFixed(1)+'%');
+ card.style.setProperty('--glint-y',(v*100).toFixed(1)+'%');
+});
+app.addEventListener('pointerout',e=>{
+ const card=e.target.closest('.seat,.reserve');
+ if(!card||card.contains(e.relatedTarget))return;
+ card.style.setProperty('--tilt-x','0deg');
+ card.style.setProperty('--tilt-y','0deg');
+ card.style.setProperty('--glint-x','50%');
+ card.style.setProperty('--glint-y','42%');
+});
+
 async function init(){
  try{
   const response=await fetch(manifestUrl,{cache:'no-cache'});
@@ -430,12 +523,19 @@ async function init(){
   if(!heroGroup||!enemyGroup)throw Error('GitHub 未找到完整的七人人物原画清单');
   referenceHeroes=rosterFromGroup(heroGroup);
   referenceEnemies=rosterFromGroup(enemyGroup);
+  installFeltWeave();
   restart();
   window.SevenSeatBattleQA={
    get state(){return state;},
    get snapshot(){return getSnapshot(state);},
    get actualAssets(){return {ally:referenceHeroes.map(x=>x.art),enemy:referenceEnemies.map(x=>x.art)};},
    get cardPhysics(){return motion.state;},
+   get presentation(){return {
+    feltTextureReady:!!document.querySelector('.board')?.style.getPropertyValue('--felt-noise'),
+    dynamic3DPaper:!!motion.state.realCardGeometry,
+    impactLayerReady:!!$('battle-sparks'),
+    blackjackFeelCSS:!![...document.styleSheets].some(x=>x.href?.includes('seven-seat-blackjack-table.css'))
+   };},
    triggerWinCoins:()=>motion.payout(36),
    get ownerStacks(){return state.allySeats.map((unit,index)=>{
     const hero=heroForSeat(unit);return {seat:index,ownerId:hero?.id||null,
