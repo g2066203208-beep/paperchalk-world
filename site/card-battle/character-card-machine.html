@@ -1,157 +1,186 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#100f18">
-<title>人物卡出卡机 · 真实立绘抽选与 3D 出卡</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#141316">
+<title>七席牌桌 · 人物卡战斗</title>
 <style>
-:root{color-scheme:dark;font-family:ui-sans-serif,system-ui,"Noto Sans SC",sans-serif}
+:root{color-scheme:dark;font-family:system-ui,-apple-system,"Noto Sans SC",sans-serif;--bg:#121317;--panel:#1d1e23;--ink:#efede7;--muted:#9a9ca4;--line:#58565a;--gold:#b9a47b;--red:#623a48;--felt:#222c2c;--green:#789e92}
 *{box-sizing:border-box}
-body{margin:0;background:radial-gradient(ellipse at 50% -10%,#302c36 0,#17151d 41%,#0c1015 100%);color:#ecece6;min-height:100dvh}
-button,select{font:inherit;touch-action:manipulation}
-a{color:#ddc991;text-decoration:none}a:hover{text-decoration:underline}
-main{width:min(1420px,100%);margin:auto;padding:clamp(7px,1.6vw,20px);display:grid;gap:12px}
-header{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap}
-header h1{margin:0;font-size:clamp(20px,2.4vw,32px);font-weight:740;letter-spacing:.045em}
-header p{margin:4px 0 0;color:#aeadb6;font-size:12px;line-height:1.65}
-header nav{display:flex;flex-wrap:wrap;gap:15px;font-size:12px}
-.stage{position:relative;overflow:hidden;isolation:isolate;border:1px solid #685745;background:radial-gradient(ellipse at 50% 25%,#413738 0%,#232128 42%,#0c1218 100%);border-radius:16px;box-shadow:0 14px 55px #0006}
-#machine-canvas{display:block;width:100%;height:clamp(370px,64dvh,740px);touch-action:none}
-.stage::after{content:"";pointer-events:none;position:absolute;inset:0;border:1px solid #ffffff11;border-radius:inherit}
-#inspect-toolbar{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:4;width:min(calc(100% - 24px),790px);padding:10px;border:1px solid #b8a17b77;border-radius:12px;background:#11151cdb;backdrop-filter:blur(9px);display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:7px;box-shadow:0 12px 38px #0008}
-#inspect-toolbar[hidden]{display:none}
-#inspect-toolbar button,#inspect-toolbar select{min-height:39px;padding:8px 10px;font-size:12px}
-#inspect-toolbar select{flex:1 1 190px;max-width:290px}
-#inspect-hint{position:absolute;left:50%;top:20px;transform:translateX(-50%);z-index:4;pointer-events:none;color:#f2e0bd;font-size:12px;text-shadow:0 2px 8px #000b;text-align:center;width:85%}
-#inspect-hint[hidden]{display:none}
-.stage[data-inspecting="true"]{cursor:grab}
-.stage[data-inspecting="true"]:active{cursor:grabbing}
-.stage[data-inspecting="true"] #announce,.stage[data-inspecting="true"] .led{display:none}
-/* Anima portraits must never be obscured by stage captions, especially on phones. */
-.stage[data-inspecting="true"] .hud,
-.stage[data-inspecting="true"] #inspect-hint{display:none!important}
-
-.hud{position:absolute;top:16px;left:18px;font:600 11px ui-monospace,monospace;letter-spacing:.085em;color:#cfbf9f;text-shadow:0 2px 8px #000;pointer-events:none;line-height:1.7}
-.hud strong{display:block;color:#f5f1dc;font-size:12px}
-#announce{position:absolute;bottom:20px;left:16px;max-width:70%;pointer-events:none;text-shadow:0 3px 15px #000b}
-#announce strong{display:block;font-size:clamp(19px,2.8vw,35px);font-weight:780;line-height:1.2}
-#announce small{display:block;margin-top:5px;color:#ded0ab;font-size:clamp(11px,1.4vw,14px)}
-#announce[hidden]{display:none}
-.led{position:absolute;right:16px;top:14px;display:flex;gap:7px;align-items:center;font:700 10px ui-monospace,monospace;letter-spacing:.1em;color:#bfb39c}
-.led i{width:7px;height:7px;border-radius:50%;background:#85ddc5;box-shadow:0 0 12px #66e7cb}
-.led[data-busy="true"] i{background:#ffd17e;box-shadow:0 0 14px #ffcc67}
-.controls{display:flex;flex-wrap:wrap;align-items:center;gap:9px;padding:4px 0}
-button,select{border:1px solid #63594c;background:#242730;color:#ebe6de;min-height:44px;padding:10px 14px;border-radius:8px;cursor:pointer}
-button.primary{background:linear-gradient(160deg,#e5cf90,#b98e4b);border-color:#f8dfa6;color:#201910;font-weight:800;box-shadow:inset 0 1px 0 #ffffff99,0 4px 18px #d9ad5133}
-button.primary:active{transform:translateY(2px)}
-button[disabled]{opacity:.38;cursor:not-allowed;transform:none}
-button[aria-pressed=true]{border-color:#c4a76b;color:#f8e1a2;background:#38342c}
-select{max-width:100%;font-size:12px;min-width:140px}
-.status{color:#b9b0a3;font-size:12px;margin-left:auto}
-.library{border-top:1px solid #54463c;padding-top:12px}
-.library header h2{font-size:14px;margin:0;color:#e7d4ae}
-.library header span{font-size:12px;color:#aaa5a0}
-#collection{display:flex;gap:8px;overflow-x:auto;min-height:99px;padding:9px 0 12px;scrollbar-color:#655842 transparent}
-#collection .empty{align-self:center;color:#9d9b97;font-size:12px}
-.mini{width:62px;height:87px;flex:none;position:relative;background:#1a1b1b;border:1px solid #81735b;border-radius:5px;overflow:hidden}
-.mini img{width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 2px 3px #000)}
-.mini em{position:absolute;right:2px;bottom:2px;background:#070a0bdb;color:#f4ddaa;font:700 10px ui-monospace,monospace;padding:2px 4px;border-radius:2px}
-footer{font-size:11px;color:#968e83;line-height:1.55}
-@media(max-width:760px){
- main{gap:8px}header h1{font-size:21px}header p{font-size:11px}
- #machine-canvas{height:clamp(390px,57dvh,700px)}
- .controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
- .controls>*{min-width:0!important;padding:9px 6px;font-size:11px}
- .controls select{grid-column:1/4;width:100%}
- .controls .status{grid-column:1/4;margin-left:0;text-align:center}
- #announce{bottom:12px;left:12px}#announce strong{font-size:21px}
- .hud{font-size:9px;top:8px;left:10px}.led{right:8px;top:8px;font-size:9px}
- #inspect-toolbar{padding:7px;gap:5px}
- #inspect-toolbar button,#inspect-toolbar select{font-size:11px;min-height:38px;padding:6px 8px}
- #inspect-hint{top:7px;font-size:10px}
-
+html{scroll-behavior:smooth}
+body{margin:0;background:radial-gradient(ellipse at 50% 0,#292429,#111317 75%);color:var(--ink);min-height:100dvh}
+button{font:inherit;cursor:pointer;touch-action:manipulation;color:inherit}
+button:disabled{opacity:.39;cursor:not-allowed}
+button:focus-visible{outline:3px solid #e0cc94;outline-offset:2px}
+a{color:#d6c6a4;text-decoration:none}
+main{max-width:1350px;margin:0 auto;padding:12px clamp(8px,2vw,24px) 24px}
+.top{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:0 0 10px}
+.brand h1{font-size:clamp(18px,2vw,27px);margin:0;font-weight:720;letter-spacing:.08em}
+.brand small{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.links{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:12px}
+.links button,.controls button,.preview-actions button{background:#2b2930;border:1px solid #6a6160;padding:9px 12px;border-radius:6px;min-height:39px}
+.links button:hover,.controls button:hover{border-color:#c1aa7e}
+.board{padding:12px clamp(8px,1.8vw,24px) 14px;border-radius:12px;border:1px solid #494c4c;position:relative;background:radial-gradient(ellipse at 50% 60%,#32403d 0,#222a2b 52%,#181c20 100%);box-shadow:0 18px 60px #0007,inset 0 0 0 1px #ffffff08;overflow:hidden}
+.board:before{content:"";position:absolute;inset:0;opacity:.12;pointer-events:none;background:repeating-linear-gradient(112deg,transparent 0px,transparent 5px,#a09e8933 6px,transparent 7px)}
+.board>*{position:relative}
+.board-status{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:0 0 8px;border-bottom:1px solid #77786d42;margin-bottom:9px;font-size:12px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:5px 9px;background:#171b1cbf;border:1px solid #65655d80;border-radius:5px;font-size:11px;color:#e4e1d8}
+.board-label{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700;letter-spacing:.08em;margin:0 0 6px}
+.board-label.enemy{color:#e7a9a9}.board-label.ally{color:#a7d6c5}
+.board-label span:last-child{font-weight:400;letter-spacing:0;color:#b7b7b4}
+.seats{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:clamp(3px,.65vw,10px);justify-items:center;align-items:center}
+.seat{width:100%;max-width:121px;aspect-ratio:0.7;min-height:0;padding:0;position:relative;border:1px solid #78766d88;border-radius:6px;background:linear-gradient(155deg,#151c1df2,#272a2a);box-shadow:inset 0 0 0 3px #090a0b55,0 2px 9px #0008;overflow:hidden;display:block;text-align:center;transition:transform .15s,border-color .15s,box-shadow .15s}
+.seat[data-occupied="false"]{border:1px dashed #988c786a;background:repeating-linear-gradient(-45deg,#20282a 0,#20282a 8px,#252e2e 8px,#252e2e 16px)}
+.seat[data-occupied="true"]{border:1px solid #8b8172;background:linear-gradient(150deg,#665058,#392f35)}
+.seat:hover{transform:translateY(-3px);border-color:#d0ba8e}
+.seat[data-selectable="true"]{border:2px solid #e5c689;box-shadow:0 0 15px #d9ae6447,inset 0 0 0 2px #ffffff28}
+.seat[data-target="true"]{border-color:#93d2bb;box-shadow:0 0 13px #9af7ca52}
+.seat.is-fallen{filter:saturate(.25);opacity:.5}
+.seat img{display:block;width:100%;height:100%;object-fit:contain;object-position:center;background:linear-gradient(155deg,#8b716a,#493644)}
+.seat-num{position:absolute;left:4px;top:4px;font-size:10px;color:#b4b2aa;opacity:.8}
+.seat-empty{position:absolute;inset:0;display:grid;place-items:center;color:#828b89;font-size:clamp(9px,1.5vw,13px);text-align:center;letter-spacing:.1em}
+.seat-name{position:absolute;left:0;right:0;bottom:0;padding:15px 2px 3px;background:linear-gradient(transparent,#0b0b10ea);font-weight:700;font-size:clamp(8px,.95vw,12px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seat-stats{position:absolute;top:3px;right:3px;display:flex;flex-direction:column;gap:3px}
+.seat-hp,.seat-shield{background:#151419ed;padding:2px 3px;border-radius:3px;font-size:clamp(8px,.75vw,11px);font-weight:700;box-shadow:0 0 2px #000}
+.seat-hp{color:#ffe0ca}.seat-shield{color:#a9daed}
+.mid{height:clamp(58px,10vh,103px);margin:9px 0;position:relative;display:grid;place-items:center;border-top:1px solid #8b8c7c30;border-bottom:1px solid #8b8c7c30}
+.mid:before{content:"";position:absolute;left:1%;right:1%;top:50%;border-top:1px dashed #a1b5a448;pointer-events:none}
+.mid .cue{position:relative;background:#151a1bdd;padding:8px 13px;border:1px solid #79807970;border-radius:5px;max-width:94%;text-align:center;min-width:min(370px,94%)}
+.mid .cue strong{display:block;font-size:clamp(11px,1vw,15px);color:#e8e0cb}
+.mid .cue small{display:block;color:#aab5ae;margin-top:3px;font-size:10px;line-height:1.5}
+.bottom{display:grid;gap:9px;padding-top:12px}
+.tool-label{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#b9b7b6;font-size:11px;letter-spacing:.04em}
+.tool-label strong{color:#ede4d1;font-size:13px}
+.rail{display:flex;gap:6px;overflow-x:auto;padding:4px 2px 8px;scrollbar-width:thin;scrollbar-color:#777064 transparent;min-height:55px}
+.reserve{width:82px;flex:0 0 82px;height:112px;position:relative;background:#322d32;border:1px solid #7c7166;border-radius:6px;padding:0;overflow:hidden;text-align:center;box-shadow:0 3px 10px #0007}
+.reserve img{width:100%;height:100%;object-fit:contain;display:block;background:linear-gradient(140deg,#75615c,#34282e)}
+.reserve .tag{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,#090b0def);padding:9px 2px 4px;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.reserve[data-selected="true"]{border:2px solid #e5c98a;transform:translateY(-3px)}
+.reserve[data-deployed="true"]{filter:saturate(.35);opacity:.48}
+.reserve[data-deployed="true"]:after{content:"已上场";position:absolute;top:37%;left:0;right:0;font-size:11px;background:#111a1bcb;padding:4px 0}
+.decks{display:flex;gap:7px;overflow-x:auto;padding:3px 0 7px;min-height:65px}
+.deck{position:relative;display:flex;align-items:center;gap:8px;min-height:58px;flex:0 0 148px;text-align:left;border:1px solid #857765;background:#322c2e;border-radius:6px;padding:5px 8px}
+.deck img{width:33px;height:47px;object-fit:cover;border-radius:3px;border:1px solid #b59f79}
+.deck strong{display:block;font-size:11px;white-space:nowrap;max-width:85px;overflow:hidden;text-overflow:ellipsis}
+.deck small{display:block;font-size:10px;color:#b4a9a3;margin-top:4px}
+.hand{display:flex;gap:7px;overflow-x:auto;padding:5px 2px 12px;min-height:98px}
+.action{flex:0 0 122px;height:141px;text-align:left;border:1px solid #867762;border-radius:6px;background:linear-gradient(#65505a,#352e33 32%,#27242a);padding:9px 8px;position:relative;box-shadow:0 3px 10px #0006;transition:transform .12s}
+.action .owner{font-size:10px;color:#ddc9ac;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.action strong{display:block;margin:13px 0 7px;font-size:15px}
+.action small{display:block;color:#d3ced0;font-size:10px;line-height:1.5}
+.action .cost{position:absolute;right:6px;top:6px;border:1px solid #cfac75;border-radius:50%;padding:2px 6px;font-size:12px}
+.action[data-selected="true"]{transform:translateY(-5px);outline:2px solid #dbc08e;outline-offset:0}
+.action:disabled{opacity:.5}
+.rail-empty{color:#898e92;font-size:12px;align-self:center;padding:10px 3px}
+.controls{display:flex;align-items:center;gap:8px;justify-content:space-between;flex-wrap:wrap}
+.controls .primary{background:#bba274;color:#17181a;border:1px solid #e8d7a8;font-weight:800}
+.controls small{color:#a9a9a7;font-size:11px}
+#notification{color:#ded0b2;font-size:12px;min-height:24px;padding:3px 0;line-height:1.5}
+.log{border-top:1px solid #65615b66;padding:10px 0;color:#aaa9aa;font-size:11px;line-height:1.65}
+.log ul{list-style:none;padding:0;margin:5px 0;max-height:100px;overflow:auto}
+.log li{border-left:2px solid #775c5c;padding-left:8px;margin:5px 0}
+#preview[hidden]{display:none}
+#preview{position:fixed;inset:0;z-index:40;display:grid;place-items:center;background:#08090bd9;padding:15px;backdrop-filter:blur(6px)}
+.preview-card{width:min(420px,94vw);max-height:92dvh;display:flex;flex-direction:column;align-items:center;background:#222026;border:1px solid #958472;border-radius:12px;padding:12px;box-shadow:0 18px 90px #000b}
+.preview-card img{display:block;max-height:min(68dvh,690px);max-width:100%;aspect-ratio:704/1024;object-fit:contain;background:linear-gradient(135deg,#8d6869,#39292e);border-radius:6px}
+.preview-card h2{font-size:16px;margin:8px 0}
+.preview-actions{display:flex;justify-content:center}
+#ghost{position:fixed;z-index:99;pointer-events:none;width:85px;height:120px;object-fit:contain;opacity:.88;border-radius:4px;transform:translate(-50%,-50%) rotate(-6deg);filter:drop-shadow(0 12px 18px #000a)}
+#ghost[hidden]{display:none}
+@media(min-width:1100px){.bottom{grid-template-columns:1fr 1.2fr;column-gap:18px}.reserve-section{grid-column:1}.deck-section{grid-column:2}.hand-section,.controls,.log{grid-column:1/-1}}
+@media(max-width:600px){
+ main{padding:6px 6px 12px}
+ .top{margin-bottom:6px}.brand h1{font-size:17px}.brand small{font-size:10px}.links{gap:8px;font-size:10px}
+ .links a:nth-child(2){display:none}
+ .board{padding:7px 5px 8px;border-radius:7px}
+ .board-status{font-size:10px;padding-bottom:5px;margin-bottom:6px;gap:5px}
+ .chip{font-size:9px;padding:4px 5px}
+ .board-label{font-size:10px;margin-bottom:4px}
+ .board-label span:last-child{font-size:9px}
+ .seats{gap:3px}
+ .seat{border-radius:4px}
+ .seat-name{font-size:8px;padding:10px 1px 2px}
+ .seat-hp,.seat-shield{font-size:8px;padding:1px 2px}
+ .seat-stats{top:2px;right:2px;gap:2px}
+ .seat-num{font-size:8px;top:1px;left:1px}
+ .seat-empty{font-size:8px}
+ .mid{height:53px;margin:6px 0}
+ .mid .cue{padding:6px 7px}.mid .cue strong{font-size:11px}.mid .cue small{font-size:9px}
+ .bottom{gap:5px;padding-top:8px}
+ .tool-label{font-size:9px}.tool-label strong{font-size:11px}
+ .reserve{width:62px;flex-basis:62px;height:88px}
+ .deck{flex-basis:124px;min-height:53px}
+ .hand{min-height:90px}
+ .action{flex-basis:103px;height:122px;padding:7px 6px}
+ .action strong{font-size:13px;margin:10px 0 6px}
+ .action small{font-size:9px}
+ .controls button{font-size:11px;min-height:36px;padding:7px 9px}
+ .log{padding-top:5px}
 }
-/* The actual 844×390 phone viewport must show BOTH the full machine and
-   controls without Playwright (or touch) auto-scrolling the machine away. */
-@media (orientation:landscape) and (max-height:470px) and (min-width:650px){
- main{padding:4px 8px;gap:4px}
- header{gap:4px;min-height:29px}
- header h1{font-size:17px;line-height:1.1}
- header p{display:none}
- header nav{font-size:10px;gap:8px}
- #machine-canvas{height:calc(100dvh - 111px);min-height:210px}
- .stage{border-radius:9px}
- .hud{top:5px;left:9px;font-size:9px}
- .led{top:6px;right:8px;font-size:9px}
- #announce{bottom:8px;left:10px}
- #announce strong{font-size:19px}
- #announce small{font-size:10px}
- .controls{gap:5px;padding:0;flex-wrap:nowrap}
- .controls button,.controls select{min-height:38px;padding:6px 9px;font-size:11px}
- .controls select{min-width:130px}
- .controls .status{display:none}
- .library,footer{display:none}
- #inspect-toolbar{bottom:4px;width:min(99%,790px);padding:4px;gap:4px;border-radius:6px}
- #inspect-toolbar button,#inspect-toolbar select{min-height:32px;font-size:10px;padding:3px 6px}
- #inspect-toolbar select{min-width:135px;flex:1 1 135px}
+@media(orientation:landscape) and (max-height:480px){
+ .brand small{display:none}.top{margin-bottom:2px}
+ .board{padding-top:3px;padding-bottom:4px}
+ .board-status{margin-bottom:3px;padding-bottom:3px}
+ .board-label{margin-bottom:2px}
+ .seat{max-width:75px}
+ .mid{height:33px;margin:3px 0}
+ .mid .cue{padding:2px 8px}
+ .mid .cue small{display:none}
+ .bottom{grid-template-columns:1fr 1fr;gap:2px 8px}
+ .reserve-section{grid-column:1}.deck-section{grid-column:2}
+ .hand-section,.controls,.log{grid-column:1/-1}
+ .reserve{flex-basis:46px;width:46px;height:65px}
+ .action{height:100px}
+ .log{display:none}
 }
-/* Inspection controls occupy their own row, NEVER cover the treasured art. */
-#inspect-toolbar{position:relative;top:auto;bottom:auto;left:auto;right:auto;transform:none;width:100%;max-width:100%;background:#17191fe8;border:1px solid #72634d68;box-shadow:none;padding:8px 10px}
-#inspect-toolbar select{max-width:380px}
-#inspect-toolbar[hidden]{display:none!important}
-body.inspect-open .controls,body.inspect-open .library,body.inspect-open footer{display:none!important}
-@media(max-width:760px){
- #inspect-toolbar{padding:8px;gap:5px}
- #inspect-toolbar select{flex:1 1 100%;max-width:100%}
- #inspect-toolbar button{flex:1 1 auto}
-}
-@media(orientation:landscape) and (max-height:470px) and (min-width:650px){
- #inspect-toolbar{padding:4px 6px;gap:5px;flex-wrap:nowrap}
- #inspect-toolbar button{flex:none;min-height:32px;font-size:9px;padding:3px 4px}
- #inspect-toolbar select{flex:1 1 auto;min-width:175px;max-width:none}
-}
-@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-<main>
-<header>
- <div><h1>人物卡 · 实体出卡机</h1><p>真实组织立绘 · 机械滚轮锁定 · 卡背出仓 · 翻面揭晓 · PBR 金属灯光</p></div>
- <nav><a href="../index.html">主菜单</a><a href="./coin-payout-3d.html">金币出奖机</a><a href="./anima-paintover-lab.html">古堡探索</a></nav>
-</header>
-<section class="stage" aria-label="可操作的立体人物卡自动售卡机">
- <canvas id="machine-canvas" aria-label="3D 人物卡机：三只滚轮转动，人物卡从下方滑出、翻面展示"></canvas>
- <div class="hud">PAPERCHALK · CASTING MACHINE<strong id="stage-label">加载人物资源…</strong><span id="stage-frame">READY / 00:00</span></div>
- <div class="led" id="machine-led"><i></i><span id="machine-state">STANDBY</span></div>
- <div id="announce" hidden aria-live="polite"><strong id="card-name"></strong><small id="card-origin"></small></div>
- <div id="inspect-hint" hidden>拖动：任意方向 360° 旋转 · 滚轮/双指：放大缩小 · 右键/Shift 拖动或双指移动：平移 · 双指扭转：旋转角度</div>
-</section>
- <div id="inspect-toolbar" hidden aria-label="卡牌自由观赏操作">
-  <select id="inspect-character" aria-label="选择已入库人物原画"><option value="back">只看通用卡背</option></select>
-  <button id="inspect-front" type="button">看正面</button>
-  <button id="inspect-back" type="button">看背面</button>
-  <button id="inspect-spin" type="button" aria-pressed="false">自动转动</button>
-  <button id="inspect-zoom-out" type="button" title="缩小卡牌" aria-label="缩小卡牌">− 缩小</button>
-  <button id="inspect-zoom-in" type="button" title="放大卡牌" aria-label="放大卡牌">＋ 放大</button>
-  <button id="inspect-reset" type="button">居中复位</button>
-  <button id="inspect-exit" type="button">返回机器</button>
- </div>
-<section class="controls" aria-label="抽卡操作">
- <button type="button" class="primary" id="draw-one" disabled>抽取 1 张</button>
- <button type="button" class="primary" id="draw-five" disabled>连续抽取 5 张</button>
- <button type="button" id="skip" disabled>跳过演出</button>
- <button type="button" id="inspect" disabled>自由观赏卡牌</button>
- <select id="faction" aria-label="抽取组织"><option value="all">全部已入库组织</option></select>
- <button type="button" id="glow" aria-pressed="true">电影辉光：开</button>
- <button type="button" id="mute" aria-pressed="false">音效：开</button>
- <span class="status" id="load-status" role="status">核对角色清单与原图…</span>
-</section>
-<section class="library" aria-label="本机抽取记录">
- <header><h2>抽取记录 / 本机图鉴</h2><span id="library-count">0 张</span></header>
- <div id="collection"><span class="empty">还未抽取人物卡</span></div>
-</section>
-<footer>当前为角色抽取与电影演出的交互原型。使用 GitHub 已上传的原始人物立绘；未制定正式抽卡货币、概率、保底和人物强度，也不会据此修改已有七职业或角色设定。记录保存在当前浏览器。</footer>
+<main id="duel-app">
+ <header class="top">
+  <div class="brand"><h1>七席牌桌 <span style="color:#b9a47b">/</span> 人物卡对战</h1><small>敌我各七席 · 上场解锁角色专属卡组 · 可攻击或支援双方</small></div>
+  <nav class="links"><a href="../index.html">主菜单</a><a href="./character-card-machine-legacy.html">旧人物抽卡机（归档）</a><button id="restart" type="button">重新开局</button></nav>
+ </header>
+ <section class="board" aria-label="七对七人物卡对阵牌桌">
+  <div class="board-status">
+   <span class="chips"><span class="chip" id="round-label">第 1 回合</span><span class="chip" id="energy-label">行动点 4/4</span><span class="chip" id="hand-count">手牌 0/10</span></span>
+   <span class="chip" id="battle-status">正在载入真实人物原画…</span>
+  </div>
+  <div class="board-label enemy"><span>敌方 · 七个卡位</span><span id="enemy-count">已上场 3 / 7</span></div>
+  <div class="seats enemy-row" id="enemy-seats" aria-label="敌方七个可选人物卡位"></div>
+  <div class="mid" aria-live="polite"><div class="cue"><strong id="cue-title">先从下方候补打出一张人物卡</strong><small id="cue-sub">之后点击人物专属牌堆摸行动牌，可打队友或敌人</small></div></div>
+  <div class="board-label ally"><span>我方 · 七个卡位</span><span id="ally-count">已上场 0 / 7</span></div>
+  <div class="seats ally-row" id="ally-seats" aria-label="我方七个部署卡位"></div>
+ </section>
+ <section class="bottom" aria-label="人物部署与行动手牌">
+  <div class="reserve-section">
+   <div class="tool-label"><strong>候补人物卡 · 先部署才能解锁卡组</strong><span>点击人物 → 点击己方空位</span></div>
+   <div class="rail" id="hero-reserve" aria-label="七张候补人物卡"></div>
+  </div>
+  <div class="deck-section">
+   <div class="tool-label"><strong>已解锁的专属牌堆</strong><span>手动摸牌 · 不自动摸</span></div>
+   <div class="decks" id="owner-decks" aria-label="已经上场人物各自独立的抽牌堆"></div>
+  </div>
+  <div class="hand-section">
+   <div class="tool-label"><strong>共享行动手牌</strong><span>选择行动卡 → 点击任意己方或敌方角色</span></div>
+   <div class="hand" id="action-hand" aria-label="已抽取的人物专属行动牌"></div>
+  </div>
+  <div class="controls">
+   <button class="primary" id="end-turn" type="button">结束回合</button>
+   <button id="inspect-selected" type="button" disabled>放大查看所选人物</button>
+   <small>可拖人物/行动牌到目标卡位；手机也可两次点按完成操作。</small>
+  </div>
+  <div id="notification" role="status" aria-live="polite">加载人物卡组…</div>
+  <div class="log" aria-label="实时战斗记录"><strong>行动记录</strong><ul id="action-log"></ul></div>
+ </section>
 </main>
-<script type="module" src="./motion/character-card-machine.mjs?v=20261118-integrated-burgundy-portrait-v7"></script>
+<div id="preview" hidden role="dialog" aria-modal="true" aria-label="角色原画放大预览">
+ <div class="preview-card"><img id="preview-img" alt=""><h2 id="preview-name"></h2><div class="preview-actions"><button id="preview-close" type="button">关闭预览</button></div></div>
+</div>
+<img id="ghost" hidden alt="" aria-hidden="true">
+<script type="module" src="./seven-seat-battle.mjs?v=20261119-seven-seats-v1"></script>
 </body>
 </html>
