@@ -59,7 +59,7 @@ for(let i=0;i<3;i++){
   'stopped mechanical reels should land exactly on an aligned emblem');
 }
 assert.equal(smooth(-1),0);assert.equal(smooth(2),1);
-const html=file('site/card-battle/character-card-machine.html');
+const html=file('site/card-battle/character-card-machine-legacy.html');
 const runtime=file('site/card-battle/motion/character-card-machine.mjs');
 const menu=file('site/index.html');
 for(const token of ['draw-one','draw-five','faction','collection','machine-canvas','skip','glow']){
