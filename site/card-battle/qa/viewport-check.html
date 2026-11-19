@@ -9,10 +9,10 @@ async function until(condition){for(let i=0;i<100;i++){if(condition())return;awa
 function checkLayout(d){const body=d.documentElement;if(body.scrollWidth>width||body.scrollHeight>height+1)throw Error('页面溢出 '+body.scrollWidth+'×'+body.scrollHeight);
 for(const node of d.querySelectorAll('.pile,.slot,.card,#actions button,#help')){const b=node.getBoundingClientRect();if(b.left<0||b.right>width+1||b.top<0||b.bottom>height+1)throw Error('控件越界 '+node.textContent)}}
 async function verify(f){try{const d=f.contentDocument;checkLayout(d);
-const find=t=>Array.from(d.querySelectorAll('button')).find(b=>b.textContent===t&&!b.disabled);
-find('换位').click();await until(()=>!find('换位')&&(find('停牌')||find('下一局')));if(find('下一局'))find('下一局').click();
-find('抽牌').click();find('灰烬').click();await until(()=>d.querySelector('#player em')&&Array.from(d.querySelectorAll('#player em')).some(n=>n.textContent.includes('灰烬'))&&(find('下一局')||find('停牌')));
-if(find('停牌'))find('停牌').click();await until(()=>find('下一局'));checkLayout(d);
+const ready=()=>!d.querySelector('.field').inert;const find=t=>Array.from(d.querySelectorAll('button')).find(b=>b.textContent===t&&!b.disabled);
+find('换位').click();await until(()=>ready()&&!find('换位')&&(find('停牌')||find('下一局')));if(find('下一局'))find('下一局').click();
+find('抽牌').click();find('灰烬').click();await until(()=>ready()&&d.querySelector('#player em')&&Array.from(d.querySelectorAll('#player em')).some(n=>n.textContent.includes('灰烬'))&&(find('下一局')||find('停牌')));
+if(find('停牌'))find('停牌').click();await until(()=>ready()&&find('下一局'));checkLayout(d);
 if(f===frame)out.textContent=width+' × '+height+' · 换位、抽牌、灰烬、结算及边界检查通过';}
 catch(e){if(f===frame)out.textContent='检查失败 · '+e.message}}
 function openSize(dim){[width,height]=dim.split(',').map(Number);const f=document.createElement('iframe');f.title='真实游戏视口';frame=f;f.width=width;f.height=height;f.onload=()=>verify(f);f.src='../soul-table.html';host.replaceChildren(f);out.textContent='检查中…';fit()}
