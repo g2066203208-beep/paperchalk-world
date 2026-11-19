@@ -113,7 +113,9 @@ export function createSevenSeatCardMotion({backUrl,canvas}){
      backMaterial.needsUpdate=true;
     }catch(e){console.warn('Using unlit gold card back instead of derived PBR',e)}
    },{once:true});
-   resize();enabled=true;return true;
+   resize();enabled=true;
+   prepareVictoryCoins().catch(console.warn);
+   return true;
   }catch(e){disabledReason=String(e);console.warn('WebGL card animation fallback',e);return false}
  }
  function resize(){
@@ -208,7 +210,7 @@ export function createSevenSeatCardMotion({backUrl,canvas}){
   return true;
  }
  function run(now){
-  raf=0;if(!flyers.size||!enabled)return;
+  raf=0;if((!flyers.size&&!coinRunning)||!enabled)return;
   const dt=Math.min(.033,Math.max(.001,(now-(prev||now-16))/1000));
   prev=now;
   for(const flyer of [...flyers]){
@@ -251,8 +253,9 @@ export function createSevenSeatCardMotion({backUrl,canvas}){
     flyer.onFinish?.();
    }
   }
+  if(coinRunning)stepVictoryCoins(dt);
   renderer.render(scene,camera);
-  if(flyers.size)raf=requestAnimationFrame(run);
+  if(flyers.size||coinRunning)raf=requestAnimationFrame(run);
   else{
    renderer.clear();
    canvas.dataset.active='false';
@@ -278,6 +281,9 @@ export function createSevenSeatCardMotion({backUrl,canvas}){
  }
  function stop(){
   if(raf)cancelAnimationFrame(raf);raf=0;
+  coinRunning=false;coinAcc=0;coinAge=0;
+  if(coinPayout){coinPayout.destroy();coinPayout=null}
+  if(coinMesh)coinMesh.count=0;
   for(const f of flyers){scene.remove(f.model.node);f.onFinish?.();}
   flyers.clear();renderer?.clear();canvas.dataset.active='false';
  }
@@ -289,10 +295,14 @@ export function createSevenSeatCardMotion({backUrl,canvas}){
  }
  init();
  addEventListener('resize',resize,{passive:true});
- return {fly,stop,destroy,get state(){return {
+ return {fly,payout:victoryCoins,stop,destroy,get state(){return {
   enabled,disabledReason,active:flyers.size,cardFlights:plays,
   legacyLighting:!!lighting,legacyRevealTiming:typeof evaluateCardSequence==='function',
   physicalIntegrator:'semi-implicit-euler-spring-impulse',
-  realCardGeometry:enabled,pbrBackReady:!!cardBackMap
+  realCardGeometry:enabled,pbrBackReady:!!cardBackMap,
+  reusedSlotCoinPhysics:true,coinSpriteReady:coinReady,
+  coinArtworkError:coinInitError,coinActive:coinRunning,
+  actualCoinBodies:coinPayout?.coins.length||0,
+  coinPayoutEmitted:coinProduced,coinPhysicsModel:coinPayout?.physicsModel||'3D spatial-hash oriented-disc separation (non-SAT)'
  }}};
 }
