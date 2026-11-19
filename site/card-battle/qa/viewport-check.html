@@ -8,10 +8,10 @@ const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function until(condition){for(let i=0;i<1000;i++){if(condition())return;await wait(50)}throw Error('等待动画结束超时')}
 function checkLayout(d){const body=d.documentElement;if(body.scrollWidth>width||body.scrollHeight>height+1)throw Error('页面溢出 '+body.scrollWidth+'×'+body.scrollHeight);
 for(const node of d.querySelectorAll('.pile,.slot,.card,#actions button,#help')){const b=node.getBoundingClientRect();if(b.left<0||b.right>width+1||b.top<0||b.bottom>height+1)throw Error('控件越界 '+node.textContent)}}
-async function verify(f){try{const d=f.contentDocument;checkLayout(d);
+async function verify(f){try{const d=f.contentDocument;await until(()=>d.querySelector('.field')&&!d.querySelector('.field').inert);checkLayout(d);
 const ready=()=>!d.querySelector('.field').inert;const find=t=>Array.from(d.querySelectorAll('button')).find(b=>b.textContent===t&&!b.disabled);
 find('换位').click();await until(()=>ready()&&!find('换位')&&(find('停牌')||find('下一局')));if(find('下一局'))find('下一局').click();
-find('抽牌').click();find('灰烬').click();await until(()=>ready()&&d.querySelector('#player em')&&Array.from(d.querySelectorAll('#player em')).some(n=>n.textContent.includes('灰烬'))&&(find('下一局')||find('停牌')));
+await until(ready);find('抽牌').click();await until(ready);find('灰烬').click();await until(()=>ready()&&d.querySelector('#player em')&&Array.from(d.querySelectorAll('#player em')).some(n=>n.textContent.includes('灰烬'))&&(find('下一局')||find('停牌')));
 if(find('停牌'))find('停牌').click();await until(()=>ready()&&find('下一局'));checkLayout(d);
 if(f===frame)out.textContent=width+' × '+height+' · 换位、抽牌、灰烬、结算及边界检查通过';}
 catch(e){if(f===frame)out.textContent='检查失败 · '+e.message}}
@@ -22,15 +22,19 @@ document.querySelectorAll('button').forEach(b=>b.onclick=()=>openSize(b.dataset.
   const f=document.createElement('iframe');frame=f;f.width=width;f.height=height;f.title='动画逐帧';f.src='../soul-table.html';
   f.onload=async()=>{
     const d=f.contentDocument;
+    await until(()=>!d.querySelector('.field').inert);
     d.querySelector('#player .pile').click();
+    await until(()=>!d.querySelector('.field').inert);
     Array.from(d.querySelectorAll('#player button')).find(b=>b.textContent==='灰烬').click();
-    await until(()=>d.querySelector('.slash') && d.getAnimations().some(a=>a.effect.target.matches('.slash')));
-    const anim=d.getAnimations().filter(a=>a.effect.target.matches('.faces,.embers,.slash'));
+    const hands=new URLSearchParams(location.search).get('film')==='hand';
+    const selector=hands?'.motion-rig, .motion-rig *':'.faces,.embers,.slash';
+    if(!hands)await until(()=>d.querySelector('.slash') && d.getAnimations().some(a=>a.effect.target.matches('.slash')));
+    const anim=d.getAnimations().filter(a=>a.effect.target.matches(selector));
     anim.forEach(a=>{a.pause();a.currentTime=0});
     let n=0;
     const next=document.createElement('button');next.textContent='下一帧';
-    next.onclick=()=>{n=Math.min(28,n+1);anim.forEach(a=>a.currentTime=Math.min(n*1001/30,a.effect.getTiming().duration-.01));label.textContent='灰烬 · 第 '+n+' 帧'};
-    const label=document.createElement('span');label.textContent='灰烬 · 第 0 帧';out.replaceChildren(next,label)
+    next.onclick=()=>{n=Math.min(hands?26:28,n+1);anim.forEach(a=>a.currentTime=Math.min(n*1001/30,a.effect.getTiming().duration-.01));label.textContent=(hands?'持牌落位 · 第 ':'灰烬 · 第 ')+n+' 帧'};
+    const label=document.createElement('span');label.textContent=(hands?'持牌落位':'灰烬')+' · 第 0 帧';out.replaceChildren(next,label)
   };host.replaceChildren(f);fit()
 }else openSize('390,844');
 </script></html>
