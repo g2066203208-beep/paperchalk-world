@@ -200,7 +200,7 @@ function render(){
    b.disabled=!!ending||locked||(!dealt[i]&&!recruits)||(dealt[i]&&(!vitality[i]||!orders))||!!held&&held.owner!==i;
    if(selected===i||held?.owner===i)b.classList.add('armed');decks.append(b)
  });
- const pub=el('public');pub.replaceChildren();if(common)pub.append(tactic(common.owner,2));else pub.textContent='公共位';pub.disabled=!!ending||locked||(!dealt[i]&&!recruits)||(dealt[i]&&(!vitality[i]||!orders))||held?.kind!==2;pub.classList.toggle('armed',!pub.disabled);refreshHeader();
+ const pub=el('public');pub.replaceChildren();if(common)pub.append(tactic(common.owner,2));else pub.textContent='公共位';pub.disabled=!!ending||locked||held?.kind!==2;pub.classList.toggle('armed',!pub.disabled);refreshHeader();
 }
 function select(i){
  if(locked||ending||(!dealt[i]&&!recruits)||(dealt[i]&&(!orders||!vitality[i])))return;
