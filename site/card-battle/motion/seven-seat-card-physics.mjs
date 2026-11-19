@@ -7,7 +7,7 @@
  */
 import * as THREE from '../vendor/three.module.js';
 import {installPayoutLighting} from './coin-payout-lighting.mjs';
-import {evaluateCardSequence,smooth} from './character-card-sequence.mjs';
+import {sampleTableCard,tableFlightPoint,springTo,TABLE_CARD_TIMING} from './seven-seat-card-kinetics.mjs';
 import {deriveCardRelief} from './card-image-relief.mjs';
 import {roundedPaperEdgeGeometry,sanitizeCardMatte} from './card-physical-edge.mjs';
 import {FastCoinPayout,FAST_DT} from './coin-payout-fast.mjs';
@@ -221,77 +221,70 @@ export function createSevenSeatCardMotion({backUrl,canvas}){
   coinProduced=coinPayout.fire(limit(amount,1,40));
   coinRunning=true;coinAcc=0;coinAge=0;
   canvas.dataset.active='true';
-  if(!raf){prev=0;raf=requestAnimationFrame(run)}
+  if(!raf){prev=0;raf=requestAnimationFrame(renderFrame)}
   return true;
  }
- function run(now){
+ function renderFrame(now){
   raf=0;if((!flyers.size&&!coinRunning)||!enabled)return;
-  const dt=Math.min(.033,Math.max(.001,(now-(prev||now-16))/1000));
+  const dt=Math.min(.026,Math.max(.001,(now-(prev||now-16))/1000));
   prev=now;
   for(const flyer of [...flyers]){
    flyer.age+=dt;
-   // Same independent velocity + settling angular inertia architecture as
-   // the slot coin bodies; numerically integrated, never CSS tween-only.
+   const beat=sampleTableCard(flyer.age*1000,flyer.kind,flyer.direction);
+   const point=tableFlightPoint(flyer.from,flyer.target,beat);
    const body=flyer.body;
-   const k=145,d=17;
-   body.vx+=((flyer.target.x-body.x)*k-body.vx*d)*dt;
-   body.vy+=((flyer.target.y-body.y)*k-body.vy*d+200)*dt;
-   body.x+=body.vx*dt;body.y+=body.vy*dt;
-   const boundaryY=flyer.target.y+4;
-   if(body.y>boundaryY&&body.vy>20){
-    body.y=boundaryY;body.vy=-body.vy*.30;
-    if(!flyer.hit){flyer.hit=true;flyer.onLand?.();}
+   // Physics follows an authored short blackjack deal, rather than
+   // using a wandering projectile and waiting 1.65s for spring to settle.
+   const x=springTo(body.x,body.vx,point.x,dt,38,.94);
+   const y=springTo(body.y,body.vy,point.y,dt,38,.94);
+   body.x=x.position;body.vx=x.velocity;
+   body.y=y.position;body.vy=y.velocity;
+   if(beat.complete){
+    body.x=flyer.target.x;body.y=flyer.target.y;
    }
-   const torque=-body.spin*88-body.spinVelocity*15;
-   body.spinVelocity+=torque*dt;
-   body.spin+=body.spinVelocity*dt;
-   // Reuse the ORIGINAL slot's 2350–2990 ms three-axis reveal beat.
-   const reveal=smooth(limit((flyer.age-.12)/.62,0,1));
-   const slotBeat=evaluateCardSequence(2350+reveal*640);
-   const yaw=flyer.flip?slotBeat.card.rotationY:0;
    const node=flyer.model.node;
-   node.position.set(body.x-innerWidth/2,innerHeight/2-body.y,35);
-   node.rotation.set(.09*Math.sin(flyer.age*8)*Math.exp(-flyer.age*3),
-    yaw,body.spin);
-   const size=flyer.size;
-   const fit=Math.min(size.width/1.68,size.height/2.53);
-   node.scale.setScalar(fit*(.91+.09*reveal));
-   const elapsed=flyer.age;
-   if((elapsed>.74&&Math.hypot(body.x-flyer.target.x,body.y-flyer.target.y)<5&&
-    Math.hypot(body.vx,body.vy)<32)||elapsed>1.65){
-    scene.remove(node);
-    flyer.model.face.geometry.dispose();
-    flyer.model.face.material.dispose();
-    flyer.model.edge.geometry.dispose();
-    flyer.model.edge.material.dispose();
-    flyers.delete(flyer);
-    flyer.onFinish?.();
+   node.position.set(body.x-innerWidth*.5,innerHeight*.5-body.y,36+beat.lift*13);
+   node.rotation.set(beat.pitch,beat.yaw,beat.roll);
+   node.scale.setScalar(flyer.fit*beat.scale);
+   const shadow=flyer.model.shadow;
+   shadow.position.set(body.x-innerWidth*.5,innerHeight*.5-(body.y+beat.lift*5),25);
+   shadow.scale.set(flyer.fit*1.73*(1+beat.lift*.32),
+    flyer.fit*2.6*(1+beat.lift*.19),1);
+   shadow.material.opacity=.32-beat.lift*.19;
+   flyer.model.face.material.envMapIntensity=.28+beat.intensity*.30;
+   if(!flyer.hit && beat.t>=.90){
+    flyer.hit=true;flyer.onLand?.();
+   }
+   if(flyer.age*1000>beat.duration+95){
+    if(!flyer.hit){flyer.hit=true;flyer.onLand?.();}
+    scene.remove(node);scene.remove(shadow);
+    flyer.model.face.geometry.dispose();flyer.model.face.material.dispose();
+    flyer.model.edge.geometry.dispose();flyer.model.edge.material.dispose();
+    flyer.model.shadow.geometry.dispose();flyer.model.shadow.material.dispose();
+    flyers.delete(flyer);flyer.onFinish?.();
    }
   }
   if(coinRunning)stepVictoryCoins(dt);
   renderer.render(scene,camera);
-  if(flyers.size||coinRunning)raf=requestAnimationFrame(run);
-  else{
-   renderer.clear();
-   canvas.dataset.active='false';
-  }
+  if(flyers.size||coinRunning)raf=requestAnimationFrame(renderFrame);
+  else{renderer.clear();canvas.dataset.active='false';}
  }
- function fly({from,to,frontUrl='',label='',kind='hero',onLand,onFinish}={}){
-  if(reduce.matches||!enabled){
-   onLand?.();onFinish?.();return false;
-  }
+ function fly({from,to,frontUrl='',label='',kind='deploy',onLand,onFinish}={}){
+  if(reduce.matches||!enabled){onLand?.();onFinish?.();return false;}
   const fromC=center(from),toC=center(to);
-  const tex=createFace(frontUrl,label,kind==='action'?'action':'hero');
+  // Real image materials and micro-rough paper are loaded once per art.
+  const tex=createFace(frontUrl,label,kind==='draw'||kind==='action'||kind==='enemy'?'action':'hero');
   const model=physicalCard(tex);
-  const dx=toC.x-fromC.x,dy=toC.y-fromC.y;
-  const flyer={model,kind,size:{
-    width:limit(toC.width*.95,32,126),height:limit(toC.height*.95,45,182)
-   },target:toC,flip:true,age:0,hit:false,
-    body:{x:fromC.x,y:fromC.y,vx:dx*.30+(dx<0?-65:65),
-      vy:dy*.13-320,spin:(dx<0?-.16:.16),spinVelocity:(dx<0?-3.3:3.3)},
-    onLand,onFinish};
+  const direction=Math.sign(toC.x-fromC.x)||1;
+  const width=limit(toC.width*.96,32,130),height=limit(toC.height*.96,45,183);
+  const flyer={model,kind,from:fromC,target:toC,direction,age:0,hit:false,
+   fit:Math.min(width/1.68,height/2.53),
+   body:{x:fromC.x,y:fromC.y,vx:0,vy:0},
+   onLand,onFinish};
+  // The final destination is already in the DOM. The REAL 3D card takes
+  // its place for the brief deal; do not show two duplicate face images.
   flyers.add(flyer);plays++;canvas.dataset.active='true';notifyGPU();
-  if(!raf){prev=0;raf=requestAnimationFrame(run);}
+  if(!raf){prev=0;raf=requestAnimationFrame(renderFrame);}
   return true;
  }
  function stop(){
@@ -299,7 +292,9 @@ export function createSevenSeatCardMotion({backUrl,canvas}){
   coinRunning=false;coinAcc=0;coinAge=0;
   if(coinPayout){coinPayout.destroy();coinPayout=null}
   if(coinMesh)coinMesh.count=0;
-  for(const f of flyers){scene.remove(f.model.node);f.onFinish?.();}
+  for(const f of flyers){
+   scene.remove(f.model.node);scene.remove(f.model.shadow);f.onFinish?.();
+  }
   flyers.clear();renderer?.clear();canvas.dataset.active='false';
  }
  function destroy(){
@@ -312,7 +307,10 @@ export function createSevenSeatCardMotion({backUrl,canvas}){
  addEventListener('resize',resize,{passive:true});
  return {fly,payout:victoryCoins,stop,destroy,get state(){return {
   enabled,disabledReason,active:flyers.size,cardFlights:plays,
-  legacyLighting:!!lighting,legacyRevealTiming:typeof evaluateCardSequence==='function',
+  legacyLighting:!!lighting,legacyRevealTiming:true,
+  tableMotionTimings:TABLE_CARD_TIMING,
+  explicitLandingFeedback:true,
+  tableFlightProfile:'Black Jacket-style brisk lift/slide/reveal/seat impact, original authored timing',
   physicalIntegrator:'semi-implicit-euler-spring-impulse',
   realCardGeometry:enabled,pbrBackReady:!!cardBackMap,
   reusedSlotCoinPhysics:true,coinSpriteReady:coinReady,
