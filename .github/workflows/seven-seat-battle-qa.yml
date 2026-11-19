@@ -71,6 +71,8 @@ jobs:
           cp artifacts/seven-seat-battle/desktop-00-first-game-seven-vs-seven.png site/card-battle/qa/seven-seat/desktop-00-table.png
           cp artifacts/seven-seat-battle/desktop-01-real-ringmaster-deployed.png site/card-battle/qa/seven-seat/desktop-01-deployed.png
           cp artifacts/seven-seat-battle/desktop-02-first-attack-on-enemy.png site/card-battle/qa/seven-seat/desktop-02-attack.png
+          cp artifacts/seven-seat-battle/desktop-08-amber-edge-hit-flare.png site/card-battle/qa/seven-seat/desktop-08-blackjacket-amber-impact.png
+          cp artifacts/seven-seat-battle/phone-portrait-08-amber-edge-hit-flare.png site/card-battle/qa/seven-seat/phone-portrait-08-blackjacket-amber-impact.png
           cp artifacts/seven-seat-battle/desktop-03-support-ally-card.png site/card-battle/qa/seven-seat/desktop-03-ally-shield.png
           cp artifacts/seven-seat-battle/desktop-05-two-owners-two-independent-decks.png site/card-battle/qa/seven-seat/desktop-05-owner-stacks.png
           cp artifacts/seven-seat-battle/desktop-06-real-physical-ten-sided-gold-reward.png site/card-battle/qa/seven-seat/desktop-06-original-slot-coins.png
