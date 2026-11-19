@@ -6,9 +6,29 @@ main{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-i
 @media (orientation:portrait) and (max-width:700px){.field{width:min(96%,520px);gap:clamp(12px,2.6dvh,24px)}.row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;position:relative;padding-top:47px}.row>.card,.row>.slot{width:100%;height:auto;aspect-ratio:0.69}.row>.seat{position:absolute;right:0;top:8px;width:auto;display:flex;align-items:center;gap:8px}.row>.pile{position:absolute;left:3px;top:0;width:64px;height:40px;transform:rotate(-3deg);font-size:14px}.row>.pile:before{content:"";position:absolute;inset:-3px}.field .scores{gap:38px}.score small{font-size:12px}.pips{font-size:clamp(13px,3.5vw,20px)}header small{display:none}.message{margin:0;min-height:2.8em}}
 @media (orientation:landscape) and (max-height:570px){header,footer{padding:2px 3vw}header small{display:none}header h1{font-size:19px}.field{gap:3px;padding:3px 0}.pile,.card,.slot{width:min(10vw,14dvh);height:min(15vw,20dvh)}.score i{height:29px;min-width:36px;font-size:18px}.target{font-size:21px}.score small{font-size:10px}.message{min-height:1.3em;font-size:13px}.actions{min-height:36px}.actions button,#help{padding:2px 12px;min-height:36px}.pips{font-size:min(1.85vw,3.3dvh)}footer{font-size:12px}}
 @media (orientation:portrait) and (max-height:680px){.field{gap:6px;padding:5px 0}.row{padding-top:42px}.row>.card,.row>.slot{max-height:15dvh}.message{min-height:1.5em}.score i{height:34px}header,footer{padding-block:5px}}
+main{background:radial-gradient(ellipse at 45% 92%,#7b3825bd,transparent 61%),radial-gradient(ellipse at 65% 22%,#385944 0%,#334637 44%,#252e25 70%,#111916)}#grain{opacity:.95}.field{position:relative}.field:before{content:"";position:absolute;inset:2% -20%;pointer-events:none;z-index:-1;border-radius:50%;background:radial-gradient(ellipse at var(--light-x,55%) var(--light-y,42%),#ebb56a1c,transparent 49%)}header,footer{background:linear-gradient(90deg,#101810e8,#18221788,#0e1712d4)}.front{background:repeating-linear-gradient(21deg,transparent 0 3px,#7454330b 4px 5px),radial-gradient(ellipse at 44% 40%,#f9e6b9,#eac990 67%,#bc9259 92%,#725632);box-shadow:inset 0 0 0 1px #452e20,inset 0 0 0 3px #af8854,inset 0 0 8px 3px #ad783caa,1px 3px 2px #100d0a99}.front:after{content:"";position:absolute;inset:6%;border:1px solid #815a3338;pointer-events:none}.corner{z-index:1}.front:before{content:attr(data-rank);position:absolute;right:7%;bottom:5%;transform:rotate(180deg);font:bold .39em Georgia;color:inherit}.back,.pile{background:repeating-radial-gradient(ellipse at 50% 110%,#54332d 0 2px,#94654a 2.6px 3px,#51352f 3.4px 5px);border:3px double #aa7758}.slot{box-shadow:inset 1px 1px 2px #111a1344}.available:is(:hover,:focus-visible){background:#c7a96666;box-shadow:0 0 18px #dfa65350,inset 0 0 10px #f4d39533}.seat b{color:#d2ae66;text-shadow:1px 1px #291c0f}
+#stage-fx{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:8}.motion-rig,.lift,.plane,.wrist{position:absolute;top:0;left:0;width:0;height:0}.motion-rig .plane{perspective:700px;transform-style:preserve-3d}.motion-rig .card{position:absolute;left:calc(-.5 * var(--cw));top:calc(-.5 * var(--ch));width:var(--cw);height:var(--ch);transform:none;color:#27251e;font-size:calc(.4 * var(--cw))}.motion-rig .card.red{color:#912e20}.motion-rig .faces{transform-style:preserve-3d}.motion-rig .palm{position:absolute;width:calc(var(--cw) * 1.28);left:calc(var(--cw) * -.64);top:calc(var(--cw) * -1.9)}.palm svg{width:100%;height:auto;display:block}.digit{transform-origin:var(--pivot);transform-box:view-box}.contact-shadow{position:absolute;width:var(--cw);height:var(--ch);left:calc(-.5 * var(--cw));top:calc(-.5 * var(--ch));border-radius:7%;background:#15120e}.holding .wrist{opacity:.96}#table-rim{position:absolute;inset:0;pointer-events:none;z-index:-1;opacity:.55;box-shadow:inset 0 0 11vmax #08110d}#table-rim:after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(32deg,transparent 0 2px,#11191022 2px 3px);mix-blend-mode:multiply}
+.motion-rig .card{perspective:none;transform-style:preserve-3d}.lift{perspective:760px}.seat b:before,.soul-coin{content:"";display:inline-block;width:1.05em;height:.88em;border-radius:50%;background:radial-gradient(ellipse at 50% 43%,#413e30 0 16%,#899385 19% 28%,#677367 33% 49%,#bdc2a3 53% 59%,#697569 63% 75%,#30392d 80%);border:1px solid #a9ae91;box-shadow:0 2px #394036,0 3px #83917d,0 5px #293027;vertical-align:middle;margin-right:.27em}.soul-coin{position:fixed;z-index:10;pointer-events:none;width:23px;height:19px;margin:0}.target.bright{box-shadow:0 0 24px #f9c15e}
 </style>
-<main><canvas id="grain" aria-hidden="true"></canvas><header><div><small>冥河渡口</small><h1>渡魂牌局</h1></div><span id="journey"></span><button id="help">桌规</button></header><section class="field"><div class="row" id="enemy"></div><div class="scores"><div class="score"><i id="myScore"></i><small>你的点数</small></div><div class="target">21</div><div class="score foe"><i id="theirScore"></i><small>亡魂点数</small></div></div><div class="row" id="player"></div><p class="message" aria-live="polite" id="message"></p><div class="actions" id="actions"></div></section><footer><a href="./coin-payout-3d.html">返回金币机</a><span id="progress"></span></footer></main>
+<main><div id="table-rim"></div><canvas id="grain" aria-hidden="true"></canvas><header><div><small>冥河渡口</small><h1>渡魂牌局</h1></div><span id="journey"></span><button id="help">桌规</button></header><section class="field"><div class="row" id="enemy"></div><div class="scores"><div class="score"><i id="myScore"></i><small>你的点数</small></div><div class="target">21</div><div class="score foe"><i id="theirScore"></i><small>亡魂点数</small></div></div><div class="row" id="player"></div><p class="message" aria-live="polite" id="message"></p><div class="actions" id="actions"></div></section><footer><a href="./coin-payout-3d.html">返回金币机</a><span id="progress"></span></footer></main>
 <dialog id="rules"><h2>渡口桌规</h2><p>上下两席轮流行动。点击自己的牌堆，抽一张牌，再点空位落牌。每回合限抽一次，也可以停牌。双方停牌、牌位满或爆点后比大小，超过 21 点的一方落败。</p><p>每局可使用一次换位，交换双方最后落下的一张牌，随后亡魂行动。</p><p>A 计 1 或 11，自动取最优值。洞察位可看下张牌，灰烬位让该牌减 2 点（最低 1 点）。每局双方各押一枚魂币，平局各自取回。</p><p>赢光对手的魂币，选一项遗物再前往下一桌。过三桌即可渡河。</p><button id="closeRules">回到牌桌</button></dialog>
+<div id="stage-fx" aria-hidden="true"></div><template id="grip-art"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-80 -210 160 320" overflow="visible" aria-hidden="true">
+<defs>
+<linearGradient id="skin" x1="0" y1=".22" x2="1" y2=".8" gradientUnits="objectBoundingBox"><stop stop-color="#3d1a21"/><stop offset=".18" stop-color="#8d3933"/><stop offset=".42" stop-color="#eb9955"/><stop offset=".52" stop-color="#df7740"/><stop offset=".76" stop-color="#a34634"/><stop offset="1" stop-color="#59242a"/></linearGradient>
+<pattern id="etch" width="7" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(21)"><path d="M0 0v3m4 3v2" stroke="#401c24" opacity=".36" stroke-width=".8"/></pattern>
+</defs>
+<path d="M-46 -700L39 -700 31 -204 -39 -204Z" fill="#433139"/><g stroke="#45232a" stroke-width="1.6" stroke-linejoin="round">
+<path fill="url(#skin)" d="M-40 -216L31 -216 28 -125 Q24 -87 30 -66L42 -32 49 -14 47 8 35 20 22 29 -5 31 -28 17 -41 -6 -39 -30Q-24 -66 -30 -104Z"/>
+<path fill="url(#etch)" d="M-40 -216L31 -216 28 -125Q24 -87 30 -66L42 -32 49 -14 47 8 35 20 22 29 -5 31 -28 17 -41 -6 -39 -30Q-24 -66 -30 -104Z"/>
+<path fill="#662b2d" stroke="none" d="M-38 -202l13 1 6 105 -4 46 -8 25 -6 13 9 -55zM30 -198l-7 133 12 36 -3 -36z"/>
+<g fill="none" stroke="#784033"><path d="M-23 -140Q-15 -66 -25 -32M-16 -30Q-6 -45 -3 -70M8 -32Q20 -65 16 -94M16 -25Q23 -32 26 -49"/><path d="M-24 -12q4 -11 12 -13m10 9q0 -12 8 -18m9 15 7 -10"/></g>
+<g class="digit" style="--pivot:-31px -7px"><path fill="url(#skin)" d="M-40 -9Q-34 -16 -26 -7L-29 14 -37 31 -43 40Q-48 42 -50 36L-46 18Z"/><path fill="#d78b65" d="M-46 30l6 3 -5 6 -4 -2z"/></g>
+<g class="digit" style="--pivot:-20px 1px"><path fill="url(#skin)" d="M-29 -1Q-23 -15 -13 -2L-14 22 -21 42 -28 57Q-34 62 -38 55L-35 38 -30 20Z"/><path fill="#af6554" d="M-34 45q5 -2 9 3l-6 10 -5 -3z"/><path fill="none" d="M-32 32l8 3m-7 -6 8 3"/></g>
+<g class="digit" style="--pivot:-5px 3px"><path fill="url(#skin)" d="M-13 -2Q-4 -13 3 -2L2 23 -1 39 -9 63Q-14 70 -20 64L-19 47 -15 27Z"/><path fill="#ba7060" d="M-18 54q5 -2 10 2l-5 10 -5 -2z"/><path fill="none" d="M-14 34l12 3m-13 -7 10 3"/></g>
+<g class="digit" style="--pivot:14px -1px"><path fill="url(#skin)" d="M3 -4Q11 -15 20 -3L21 17 20 29 18 48 13 59Q8 64 3 58L3 39 4 23Z"/><path fill="#dfc69e" d="M3 33l17 3 -2 12 -16 -3z"/><path fill="none" d="M3 36l15 5m-14 -1 13 4"/><path fill="#a96054" d="M4 49l12 2 -4 7 -7 0z"/></g>
+<g class="digit" style="--pivot:32px -24px"><path fill="url(#skin)" d="M24 -28Q37 -32 44 -18L52 -1 62 10Q64 16 59 20 54 23 48 18L33 6 23 -9Z"/><path fill="#c78063" d="M52 11q6 -5 9 1 2 6 -4 7z"/></g>
+</g></svg>
+</template>
 <script>
 const el=id=>document.getElementById(id);
 const suits=['♣','♦','♠','♥'], names=['守灯人','无名水手','摆渡人'], places=['芦苇岸','沉船湾','忘川'];
@@ -18,28 +38,103 @@ function texture(){
  function random(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}
  for(let i=0;i<105000;i++){g.fillStyle=random()>.5?'rgba(0,0,0,.10)':'rgba(243,207,138,.08)';g.fillRect(random()*w,random()*h,random()*3+1,1)}
  for(let i=0;i<200;i++){let x=random()*w,y=random()*h;g.beginPath();g.moveTo(x,y);for(let j=0;j<9;j++){x+=random()*9-2;y+=random()*8-3;g.lineTo(x,y)}g.strokeStyle='rgba(35,24,15,.16)';g.stroke()}
- // Inked fingertips frame the table, outside the playable card slots.
- function hand(x,y,angle,scale){
-  g.save();g.translate(x,y);g.rotate(angle);g.scale(scale,scale);
-  g.shadowColor='#0b100dcc';g.shadowBlur=12;g.shadowOffsetY=6;
-  g.fillStyle='#603527';g.strokeStyle='#211d17';g.lineWidth=3;
-  const palm=new Path2D('M-35 -55 L31 -55 Q32 -19 44 2 Q53 18 59 35 Q55 45 48 37 L30 17 Q32 43 36 65 Q34 76 27 66 L14 28 L17 81 Q14 92 8 81 L0 32 L-3 84 Q-8 94 -12 82 L-15 30 L-25 68 Q-31 76 -32 65 L-27 22 Q-39 5 -35 -55Z');
-  g.fill(palm);g.stroke(palm);g.shadowBlur=0;g.shadowOffsetY=0;g.clip(palm);
-  for(let i=0;i<470;i++){let a=random()*100-40,b=random()*145-55;g.strokeStyle=random()>.5?'#c9905f55':'#21190f77';g.lineWidth=.8;g.beginPath();g.moveTo(a,b);g.lineTo(a+3,b+9);g.stroke()}
-  g.restore()
- }
- hand(115,4,-.14,1.3);hand(902,650,3.27,1.35);
 }texture();
 function shuffled(){let d=[];for(const s of suits)for(let n=1;n<=10;n++)d.push({n,s});for(let i=d.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[d[i],d[j]]=[d[j],d[i]]}return d}
 function total(hand){let t=0,a=0;for(const c of hand.filter(Boolean)){t+=c.value??c.n;if(c.n===1&&c.value===undefined)a++}return a&&t+10<=21?t+10:t}
-function begin(){exchanged=false;busy=false;round++;deck=shuffled();mine=[deck.pop(),null,null,null,null];theirs=[deck.pop(),null,null,null,null];passed=false;insight=false;usedWard=false;pending=null;phase='play';log='轮到你了。点击左侧牌堆抽牌。';render()}
+function begin(){exchanged=false;busy=false;round++;deck=shuffled();mine=[deck.pop(),null,null,null,null];theirs=[deck.pop(),null,null,null,null];passed=false;insight=false;usedWard=false;pending=null;phase='play';log='轮到你了。点击左侧牌堆抽牌。';render();opening()}
 function badge(c){return c.n===1?'A':c.n}
-function card(c,i){const node=document.createElement('div');node.className='card '+('♦♥'.includes(c.s)?'red':'');node.style.setProperty('--tilt',[-3,2,-2,3,-1][i]+'deg');node.innerHTML='<b class="corner">'+badge(c)+c.s+'</b><span class="pips">'+Array.from({length:c.n},()=>'<span>'+c.s+'</span>').join('')+'</span><em>'+(c.value!==undefined?'灰烬 · '+c.value:'')+'</em>';const front=document.createElement('span');front.className='front';front.append(...node.childNodes);const faces=document.createElement('span');faces.className='faces';const back=document.createElement('span');back.className='back';faces.append(front,back);node.append(faces);node.setAttribute('aria-label',badge(c)+c.s);return node}
+function card(c,i){const node=document.createElement('div');node.className='card '+('♦♥'.includes(c.s)?'red':'');node.style.setProperty('--tilt',[-3,2,-2,3,-1][i]+'deg');node.innerHTML='<b class="corner">'+badge(c)+c.s+'</b><span class="pips">'+Array.from({length:c.n},()=>'<span>'+c.s+'</span>').join('')+'</span><em>'+(c.value!==undefined?'灰烬 · '+c.value:'')+'</em>';const front=document.createElement('span');front.className='front';front.dataset.rank=badge(c)+c.s;front.append(...node.childNodes);const faces=document.createElement('span');faces.className='faces';const back=document.createElement('span');back.className='back';faces.append(front,back);node.append(faces);node.setAttribute('aria-label',badge(c)+c.s);return node}
 function button(label,fn){const b=document.createElement('button');b.textContent=label;b.onclick=fn;return b}
 function row(id,hand,own){const r=el(id);r.replaceChildren();const pile=button('',draw);pile.className='pile';pile.innerHTML='<span>'+(own?(pending?badge(pending)+pending.s:'抽牌'):'亡魂')+'</span>';pile.disabled=!own||phase!=='play'||!!pending;r.append(pile);
  hand.forEach((c,i)=>{if(c){r.append(card(c,i));return}const active=own&&phase==='play'&&!!pending;const b=button(own?(['','洞察','', '灰烬',''][i]||'落牌'):'',()=>place(i));b.className='slot'+(active?' available':'');b.disabled=!active;r.append(b)});
- const seat=document.createElement('span');seat.className='seat';seat.innerHTML=(own?'旅人':names[stage])+'<b>◉ '+(own?coins:rival)+'</b>';r.append(seat)}
-function draw(){if(busy||phase!=='play'||pending)return;pending=deck.pop();log='抽到 '+badge(pending)+pending.s+'，点下排空位落牌。';render()}
+ const seat=document.createElement('span');seat.className='seat';seat.innerHTML=(own?'旅人':names[stage])+'<b>'+(own?coins:rival)+'</b>';r.append(seat)}
+const handMarkup=document.querySelector('#grip-art').innerHTML;
+const stageFx=el('stage-fx');
+let heldActor=null;
+function actor(node,enemy){
+  const shell=document.createElement('div');
+  shell.className='motion-rig'+(enemy?' north':' south');
+  const size=el('player').querySelector('.card,.slot');
+  const w=size.offsetWidth,h=size.offsetHeight;
+  shell.style.setProperty('--cw',w+'px');shell.style.setProperty('--ch',h+'px');
+  shell.innerHTML='<div class="contact-shadow"></div><div class="lift"><div class="plane"></div></div><div class="wrist"><div class="palm">'+handMarkup+'</div></div>';
+  const replica=node.cloneNode(true);shell.querySelector('.plane').append(replica);
+  stageFx.append(shell);
+  return {shell,w,h,enemy};
+}
+// x/y are the contact point on the table. Lift, roll, wrist bend and finger curl share one clock.
+async function gesture(rig,frames,ms){
+  const {shell,w,h,enemy}=rig, side=enemy?1:-1;
+  const motions=[
+    [shell,f=>'translate('+f.x+'px,'+f.y+'px)'],
+    [shell.querySelector('.lift'),f=>'translateY('+(-f.z*h*.18)+'px) scale('+(1+f.z*.08)+')'],
+    [shell.querySelector('.plane'),f=>'rotate('+f.tilt+'deg) rotateY('+f.roll+'deg)'],
+    [shell.querySelector('.contact-shadow'),f=>'translate('+f.z*w*.18+'px,'+(2+f.z*h*.17)+'px) rotate('+f.tilt+'deg) scale('+(1+f.z*.15)+')'],
+    [shell.querySelector('.wrist'),f=>'translate('+f.hx*w+'px,'+((f.hy-f.z*.15)*h)+'px) rotate('+(enemy?0:180)+'deg) rotate('+f.wrist*side+'deg)'],
+    ...Array.from(shell.querySelectorAll('.digit'),(node,i)=>[node,f=>'rotate('+f.curl*[15,10,4,-4,-16][i]+'deg) scaleY('+(1-f.curl*.21)+')'])
+  ];
+  const tracks=motions.map(([node,fn])=>[node,frames.map(f=>({offset:f.at,transform:fn(f)}))]);
+  tracks.push([shell.querySelector('.contact-shadow'),frames.map(f=>({offset:f.at,opacity:.62-f.z*.24,filter:'blur('+(1+f.z*10)+'px)'}))]);
+  tracks.push([shell.querySelector('.plane'),frames.map(f=>({offset:f.at,filter:'brightness('+(1.01+.24*f.z)+')'}))]);
+  tracks.push([shell.querySelector('.palm'),frames.map(f=>({offset:f.at,filter:'drop-shadow('+(2+f.z*3)+'px '+(3+f.z*6)+'px '+(1+f.z*4)+'px #1b0e12a8)'}))]);
+  const tasks=tracks.map(([node,keys])=>{
+    const last=keys[keys.length-1];Object.entries(last).forEach(([k,v])=>{if(k!=='offset')node.style[k]=v});
+    return animate(node,keys,ms);
+  });
+  await Promise.all(tasks);
+}
+function pose(at,x,y,z,roll,tilt,hx,hy,wrist,curl){return {at,x,y,z,roll,tilt,hx,hy,wrist,curl}}
+function gripY(rig){return rig.enemy?-.39:.39}
+function heldPoint(){
+ const p=center(el('player').firstElementChild),r=el('player').querySelector('.card,.slot');
+ return {x:Math.max(r.offsetWidth*.65,p.x),y:p.y-r.offsetHeight*.32};
+}
+async function liftCard(rig,source,target) {
+ const g=gripY(rig),s=rig.enemy?-1:1;
+ await gesture(rig,[
+ pose(0,source.x,source.y,0,180,-7,.35,g+s*1.7,-26,0),
+ pose(.27,source.x,source.y,0,180,-7,.06,g,-16,.2),
+ pose(.42,source.x,source.y,.12,158,-11,.04,g,-13,.9),
+ pose(.65,(source.x+target.x)*.5,(source.y+target.y)*.5,.84,81,-13,.08,g,-8,.95),
+ pose(.85,target.x,target.y,.94,18,-8,.08,g,-5,.8),
+ pose(1,target.x,target.y,.88,8,-6,.08,g,-5,.8)],530);
+}
+async function deliver(rig,from,to,backFirst){
+ const g=gripY(rig),s=rig.enemy?-1:1;
+ const x=t=>from.x+(to.x-from.x)*t,y=t=>from.y+(to.y-from.y)*t;
+ await gesture(rig,[
+ pose(0,x(0),y(0),.88,backFirst?164:8,-6,.08,g,-8,.8),
+ pose(.22,x(.35),y(.31),1,backFirst?148:20,-16,.06,g,-14,.95),
+ pose(.41,x(.8),y(.72),.78,backFirst?93:37,-19,.05,g,-18,.85),
+ pose(.56,x(.99),y(.98),.34,backFirst?29:12,-8,.01,g,-8,.45),
+ pose(.65,x(1),y(1),0,0,-2,-.02,g+s*.04,-4,.05),
+ pose(.77,x(1),y(1),0,0,-2,-.05,g+s*.06,-4,0),
+ pose(.88,x(1),y(1),0,0,-2,.04,g+s*.58,-12,.2),
+ pose(1,x(1),y(1),0,0,-2,.2,g+s*3.5,-21,.1)],890);
+}
+async function dealFromDeck(node,enemy){
+ if(reduced())return;
+ const row=el(enemy?'enemy':'player'),start=center(row.firstElementChild),to=center(node);
+ node.style.visibility='hidden';
+ const rig=actor(node,enemy);rig.shell.querySelector('.card').style.visibility='visible';
+ try{await deliver(rig,start,to,true)}finally{node.style.visibility='';rig.shell.remove()}
+}
+async function opening(){
+ lockTable(true);
+ try{await Promise.all(['enemy','player'].map(id=>dealFromDeck(el(id).children[1],id==='enemy')))}
+ finally{lockTable(false)}
+}
+async function draw(){
+ if(busy||phase!=='play'||pending)return;
+ lockTable(true);pending=deck.pop();
+ log='抽到 '+badge(pending)+pending.s+'，点下排空位落牌。';render();
+ try{if(!reduced()){
+   heldActor=actor(card(pending,0),false);
+   await liftCard(heldActor,center(el('player').firstElementChild),heldPoint());
+   heldActor.shell.classList.add('holding');
+ }}finally{lockTable(false)}
+}
+
 let busy = false;
 let exchanged = false;
 function lockTable(value) {
@@ -58,13 +153,6 @@ function animate(node, frames, duration, delay = 0) {
 function center(node) {
   const rect = node.getBoundingClientRect();
   return {x:rect.left + rect.width / 2, y:rect.top + rect.height / 2};
-}
-function fly(node, start, end, frames = 12) {
-  const dx = start.x - end.x, dy = start.y - end.y;
-  return animate(node, [0,.12,.35,.61,.84,1].map((progress,index) => ({
-    offset:[0,.12,.29,.47,.7,1][index],
-    transform:'translate('+dx*(1-progress)+'px,'+dy*(1-progress)+'px) rotate('+(-6*(1-progress))+'deg)'
-  })), frames * frameMs);
 }
 async function burn(node) {
   if (reduced()) return;
@@ -85,6 +173,7 @@ function pulse(id) {
   return animate(el(id),[{filter:'brightness(1)',scale:'.92'},{filter:'brightness(1.9)',scale:'1.18',offset:.35},{filter:'brightness(1)',scale:'1'}],8*frameMs);
 }
 async function opponentTurn(standing) {
+  const purseBefore=coins;
   const previous = theirs.slice();
   const oldScore = total(theirs);
   opponent(standing);
@@ -95,10 +184,17 @@ async function opponentTurn(standing) {
     const start = center(row.firstElementChild), end = center(target);
     const node = card(theirs[i],i);
     target.replaceWith(node);
-    await fly(node,start,end);
+    await dealFromDeck(node,true);
     previous[i] = theirs[i];
     el('theirScore').textContent = total(previous);
     await pulse('theirScore');
+  }
+  if(coins!==purseBefore && !reduced()){
+    const gained=coins>purseBefore, origin=center(el(gained?'enemy':'player').querySelector('.seat b')), dest=center(el(gained?'player':'enemy').querySelector('.seat b'));
+    const coin=document.createElement('span');coin.className='soul-coin';coin.style.left=(dest.x-11)+'px';coin.style.top=(dest.y-9)+'px';stageFx.append(coin);
+    const dx=origin.x-dest.x,dy=origin.y-dest.y;
+    await animate(coin,[{transform:'translate('+dx+'px,'+dy+'px) rotateY(0deg)'},{offset:.48,transform:'translate('+(dx*.5-16)+'px,'+(dy*.5-28)+'px) rotateY(240deg)'},{transform:'translate(0,0) rotateY(540deg)'}],420);
+    coin.remove();
   }
   lockTable(false);
   render();
@@ -128,7 +224,11 @@ async function place(i) {
   const selected=pending;pending=null;mine[i]=selected;insight=i===1;
   const node=card(selected,i);
   row.children[i+1].replaceWith(node);
-  await fly(node,start,end);
+  if(heldActor){
+    const rig=heldActor;heldActor=null;rig.shell.classList.remove('holding');
+    node.style.visibility='hidden';
+    try{await deliver(rig,heldPoint(),end,false)}finally{node.style.visibility='';rig.shell.remove()}
+  }
   if(i===3){
     await burn(node);
     selected.value=Math.max(1,selected.n-ash);
@@ -151,5 +251,12 @@ function reward(type){if(type==='ash')ash+=2;else if(type==='coin')coins+=2;else
 function reset(){stage=0;coins=4;rival=3;round=0;ash=2;ward=false;begin()}
 function render(){row('enemy',theirs,false);row('player',mine,true);el('myScore').textContent=total(mine);el('theirScore').textContent=total(theirs);el('journey').textContent=places[stage]+' · 第 '+round+' 局';el('progress').textContent='渡程 '+(stage+1)+' / 3';el('message').textContent=log;const a=el('actions');a.replaceChildren();
  if(phase==='play'&&!pending)a.append(button('停牌',async()=>{if(busy)return;lockTable(true);await opponentTurn(true)}));if(phase==='play'&&!pending&&!exchanged)a.append(button('换位',exchange));if(phase==='next')a.append(button('下一局',begin));if(phase==='reward'){a.append(button('取两枚魂币',()=>reward('coin')),button('强化灰烬位',()=>reward('ash')));if(!ward)a.append(button('护符 · 22点免败',()=>reward('ward')))}if(['lost','won'].includes(phase))a.append(button('再渡一次',reset))}
+const felt=document.querySelector('.field');
+felt.addEventListener('pointermove',event=>{
+ const r=felt.getBoundingClientRect();
+ felt.style.setProperty('--light-x',((event.clientX-r.left)/r.width*100)+'%');
+ felt.style.setProperty('--light-y',((event.clientY-r.top)/r.height*100)+'%');
+});
+window.addEventListener('resize',()=>{if(heldActor&&!busy){const pt=heldPoint();heldActor.shell.style.transform='translate('+pt.x+'px,'+pt.y+'px)'}});
 el('help').onclick=()=>el('rules').showModal();el('closeRules').onclick=()=>el('rules').close();begin();
 </script></html>
