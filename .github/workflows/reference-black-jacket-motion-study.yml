@@ -1,0 +1,33 @@
+name: Black Jacket animation reference - official microtrailer frame study
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/reference-black-jacket-motion-study.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  extract-reference-frames:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch official Black Jacket gameplay release microtrailer
+        run: |
+          mkdir -p artifacts/black-jacket-reference
+          curl --fail --location --retry 2 --connect-timeout 20 --max-time 70             'https://video.fastly.steamstatic.com/store_trailers/3100370/1468733886/c4a4a92911c349d943a85640db1327366095211b/1778169815/microtrailer.mp4'             -o /tmp/black-jacket-gameplay.mp4
+          ffprobe -v error -show_entries format=duration,size -of default=noprint_wrappers=1 /tmp/black-jacket-gameplay.mp4 | tee artifacts/black-jacket-reference/source-metadata.txt
+          echo "Official source: https://store.steampowered.com/app/3100370/" > artifacts/black-jacket-reference/provenance.txt
+          echo "Reference only. Do not redistribute trailer. Frame strips are for comparative private development analysis." >> artifacts/black-jacket-reference/provenance.txt
+      - name: Extract motion sample contact sheets at 5 fps with timestamp
+        run: |
+          ffmpeg -nostdin -hide_banner -loglevel error -i /tmp/black-jacket-gameplay.mp4             -vf "fps=5,scale=480:-2:flags=lanczos,drawtext=text='%{pts\\:hms}':x=12:y=12:fontsize=24:fontcolor=white:box=1:boxcolor=black@0.6,tile=4x3"             -vsync vfr artifacts/black-jacket-reference/real-source-frames-%02d.png
+          ls -lah artifacts/black-jacket-reference
+      - name: Upload short reference contact sheets (no full video redistribution)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: black-jacket-official-actual-motion-frame-study
+          path: artifacts/black-jacket-reference/
+          retention-days: 5
