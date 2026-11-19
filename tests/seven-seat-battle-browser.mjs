@@ -4,7 +4,11 @@ import {chromium} from 'playwright';
 
 const out='artifacts/seven-seat-battle';
 fs.mkdirSync(out+'/videos',{recursive:true});
-const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+const browser=await chromium.launch({
+ headless:true,
+ executablePath:process.env.PLAYWRIGHT_BROWSER_PATH||undefined,
+ args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader']
+});
 const results=[];
 for(const d of [
  {name:'desktop',width:1440,height:900,touch:false},
