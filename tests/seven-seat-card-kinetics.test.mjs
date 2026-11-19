@@ -12,7 +12,7 @@ for(const kind of Object.keys(TABLE_CARD_TIMING)){
  assert.equal(b.complete,true);
  assert.equal(b.travel,1);
  assert(Math.abs(b.roll)<.01,'no endless spinning at card rest');
- assert.equal(b.elevation,undefined,'motion should export normalized lift, not accidental world height');
+ assert.equal(b.elevation,0,'card must land at zero lift without indefinite hovering');
  for(let frame=0;frame<=total;frame+=8){
   const q=sampleTableCard(frame,kind);
   const point=tableFlightPoint({x:20,y:750},{x:500,y:250},q);
