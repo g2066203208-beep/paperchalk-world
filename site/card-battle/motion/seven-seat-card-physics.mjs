@@ -148,6 +148,65 @@ export function createSevenSeatCardMotion({backUrl,canvas}){
   // The actual DOM artwork stays readable even if WebGL is unavailable.
   canvas.dataset.rendering='three-card-paper';
  }
+ // Identical OLD 3D coin pipeline: pixel-art extrusion and original
+ // spatial-hash FastCoinPayout dynamics. Keep only 36 active coin bodies.
+ async function prepareVictoryCoins(){
+  try{
+   const source=new Image();
+   source.src=new URL('../assets/slots-style-pixel-coin.svg',import.meta.url).href;
+   await source.decode();
+   const profile=prepareExtrudedSprite(source,{
+    size:COIN.imageDiameter,pixelArt:true,outlineResolution:80,
+    autoRemoveBackground:true,simplify:.35
+   });
+   const coinModel=buildLowPolyPixelCoin3D(profile,THREE,{
+    sides:COIN.sides,thickness:COIN.visualThickness,
+    edgeColor:0x10120e,pixelArt:true
+   });
+   const base=coinModel.children[0];
+   coinMesh=new THREE.InstancedMesh(base.geometry,
+    upgradeCoinMaterials(THREE,base.material),40);
+   coinMesh.name='old-slot-10-facet-real-3d-gold-win-burst';
+   coinMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+   coinMesh.count=0;coinMesh.frustumCulled=false;
+   scene.add(coinMesh);coinReady=true;
+  }catch(e){coinInitError=String(e);console.warn('Payout coin art unavailable',e)}
+ }
+ function drawCoinBodies(){
+  if(!coinMesh||!coinPayout)return;
+  coinMesh.count=coinPayout.coins.length;
+  const scale=Math.min(88,Math.max(32,innerWidth/9.2));
+  for(let i=0;i<coinPayout.coins.length;i++){
+   const c=coinPayout.coins[i],p=c.position,q=c.quaternion;
+   coinDummy.position.set((p.x+2.55)*scale,
+    -innerHeight*.22+p.y*scale,
+    30+p.z*scale*.27);
+   coinDummy.quaternion.set(q.x,q.y,q.z,q.w).multiply(coinAxis);
+   coinDummy.scale.setScalar(COIN.scale*scale);
+   coinDummy.updateMatrix();coinMesh.setMatrixAt(i,coinDummy.matrix);
+  }
+  coinMesh.instanceMatrix.needsUpdate=true;
+ }
+ function stepVictoryCoins(dt){
+  if(!coinPayout)return;
+  coinAge+=dt;coinAcc+=dt;let n=0;
+  while(coinAcc>=FAST_DT&&n++<3){coinPayout.step();coinAcc-=FAST_DT}
+  drawCoinBodies();
+  if(coinAge>5.5){
+   coinRunning=false;coinMesh.count=0;
+   coinPayout.destroy();coinPayout=null;
+  }
+ }
+ function victoryCoins(amount=36){
+  if(!enabled||!coinReady)return false;
+  if(coinPayout){coinPayout.destroy();coinPayout=null}
+  coinPayout=new FastCoinPayout({seed:20261120,maxCoins:40});
+  coinProduced=coinPayout.fire(limit(amount,1,40));
+  coinRunning=true;coinAcc=0;coinAge=0;
+  canvas.dataset.active='true';
+  if(!raf){prev=0;raf=requestAnimationFrame(run)}
+  return true;
+ }
  function run(now){
   raf=0;if(!flyers.size||!enabled)return;
   const dt=Math.min(.033,Math.max(.001,(now-(prev||now-16))/1000));
