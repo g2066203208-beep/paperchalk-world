@@ -155,11 +155,29 @@ for(const d of [
   assert.equal(Object.values(second.decks).filter(x=>x.unlocked).length,2,
    'each hero unlocks its own DECK, not the whole roster');
   assert.equal(await page.locator('#ally-seats .pocket-deck').count(),2);
+  // Demonstrate ACTUAL overlapping hands beneath each separate hero card.
+  await page.locator('#ally-seats .pocket-deck').nth(0).click();
+  await page.locator('#ally-seats .pocket-deck').nth(0).click();
+  await page.locator('#ally-seats .pocket-deck').nth(1).click();
+  const grouped=await page.evaluate(()=>window.SevenSeatBattleQA.ownerStacks);
+  assert.equal(grouped[3].hand.length,2,
+   'ringmaster holds two physical action cards beneath seat 4');
+  assert.equal(grouped[5].hand.length,1,
+   'acrobat holds one different physical action card beneath seat 6');
+  assert.equal(await page.locator('#ally-seats .seat-column').nth(3).locator('.pocket-mini').count(),2);
+  assert.equal(await page.locator('#ally-seats .seat-column').nth(5).locator('.pocket-mini').count(),1);
+  assert.equal(await page.locator('#ally-seats .pocket-mini').count(),3,
+   'all three drawn cards must overlap THEIR OWN character, not the global hand rail');
+  await page.waitForTimeout(1050);
+  await page.screenshot({path:out+'/'+d.name+'-05-two-owners-two-independent-decks.png',fullPage:true});
   await page.locator('#ally-seats [data-owner-open]').last().click();
   assert.equal(
    await page.evaluate(()=>window.SevenSeatBattleQA.focusedOwner),
    await page.evaluate(()=>window.SevenSeatBattleQA.state.heroes[1].id),
    'second character expands HER own pocket, not another hero card');
+  assert.equal(await page.locator('#owner-fan-cards .action').count(),1,
+   'expansion shows ONLY the acrobat\'s action card, never the ringmaster\'s two cards');
+  await page.screenshot({path:out+'/'+d.name+'-07-physical-owner-hand-unfold.png',fullPage:true});
   await page.locator('#owner-fan-close').click();
   assert.equal(await page.locator('#owner-fan[hidden]').count(),1,
    'closing a hand must tuck the fan back under the owner character');
@@ -169,7 +187,6 @@ for(const d of [
    'two separate characters must NOT share one visible hand stack');
   assert.equal(await page.locator('#owner-fan').count(),1,
    'only one focused character fan may be unfolded at a time');
-  await page.screenshot({path:out+'/'+d.name+'-05-two-owners-two-independent-decks.png',fullPage:true});
   await page.waitForFunction(()=>window.SevenSeatBattleQA.cardPhysics.coinSpriteReady,{
    timeout:25000
   });
@@ -192,7 +209,7 @@ for(const d of [
   assert.equal(errors.length,0,'JavaScript page errors: '+errors.join('\n'));
   console.log('PASS',d.name,'real portraits and functional 7+7 tableau: deploy, draw, target both sides, turns, reset');
   results.push({viewport:d.name,passed:true,slots:14,characters:7,
-   screenshotCount:7,issues:errors});
+   screenshotCount:8,issues:errors});
  }catch(err){
   console.error('FAIL',d.name,err.stack||err);
   results.push({viewport:d.name,passed:false,error:String(err.stack||err),issues:errors});
