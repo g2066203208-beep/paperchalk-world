@@ -42,7 +42,9 @@ for(const d of [
    const ally=[...document.querySelectorAll('#ally-seats .seat')].map(el=>el.getBoundingClientRect().toJSON());
    const foe=[...document.querySelectorAll('#enemy-seats .seat')].map(el=>el.getBoundingClientRect().toJSON());
    return {board:bb.toJSON(),ally,foe,bodyScroll:document.documentElement.scrollWidth,
-    viewport:window.innerWidth};
+    viewport:window.innerWidth,cssViewport:document.documentElement.clientWidth,
+    visualViewport:window.visualViewport?.width,
+    overflowNodes:[...document.querySelectorAll('.top,.bottom,.board,.rail,.decks,.hand,.tool-label,.controls')].map(e=>({tag:e.tagName,cls:e.className,rect:e.getBoundingClientRect().toJSON()})).filter(x=>x.rect.width>document.documentElement.clientWidth+5).slice(0,8)};
   });
   for(const [label,seats] of Object.entries({ally:geometry.ally,foe:geometry.foe})){
    assert.equal(seats.length,7);
@@ -51,12 +53,19 @@ for(const d of [
    assert(seats.every(x=>x.left>=geometry.board.left-2&&x.right<=geometry.board.right+2),
     label+' positions must not clip beyond board container');
   }
-  assert(geometry.bodyScroll<=geometry.viewport+4,'no horizontal page overflow on '+d.name);
+  assert(Math.abs(geometry.viewport-d.width)<=2,
+   'mobile CSS viewport must be '+d.width+'px, got '+JSON.stringify(geometry));
+  assert(Math.abs(geometry.cssViewport-d.width)<=2,
+   'layout viewport must match the actual device width, not an inflated virtual phone');
+  assert(geometry.bodyScroll<=d.width+4,
+   'no horizontal page overflow on '+d.name+' '+JSON.stringify(geometry.overflowNodes));
   await page.waitForFunction(()=>{
    const img=document.querySelector('#hero-reserve img');
    return img?.complete&&img.naturalWidth>=320;
   },{timeout:18000});
-  await page.screenshot({path:out+'/'+d.name+'-00-first-game-seven-vs-seven.png',fullPage:true});
+  const baselinePNG=await page.screenshot({path:out+'/'+d.name+'-00-first-game-seven-vs-seven.png',fullPage:true});
+  assert.equal(baselinePNG.readUInt32BE(16),d.width,
+    'a true '+d.width+'px device screenshot must not be wider because of uncontained game UI');
   await page.locator('#hero-reserve .reserve').first().click();
   assert.equal(await page.locator('#ally-seats [data-selectable="true"]').count(),7);
   await page.locator('#ally-seats .seat').nth(3).click();
