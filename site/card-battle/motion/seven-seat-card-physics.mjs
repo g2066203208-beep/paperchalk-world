@@ -59,18 +59,48 @@ export function createSevenSeatCardMotion({backUrl,canvas}){
   if(kind==='action'){
    const key='skill:'+label;
    if(cachedFront.has(key))return cachedFront.get(key);
-   const cv=document.createElement('canvas');cv.width=288;cv.height=422;
-   const ctx=cv.getContext('2d');
-   const grad=ctx.createLinearGradient(0,0,0,422);
-   grad.addColorStop(0,'#70444e');grad.addColorStop(.58,'#372a33');grad.addColorStop(1,'#211f28');
-   ctx.fillStyle=grad;ctx.fillRect(0,0,288,422);
-   ctx.lineWidth=3;ctx.strokeStyle='#c1a77b';
-   ctx.strokeRect(14,14,260,394);ctx.strokeRect(21,21,246,380);
-   ctx.fillStyle='#e7dbbf';ctx.textAlign='center';
-   ctx.font='bold 28px sans-serif';ctx.fillText('专属行动牌',144,90);
-   ctx.font='bold 52px sans-serif';ctx.fillText(label.slice(0,6),144,214);
-   ctx.font='19px sans-serif';ctx.fillText('选择队友或敌人',144,288);
-   const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;
+   const cv=document.createElement('canvas');cv.width=336;cv.height=486;
+   const ctx=cv.getContext('2d'),im=ctx.createImageData(336,486);
+   // Aged INK on cotton paper, not a plastic plum box or a fake metal rim.
+   // Warm parchment comes from observed Black Jacket card color hierarchy;
+   // artwork/typography are original and not traced/copied from reference.
+   for(let y=0;y<486;y++)for(let x=0;x<336;x++){
+    const i=(y*336+x)*4;
+    const border=Math.min(x,335-x,y,485-y);
+    const wear=Math.pow(Math.max(0,1-border/35),2);
+    const weave=Math.sin(y*.77+x*.035)*3.6+
+      Math.sin(x*.59-y*.055)*2.9;
+    const fleck=Math.sin(x*12.333+y*9.71)*Math.cos(x*5.21-y*14.99)*6.6;
+    const stains=Math.sin(x*.067+y*.019)*5.2+
+      Math.cos(y*.088-x*.025)*3.8;
+    const r=232+weave+fleck+stains-wear*65;
+    const g=201+weave+fleck*.75+stains*.7-wear*69;
+    const b=153+weave+fleck*.6+stains*.52-wear*61;
+    im.data[i]=Math.max(0,Math.min(255,r));
+    im.data[i+1]=Math.max(0,Math.min(255,g));
+    im.data[i+2]=Math.max(0,Math.min(255,b));im.data[i+3]=255;
+   }
+   ctx.putImageData(im,0,0);
+   ctx.strokeStyle='#63402a';ctx.lineWidth=3.5;
+   ctx.strokeRect(11,11,314,464);
+   ctx.strokeStyle='rgba(110,69,37,.45)';ctx.lineWidth=1;
+   ctx.strokeRect(20,20,296,446);
+   ctx.strokeStyle='rgba(85,46,30,.42)';
+   ctx.beginPath();ctx.moveTo(41,100);ctx.lineTo(295,100);
+   ctx.moveTo(41,376);ctx.lineTo(295,376);ctx.stroke();
+   ctx.fillStyle='#372320';ctx.textAlign='center';
+   ctx.font='bold 24px serif';ctx.fillText('专属行动',168,75);
+   const mark=label.includes('恢复')?'✚':label.includes('盾')||label.includes('架势')?'✦':
+    label.includes('强')||label.includes('突')?'⚔':'◆';
+   ctx.globalAlpha=.12;ctx.font='188px serif';ctx.fillText(mark,168,286);
+   ctx.globalAlpha=1;
+   ctx.font='bold 49px serif';ctx.fillText(label.slice(0,6),168,258);
+   ctx.font='21px serif';ctx.fillText('可对敌我双方施放',168,413);
+   ctx.strokeStyle='rgba(255,234,180,.56)';ctx.lineWidth=2;
+   ctx.beginPath();ctx.moveTo(15,10);ctx.lineTo(320,10);ctx.stroke();
+   const tex=new THREE.CanvasTexture(cv);
+   tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=3;
+   tex.minFilter=THREE.LinearMipmapLinearFilter;
    cachedFront.set(key,tex);return tex;
   }
   const key=url;
