@@ -143,6 +143,17 @@ for(const d of [
   await page.waitForTimeout(110);
   assert.equal(await page.locator('#battle-sparks .battle-floating-number').count(),1,
    'a readable damage number should still be visible 110ms after collision');
+  const flareCss=await page.evaluate(()=>{
+   const hit=[...document.querySelectorAll('#enemy-seats .seat')][1];
+   const after=window.getComputedStyle(hit,'::after');
+   const pool=window.getComputedStyle(document.querySelector('.battle-lightpool'));
+   return {edgeOpacity:Number(after.opacity),edgeShadow:after.boxShadow,
+    poolOpacity:Number(pool.opacity),poolBackground:pool.backgroundImage};
+  });
+  assert(flareCss.edgeOpacity>.55,'reference-style gold edge must be visibly bright at impact peak');
+  assert(flareCss.edgeShadow!=='none','physical card should have an active warm emissive rim');
+  assert(flareCss.poolBackground.includes('radial-gradient'),
+   'impact glow must have a real radial light falloff, not an inert pseudo layer');
   await page.screenshot({path:out+'/'+d.name+'-08-amber-edge-hit-flare.png',fullPage:true});
   const hit=await page.evaluate(()=>window.SevenSeatBattleQA.snapshot);
   assert.equal(hit.hand.length,0);
