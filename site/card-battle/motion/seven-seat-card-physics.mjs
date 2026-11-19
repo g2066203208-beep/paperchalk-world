@@ -235,7 +235,7 @@ export function createSevenSeatCardMotion({backUrl,canvas}){
    new THREE.MeshBasicMaterial({map:shadowTexture,color:'#10120f',
     transparent:true,opacity:.28,depthWrite:false,side:THREE.FrontSide}));
   scene.add(shadow);
-  return {node,face,edge,shadow};
+  return {node,face,edge,shadow,paper,back};
  }
  function notifyGPU(){
   // The actual DOM artwork stays readable even if WebGL is unavailable.
@@ -345,6 +345,7 @@ export function createSevenSeatCardMotion({backUrl,canvas}){
     scene.remove(node);scene.remove(shadow);
     flyer.model.face.geometry.dispose();flyer.model.face.material.dispose();
     flyer.model.edge.geometry.dispose();flyer.model.edge.material.dispose();
+    flyer.model.paper.geometry.dispose();flyer.model.back.geometry.dispose();
     flyer.model.shadow.geometry.dispose();flyer.model.shadow.material.dispose();
     flyers.delete(flyer);flyer.onFinish?.();
    }
@@ -378,7 +379,12 @@ export function createSevenSeatCardMotion({backUrl,canvas}){
   if(coinPayout){coinPayout.destroy();coinPayout=null}
   if(coinMesh)coinMesh.count=0;
   for(const f of flyers){
-   scene.remove(f.model.node);scene.remove(f.model.shadow);f.onFinish?.();
+   scene.remove(f.model.node);scene.remove(f.model.shadow);
+   f.model.face.geometry.dispose();f.model.face.material.dispose();
+   f.model.edge.geometry.dispose();f.model.edge.material.dispose();
+   f.model.paper.geometry.dispose();f.model.back.geometry.dispose();
+   f.model.shadow.geometry.dispose();f.model.shadow.material.dispose();
+   f.onFinish?.();
   }
   flyers.clear();renderer?.clear();canvas.dataset.active='false';
  }
