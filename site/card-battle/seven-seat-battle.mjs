@@ -188,25 +188,87 @@ function render(){
  $('action-log').innerHTML=state.history.slice(0,6).map(x=>`<li>${escape(x)}</li>`).join('')||'<li>新对局开始：请选择第一名要部署的角色</li>';
  state.turnEvents=[];
 }
-function apply(action){
+function heroWidget(id){
+ return [...document.querySelectorAll('[data-hero-id]')].find(x=>x.dataset.heroId===id);
+}
+function actionWidget(id){
+ return [...document.querySelectorAll('[data-action-id]')].find(x=>x.dataset.actionId===id);
+}
+function seatWidget(side,index){
+ return [...document.querySelectorAll(`#${side}-seats .seat`)]
+  .find(x=>+x.dataset.seat===index);
+}
+function impactEffect(ev){
+ const el=seatWidget(ev.side,ev.index);if(!el)return;
+ const cls=ev.type==='damage'?'hit-shock':ev.type==='heal'?'healed':
+  ev.type==='shield'?'shielded':'deployed';
+ el.classList.remove('hit-shock','healed','shielded','deployed');
+ void el.offsetWidth;el.classList.add(cls);
+ el.addEventListener('animationend',()=>el.classList.remove(cls),{once:true});
+}
+function animateEvent(ev,origin){
+ let target=null,label='行动',kind='action',frontUrl='';
+ if(ev.type==='draw'){
+  const cards=[...document.querySelectorAll('.person-pocket .pocket-mini')]
+   .filter(x=>state.hand.some(c=>c.id===x.dataset.actionId&&c.ownerId===ev.ownerId));
+  target=cards.at(-1)||document.querySelector('.person-pocket[data-owner-id="'+ev.ownerId+'"]');
+  label=state.hand.find(x=>x.id===ev.cardId)?.name||'行动';
+ }else if(ev.side){
+  target=seatWidget(ev.side,ev.index);
+  if(ev.type==='deploy'){
+   kind='hero';frontUrl=state.allySeats[ev.index]?.art||'';
+   label=state.allySeats[ev.index]?.name||'人物';
+  }else label=ev.type==='damage'?'突击':ev.type==='heal'?'治疗':'架势';
+ }
+ if(!target)return;
+ if(!origin&&ev.attacker){
+  const attacker=state.enemySeats.findIndex(x=>x?.name===ev.attacker);
+  origin=seatWidget('enemy',attacker)?.getBoundingClientRect();
+ }
+ const to=target.getBoundingClientRect();
+ motion.fly({from:origin||to,to,frontUrl,label,kind,
+  onLand:()=>{
+   if(ev.type!=='draw')impactEffect(ev);
+   cardSound(ev.type==='damage'?'impact':ev.type==='draw'?'draw':'deal');
+  }});
+}
+function apply(action,{from=null}={}){
  if(!state)return;
- const res=action();
- notice=res.message||'该操作无效';
- if(res.ok){selection=null;selectedUnit=null;}
+ const result=action();notice=result.message||'无法完成这次行动';
+ if(!result.ok){render();return result}
+ const events=state.turnEvents.map(x=>({...x}));
+ selection=null;selectedUnit=null;
+ if(events.some(x=>x.type==='draw'))focusedOwnerId=events[0].ownerId;
  render();
+ events.forEach((ev,i)=>{
+  if(i>2)return; // lightweight, even when 3 enemy actions resolve
+  animateEvent(ev,i===0?from:null);
+ });
+ return result;
 }
 function clickSeat(side,index){
  if(!state)return;
  if(selection?.type==='hero'){
-  if(side!=='ally'){notice='人物卡只能部署到我方七席';render();return;}
-  return apply(()=>deployHero(state,selection.id,index));
+  if(side!=='ally'){notice='人物卡只能部署到我方七席';render();return}
+  const heroId=selection.id;
+  const from=heroWidget(heroId)?.getBoundingClientRect();
+  return apply(()=>deployHero(state,heroId,index),{from});
  }
- if(selection?.type==='action')return apply(()=>playAction(state,selection.id,side,index));
+ if(selection?.type==='action'){
+  const id=selection.id;
+  const from=actionWidget(id)?.getBoundingClientRect();
+  return apply(()=>playAction(state,id,side,index),{from});
+ }
  const unit=(side==='ally'?state.allySeats:state.enemySeats)[index];
  if(unit){
   selectedUnit=unit;
-  notice=`${unit.name} · 生命 ${unit.hp}/${unit.maxHp} · 护盾 ${unit.shield}。点击“放大查看”欣赏原画。`;
- }else notice=side==='ally'?'点击下方候补人物卡，再点击这个空位进行部署':'敌方这个卡位当前无人';
+  notice=`${unit.name} · 生命 ${unit.hp}/${unit.maxHp} · 护盾 ${unit.shield}。`;
+  if(side==='ally'){
+   const owner=heroForSeat(unit);
+   if(owner)focusedOwnerId=focusedOwnerId===owner.id?null:owner.id;
+   notice+=' 该人物卡下的专属手牌已'+(focusedOwnerId?'展开':'收拢');
+  }
+ }else notice=side==='ally'?'请选候补人物卡，再点击己方空位部署':'敌方空席没有目标';
  render();
 }
 function chooseHero(id){
@@ -218,8 +280,8 @@ function chooseHero(id){
 function chooseAction(id){
  const card=state?.hand.find(x=>x.id===id);
  if(!card)return;
- selection={type:'action',id};selectedUnit=null;
- notice=card.ownerName+'·'+card.name+'：点击敌方或己方人物牌。空槽和倒下单位不会消耗这张牌。';
+ selection={type:'action',id};selectedUnit=null;focusedOwnerId=card.ownerId;
+ notice=card.ownerName+'·'+card.name+'：从人物下方展开的专属手牌，选择敌方或己方目标。';
  render();
 }
 function openPreview(entry){
@@ -231,8 +293,9 @@ function openPreview(entry){
 }
 function closePreview(){previewEntry=null;$('preview').hidden=true;$('preview-img').removeAttribute('src');}
 function restart(){
+ motion.stop();
  state=makeDuel(referenceHeroes,referenceEnemies);
- selection=null;selectedUnit=null;notice='新对局：行动手牌为 0。选择候补人物，再点击我方空席。';
+ selection=null;selectedUnit=null;focusedOwnerId=null;notice='新对局：行动手牌为 0。选择候补人物，再点击我方空席。';
  render();
 }
 function imageAssetError(e){
@@ -273,9 +336,19 @@ app.addEventListener('click',e=>{
  if(button.matches('[data-side][data-seat]'))return clickSeat(button.dataset.side,Number(button.dataset.seat));
  if(button.matches('[data-hero-id]'))return chooseHero(button.dataset.heroId);
  if(button.matches('[data-action-id]'))return chooseAction(button.dataset.actionId);
- if(button.matches('[data-deck-id]'))return apply(()=>drawFromHero(state,button.dataset.deckId));
+ if(button.matches('[data-owner-open]')){
+  const id=button.dataset.ownerOpen;
+  focusedOwnerId=focusedOwnerId===id?null:id;
+  notice=(state.heroes.find(h=>h.id===id)?.name||'人物')+'的个人手牌已'+(focusedOwnerId?'展开':'叠回人物卡下');
+  render();return;
+ }
+ if(button.matches('[data-deck-id]')){
+  const from=button.getBoundingClientRect();
+  return apply(()=>drawFromHero(state,button.dataset.deckId),{from});
+ }
 });
 app.addEventListener('error',imageAssetError,true);
+$('owner-fan-close').addEventListener('click',()=>{focusedOwnerId=null;selection=null;render();});
 $('restart').addEventListener('click',restart);
 $('end-turn').addEventListener('click',()=>apply(()=>endRound(state)));
 $('inspect-selected').addEventListener('click',()=>openPreview(resolveSelectedHero()));
@@ -351,6 +424,14 @@ async function init(){
    get state(){return state;},
    get snapshot(){return getSnapshot(state);},
    get actualAssets(){return {ally:referenceHeroes.map(x=>x.art),enemy:referenceEnemies.map(x=>x.art)};},
+   get cardPhysics(){return motion.state;},
+   get ownerStacks(){return state.allySeats.map((unit,index)=>{
+    const hero=heroForSeat(unit);return {seat:index,ownerId:hero?.id||null,
+     hand:hero?cardsOwnedBy(hero.id).map(c=>c.id):[],
+     deckRemaining:hero?state.decks[hero.id].drawPile.length:0};
+   });},
+   get focusedOwner(){return focusedOwnerId;},
+   openOwner:id=>{focusedOwnerId=id;render();return focusedOwnerId;},
    deploy:(heroIndex,seatIndex)=>{const r=deployHero(state,referenceHeroes[heroIndex].id,seatIndex);notice=r.message;render();return r;},
    draw:heroIndex=>{const r=drawFromHero(state,referenceHeroes[heroIndex].id);notice=r.message;render();return r;},
    play:(cardIndex,side,seatIndex)=>{const c=state.hand[cardIndex];if(!c)return {ok:false};const r=playAction(state,c.id,side,seatIndex);notice=r.message;render();return r;},
