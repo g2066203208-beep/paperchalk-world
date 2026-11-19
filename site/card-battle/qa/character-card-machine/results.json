@@ -2,8 +2,8 @@
   {
     "viewport": "desktop",
     "passed": true,
-    "character": "冰霜魔女",
-    "id": "witch-workshop/frost-witch.png",
+    "character": "星象魔女",
+    "id": "witch-workshop/astral-witch.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
@@ -12,8 +12,8 @@
   {
     "viewport": "portrait",
     "passed": true,
-    "character": "赏金枪手",
-    "id": "monster-hunters/04-bounty-markswoman.png",
+    "character": "马戏团团长",
+    "id": "wonder-circus/ringmaster.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
@@ -22,8 +22,8 @@
   {
     "viewport": "landscape",
     "passed": true,
-    "character": "首席魔女",
-    "id": "witch-workshop/grand-witch.png",
+    "character": "月下剑姬",
+    "id": "crimson-vampires/moonlight-duelist.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
