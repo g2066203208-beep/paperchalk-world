@@ -177,6 +177,13 @@ for(const d of [
    'second character expands HER own pocket, not another hero card');
   assert.equal(await page.locator('#owner-fan-cards .action').count(),1,
    'expansion shows ONLY the acrobat\'s action card, never the ringmaster\'s two cards');
+  await page.locator('#owner-fan-draw').click();
+  const localDraw=await page.evaluate(()=>window.SevenSeatBattleQA.ownerStacks);
+  assert.equal(localDraw[3].hand.length,2,'local draw must never modify another character\'s hand');
+  assert.equal(localDraw[5].hand.length,2,'large touch draw button must draw from selected character ONLY');
+  assert.equal(await page.locator('#owner-fan-cards .action').count(),2,
+   'expanded owner pocket must now show two acrobat-only cards');
+  await page.waitForTimeout(850);
   await page.screenshot({path:out+'/'+d.name+'-07-physical-owner-hand-unfold.png',fullPage:true});
   await page.locator('#owner-fan-close').click();
   assert.equal(await page.locator('#owner-fan[hidden]').count(),1,
