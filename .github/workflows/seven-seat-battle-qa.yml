@@ -23,7 +23,7 @@ on:
       - '.github/workflows/seven-seat-battle-qa.yml'
   workflow_dispatch:
 concurrency:
-  group: real-seven-seat-card-battle-${{ github.ref }}
+  group: real-seven-seat-owner-stacks-pbr-${{ github.ref }}
   cancel-in-progress: true
 permissions:
   contents: write
@@ -67,6 +67,9 @@ jobs:
           cp artifacts/seven-seat-battle/desktop-01-real-ringmaster-deployed.png site/card-battle/qa/seven-seat/desktop-01-deployed.png
           cp artifacts/seven-seat-battle/desktop-02-first-attack-on-enemy.png site/card-battle/qa/seven-seat/desktop-02-attack.png
           cp artifacts/seven-seat-battle/desktop-03-support-ally-card.png site/card-battle/qa/seven-seat/desktop-03-ally-shield.png
+          cp artifacts/seven-seat-battle/desktop-05-two-owners-two-independent-decks.png site/card-battle/qa/seven-seat/desktop-05-owner-stacks.png
+          cp artifacts/seven-seat-battle/desktop-06-real-physical-ten-sided-gold-reward.png site/card-battle/qa/seven-seat/desktop-06-original-slot-coins.png
+          cp artifacts/seven-seat-battle/phone-portrait-06-real-physical-ten-sided-gold-reward.png site/card-battle/qa/seven-seat/phone-portrait-06-original-slot-coins.png
           cp artifacts/seven-seat-battle/phone-portrait-00-first-game-seven-vs-seven.png site/card-battle/qa/seven-seat/phone-portrait-00-table.png
           cp artifacts/seven-seat-battle/phone-portrait-05-two-owners-two-independent-decks.png site/card-battle/qa/seven-seat/phone-portrait-05-decks.png
           cp artifacts/seven-seat-battle/phone-landscape-00-first-game-seven-vs-seven.png site/card-battle/qa/seven-seat/phone-landscape-00-table.png
