@@ -2,8 +2,8 @@
   {
     "viewport": "desktop",
     "passed": true,
-    "character": "放贷主管",
-    "id": "demon-merchant/loan-director.webp",
+    "character": "巨兽屠夫",
+    "id": "monster-hunters/06-beast-butcher.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
@@ -12,8 +12,8 @@
   {
     "viewport": "portrait",
     "passed": true,
-    "character": "血族守卫",
-    "id": "crimson-vampires/crimson-guardian.png",
+    "character": "空中杂技演员",
+    "id": "wonder-circus/aerial-acrobat.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
@@ -22,8 +22,8 @@
   {
     "viewport": "landscape",
     "passed": true,
-    "character": "飞刀演员",
-    "id": "wonder-circus/knife-thrower.png",
+    "character": "重斧清道夫",
+    "id": "monster-hunters/07-axe-scout.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
