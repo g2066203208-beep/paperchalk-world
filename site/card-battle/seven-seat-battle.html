@@ -89,7 +89,7 @@ main{max-width:1350px;margin:0 auto;padding:12px clamp(8px,2vw,24px) 24px}
 .preview-actions{display:flex;justify-content:center}
 #ghost{position:fixed;z-index:99;pointer-events:none;width:85px;height:120px;object-fit:contain;opacity:.88;border-radius:4px;transform:translate(-50%,-50%) rotate(-6deg);filter:drop-shadow(0 12px 18px #000a)}
 #ghost[hidden]{display:none}
-@media(min-width:1100px){.bottom{grid-template-columns:1fr 1.2fr;column-gap:18px}.reserve-section{grid-column:1}.deck-section{grid-column:2}.hand-section,.controls,.log{grid-column:1/-1}}
+@media(min-width:1100px){.bottom{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);column-gap:18px}.reserve-section{grid-column:1}.deck-section{grid-column:2}.hand-section,.controls,.log{grid-column:1/-1}}
 @media(max-width:600px){
  main{padding:6px 6px 12px}
  .top{margin-bottom:6px}.brand h1{font-size:17px}.brand small{font-size:10px}.links{gap:8px;font-size:10px}
@@ -128,7 +128,7 @@ main{max-width:1350px;margin:0 auto;padding:12px clamp(8px,2vw,24px) 24px}
  .mid{height:33px;margin:3px 0}
  .mid .cue{padding:2px 8px}
  .mid .cue small{display:none}
- .bottom{grid-template-columns:1fr 1fr;gap:2px 8px}
+ .bottom{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:2px 8px}
  .reserve-section{grid-column:1}.deck-section{grid-column:2}
  .hand-section,.controls,.log{grid-column:1/-1}
  .reserve{flex-basis:46px;width:46px;height:65px}
@@ -136,6 +136,22 @@ main{max-width:1350px;margin:0 auto;padding:12px clamp(8px,2vw,24px) 24px}
  .log{display:none}
 }
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+/* Seven fixed seats may never cause the WHOLE mobile viewport to grow. */
+html,body{width:100%;max-width:100%;overflow-x:clip}
+main{width:100%;min-width:0}
+main>.board,main>.bottom,main>.top,.board-status,.board-label,.seats{min-width:0;max-width:100%}
+.bottom{width:100%;min-width:0;grid-template-columns:minmax(0,1fr)}
+.bottom>*{min-width:0;max-width:100%}
+.rail,.decks,.hand{width:100%;max-width:100%;min-width:0}
+.tool-label{min-width:0;flex-wrap:wrap;row-gap:2px}
+.tool-label>*{min-width:0}
+.controls{min-width:0;max-width:100%}
+.controls small{flex:1 1 150px}
+@media(max-width:600px){
+ .tool-label>strong{font-size:10px}
+ .tool-label>span{text-align:right}
+ .reserve-section,.deck-section,.hand-section{overflow:hidden}
+}
 </style>
 </head>
 <body>
