@@ -27,6 +27,13 @@ jobs:
       - name: Extract motion sample contact sheets at 5 fps with timestamp
         run: |
           $(cat /tmp/ffmpeg_path) -nostdin -hide_banner -loglevel error -i /tmp/black-jacket-gameplay.mp4             -vf "fps=5,scale=480:-2:flags=lanczos,tile=4x3"             -vsync vfr artifacts/black-jacket-reference/real-source-frames-%02d.png
+          # 15fps (66.7ms per frame) precisely around a card-activation
+          # sequence, unlike the broad 5fps editorial overview.
+          $(cat /tmp/ffmpeg_path) -nostdin -hide_banner -loglevel error \
+            -ss 2.4 -t 2.4 -i /tmp/black-jacket-gameplay.mp4 \
+            -vf "fps=15,scale=480:-2:flags=lanczos,tile=4x3" \
+            -vsync vfr artifacts/black-jacket-reference/official-card-glow-15fps-%02d.png
+          echo "Glow subclip starts at 2.4s in official 9.4s trailer, 15fps = 66.7ms per mini-frame, 4x3 frames/tile." >> artifacts/black-jacket-reference/provenance.txt
           ls -lah artifacts/black-jacket-reference
       - name: Upload short reference contact sheets (no full video redistribution)
         if: always()
