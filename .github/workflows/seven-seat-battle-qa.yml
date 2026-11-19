@@ -53,10 +53,21 @@ jobs:
           node tests/seven-seat-card-kinetics.test.mjs
           node tests/card-portrait-matte.test.mjs
           node -e "const fs=require('node:fs');const main=fs.readFileSync('site/card-battle/character-card-machine.html','utf8');const ref=fs.readFileSync('site/card-battle/character-card-machine-legacy.html','utf8');if(!main.includes('seven-seat-battle.mjs')||!ref.includes('character-card-machine.mjs'))process.exit(1);console.log('PASS new hosted route + archived original slot machine')"
-      - name: Install Playwright and real Chromium
+      - name: Use preinstalled GitHub Chrome with lightweight Playwright recorder
         run: |
           npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
-          npx playwright install --with-deps chromium
+          if command -v google-chrome >/dev/null 2>&1; then
+            echo "PLAYWRIGHT_BROWSER_PATH=$(command -v google-chrome)" >> "$GITHUB_ENV"
+            npx playwright install ffmpeg
+          elif command -v google-chrome-stable >/dev/null 2>&1; then
+            echo "PLAYWRIGHT_BROWSER_PATH=$(command -v google-chrome-stable)" >> "$GITHUB_ENV"
+            npx playwright install ffmpeg
+          elif command -v chromium >/dev/null 2>&1; then
+            echo "PLAYWRIGHT_BROWSER_PATH=$(command -v chromium)" >> "$GITHUB_ENV"
+            npx playwright install ffmpeg
+          else
+            npx playwright install --with-deps chromium
+          fi
       - name: Launch actual hosted static game tree
         run: |
           nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/seven-seat-battle.log 2>&1 &
