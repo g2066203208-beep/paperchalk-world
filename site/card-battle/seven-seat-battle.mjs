@@ -248,6 +248,12 @@ function emitImpactParticles(node,type){
  ring.style.setProperty('--spark-color',color);
  container.appendChild(ring);
  ring.addEventListener('animationend',()=>ring.remove(),{once:true});
+ // A short-lived light pool like a lit ink edge; no permanent glare.
+ const pool=document.createElement('span');pool.className='battle-lightpool';
+ pool.style.setProperty('--x',x+'px');pool.style.setProperty('--y',y+'px');
+ pool.style.setProperty('--spark-color',color);
+ container.appendChild(pool);
+ pool.addEventListener('animationend',()=>pool.remove(),{once:true});
 }
 function impactEffect(ev){
  const el=seatWidget(ev.side,ev.index);if(!el)return;
@@ -256,6 +262,19 @@ function impactEffect(ev){
  el.classList.remove('hit-shock','healed','shielded','deployed');
  void el.offsetWidth;el.classList.add(cls);
  emitImpactParticles(el,ev.type);
+ if((ev.amount||0)>0 && ev.type!=='deploy'){
+  const label=ev.type==='damage'?'-'+ev.amount:
+   ev.type==='heal'?'+'+ev.amount:'+ev.amount;
+  const rect=el.getBoundingClientRect(),floating=document.createElement('span');
+  floating.className='battle-floating-number';
+  floating.textContent=label;
+  floating.style.setProperty('--x',(rect.left+rect.width*.5)+'px');
+  floating.style.setProperty('--y',(rect.top+rect.height*.35)+'px');
+  floating.style.setProperty('--spark-color',
+   ev.type==='damage'?'#ffbd79':ev.type==='heal'?'#a7f4c2':'#b2ebf7');
+  $('battle-sparks').appendChild(floating);
+  floating.addEventListener('animationend',()=>floating.remove(),{once:true});
+ }
  el.addEventListener('animationend',()=>el.classList.remove(cls),{once:true});
 }
 function animateEvent(ev,origin){
