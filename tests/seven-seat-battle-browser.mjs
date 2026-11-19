@@ -68,7 +68,7 @@ for(const d of [
   await page.screenshot({path:out+'/'+d.name+'-01-real-ringmaster-deployed.png',fullPage:true});
   await page.locator('#owner-decks .deck').first().click();
   assert.equal(await page.locator('#action-hand .action').count(),1,
-   'manual draw from deployed ringmaster's OWN deck');
+   "manual draw from deployed ringmaster-owned deck");
   assert.equal((await page.evaluate(()=>window.SevenSeatBattleQA.snapshot)).hand.length,1);
   await page.locator('#action-hand .action').first().click();
   const noValid=await page.locator('#enemy-seats [data-target="true"]').count();
