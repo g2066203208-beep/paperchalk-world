@@ -2,8 +2,8 @@
   {
     "viewport": "desktop",
     "passed": true,
-    "character": "巨兽屠夫",
-    "id": "monster-hunters/06-beast-butcher.png",
+    "character": "小丑演员",
+    "id": "wonder-circus/clown-performer.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
@@ -12,8 +12,8 @@
   {
     "viewport": "portrait",
     "passed": true,
-    "character": "空中杂技演员",
-    "id": "wonder-circus/aerial-acrobat.png",
+    "character": "夜行信使",
+    "id": "crimson-vampires/night-courier.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
@@ -22,8 +22,8 @@
   {
     "viewport": "landscape",
     "passed": true,
-    "character": "重斧清道夫",
-    "id": "monster-hunters/07-axe-scout.png",
+    "character": "持剑指挥官",
+    "id": "monster-hunters/01-legendary-hunter.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
