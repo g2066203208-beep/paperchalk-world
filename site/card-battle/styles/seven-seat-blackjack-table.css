@@ -1,0 +1,252 @@
+/* The original seven-seat card game, visually calibrated against Black Jacket
+   official screenshots: worn ink, dark felt, amber edges and warm contact
+   shadows. NO copied images, fonts or proprietary textures. */
+:root{
+ --bj-cream:#ead2a4;
+ --bj-paper:#d9c19c;
+ --bj-dry-gold:#c69f63;
+ --bj-felt:#1c302c;
+ --bj-shadow:#080e10;
+}
+body{
+ background:
+  radial-gradient(ellipse 83% 76% at 52% -12%,#41332e 0%,transparent 72%),
+  radial-gradient(ellipse 75% 55% at 50% 96%,#152522 0%,transparent 80%),
+  linear-gradient(170deg,#14161a,#080e12 85%);
+ color:#eee3ce;
+}
+.top{padding:5px 8px 10px}
+.brand h1{font-weight:750;letter-spacing:.10em;color:#ead4af;
+ text-shadow:0 2px 14px #d49f5d35,0 2px 3px #000b}
+.brand small{color:#b6a898;letter-spacing:.035em}
+.links button,.controls button{border-color:#776754;background:linear-gradient(#312a2a,#1c1e20);
+ box-shadow:inset 0 1px #e7c18b27,0 3px 9px #0008}
+.board{
+ background:
+  radial-gradient(ellipse 56% 64% at 50% 48%,#45514699,transparent 89%),
+  radial-gradient(ellipse 85% 30% at 50% 102%,#55463840,transparent 80%),
+  radial-gradient(ellipse 125% 84% at 50% 42%,#304542,#152825 72%,#10191b 100%);
+ border:1px solid #76624980;
+ border-radius:11px;
+ box-shadow:
+  0 21px 46px #000d,0 4px 6px #000b,
+  inset 0 2px 0 #e3c58b3d,inset 0 0 0 5px #151b1c80,
+  inset 0 0 84px #081013a1,inset 0 0 26px #c9a76624;
+ transform:translateZ(0);
+}
+.board:before{
+ content:"";position:absolute;inset:0;pointer-events:none;
+ opacity:.24;mix-blend-mode:soft-light;
+ background-image:var(--felt-noise,none);
+ background-repeat:repeat;background-size:256px 256px;
+}
+.board:after{border-color:#dbb77a24;inset:6px}
+.board-status{margin-bottom:11px;border-color:#c8af8451;
+ color:#ddcdb0}
+.chip{background:linear-gradient(155deg,#101719d9,#25322fa9);
+ border:1px solid #89785a80;border-bottom-color:#443c33;
+ box-shadow:0 2px 5px #0005,inset 0 1px #d4bd872e;
+ color:#f4e4c5;letter-spacing:.02em}
+.board-label.enemy{color:#e7b79f}
+.board-label.ally{color:#b9d6bd}
+.board-label span:first-child{font-weight:800;
+ text-shadow:0 1px 8px #000b;letter-spacing:.14em}
+.board-label span:last-child{color:#dac9a8}
+.seats{gap:clamp(4px,.75vw,11px)}
+.seat-column{perspective:750px}
+.seat-column:before{
+ content:"";position:absolute;z-index:0;pointer-events:none;
+ width:93%;height:18px;top:72%;left:4%;border-radius:50%;
+ background:#000a;filter:blur(10px);
+}
+.seat{
+ --tilt-x:0deg;--tilt-y:0deg;--glint-x:50%;--glint-y:42%;
+ border:1px solid #c2a47c98;border-top-color:#edd3aaab;
+ border-left-color:#ddc69b9a;border-bottom-color:#705945a3;
+ border-radius:7px;
+ background:#3c3234;
+ transform:translateY(0) perspective(700px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
+ box-shadow:
+  0 1px #f5e8b05c inset, 0 0 0 2px #2c262c82 inset,
+  0 3px 0 #251b20,0 9px 15px #000b,0 18px 21px #0005;
+ transition:transform .19s cubic-bezier(.16,.82,.26,1),
+  box-shadow .19s ease,border-color .12s,filter .17s ease;
+ will-change:transform;
+ isolation:isolate;
+}
+.seat[data-occupied="true"]{
+ background:#62474c;
+ border-color:#bfa581a8;
+ border-top-color:#f2d5a5a8;
+}
+.seat[data-occupied="true"]:before{
+ opacity:.44;inset:0;
+ background:
+  radial-gradient(circle at var(--glint-x) var(--glint-y),
+   #fff1c137,transparent 34%),
+  linear-gradient(135deg,transparent 20%,#f6edc411 27%,transparent 35%,transparent 75%,#efbb7110);
+ mix-blend-mode:screen;z-index:2;
+ transition:opacity .14s ease;
+}
+.seat[data-occupied="true"]:after{
+ content:"";position:absolute;inset:4px;border:1px solid #eec69321;
+ border-radius:4px;pointer-events:none;z-index:3;
+}
+.seat img{
+ display:block;background:linear-gradient(120deg,#7b6059,#3d343a 68%,#272629);
+ filter:contrast(1.045) saturate(1.04);
+ transition:filter .18s;
+}
+.seat:hover:not(:disabled){
+ transform:translateY(-8px) perspective(650px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
+ border-color:#f0c788;
+ box-shadow:0 2px #fff1d06e inset,0 0 0 1px #f0c7885e,
+  0 7px 3px #181313,0 17px 24px #000d,0 0 16px #d99b4536;
+}
+.seat:hover[data-occupied="true"]:before{opacity:.78}
+.seat:active:not(:disabled){transform:translateY(0) scale(.987)}
+.seat[data-selectable="true"],.seat[data-target="true"]{
+ animation:bj-select-glow 1.55s ease-in-out infinite;
+}
+@keyframes bj-select-glow{
+ 0%,100%{box-shadow:0 3px #312527,0 8px 18px #000a,0 0 8px #d9a4596b}
+ 50%{box-shadow:0 3px #312527,0 8px 18px #000a,0 0 19px #e2bc738a}
+}
+.seat[data-occupied="false"]{
+ border:1px dashed #a58c656e;
+ background:
+  linear-gradient(135deg,#f2ce8710,transparent 19%,#050a0b15 80%),
+  repeating-linear-gradient(125deg,#182a29 0,#182a29 7px,#223532 8px,#192a28 17px);
+ box-shadow:inset 0 1px 9px #02050593,0 2px 5px #0006;
+}
+.seat-empty{color:#b2a99399;text-shadow:0 1px 5px #000c;letter-spacing:.16em}
+.seat-name{
+ background:linear-gradient(transparent,#111317e8 50%,#171519ed);
+ color:#f2e0c0;
+ text-shadow:0 1px 3px #000e,0 0 8px #000d;
+ font-weight:750;
+}
+.seat-num{color:#e6c995cc}
+.seat-hp,.seat-shield{box-shadow:0 1px 3px #000b;
+ border:1px solid #bc976554;
+ background:#191417e3}
+.seat-hp{color:#ffd8bd}
+.seat-shield{color:#bde6ea}
+.enemy-row,.ally-row{perspective:900px}
+.mid{
+ background:radial-gradient(ellipse,#bc975c15,transparent 74%);
+ border-color:#c7aa7656;
+}
+.mid:before{border-color:#bea97c55;border-top-style:dotted}
+.mid .cue{
+ background:linear-gradient(#121d1dc9,#141a1cda);
+ border:1px solid #a48f695e;
+ box-shadow:0 5px 15px #0008,inset 0 1px #edd7a021;
+ border-radius:4px;
+ padding:7px 15px;
+}
+.mid .cue strong{color:#dfc7a1;text-shadow:0 1px 5px #000d;letter-spacing:.05em}
+.mid .cue small{color:#aab4aa}
+.pocket-deck,.enemy-pile{
+ box-shadow:0 2px 0 #3b232a,0 4px 0 #94745e,0 6px 8px #000a;
+ border-color:#d1ae7b66;
+}
+.pocket-deck img,.enemy-pile img{filter:contrast(1.055) brightness(.90)}
+.pocket-deck:hover{filter:brightness(1.15) drop-shadow(0 2px 6px #ffd08861);
+ transform:translateY(-4px) rotate(-5deg)}
+.pocket-mini{
+ background:linear-gradient(120deg,#cda77c,#eed2a3 47%,#a57957);
+ border:1px solid #6e432e;
+ color:#342322;
+ box-shadow:0 2px 0 #5e4235,0 6px 10px #000a;
+}
+.pocket-mini b{background:#edcf99d4;color:#33231c;border:1px solid #7a58454d;
+ padding:4px 3px}
+.pocket-mini .pip{color:#5a2c27;font-weight:900}
+.pocket-mini:hover{transform:translateY(-8px) rotate(0);z-index:19;
+ box-shadow:0 8px 16px #000b,0 0 10px #edbc736b}
+.pocket-open{
+ color:#e3c797;background:linear-gradient(#35332b,#1b2725);
+ border-color:#9c865f;box-shadow:inset 0 1px #e1c68e32,0 3px 7px #0009;
+}
+.pocket-open[data-focused="true"]{background:linear-gradient(#846448,#514438);
+ border-color:#f1c88a;box-shadow:0 0 12px #d3ae6663}
+.owner-fan{
+ background:
+  radial-gradient(ellipse at 50% 3%,#785c4936,transparent 76%),
+  linear-gradient(155deg,#352d2bfb,#161c1af8);
+ border-color:#b39a77b5;
+ box-shadow:0 12px 36px #000c,inset 0 1px #f2d7a33c;
+}
+.owner-fan:before{background:#382f2b}
+.owner-fan-header strong{color:#efd6a4;letter-spacing:.05em}
+#owner-fan-draw{
+ background:linear-gradient(#806549,#513e34);
+ border:1px solid #e7c38b;color:#ffefcf;
+ box-shadow:inset 0 1px #fff4d239,0 3px 8px #000a
+}
+#owner-fan-draw:hover{background:linear-gradient(#9c754a,#68503d)}
+.owner-fan-cards .action{
+ background:linear-gradient(105deg,#b88e62,#eed0a2 21%,#f0d8b0 65%,#9f714e);
+ border:1px solid #835836;
+ color:#352822;
+ box-shadow:inset 0 0 0 3px #4b332229,inset 0 0 0 4px #edd8b550,
+  0 3px 0 #513b31,0 9px 15px #000b;
+}
+.owner-fan-cards .action:before{border-color:#784f358c}
+.owner-fan-cards .action .owner{color:#724128}
+.owner-fan-cards .action strong{color:#30211a;text-shadow:0 1px #f6e5c8}
+.owner-fan-cards .action small{color:#6e4b35}
+.owner-fan-cards .action .cost{background:#442d26;color:#fff0d3;border-color:#a77c4c}
+.owner-fan-cards .action:hover{
+ border-color:#dfbc80;transform:translateY(-11px) rotate(-1.5deg) scale(1.035);
+ box-shadow:0 5px 0 #442b23,0 13px 22px #000d,0 0 18px #ebbc7555;
+}
+.reserve{
+ background:linear-gradient(137deg,#694a45,#352b30);
+ box-shadow:0 2px 0 #342622,0 6px 8px #000c,0 12px 14px #0007;
+ border:1px solid #b69570;
+}
+.reserve:before{content:"";position:absolute;inset:3px;
+ border:1px solid #e8cfae37;border-radius:3px;pointer-events:none;z-index:1}
+.reserve:hover{border-color:#e0b77d;
+ box-shadow:0 3px 0 #3b2725,0 12px 17px #000d,0 0 14px #d9a45c3d}
+.reserve .tag{color:#f7e6c9}
+.bottom{padding-top:13px}
+.layout-legend{opacity:.6;letter-spacing:.01em}
+#notification{color:#d9c39c;text-shadow:0 1px 2px #000c}
+.log{opacity:.70;border-color:#a3946a34}
+.battle-sparks{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:44}
+.battle-spark{position:absolute;left:var(--x);top:var(--y);height:var(--size,3px);
+ width:var(--size,3px);border-radius:50%;
+ background:var(--spark-color,#f7c87d);opacity:0;
+ box-shadow:0 0 5px var(--spark-color,#f7c87d),0 0 12px #ffd8863e;
+ animation:bj-spark .55s cubic-bezier(.1,.55,.28,1) forwards}
+@keyframes bj-spark{
+ 0%{transform:translate(0,0) scale(.3);opacity:0}
+ 12%{opacity:1}
+ 82%{opacity:.62}
+ 100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.45)}
+}
+.battle-impact-ring{position:absolute;left:var(--x);top:var(--y);
+ height:16px;width:16px;opacity:0;border:2px solid var(--spark-color,#eab56f);
+ border-radius:50%;box-shadow:0 0 20px var(--spark-color,#eab56f);
+ animation:bj-impact .42s ease-out forwards}
+@keyframes bj-impact{0%{transform:translate(-50%,-50%) scale(.25);opacity:.9}
+ 100%{transform:translate(-50%,-50%) scale(4.3);opacity:0}}
+#physical-card-fx[data-active="true"]{opacity:1}
+@media(max-width:600px){
+ .board{border-radius:7px;box-shadow:0 10px 28px #000b,inset 0 1px #f5d49b44,
+  inset 0 0 30px #10181ab5}
+ .seat{border-radius:4px;box-shadow:0 2px 0 #291e1e,0 4px 6px #000b}
+ .seat:active{transform:translateY(0) scale(.99)}
+ .mid .cue{padding:5px 7px}
+ .mid .cue strong{font-size:10px}
+ .pocket-deck:hover{transform:none}
+ .owner-fan-cards .action:hover{transform:translateY(-4px)}
+}
+@media(prefers-reduced-motion:reduce){
+ .battle-spark,.battle-impact-ring{animation:none!important}
+ .seat[data-selectable="true"],.seat[data-target="true"]{animation:none!important}
+ .seat:hover,.reserve:hover{transform:none!important}
+}
