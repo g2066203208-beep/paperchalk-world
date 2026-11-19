@@ -263,8 +263,7 @@ function impactEffect(ev){
  void el.offsetWidth;el.classList.add(cls);
  emitImpactParticles(el,ev.type);
  if((ev.amount||0)>0 && ev.type!=='deploy'){
-  const label=ev.type==='damage'?'-'+ev.amount:
-   ev.type==='heal'?'+'+ev.amount:'+ev.amount;
+  const label=ev.type==='damage'?'-'+ev.amount:'+'+ev.amount;
   const rect=el.getBoundingClientRect(),floating=document.createElement('span');
   floating.className='battle-floating-number';
   floating.textContent=label;
