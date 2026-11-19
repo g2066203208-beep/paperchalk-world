@@ -2,8 +2,8 @@
   {
     "viewport": "desktop",
     "passed": true,
-    "character": "小丑演员",
-    "id": "wonder-circus/clown-performer.png",
+    "character": "纯血女皇",
+    "id": "crimson-vampires/pureblood-empress.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
@@ -12,8 +12,8 @@
   {
     "viewport": "portrait",
     "passed": true,
-    "character": "夜行信使",
-    "id": "crimson-vampires/night-courier.png",
+    "character": "血族守卫",
+    "id": "crimson-vampires/crimson-guardian.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
@@ -22,8 +22,8 @@
   {
     "viewport": "landscape",
     "passed": true,
-    "character": "持剑指挥官",
-    "id": "monster-hunters/01-legendary-hunter.png",
+    "character": "大力士",
+    "id": "wonder-circus/strongwoman.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
