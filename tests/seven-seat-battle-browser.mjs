@@ -138,11 +138,16 @@ for(const d of [
    'worn dark felt, material and impact layer actually integrated into hosted game');
   assert(flourish.motion.tableMotionTimings.action<=500,
    'battle uses reference-inspired brisk card rhythm, NOT the old 1.65 sec elastic flight');
-  // Impact starts at opacity 0; measure/record the PEAK luminous frame,
-  // not the blank initial animation event frame. ~110ms after contact.
-  await page.waitForTimeout(110);
+  // Avoid wall-clock assumptions on slow headless GPU: sample the
+  // actual animated pseudo-element and capture once its amber rim reaches
+  // visible brightness. Tests otherwise accidentally screenshot t=0 or
+  // after the class has finished on overloaded CI.
+  await page.waitForFunction(()=>{
+   const card=[...document.querySelectorAll('#enemy-seats .seat')][1];
+   return Number(getComputedStyle(card,'::after').opacity)>.60;
+  },{timeout:1300});
   assert.equal(await page.locator('#battle-sparks .battle-floating-number').count(),1,
-   'a readable damage number should still be visible 110ms after collision');
+   'a readable floating damage number must overlap the bright rim beat');
   const flareCss=await page.evaluate(()=>{
    const hit=[...document.querySelectorAll('#enemy-seats .seat')][1];
    const after=window.getComputedStyle(hit,'::after');
@@ -150,10 +155,11 @@ for(const d of [
    return {edgeOpacity:Number(after.opacity),edgeShadow:after.boxShadow,
     poolOpacity:Number(pool.opacity),poolBackground:pool.backgroundImage};
   });
-  assert(flareCss.edgeOpacity>.55,'reference-style gold edge must be visibly bright at impact peak');
+  assert(flareCss.edgeOpacity>.45,
+   'gold edge should remain visibly bright on captured reference peak: '+JSON.stringify(flareCss));
   assert(flareCss.edgeShadow!=='none','physical card should have an active warm emissive rim');
   assert(flareCss.poolBackground.includes('radial-gradient'),
-   'impact glow must have a real radial light falloff, not an inert pseudo layer');
+   'impact glow gradient did not render: '+JSON.stringify(flareCss));
   await page.screenshot({path:out+'/'+d.name+'-08-amber-edge-hit-flare.png',fullPage:true});
   const hit=await page.evaluate(()=>window.SevenSeatBattleQA.snapshot);
   assert.equal(hit.hand.length,0);
