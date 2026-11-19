@@ -9,6 +9,8 @@ on:
       - 'site/card-battle/seven-seat-battle.mjs'
       - 'site/card-battle/engine/seven-seat-duel.mjs'
       - 'site/card-battle/motion/seven-seat-card-physics.mjs'
+      - 'site/card-battle/motion/seven-seat-card-kinetics.mjs'
+      - 'site/card-battle/styles/seven-seat-blackjack-table.css'
       - 'site/card-battle/motion/character-card-sequence.mjs'
       - 'site/card-battle/motion/coin-payout-lighting.mjs'
       - 'site/card-battle/motion/card-image-relief.mjs'
@@ -20,6 +22,7 @@ on:
       - 'site/index.html'
       - 'tests/seven-seat-duel.test.mjs'
       - 'tests/seven-seat-battle-browser.mjs'
+      - 'tests/seven-seat-card-kinetics.test.mjs'
       - '.github/workflows/seven-seat-battle-qa.yml'
   workflow_dispatch:
 concurrency:
@@ -41,11 +44,13 @@ jobs:
           node --check site/card-battle/engine/seven-seat-duel.mjs
           node --check site/card-battle/seven-seat-battle.mjs
           node --check site/card-battle/motion/seven-seat-card-physics.mjs
+          node --check site/card-battle/motion/seven-seat-card-kinetics.mjs
           node --check site/card-battle/motion/card-portrait-matte.mjs
           node --check tests/seven-seat-duel.test.mjs
           node --check tests/seven-seat-battle-browser.mjs
           node --check tests/card-portrait-matte.test.mjs
           node tests/seven-seat-duel.test.mjs
+          node tests/seven-seat-card-kinetics.test.mjs
           node tests/card-portrait-matte.test.mjs
           node -e "const fs=require('node:fs');const main=fs.readFileSync('site/card-battle/character-card-machine.html','utf8');const ref=fs.readFileSync('site/card-battle/character-card-machine-legacy.html','utf8');if(!main.includes('seven-seat-battle.mjs')||!ref.includes('character-card-machine.mjs'))process.exit(1);console.log('PASS new hosted route + archived original slot machine')"
       - name: Install Playwright and real Chromium
