@@ -2,8 +2,8 @@
   {
     "viewport": "desktop",
     "passed": true,
-    "character": "星象魔女",
-    "id": "witch-workshop/astral-witch.png",
+    "character": "放贷主管",
+    "id": "demon-merchant/loan-director.webp",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
@@ -12,8 +12,8 @@
   {
     "viewport": "portrait",
     "passed": true,
-    "character": "马戏团团长",
-    "id": "wonder-circus/ringmaster.png",
+    "character": "血族守卫",
+    "id": "crimson-vampires/crimson-guardian.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
@@ -22,8 +22,8 @@
   {
     "viewport": "landscape",
     "passed": true,
-    "character": "月下剑姬",
-    "id": "crimson-vampires/moonlight-duelist.png",
+    "character": "飞刀演员",
+    "id": "wonder-circus/knife-thrower.png",
     "portraits": 35,
     "beforeCount": 0,
     "afterCount": 1,
