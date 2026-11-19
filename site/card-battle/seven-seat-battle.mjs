@@ -130,28 +130,31 @@ function renderReserve(){
      ${markupArt(hero.art,hero.name)}<span class="tag">${escape(hero.name)}</span>
    </button>`).join('');
 }
-function renderDecks(){
- const deployed=state.heroes.filter(h=>state.decks[h.id]?.unlocked);
- $('owner-decks').innerHTML=deployed.length?deployed.map(h=>{
-  const d=state.decks[h.id],unit=state.allySeats.find(x=>x?.id===`ally:${h.id}`);
-  return `<button class="deck" type="button" data-deck-id="${escape(h.id)}"
-    ${!unit?.alive||state.hand.length>=HAND_LIMIT||state.phase!=='player'?'disabled':''}
-    title="${escape(h.name)}的独立牌堆，点击手动抽一张">
-    <img src="${escape(backUrl)}" alt="统一酒红金线卡背">
-    <span><strong>${escape(h.name)}</strong><small>${unit?.alive?'剩余 '+d.drawPile.length+' · 手牌 '+state.hand.length+'/10':'人物已退场'}</small></span>
-    </button>`;
- }).join(''):'<span class="rail-empty">尚未部署人物 · 暂无可使用的行动牌堆</span>';
-}
-function renderHand(){
- $('action-hand').innerHTML=state.hand.length?state.hand.map(card=>
-  `<button type="button" class="action" data-action-id="${escape(card.id)}"
-    data-selected="${selection?.type==='action'&&selection.id===card.id}"
-    draggable="${state.phase==='player'}" aria-label="${escape(card.ownerName+'的'+card.name+'，行动点'+card.cost)}"
-    title="${escape(card.ownerName+' · '+card.description)}">
-    <span class="owner">${escape(card.ownerName)} · 专属牌</span>
-    <span class="cost">${card.cost}</span><strong>${escape(card.name)}</strong>
-    <small>${escape(card.description)}<br>目标：己方或敌方</small>
-    </button>`).join(''):'<span class="rail-empty">手牌为空 · 部署人物后，点击对应牌堆手动摸牌</span>';
+// The open hand is never a detached global rail. It unfolds directly below
+// its owning character on the physical table, then packs back under the card.
+function renderOwnerFan(){
+ const fan=$('owner-fan'),h=state.heroes.find(x=>x.id===focusedOwnerId);
+ if(!h||!state.decks[h.id]?.unlocked){fan.hidden=true;return}
+ const unit=state.allySeats.find(x=>x?.id===`ally:${h.id}`);
+ if(!unit){fan.hidden=true;return}
+ const cards=cardsOwnedBy(h.id);
+ fan.hidden=false;
+ $('owner-fan-name').textContent=h.name+' · 专属手牌';
+ $('owner-fan-count').textContent=cards.length+' 张在手 · 剩余 '+state.decks[h.id].drawPile.length+' 张';
+ const index=state.allySeats.findIndex(x=>x?.id===`ally:${h.id}`);
+ fan.style.setProperty('--owner-origin',((index+.5)/7*100).toFixed(1)+'%');
+ $('owner-fan-cards').innerHTML=cards.length?cards.map((c,j)=>
+   `<button type="button" class="action" data-action-id="${escape(c.id)}"
+    data-selected="${selection?.type==='action'&&selection.id===c.id}"
+    draggable="${unit.alive&&state.phase==='player'}"
+    style="--card-tilt:${(j%5-2)*1.6}deg"
+    aria-label="${escape(h.name+'的'+c.name+'，'+c.cost+'点行动力')}"
+    title="${escape(c.description)}">
+    <span class="owner">${escape(h.name)} · 专属</span>
+    <span class="cost">${c.cost}</span><strong>${escape(c.name)}</strong>
+    <small>${escape(c.description)}<br>可指定己方或敌方</small>
+   </button>`).join(''):
+   '<span class="rail-empty">行动牌仍在这名人物下面的酒红牌堆里，点击卡背摸牌</span>';
 }
 function selectedInstruction(){
  if(state.result)return state.result==='victory'?
@@ -166,7 +169,7 @@ function selectedInstruction(){
   return [c?`${c.ownerName} · ${c.name}`:'行动卡',
    '请选择任一存活目标：可打敌方，也可作用于队友；非法目标不会扣牌'];
  }
- return ['七席牌桌 · 人物卡对战','先从候补人物卡打出角色，再手动摸该角色的行动牌'];
+ return ['七席人物牌桌 · 每人牌组独立叠放','部署人物 → 点击其人物卡下方酒红卡背抽牌 → 点叠牌展开，再选敌我目标'];
 }
 function render(){
  if(!state)return;
@@ -178,7 +181,7 @@ function render(){
  $('battle-status').textContent=state.result==='victory'?'胜利':state.result==='defeat'?'失败':'敌我各七席 · '+(state.phase==='player'?'玩家行动':'敌方行动');
  const cue=selectedInstruction();
  $('cue-title').textContent=cue[0];$('cue-sub').textContent=cue[1];
- renderSeats('enemy');renderSeats('ally');renderReserve();renderDecks();renderHand();
+ renderSeats('enemy');renderSeats('ally');renderReserve();renderOwnerFan();
  $('end-turn').disabled=!!state.result;
  $('inspect-selected').disabled=!resolveSelectedHero();
  $('notification').textContent=notice;
