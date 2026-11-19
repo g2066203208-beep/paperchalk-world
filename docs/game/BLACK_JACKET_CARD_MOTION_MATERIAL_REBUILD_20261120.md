@@ -27,3 +27,14 @@
 
 ## Visual acceptance still pending
 Static shots and passing Chromium functionality tests do **not** prove perfect fidelity to Black Jacket. Must inspect actual official video frame strips and compare with similarly timed frames from our actual Chrome WebM; refine ease, durations, ember pulses, card corner silhouette and reflection accordingly.
+
+## 2026-11-20 Official-trailer actual video frame measurements
+Official 9.4-sec promotional trailer successfully downloaded and sampled at **15 fps (66.7ms/frame)** via workflow [44578292171](https://github.com/g2066203208-beep/paperchalk-world/actions/runs/44578292171), artifact [14557018168](https://github.com/g2066203208-beep/paperchalk-world/actions/runs/44578292171/artifacts/14557018168).
+- Source: Steam official microtrailer URL above.
+- The second 15fps tile `official-card-glow-15fps-02.png` has frames t≈3.20..3.93 secs of the *edited promo video*, NOT arbitrary internal card-action timestamps. A warm gold edge glint begins building near t≈3.53, is visibly bright through ≈3.60..3.87, then reduces. Dark teal-black card beside ochre paper remains legible, with strong thin illuminated edges against rust red felt. The source has montage cuts, so these are observed screen timings only; actual full gameplay animation may differ.
+- Source frame `real-source-frames-03.png` shows warm full-table illumination and victory typography, not simply 3D coins.
+- New original authored table motion `TABLE_CARD_TIMING` still 420–660ms; these are NOT reverse-engineered literal Black Jacket easing values.
+- Additional short-lived amber edge intensity and local contact light band were added to `styles/seven-seat-blackjack-table.css`; a floating damage number and soft expanding impact halo added to `seven-seat-battle.mjs`. Continuous gold trim is forbidden; flash must decay back to matte paper.
+- Browser visual QA `tests/seven-seat-battle-browser.mjs` now captures and archives `desktop-08-amber-edge-hit-flare.png` and phone equivalent during TRUE CSS pseudo-element brightness, with explicit computed-style opacity and valid radial gradient assertions. This is stricter than checking only JS elements or a snapshot before the animation begins.
+- Early strict visual QA [44578139067](https://github.com/g2066203208-beep/paperchalk-world/actions/runs/44578139067) intentionally **FAILED** because bright rim timing was not guaranteed and CSS gradient token syntax was invalid on some Chromium configurations. Real fix committed `251c56aa23c32c0daf1fa1b193c34acc0be73b4e`, screenshot synchronized to real pseudo-element peak, CSS URL bumped `20261120-amber-glow-valid-v5`. Do not use its failed screenshots as proof.
+- Actual third-round QA outcome is recorded in latest workflow; do not claim v5 complete until all three screenshots and computed-style checks succeed.
