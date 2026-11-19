@@ -289,6 +289,12 @@ main>.board,main>.bottom,main>.top,.board-status,.board-label,.seats{min-width:0
  #physical-card-fx{transition:none}
 }
 
+.owner-fan-header button{min-height:38px;touch-action:manipulation}
+#owner-fan-draw{background:linear-gradient(135deg,#78565a,#5c414c);border:1px solid #e5c48a;color:#fff0d0;font-weight:700}
+#owner-fan-draw:hover{box-shadow:0 0 12px #d6a87270}
+.board[data-result="victory"]{box-shadow:0 0 38px #f1c87344,inset 0 0 60px #f3c97838}
+.board[data-result="defeat"]{filter:saturate(.7)}
+
 </style>
 </head>
 <body>
@@ -311,6 +317,7 @@ main>.board,main>.bottom,main>.top,.board-status,.board-label,.seats{min-width:0
    <div class="owner-fan-header">
     <strong id="owner-fan-name">人物专属手牌</strong>
     <span id="owner-fan-count">0 张</span>
+    <button id="owner-fan-draw" type="button" aria-label="从所选人物牌下方的专属牌堆摸一张">从此人牌堆摸一张</button>
     <button id="owner-fan-close" type="button" aria-label="把手牌叠回人物卡下面">收拢手牌 <span aria-hidden="true">⌄</span></button>
    </div>
    <div id="owner-fan-cards" class="owner-fan-cards"></div>
