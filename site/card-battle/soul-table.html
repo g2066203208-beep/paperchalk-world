@@ -15,8 +15,9 @@ main{background:radial-gradient(ellipse at 45% 92%,#7b3825bd,transparent 61%),ra
 #board .card{width:100%;height:100%;transform:none}.seat-art{display:block;position:absolute;inset:4%;width:92%;height:92%;object-fit:cover;object-position:50% 24%;border-radius:3px}.nameplate{position:absolute;bottom:3%;left:3%;width:94%;color:#fff0d2;font-family:Paper,serif;font-size:clamp(10px,1.25vw,15px);line-height:1.12;padding:12% 0 5%;background:linear-gradient(transparent,#24221bea 42%);text-shadow:0 1px 2px black}.stack.open span{color:#f6dbab;background:#342620e6;padding:3px;font-size:clamp(10px,1.1vw,14px);border:1px solid #ae885b}.tag{position:absolute;right:4%;top:3%;font:12px Georgia;color:#fff0c4;background:#372b20d9;padding:2px 4px;border-radius:3px}.armed{outline:2px solid #f5d48a!important;box-shadow:0 0 16px #efa94777!important}.drawn{background:repeating-linear-gradient(24deg,transparent 0 3px,#57442c12 4px),radial-gradient(ellipse,#e8d2a2,#b39159);color:#382b20;align-content:center;text-align:center;gap:5px}.sigil{font:clamp(18px,3vw,37px) Georgia}.drawn strong{font:clamp(11px,1.4vw,17px) Paper,serif}.drawn small{font:clamp(9px,1vw,13px) Paper,serif}.stackrail{align-self:end}.seat-info{text-align:center;font-size:clamp(11px,1.4vw,16px);color:#efdab1;min-height:1.3em;text-shadow:0 1px 4px #161910}.seven .place:has(.card),#public:has(.card){border:0}.front:before,.front:after{pointer-events:none}.public-line .public{transform:none}.motion-rig .card .seat-art{object-fit:cover}
 @media(max-width:650px) and (orientation:portrait){#board{--cw:12.65vw;--gap:.85vw;grid-template-rows:auto 1fr 1fr 1fr auto var(--ch)}.seat-info{padding:0 8px}.nameplate{font-size:10px}}
 @media(max-height:490px) and (orientation:landscape){#board{--cw:min(11vw,14.3dvh);row-gap:1px}#board header{padding:2px 4%}#board header small{display:none}#board #help{min-height:29px;padding:2px 8px}}
+#commands{display:flex;align-items:center;gap:clamp(4px,1vw,12px)}#turn-label{font-size:clamp(10px,1.3vw,16px)}#resolve{background:#603a2e;border-color:#c5a879}.intent{position:absolute;left:2%;top:3%;background:#582b24eb;color:#ffe1a1;padding:2px;font-size:clamp(9px,1vw,13px)}.damage{position:fixed;color:#fff0ae;font:bold clamp(22px,3.2vw,42px) Georgia;text-shadow:2px 2px #752f25}.place.fallen .card{filter:grayscale(1) brightness(.45)}@media(max-width:500px){#commands button{padding:4px 7px}}
 </style>
-<main id="board"><div id="table-rim"></div><canvas id="grain" aria-hidden="true"></canvas><header><div><small>渡魂牌局</small><h1>七席牌桌</h1></div><button id="help">桌规</button></header><section class="seven" id="enemy" aria-label="敌方七席"></section><div class="public-line"><button id="public" class="public" aria-label="公共牌位"></button></div><section class="seven" id="player" aria-label="我方七席"></section><div class="seat-info" id="info" role="status">点底边人物牌，再点同列我方空席部署</div><section id="decks" class="seven stackrail" aria-label="七个人物牌堆"></section></main><dialog id="rules"><h2>七席牌桌</h2><p>每一列属于一位人物。先选屏幕底边的人物牌，再点同列我方席位部署，该列专属牌堆随即开放。抽到的牌点亮可选目标；场地牌打到中央公共位。</p><button id="closeRules">回到牌桌</button></dialog><div id="stage-fx" aria-hidden="true"></div><template id="grip-art"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-80 -210 160 320" overflow="visible" aria-hidden="true">
+<main id="board"><div id="table-rim"></div><canvas id="grain" aria-hidden="true"></canvas><header><div><small>渡魂牌局</small><h1>七席牌桌</h1></div><div id="commands"><span id="turn-label"></span><button id="resolve">交锋</button><button id="help">桌规</button></div></header><section class="seven" id="enemy" aria-label="敌方七席"></section><div class="public-line"><button id="public" class="public" aria-label="公共牌位"></button></div><section class="seven" id="player" aria-label="我方七席"></section><div class="seat-info" id="info" role="status">点底边人物牌，再点同列我方空席部署</div><section id="decks" class="seven stackrail" aria-label="七个人物牌堆"></section></main><dialog id="rules"><h2>七席牌桌</h2><p>每一列属于一位人物。先选屏幕底边的人物牌，再点同列我方席位部署，该列专属牌堆随即开放。抽到的牌点亮可选目标；场地牌打到中央公共位。</p><p>每轮可上场两人、打两张专属牌。点击交锋后，我方按从左到右的顺序出击，随后存活的敌人反击。优先攻击同列，再找最近的目标（等距先左）。敌牌左上角显示当前目标席号。掩护抵消伤害，篝火每轮为所有存活队友恢复 1 生命。敌方全灭获胜，上场队员全倒下则败退。</p><button id="closeRules">回到牌桌</button></dialog><div id="stage-fx" aria-hidden="true"></div><template id="grip-art"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-80 -210 160 320" overflow="visible" aria-hidden="true">
 <defs>
 <linearGradient id="skin" x1="0" y1=".22" x2="1" y2=".8" gradientUnits="objectBoundingBox"><stop stop-color="#3d1a21"/><stop offset=".18" stop-color="#8d3933"/><stop offset=".42" stop-color="#eb9955"/><stop offset=".52" stop-color="#df7740"/><stop offset=".76" stop-color="#a34634"/><stop offset="1" stop-color="#59242a"/></linearGradient>
 <pattern id="etch" width="7" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(21)"><path d="M0 0v3m4 3v2" stroke="#401c24" opacity=".36" stroke-width=".8"/></pattern>
@@ -108,6 +109,65 @@ const rivals=[0,null,2,null,4,null,null], life=rivals.map(v=>v===null?0:5);
 const arts=['突袭','掩护','篝火'];
 let selected=-1, held=null, common=null, locked=false;
 const say=text=>el('info').textContent=text;
+const vitality=Array(7).fill(6),power=[2,2,1,3,3,2,2];
+let round=1,orders=2,recruits=2,ending='',resolving=false;
+function nearest(seat,valid){
+ let target=-1;
+ for(let i=0;i<7;i++)if(valid(i)&&(target<0||Math.abs(i-seat)<Math.abs(target-seat)))target=i;
+ return target;
+}
+function threat(i){return nearest(i,j=>dealt[j]&&vitality[j]>0)}
+function refreshHeader(){
+ el('turn-label').textContent=ending||('第 '+round+' 轮 · 指挥 '+orders+'/2');
+ el('resolve').textContent=ending?'再战':'交锋';
+ el('resolve').disabled=!ending&&(locked||!!held||!dealt.some((a,i)=>a&&vitality[i]>0));
+}
+function checkEnd(){
+ if(life.every(x=>x<=0))ending='胜利';
+ else if(dealt.some(Boolean)&&!dealt.some((a,i)=>a&&vitality[i]>0))ending='队伍败退';
+ if(ending){held=null;selected=-1;say(ending+' · 本场交锋结束')}
+ return !!ending;
+}
+async function strike(side,source,target,damage){
+ const allied=side==='player',from=el(side).children[source],to=el(allied?'enemy':'player').children[target];
+ const a=center(from),b=center(to),dx=b.x-a.x,dy=b.y-a.y;
+ const copy=from.firstElementChild.cloneNode(true),rect=from.getBoundingClientRect();
+ Object.assign(copy.style,{position:'fixed',left:rect.left+'px',top:rect.top+'px',width:rect.width+'px',height:rect.height+'px',zIndex:'12',pointerEvents:'none'});
+ stageFx.append(copy);from.firstElementChild.style.visibility='hidden';
+ const blocked=allied?0:Math.min(damage,guard[target]);
+ const net=damage-blocked;
+ try{
+  await animate(copy,[{transform:'translate(0,0)'},{offset:.32,transform:'translate('+(-dx*.045)+'px,'+(-dy*.045)+'px) rotate(-4deg)'},{transform:'translate('+dx*.89+'px,'+dy*.89+'px) rotate(3deg)'}],270);
+  if(allied)life[target]=Math.max(0,life[target]-net);else{guard[target]-=blocked;vitality[target]=Math.max(0,vitality[target]-net)}
+  const hit=document.createElement('b');hit.className='damage';hit.textContent=net?'−'+net:'格挡';hit.style.left=b.x+'px';hit.style.top=b.y+'px';stageFx.append(hit);
+  const fallen=(allied?life[target]:vitality[target])===0;
+  try{await Promise.all([
+   animate(copy,[{transform:'translate('+dx*.89+'px,'+dy*.89+'px) rotate(3deg)'},{transform:'translate(0,0)'}],290),
+   animate(to,[{filter:'brightness(2.4)',transform:'rotate(4deg)'},{offset:.35,transform:'rotate(-4deg)'},{opacity:fallen?.15:1,transform:'rotate(0deg)'}],340),
+   animate(hit,[{transform:'translate(-50%,-40%) scale(.8)'},{offset:.35,transform:'translate(-50%,-85%) scale(1.2)'},{opacity:.2,transform:'translate(-50%,-150%)'}],380)])}finally{hit.remove()}
+ }finally{copy.remove();from.firstElementChild.style.visibility='';render()}
+}
+async function clash(){
+ if(ending){location.reload();return}
+ if(locked||resolving||held||!dealt.some((a,i)=>a&&vitality[i]>0))return;
+ resolving=true;locked=true;selected=-1;render();
+ try{
+  for(const side of ['player','enemy']){
+   for(let i=0;i<7;i++){
+    const own=side==='player';
+    if(own?(!dealt[i]||!vitality[i]):!life[i])continue;
+    const j=own?nearest(i,k=>life[k]>0):threat(i);
+    if(j<0)break;
+    say((own?roster[i].name:roster[7+rivals[i]].name)+' → '+(own?roster[7+rivals[j]].name:roster[j].name));
+    await strike(side,i,j,own?power[i]:2);
+    if(checkEnd())return
+   }
+  }
+  if(common){for(let i=0;i<7;i++)if(dealt[i]&&vitality[i])vitality[i]=Math.min(6,vitality[i]+1)}
+  round++;orders=2;recruits=2;say('选择人物部署或打出专属牌，再交锋');
+ }finally{resolving=false;locked=false;render()}
+}
+
 function portrait(person){
   const node=document.createElement('span');node.className='card';
   const face=document.createElement('span');face.className='front';
@@ -130,20 +190,20 @@ function render(){
  const you=el('player'),enemy=el('enemy'),decks=el('decks');you.replaceChildren();enemy.replaceChildren();decks.replaceChildren();
  roster.slice(0,7).forEach((p,i)=>{
    const e=button('place','敌方第'+(i+1)+'席'+(life[i]?' '+roster[7+rivals[i]].name:''),()=>use('enemy',i));
-   if(life[i]){e.append(portrait(roster[7+rivals[i]]));addTag(e,'♥ '+life[i])}
+   if(life[i]){e.append(portrait(roster[7+rivals[i]]));addTag(e,'♥ '+life[i]);const n=threat(i);if(n>=0){const marker=document.createElement('span');marker.className='intent';marker.textContent='↓'+(n+1);marker.title='将攻击我方第 '+(n+1)+' 席';e.append(marker)}}
    e.disabled=locked||held?.kind!==0||!life[i];if(!e.disabled)e.classList.add('armed');enemy.append(e);
    const a=button('place','我方第'+(i+1)+'席'+(dealt[i]?' '+p.name:''),()=>dealt[i]?use('ally',i):deploy(i));
-   if(dealt[i]){a.append(portrait(p));if(guard[i])addTag(a,'◇ '+guard[i])}
-   a.disabled=locked||!(selected===i&&!dealt[i]||held?.kind===1&&dealt[i]);if(!a.disabled)a.classList.add('armed');you.append(a);
+   if(dealt[i]){a.append(portrait(p));addTag(a,'♥ '+vitality[i]+(guard[i]?' ◇'+guard[i]:''));a.classList.toggle('fallen',!vitality[i])}
+   a.disabled=locked||!(selected===i&&!dealt[i]||held?.kind===1&&dealt[i]&&vitality[i]);if(!a.disabled)a.classList.add('armed');you.append(a);
    const b=button('stack'+(dealt[i]?' open':''),p.name+(dealt[i]?'专属牌堆':'人物牌'),()=>select(i));
    if(!dealt[i])b.append(portrait(p));else if(held?.owner===i)b.append(tactic(i,held.kind));else{const s=document.createElement('span');s.textContent=p.name;b.append(s)}
-   b.disabled=locked||!!held&&held.owner!==i;
+   b.disabled=!!ending||locked||(!dealt[i]&&!recruits)||(dealt[i]&&(!vitality[i]||!orders))||!!held&&held.owner!==i;
    if(selected===i||held?.owner===i)b.classList.add('armed');decks.append(b)
  });
- const pub=el('public');pub.replaceChildren();if(common)pub.append(tactic(common.owner,2));else pub.textContent='公共位';pub.disabled=locked||held?.kind!==2;pub.classList.toggle('armed',!pub.disabled);
+ const pub=el('public');pub.replaceChildren();if(common)pub.append(tactic(common.owner,2));else pub.textContent='公共位';pub.disabled=!!ending||locked||(!dealt[i]&&!recruits)||(dealt[i]&&(!vitality[i]||!orders))||held?.kind!==2;pub.classList.toggle('armed',!pub.disabled);refreshHeader();
 }
 function select(i){
- if(locked)return;
+ if(locked||ending||(!dealt[i]&&!recruits)||(dealt[i]&&(!orders||!vitality[i])))return;
  if(!dealt[i]){selected=selected===i?-1:i;say(selected<0?'选择人物牌':roster[i].name+' · 点正上方亮起的我方席位上场');render();return}
  selected=-1;
  if(held){say('请先打出已抽出的'+arts[held.kind]);return}
@@ -155,21 +215,22 @@ async function moveCard(node,a,b){
  try{await deliver(rig,a,b,false)}finally{rig.shell.remove()}
 }
 async function deploy(i){
- if(locked||selected!==i||dealt[i]||held)return;
+ if(ending||!recruits||locked||selected!==i||dealt[i]||held)return;
  locked=true;const from=center(el('decks').children[i]),to=center(el('player').children[i]);
  render();el('decks').children[i].firstElementChild.style.visibility='hidden';
- try{await moveCard(portrait(roster[i]),from,to);dealt[i]=true;selected=-1;say(roster[i].name+'已上场 · 对应牌堆已解锁')}
+ try{await moveCard(portrait(roster[i]),from,to);dealt[i]=true;recruits--;selected=-1;say(roster[i].name+'已上场 · 对应牌堆已解锁')}
  finally{locked=false;render()}
 }
 async function use(side,i){
- if(locked||!held)return;
+ if(ending||!orders||locked||!held)return;
  const {owner,kind}=held;
  if(!(side==='enemy'&&kind===0&&life[i]||side==='ally'&&kind===1&&dealt[i]||side==='public'&&kind===2))return;
  locked=true;const dest=side==='public'?el('public'):el(side==='ally'?'player':'enemy').children[i];
  const from=center(el('decks').children[owner]),to=center(dest);render();
- try{await moveCard(tactic(owner,kind),from,to);if(kind===0)life[i]=Math.max(0,life[i]-2);if(kind===1)guard[i]++;if(kind===2)common={owner};held=null;say(arts[kind]+'已打出 · 可继续部署人物或抽牌')}
+ try{await moveCard(tactic(owner,kind),from,to);if(kind===0)await strike('player',owner,i,2);if(kind===1)guard[i]+=2;if(kind===2)common={owner};held=null;orders--;if(!checkEnd())say(orders?'可再打出一张专属牌，或交锋':'指挥已用完 · 点击交锋')}
  finally{locked=false;render()}
 }
+el('resolve').onclick=clash;
 el('public').onclick=()=>use('public',0);
 el('help').onclick=()=>el('rules').showModal();el('closeRules').onclick=()=>el('rules').close();
 render();
