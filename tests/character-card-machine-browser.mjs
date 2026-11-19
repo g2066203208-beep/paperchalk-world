@@ -21,7 +21,7 @@ for(const d of [
  const page=await context.newPage(),errors=[];
  page.on('pageerror',e=>errors.push(String(e.stack||e)));
  try{
-  const response=await page.goto('http://127.0.0.1:4173/card-battle/character-card-machine.html',
+  const response=await page.goto('http://127.0.0.1:4173/card-battle/character-card-machine-legacy.html',
    {waitUntil:'domcontentloaded'});
   assert.equal(response.status(),200);
   await page.waitForFunction(()=>window.PaperchalkCharacterMachineQA?.loaded,{timeout:22000});
