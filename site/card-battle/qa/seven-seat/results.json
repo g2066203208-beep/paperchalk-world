@@ -1,0 +1,26 @@
+[
+  {
+    "viewport": "desktop",
+    "passed": true,
+    "slots": 14,
+    "characters": 7,
+    "screenshotCount": 6,
+    "issues": []
+  },
+  {
+    "viewport": "phone-portrait",
+    "passed": true,
+    "slots": 14,
+    "characters": 7,
+    "screenshotCount": 6,
+    "issues": []
+  },
+  {
+    "viewport": "phone-landscape",
+    "passed": true,
+    "slots": 14,
+    "characters": 7,
+    "screenshotCount": 6,
+    "issues": []
+  }
+]
