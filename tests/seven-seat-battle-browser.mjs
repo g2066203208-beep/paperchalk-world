@@ -116,6 +116,29 @@ for(const d of [
   assert.equal(refused.energy,before.energy,'illegal target does not spend energy');
   assert.equal(refused.hand.length,before.hand.length,'illegal target does not burn the card');
   await page.locator('#enemy-seats .seat').nth(1).click();
+  // Frame-synchronized proof of blackjack-style warm edge, small numeric
+  // damage and bright localized contact pool on a REAL WebGL card hit.
+  await page.waitForFunction(()=>document.querySelectorAll('.battle-floating-number').length>0,
+   {timeout:2500});
+  assert.equal(await page.locator('#battle-sparks .battle-lightpool').count(),1,
+   'card impact MUST create a short-lived amber light pool, not flat CSS border');
+  assert.equal(await page.locator('#battle-sparks .battle-impact-ring').count(),1);
+  assert((await page.locator('#battle-sparks .battle-floating-number').first().textContent()).startsWith('-'),
+   'damage must produce timed floating numeric impact');
+  const flourish=await page.evaluate(()=>{
+   const el=document.querySelector('#enemy-seats .seat:nth-child(1)');
+   const card=[...document.querySelectorAll('#enemy-seats .seat')][1];
+   return {impactClass:card?.classList.contains('hit-shock'),
+    frameCss:performance.now(),
+    visual:window.SevenSeatBattleQA.presentation,
+    motion:window.SevenSeatBattleQA.cardPhysics};
+  });
+  assert.equal(flourish.impactClass,true,'physical card landing triggers real target recoil');
+  assert(flourish.visual.feltTextureReady&&flourish.visual.impactLayerReady&&flourish.visual.blackjackFeelCSS,
+   'worn dark felt, material and impact layer actually integrated into hosted game');
+  assert(flourish.motion.tableMotionTimings.action<=500,
+   'battle uses reference-inspired brisk card rhythm, NOT the old 1.65 sec elastic flight');
+  await page.screenshot({path:out+'/'+d.name+'-08-amber-edge-hit-flare.png',fullPage:true});
   const hit=await page.evaluate(()=>window.SevenSeatBattleQA.snapshot);
   assert.equal(hit.hand.length,0);
   assert(hit.health.enemy[1]<before.health.enemy[1],'actual enemy HP decreases on damage');
@@ -219,7 +242,7 @@ for(const d of [
   assert.equal(errors.length,0,'JavaScript page errors: '+errors.join('\n'));
   console.log('PASS',d.name,'real portraits and functional 7+7 tableau: deploy, draw, target both sides, turns, reset');
   results.push({viewport:d.name,passed:true,slots:14,characters:7,
-   screenshotCount:8,issues:errors});
+   screenshotCount:9,issues:errors});
  }catch(err){
   console.error('FAIL',d.name,err.stack||err);
   results.push({viewport:d.name,passed:false,error:String(err.stack||err),issues:errors});
