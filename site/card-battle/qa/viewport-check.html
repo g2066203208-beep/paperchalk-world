@@ -16,5 +16,21 @@ if(find('停牌'))find('停牌').click();await until(()=>ready()&&find('下一�
 if(f===frame)out.textContent=width+' × '+height+' · 换位、抽牌、灰烬、结算及边界检查通过';}
 catch(e){if(f===frame)out.textContent='检查失败 · '+e.message}}
 function openSize(dim){[width,height]=dim.split(',').map(Number);const f=document.createElement('iframe');f.title='真实游戏视口';frame=f;f.width=width;f.height=height;f.onload=()=>verify(f);f.src='../soul-table.html';host.replaceChildren(f);out.textContent='检查中…';fit()}
-document.querySelectorAll('button').forEach(b=>b.onclick=()=>openSize(b.dataset.size));window.addEventListener('resize',fit);openSize('390,844');
+document.querySelectorAll('button').forEach(b=>b.onclick=()=>openSize(b.dataset.size));window.addEventListener('resize',fit);if(new URLSearchParams(location.search).has('film')){
+  document.querySelector('nav').hidden=true;
+  width=844;height=390;
+  const f=document.createElement('iframe');frame=f;f.width=width;f.height=height;f.title='动画逐帧';f.src='../soul-table.html';
+  f.onload=async()=>{
+    const d=f.contentDocument;
+    d.querySelector('#player .pile').click();
+    Array.from(d.querySelectorAll('#player button')).find(b=>b.textContent==='灰烬').click();
+    await until(()=>d.querySelector('.slash') && d.getAnimations().some(a=>a.effect.target.matches('.slash')));
+    const anim=d.getAnimations().filter(a=>a.effect.target.matches('.faces,.embers,.slash'));
+    anim.forEach(a=>{a.pause();a.currentTime=0});
+    let n=0;
+    const next=document.createElement('button');next.textContent='下一帧';
+    next.onclick=()=>{n=Math.min(28,n+1);anim.forEach(a=>a.currentTime=Math.min(n*1001/30,a.effect.getTiming().duration-.01));label.textContent='灰烬 · 第 '+n+' 帧'};
+    const label=document.createElement('span');label.textContent='灰烬 · 第 0 帧';out.replaceChildren(next,label)
+  };host.replaceChildren(f);fit()
+}else openSize('390,844');
 </script></html>
