@@ -74,7 +74,18 @@ main{background:radial-gradient(ellipse at 45% 92%,#7b3825bd,transparent 61%),ra
 @keyframes fallPlace{from{transform:translateY(-35vh) rotate(-9deg);opacity:.25}to{transform:none;opacity:1}}
 @media(prefers-reduced-motion:reduce){.offer{animation:none}}
 </style>
-<main id="board" class="on-road"><canvas id="world" aria-hidden="true"></canvas><div id="forest" aria-hidden="true"><div class="scroll-layer" id="road"></div><div class="scroll-layer" id="shadow"></div><div class="scroll-layer" id="bough"></div><div class="scroll-layer" id="crown"></div></div><div id="table-rim"></div><header><div><small>渡魂牌局</small><h1>七席牌桌</h1></div><div id="commands"><div id="dial" aria-label="昼夜时间条"><b id="dialTime"></b><i></i></div><button id="bagOpen">手牌背包</button><small id="pack"></small><small id="mode-note" hidden>兼容视图</small><span id="turn-label"></span><button id="camp" disabled>篝火牌</button><button id="resolve">交锋</button><button id="help">桌规</button></div></header><div id="routes" aria-label="可前往的地点"></div><section class="seven" id="enemy" aria-label="敌方七席"></section><div class="public-line"><button id="public" class="public" aria-label="公共牌位"></button></div><section class="seven" id="player" aria-label="我方七席"></section><div class="seat-info" id="info" role="status">从底边选人物，再点对应席位上场。</div><section id="decks" class="seven stackrail" aria-label="七个人物牌堆"></section><template id="party"></template><canvas id="raylight" aria-hidden="true"></canvas><button id="market">榆门杂货铺</button></main><dialog id="bag"><header><h2>手牌背包</h2><button id="bagClose">返回</button></header><p id="bagHelp"></p><div id="handList"></div></dialog><dialog id="shop"><h2>榆门杂货铺</h2><p id="balance"></p><p>沿途收购皮货，也备着旅人的干粮。</p><button id="buy">买口粮 · 3 银</button><button id="sell">卖皮货 · 5 银</button><button id="sellfood">卖口粮 · 1 银</button><button id="leaveShop">回到街道</button></dialog><dialog id="rules"><h2>七席牌桌</h2><p>先从底边选人物，再点对应席位部署。交锋时双方依次出击；每轮可以打两张手牌。</p><p>胜利后掉落三张地点牌。点选一张，再点中央场景位确认移动，也可用鼠标拖入。每次移动推进牌面标示的小时数，每位在队成员消耗一点饱食。集市可交易，驿舍可恢复生命。</p><button id="closeRules">回到牌桌</button></dialog><div id="stage-fx" aria-hidden="true"></div><template id="grip-art"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-80 -210 160 320" overflow="visible" aria-hidden="true">
+<style>
+#board{background:repeating-linear-gradient(1deg,#11141022 0 1px,transparent 1px 4px),radial-gradient(ellipse at 50% 45%,#545644,#232b25 58%,#111713);border:clamp(5px,1.3vw,18px) ridge #595342;box-shadow:inset 0 0 55px #070a08}
+#board:before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 8px 8px,#aaa07e 1px,#35362b 2px,#131813 4px,transparent 5px) 0 0/50% 50%;opacity:.65;z-index:-1}
+#board header{background:linear-gradient(#32392f,#1b211b);border-bottom:3px ridge #66604a}#board h1{color:#dfc88c}#board #table-rim{display:none}
+#board .seven .place,#board #public{border:3px ridge #655e48;background:linear-gradient(140deg,#171e19,#343c30 70%,#20251f);border-radius:4px}
+#board .public-line{display:flex;align-items:center;justify-content:center;gap:clamp(4px,1.3vw,16px)}
+.consolePane{width:min(28vw,280px);height:min(11vh,90px);border:4px ridge #665e48;position:relative;overflow:hidden;background:#171b16}
+#scope{width:100%;height:100%;image-rendering:pixelated}.wheelbank{display:flex;padding:4px;gap:3px;background:linear-gradient(#32392e,#1b211b)}
+.reel{flex:1;overflow:hidden;position:relative;background:#252c20;border:2px inset #635f46;color:#c6b889;display:grid;place-items:center;font: bold clamp(16px,3vw,34px) Georgia}.reel:after{content:'';position:absolute;inset:0;background:linear-gradient(#060b09aa,transparent 38% 64%,#0c100d99)}
+.reel.stop{border-color:#d1a854;color:#ffdb86}.reel.spin b{animation:roll .11s linear infinite}@keyframes roll{from{transform:translateY(-90%)}to{transform:translateY(90%)}}
+#resolve{background:linear-gradient(#9f8147,#5d492b);border:3px ridge #c1a16a;color:white}#board .damage{color:#ffd778}#board #info{color:#f2dba4}.coinChip{position:fixed;z-index:30;width:12px;height:12px;border:2px solid #e5c86e;border-radius:50%;background:#b88b37;pointer-events:none;box-shadow:inset 2px 1px #ffe19a}
+</style><main id="board" class="on-road"><canvas id="world" aria-hidden="true"></canvas><div id="forest" aria-hidden="true"><div class="scroll-layer" id="road"></div><div class="scroll-layer" id="shadow"></div><div class="scroll-layer" id="bough"></div><div class="scroll-layer" id="crown"></div></div><div id="table-rim"></div><header><div><small>渡魂牌局</small><h1>七席牌桌</h1></div><div id="commands"><div id="dial" aria-label="昼夜时间条"><b id="dialTime"></b><i></i></div><button id="bagOpen">手牌背包</button><small id="pack"></small><small id="mode-note" hidden>兼容视图</small><span id="turn-label"></span><button id="camp" disabled>篝火牌</button><button id="resolve">交锋</button><button id="help">桌规</button></div></header><div id="routes" aria-label="可前往的地点"></div><section class="seven" id="enemy" aria-label="敌方七席"></section><div class="public-line"><div class="consolePane"><canvas id="scope" width="208" height="60"></canvas></div><button id="public" class="public" aria-label="公共牌位"></button><div class="consolePane wheelbank" aria-label="战斗转轮"><span class="reel"><b>◇</b></span><span class="reel"><b>◇</b></span><span class="reel"><b>◇</b></span></div></div><section class="seven" id="player" aria-label="我方七席"></section><div class="seat-info" id="info" role="status">从底边选人物，再点对应席位上场。</div><section id="decks" class="seven stackrail" aria-label="七个人物牌堆"></section><template id="party"></template><canvas id="raylight" aria-hidden="true"></canvas><button id="market">榆门杂货铺</button></main><dialog id="bag"><header><h2>手牌背包</h2><button id="bagClose">返回</button></header><p id="bagHelp"></p><div id="handList"></div></dialog><dialog id="shop"><h2>榆门杂货铺</h2><p id="balance"></p><p>沿途收购皮货，也备着旅人的干粮。</p><button id="buy">买口粮 · 3 银</button><button id="sell">卖皮货 · 5 银</button><button id="sellfood">卖口粮 · 1 银</button><button id="leaveShop">回到街道</button></dialog><dialog id="rules"><h2>七席牌桌</h2><p>先从底边选人物，再点对应席位部署。交锋时双方依次出击；每轮可以打两张手牌。</p><p>胜利后掉落三张地点牌。点选一张，再点中央场景位确认移动，也可用鼠标拖入。每次移动推进牌面标示的小时数，每位在队成员消耗一点饱食。集市可交易，驿舍可恢复生命。</p><button id="closeRules">回到牌桌</button></dialog><div id="stage-fx" aria-hidden="true"></div><template id="grip-art"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-80 -210 160 320" overflow="visible" aria-hidden="true">
 <defs>
 <linearGradient id="skin" x1="0" y1=".22" x2="1" y2=".8" gradientUnits="objectBoundingBox"><stop stop-color="#3d1a21"/><stop offset=".18" stop-color="#8d3933"/><stop offset=".42" stop-color="#eb9955"/><stop offset=".52" stop-color="#df7740"/><stop offset=".76" stop-color="#a34634"/><stop offset="1" stop-color="#59242a"/></linearGradient>
 <pattern id="etch" width="7" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(21)"><path d="M0 0v3m4 3v2" stroke="#401c24" opacity=".36" stroke-width=".8"/></pattern>
@@ -337,7 +348,7 @@ function refreshHeader(){
  el('resolve').hidden=marching&&journey.rewarded;el('resolve').disabled=!ending&&(locked||(marching&&(campReady||!!common))||!!held||!dealt.some((a,i)=>a&&vitality[i]>0));
 }
 function checkEnd(){
- if(!ending&&life.every(x=>x<=0)){ending='胜利';turnsWon++;journey.hides+=2;journey.coins+=4;pack();offerPlaces()}
+ if(!ending&&life.every(x=>x<=0)){ending='胜利';turnsWon++;coinsFly();journey.hides+=2;journey.coins+=4;pack();offerPlaces()}
  else if(dealt.some(Boolean)&&!dealt.some((a,i)=>a&&vitality[i]>0))ending='队伍败退';
  if(ending){held=null;selected=-1;if(ending!=='胜利')say(ending+' · 本场交锋结束')}
  return !!ending;
@@ -353,7 +364,7 @@ async function strike(side,source,target,damage){
  try{
   await animate(copy,[{transform:'translate(0,0)'},{offset:.32,transform:'translate('+(-dx*.045)+'px,'+(-dy*.045)+'px) rotate(-4deg)'},{transform:'translate('+dx*.89+'px,'+dy*.89+'px) rotate(3deg)'}],270);
   if(allied)life[target]=Math.max(0,life[target]-net);else{guard[target]-=blocked;vitality[target]=Math.max(0,vitality[target]-net)}
-  const hit=document.createElement('b');hit.className='damage';hit.textContent=net?'−'+net:'格挡';hit.style.left=b.x+'px';hit.style.top=b.y+'px';stageFx.append(hit);
+  impactAt=performance.now();tickSound(110,.12);const hit=document.createElement('b');hit.className='damage';hit.textContent=net?'−'+net:'格挡';hit.style.left=b.x+'px';hit.style.top=b.y+'px';stageFx.append(hit);
   if(!reduced()){const ring=document.createElement('i');ring.className='impact-ring';Object.assign(ring.style,{left:b.x+'px',top:b.y+'px',width:rect.width+'px',height:rect.width+'px'});stageFx.append(ring);setTimeout(()=>ring.remove(),340)}
   const fallen=(allied?life[target]:vitality[target])===0;
   try{await Promise.all([
@@ -367,6 +378,7 @@ async function clash(){
  if(locked||resolving||held||!dealt.some((a,i)=>a&&vitality[i]>0))return;
  resolving=true;locked=true;selected=-1;render();
  try{
+  const result=await spinReels();
   for(const side of ['player','enemy']){
    for(let i=0;i<7;i++){
     const own=side==='player';
@@ -374,7 +386,9 @@ async function clash(){
     const j=own?nearest(i,k=>life[k]>0):threat(i);
     if(j<0)break;
     say((own?roster[i].name:roster[7+rivals[i]].name)+' → '+(own?roster[7+rivals[j]].name:roster[j].name));
-    await strike(side,i,j,own?power[i]:2);
+    await strike(side,i,j,own?power[i]+(result[i%3]===0?1:0):2);
+    if(own && result[i%3]===1)guard[i]++;
+    if(own && result[i%3]===2 && dealt[i+1] && vitality[i+1] && life[j]){say(roster[i+1].name+' · 邻席追击');await strike('player',i+1,j,1)}
     if(checkEnd())return
    }
   }
@@ -569,5 +583,26 @@ marching=false;recruits=7;el('board').classList.remove('on-road');
 el('public').ondragover=e=>{if(chosen!==null)e.preventDefault()};
 el('public').ondrop=e=>{e.preventDefault();travel()};
 el('public').onclick=()=>{if(offered.length)travel();else if(journey.town&&currentPlace===1)visitShop();else use('public',0)};
+let impactAt=-1000,audio;
+function tickSound(freq,duration){try{audio??=new AudioContext();if(audio.state==='suspended')audio.resume();const osc=audio.createOscillator(),gain=audio.createGain();osc.type='triangle';osc.frequency.setValueAtTime(freq,audio.currentTime);gain.gain.setValueAtTime(.045,audio.currentTime);gain.gain.exponentialRampToValueAtTime(.001,audio.currentTime+duration);osc.connect(gain).connect(audio.destination);osc.start();osc.stop(audio.currentTime+duration)}catch{}}
+const marks=['⚔','◇','✦'],meanings=['强攻 +1','护甲 +1','右邻追击'];
+async function spinReels(){
+ const reels=[...document.querySelectorAll('.reel')],values=reels.map(()=>Math.floor(Math.random()*3));
+ reels.forEach(r=>r.className='reel spin');tickSound(175,.08);
+ await Promise.all(reels.map(async(r,i)=>{let frame=0;const timer=setInterval(()=>r.firstChild.textContent=marks[frame++%3],80);
+ await new Promise(done=>setTimeout(done,380+220*i));clearInterval(timer);r.className='reel stop';r.firstChild.textContent=marks[values[i]];r.title=meanings[values[i]];tickSound(320+110*i,.09)}));return values
+}
+function coinsFly(){const rect=el('public').getBoundingClientRect();for(let i=0;i<13;i++){const c=document.createElement('i');c.className='coinChip';c.style.left=rect.x+rect.width/2+'px';c.style.top=rect.y+'px';document.body.append(c);const x=(Math.random()-.5)*160;c.animate([{transform:'translate(0,0)'},{offset:.45,transform:'translate('+x+'px,-55px) rotateY(150deg)'},{opacity:0,transform:'translate('+x*1.6+'px,32px) rotateY(350deg)'}],{duration:680,delay:i*20,fill:'both'}).finished.then(()=>c.remove())}}
+const screenCtx=el('scope').getContext('2d');function drawScope(t){
+ const c=screenCtx,night=clock<6||clock>=19,hit=Math.max(0,1-(t-impactAt)/240);c.fillStyle=night?'#41474e':'#aa995e';c.fillRect(0,0,208,60);
+ c.fillStyle='#e1c87d';c.fillRect(144,9,10,10);
+ for(let row=0;row<3;row++){c.fillStyle=['#858760','#5a6952','#35483b'][row];c.beginPath();c.moveTo(0,60);for(let x=0;x<=210;x+=2)c.lineTo(x,22+row*9+Math.sin(x*.042+row*2)*7+Math.sin(x*.081)*4);c.lineTo(210,60);c.fill()}
+ for(let i=0;i<16;i++){let x=(i*47)%214,y=31+i%5*4;c.fillStyle=i%2?'#334536':'#444f37';c.fillRect(x,y,2,9);for(let j=0;j<5;j++)c.fillRect(x-j,y+j*2,2*j+2,2)}
+ for(let i=0;i<14;i++){const x=(i*39+t*.009)%208,y=40+Math.sin(i+t*.001)*7;c.fillStyle='#d9be73';c.fillRect(x|0,y|0,1,1)}
+ if(hit){c.fillStyle='rgba(255,222,135,'+hit*.65+')';c.fillRect(0,0,208,60)}
+ requestAnimationFrame(drawScope)
+}requestAnimationFrame(drawScope);
+el('rules').querySelector('p').textContent+=' 三轮依次停下，席位1/4/7读取第一轮，2/5读取第二轮，3/6读取第三轮。剑加伤，盾加护甲，星让存活的右邻追击。';
+
 updateDial();render();
 </script></html>
