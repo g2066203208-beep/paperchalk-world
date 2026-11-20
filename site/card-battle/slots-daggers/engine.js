@@ -20,13 +20,13 @@ const foes=[
 const items={
  sword:{name:'RUSTY SWORD',verb:'ATTACK!',damage:22},
  shield:{name:'WOODEN SHIELD',verb:'BLOCK!',armor:20},
- coin:{name:'GOLD COIN',verb:'GAIN COINS',money:3},
+ coin:{name:'GOLD COIN',verb:'GAIN COINS',money:1,multiplier:6},
  dagger:{name:'RITUAL DAGGER',verb:'STAB!',damage:24,check:true},
- bolt:{name:'STORM ROD',verb:'LIGHTNING!',damage:30},
+ bolt:{name:'STORM ROD',verb:'LIGHTNING!',damage:30,check:true},
  bow:{name:'SHORT BOW',verb:'LOOSE!',damage:28,check:true},
  gouge:{name:'BLOOD DROP',verb:'LIFE DRAIN!',damage:13,heal:9},
- charm:{name:'WARDING CHARM',verb:'WARD!',armor:15,heal:8},
- star:{name:'NOVA',verb:'STARFALL!',damage:38}
+ charm:{name:'WARDING CHARM',verb:'WARD!',armor:15,heal:8,check:true},
+ star:{name:'NOVA',verb:'STARFALL!',damage:38,check:true}
 };
 const activeRails=n=>n===3?[1,2,3]:n===4?[0,1,2,3]:[0,1,2,3,4];
 class Machine{
@@ -35,10 +35,18 @@ class Machine{
   this.reset(start);
  }
  reset(start=0){
-  this.hp=125;this.maxHp=125;this.armor=0;this.cash=11;this.stage=start;this.count=3;
+  this.training='';this.previewFaces=null;this.hp=125;this.maxHp=125;this.armor=0;this.cash=11;this.stage=start;this.count=3;
   this.pool=['shield','sword','coin','dagger'];this.levels={};this.purchases=new Set();
   this.turn=1;this.gain=0;this.lastAction='';this.streak=0;
   this.enterFight(start,true);this.emit('reset',{});
+ }
+ coinPractice(kind='coins'){
+  this.reset(1);
+  this.training=kind;
+  if(kind==='single')this.cash=0;
+  this.previewFaces=kind==='single'?['coin','shield','sword']:['coin','coin','coin'];
+  this.log=kind==='single'?'SINGLE COIN':'COIN TEST';
+  this.emit('reset',{});
  }
  get foe(){return foes[this.stage]}
  get active(){return activeRails(this.count)}
@@ -57,7 +65,7 @@ class Machine{
  makeWheel(i){
   const strip=[...this.pool,...this.pool,...this.pool];
   for(let n=strip.length-1;n>0;n--){const j=Math.floor(this.rng()*(n+1));[strip[n],strip[j]]=[strip[j],strip[n]]}
-  return {strip,p:this.rng()*strip.length,speed:4.35+i*.21+this.rng()*.35,status:'moving',brake:0,lastLatch:-99};
+  return {strip,p:this.rng()*strip.length,speed:11.02+i*.035+this.rng()*.045,status:'moving',brake:0,lastLatch:-99};
  }
  startSpin(){
   this.current=-1;this.lastAction='';this.feedback=null;this.nextStop=0;this.log='SPINNING!';
@@ -69,8 +77,17 @@ class Machine{
   if(this.paused)return;
   if(this.phase==='spin'&&this.nextStop<this.active.length){
    const i=this.active[this.nextStop++],w=this.wheels[i];
-   w.start=w.p;w.end=Math.ceil(w.p+.16);w.status='braking';w.brake=0;
-   w.travel=clamp(2*(w.end-w.start)/w.speed,.17,.39);
+   w.start=w.p;
+   w.end=Math.ceil(w.p+.62);
+   if(this.previewFaces){
+    const target=this.previewFaces[this.nextStop-1];
+    while(w.strip[w.end%w.strip.length]!==target)w.end++;
+   }
+   // The rotating strip travels at full speed to its next detent.
+   // The pawl itself arrests it over about two 60 Hz video frames.
+   w.travel=.032;
+   w.coast=(w.end-w.start)/w.speed-w.travel*.5;
+   w.status='braking';w.brake=0;
    this.emit('press',{i});return;
   }
   if(this.phase==='skill'&&this.age>.13){
@@ -88,14 +105,20 @@ class Machine{
    const w=this.wheels[i],prior=Math.floor(w.p);
    if(w.status==='moving')w.p+=dt*w.speed;
    else if(w.status==='braking'){
-    w.brake+=dt;const t=Math.min(1,w.brake/w.travel);
+    if(w.coast>0){
+     const coastStep=Math.min(w.coast,dt);
+     w.p+=w.speed*coastStep;w.coast-=coastStep;
+     if(w.coast>1e-8)continue;
+     w.start=w.p;w.brake+=dt-coastStep;
+    }else w.brake+=dt;
+    const t=Math.min(1,w.brake/w.travel);
     w.p=lerp(w.start,w.end,1-(1-t)*(1-t));
     if(t===1){w.p=w.end;w.status='set';w.lastLatch=this.time;this.emit('latch',{i})}
    }
    if(i===this.active[0]&&w.status==='moving'&&Math.floor(w.p)!==prior)this.emit('tick',{});
   }
   if(this.active.every(i=>this.wheels[i].status==='set')){
-   this.order=[...this.active];this.orderIndex=0;this.critSet=new Set();
+   this.previewFaces=null;this.order=[...this.active];this.orderIndex=0;this.critSet=new Set();
    for(let j=0;j<this.order.length;){
     let k=j+1;while(k<this.order.length&&this.symbol(this.order[j])===this.symbol(this.order[k]))k++;
     if(k-j>=3)for(let n=j;n<k;n++)this.critSet.add(this.order[n]);
@@ -116,8 +139,11 @@ class Machine{
  }
  playSymbol(skill){
   const item=items[this.currentItem],crit=skill||this.critSet.has(this.current);
-  const scale=(1+(this.levels[this.currentItem]||0)*.35)*(crit?2:1);
-  this.hit={item:this.currentItem,crit,skill,damage:Math.round((item.damage||0)*scale),heal:Math.round((item.heal||0)*scale),money:Math.round((item.money||0)*scale),armor:Math.round((item.armor||0)*scale)};
+  const matched=this.critSet.has(this.current);
+  const mega=matched&&this.critSet.size===5;
+  const multiplier=matched?(item.multiplier||3)*(mega?2:1):skill?2:1;
+  const scale=(1+(this.levels[this.currentItem]||0)*.35)*multiplier;
+  this.hit={item:this.currentItem,crit,mega,skill,damage:Math.round((item.damage||0)*scale),heal:Math.round((item.heal||0)*scale),money:Math.round((item.money||0)*scale),armor:Math.round((item.armor||0)*scale)};
   this.didHit=false;this.log=item.verb;this.setPhase('resolve');
   this.emit('cast',{i:this.current,item:this.currentItem,crit});
  }
@@ -131,7 +157,7 @@ class Machine{
   if(hit.armor){this.armor=Math.min(125,this.armor+hit.armor);this.log='BLOCK +'+hit.armor;}
   if(hit.heal)this.hp=Math.min(this.maxHp,this.hp+hit.heal);
   if(hit.money){this.cash+=hit.money;this.log='GAIN '+hit.money+' COINS';}
-  this.feedback={time:this.time,text:hit.skill?'Critical Success!':hit.crit?'Critical Hit!':hit.damage?String(hit.damage):hit.armor?'+'+hit.armor:'+'+hit.money};
+  this.feedback={time:this.time,text:hit.mega?'MEGA CRIT!':hit.skill?'Critical Success!':hit.crit?'Critical Hit!':hit.damage?String(hit.damage):hit.armor?'+'+hit.armor:'+'+hit.money};
   this.emit('impact',{...hit,i:this.current});
  }
  takeHit(){
@@ -184,7 +210,7 @@ class Machine{
    case 'skill':if(this.age>=3.4)this.playSymbol(false);break;
    case 'resolve':
     if(!this.didHit&&this.age>=.115){this.didHit=true;this.applyHit()}
-    if(this.age>=(this.hit.crit?.85:.49)){
+    if(this.age>=(this.hit.crit?.78:.535)){
      if(this.enemyHp===0)this.win();else this.nextSymbol();
     }break;
    case 'enemyWind':if(this.age>=.64){this.takeHit();this.setPhase('enemyHit')}break;

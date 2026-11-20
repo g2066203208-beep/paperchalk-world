@@ -1,0 +1,739 @@
+{
+  "version": 1,
+  "coordinates": {
+    "width": 960,
+    "height": 540,
+    "origin": "top_left",
+    "x": "right",
+    "y": "down",
+    "units": "reference-frame pixels; timestamps in seconds from each video start",
+    "time_uncertainty": "about one native encoded frame; repeated frames preserved",
+    "spatial_uncertainty": "individual unobstructed coin centers about ±3 pixels; occluded edges and shop cluster are estimates"
+  },
+  "sources": {
+    "pc-launch": {
+      "name": "PC 发售片",
+      "url": "https://www.youtube.com/watch?v=3ji0GyAcoMw",
+      "publisher_store": "https://store.steampowered.com/app/3631290/",
+      "publisher_hls": "https://video.akamai.steamstatic.com/store_trailers/3631290/137468819/96a15bbc1e8eaddc6eef6ef203243559fdb4d14c/1761230493/hls_264_master.m3u8",
+      "decoded": true,
+      "frame_rate": 60,
+      "dimensions": [
+        1280,
+        720
+      ],
+      "duration_s": 69.833333
+    },
+    "pc-reveal": {
+      "name": "PC 揭晓片",
+      "url": "https://www.youtube.com/watch?v=1c-5tsSO6_s",
+      "publisher_store": "https://store.steampowered.com/app/3631290/",
+      "publisher_hls": "https://video.akamai.steamstatic.com/store_trailers/3631290/1491345768/dd186da5b153de9d99f0e364833621a060461050/1753299465/hls_264_master.m3u8",
+      "decoded": true,
+      "frame_rate": 60,
+      "dimensions": [
+        1280,
+        720
+      ],
+      "duration_s": 65.016667
+    },
+    "pc-store-loop": {
+      "name": "Steam 商品说明实机循环",
+      "url": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3631290/extras/16b15c50d1dd18f607f74c03d30972d8.webm",
+      "publisher_store": "https://store.steampowered.com/app/3631290/",
+      "decoded": true,
+      "frame_rate": 60,
+      "dimensions": [
+        1170,
+        658
+      ],
+      "duration_s": 11.583,
+      "note": "标称60帧，存在完全重复的相邻画面。"
+    },
+    "console-launch": {
+      "name": "主机发售片，PlayStation Store 媒体",
+      "url": "https://www.youtube.com/watch?v=Cv-GKTOsgaU",
+      "store": "https://store.playstation.com/en-us/concept/10018077",
+      "decoded": true,
+      "frame_rate": 60,
+      "dimensions": [
+        1920,
+        1080
+      ],
+      "duration_s": 60.031667,
+      "note": "PC/主机剪辑顺序有差异。两者攻击画面形似，不能假定为两个不同的模拟试验。"
+    },
+    "apple-preview": {
+      "name": "App Store iPhone / iPad 实机预览",
+      "url": "https://apps.apple.com/us/app/slots-daggers/id6762803589",
+      "decoded": true,
+      "variants": [
+        {
+          "device": "iPhone",
+          "frame_rate": 30,
+          "dimensions": [
+            720,
+            332
+          ],
+          "duration_s": 29.9
+        },
+        {
+          "device": "iPad",
+          "frame_rate": 30,
+          "dimensions": [
+            960,
+            720
+          ],
+          "duration_s": 29.933333
+        }
+      ],
+      "note": "两个画幅共用剪辑，含复用的PC素材，算一条预览。仅核画幅、编排和状态可读性。"
+    },
+    "bili-demo": {
+      "name": "Lurk名彻 · Demo 试玩",
+      "url": "https://www.bilibili.com/video/BV1GQnGzfEWH/",
+      "decoded": true,
+      "duration_s": 1184,
+      "sampled": true,
+      "dimensions": [
+        852,
+        480
+      ],
+      "frame_rate": 30,
+      "example_window_s": [
+        470,
+        480
+      ]
+    },
+    "bili-win": {
+      "name": "安奎拉13 · 通关实况",
+      "url": "https://www.bilibili.com/video/BV1Xy411H7bs/",
+      "decoded": true,
+      "duration_s": 2558,
+      "sampled": true,
+      "dimensions": [
+        824,
+        480
+      ],
+      "frame_rate": 25,
+      "example_window_s": [
+        215,
+        225
+      ]
+    },
+    "bili-launch": {
+      "name": "主机游戏速报 · 中文试玩",
+      "url": "https://www.bilibili.com/video/BV1Q3sUziExr/",
+      "decoded": true,
+      "duration_s": 1616,
+      "sampled": true
+    },
+    "bili-qte": {
+      "name": "牛蛙呱呱_ · 转盘及QTE试玩",
+      "url": "https://www.bilibili.com/video/BV1HBUxBAE4T/",
+      "decoded": true,
+      "duration_s": 2258,
+      "sampled": true,
+      "dimensions": [
+        852,
+        480
+      ],
+      "frame_rate": 30,
+      "example_window_s": [
+        629.98,
+        639.98
+      ]
+    }
+  },
+  "coin": {
+    "single_bounce": {
+      "source": "pc-store-loop",
+      "emission_frame": 94,
+      "emission_s": 1.5667,
+      "first_sparks_bbox_px": [
+        266,
+        155,
+        289,
+        177
+      ],
+      "origin_description": "right-hand boundary of the left collection tray at the inner cabinet; aperture itself partially hidden; horizontal leftward impulse",
+      "points": [
+        {
+          "frame": 96,
+          "t_s": 1.6,
+          "center_px": [
+            228.5,
+            151.5
+          ]
+        },
+        {
+          "frame": 98,
+          "t_s": 1.6333,
+          "center_px": [
+            176.5,
+            156.5
+          ]
+        },
+        {
+          "frame": 100,
+          "t_s": 1.6667,
+          "center_px": [
+            196.0,
+            171.5
+          ]
+        },
+        {
+          "frame": 102,
+          "t_s": 1.7,
+          "center_px": [
+            203.5,
+            179.0
+          ]
+        },
+        {
+          "frame": 104,
+          "t_s": 1.7333,
+          "center_px": [
+            221.0,
+            191.5
+          ]
+        },
+        {
+          "frame": 106,
+          "t_s": 1.7667,
+          "center_px": [
+            230.5,
+            199.0
+          ]
+        },
+        {
+          "frame": 108,
+          "t_s": 1.8,
+          "center_px": [
+            247.5,
+            210.0
+          ]
+        },
+        {
+          "frame": 110,
+          "t_s": 1.8333,
+          "center_px": [
+            260.5,
+            221.0
+          ]
+        },
+        {
+          "frame": 112,
+          "t_s": 1.8667,
+          "center_px": [
+            268.0,
+            226.0
+          ]
+        },
+        {
+          "frame": 114,
+          "t_s": 1.9,
+          "center_px": [
+            274.0,
+            228.5
+          ]
+        }
+      ],
+      "motion": {
+        "outbound_dx_px": -52,
+        "outbound_dt_s": 0.0333,
+        "outbound_abs_vx_px_s_approx": 1560,
+        "first_return_dx_px": 19.5,
+        "first_return_dt_s": 0.0333,
+        "first_return_vx_px_s_approx": 585
+      },
+      "occlusion_s": 1.9333,
+      "note": "First direction reversal in projection. Geometry of the obstructing prop, the true height above the tray and physical restitution cannot be solved from this view. The measured silhouette includes the bevel/light edge."
+    },
+    "long_cast": {
+      "source": "pc-launch",
+      "points": [
+        {
+          "t_s": 20.4833,
+          "center_px": [
+            280.5,
+            172.5
+          ]
+        },
+        {
+          "t_s": 20.5333,
+          "center_px": [
+            184.0,
+            172.5
+          ]
+        },
+        {
+          "t_s": 20.55,
+          "center_px": [
+            152.0,
+            177.0
+          ]
+        },
+        {
+          "t_s": 20.5667,
+          "center_px": [
+            119.5,
+            179.0
+          ]
+        },
+        {
+          "t_s": 20.6167,
+          "center_px": [
+            59.0,
+            164.0
+          ]
+        },
+        {
+          "t_s": 20.6333,
+          "center_px": [
+            31.5,
+            164.0
+          ]
+        }
+      ],
+      "visible_displacement_x_px": -249,
+      "time_s": 0.15,
+      "mean_abs_vx_px_s": 1660,
+      "first_clear_vx_px_s_approx": 1930,
+      "note": "A different cast clears the center before the far-left foliage. Gaps in this point list were occluded or inseparable. A collision beyond x=31.5 cannot be timed."
+    },
+    "payouts": [
+      {
+        "source": "pc-launch",
+        "wallet_samples": [
+          {
+            "t_s": 21.5,
+            "balance": 7
+          },
+          {
+            "t_s": 21.5167,
+            "balance": 8
+          },
+          {
+            "t_s": 21.5333,
+            "balance": 9
+          },
+          {
+            "t_s": 21.5667,
+            "balance": 10
+          },
+          {
+            "t_s": 21.6167,
+            "balance": 11
+          },
+          {
+            "t_s": 21.6333,
+            "balance": 12
+          },
+          {
+            "t_s": 21.6667,
+            "balance": 13
+          },
+          {
+            "t_s": 21.7,
+            "balance": 14
+          },
+          {
+            "t_s": 21.7333,
+            "balance": 16
+          },
+          {
+            "t_s": 21.7667,
+            "balance": 17
+          },
+          {
+            "t_s": 21.8,
+            "balance": 18
+          },
+          {
+            "t_s": 21.8167,
+            "balance": 19
+          },
+          {
+            "t_s": 21.9,
+            "balance": 20
+          },
+          {
+            "t_s": 21.9667,
+            "balance": 21
+          }
+        ],
+        "net": 14,
+        "interval_s": 0.4667,
+        "aggregate_per_s": 30,
+        "note": "15 briefly skipped/illegible. Counts from display, not inferred physical contacts. Tray movement remains visible after the last balance tick."
+      },
+      {
+        "source": "bili-demo",
+        "wallet_samples": [
+          {
+            "t_s": 471.6667,
+            "balance": 21
+          },
+          {
+            "t_s": 471.7,
+            "balance": 22
+          },
+          {
+            "t_s": 471.7333,
+            "balance": 23
+          },
+          {
+            "t_s": 471.7667,
+            "balance": 24
+          },
+          {
+            "t_s": 471.8,
+            "balance": 25
+          },
+          {
+            "t_s": 471.8333,
+            "balance": 26
+          },
+          {
+            "t_s": 471.8667,
+            "balance": 27
+          },
+          {
+            "t_s": 471.9,
+            "balance": 28
+          },
+          {
+            "t_s": 471.9333,
+            "balance": 29
+          },
+          {
+            "t_s": 471.9667,
+            "balance": 30
+          },
+          {
+            "t_s": 472.0,
+            "balance": 31
+          },
+          {
+            "t_s": 472.0333,
+            "balance": 32
+          },
+          {
+            "t_s": 472.0667,
+            "balance": 33
+          },
+          {
+            "t_s": 472.1,
+            "balance": 34
+          },
+          {
+            "t_s": 472.1333,
+            "balance": 35
+          },
+          {
+            "t_s": 472.1667,
+            "balance": 36
+          }
+        ],
+        "net": 15,
+        "interval_s": 0.5,
+        "aggregate_per_s": 30,
+        "note": "Independent 30fps uncut recording; one visible money unit per video frame during this interval."
+      }
+    ],
+    "shop_debits": [
+      {
+        "source": "bili-win",
+        "last_previous_balance_s": 218.6,
+        "purchase_s": 218.64,
+        "balance_before": 24,
+        "balance_after": 10,
+        "note": "Unspent coins remain in place; paid coins converge and disappear behind the sign."
+      },
+      {
+        "source": "bili-win",
+        "last_previous_balance_s": 223.68,
+        "purchase_s": 223.72,
+        "balance_before": 10,
+        "balance_after": 0,
+        "gathering_cluster": {
+          "interval_s": [
+            224.12,
+            224.4
+          ],
+          "centroid_px": [
+            192,
+            227
+          ],
+          "spatial_tolerance_px": 15
+        },
+        "passes_near_px": [
+          188,
+          250
+        ],
+        "last_visible_half_coin": {
+          "interval_s": [
+            224.72,
+            224.88
+          ],
+          "position_px": [
+            187,
+            279
+          ]
+        },
+        "first_clear_frame_s": 224.92,
+        "visual_finish_after_debit_s": 1.2
+      }
+    ]
+  },
+  "reels": {
+    "upward_scroll": [
+      {
+        "source": "pc-launch",
+        "sampling_window_s": [
+          17.5,
+          19.5
+        ],
+        "detail": "only pre-latch samples per reel, fixed narrow side strips at x385,484,583, y around347; image registered to each window; temporal frequency",
+        "pitches_per_s": [
+          11.1,
+          11.09,
+          11.1
+        ]
+      },
+      {
+        "source": "pc-reveal",
+        "reel": "right",
+        "sampling_window_s": [
+          11.9,
+          13.35
+        ],
+        "pitches_per_s": 11.1,
+        "subject": "egg creature"
+      },
+      {
+        "source": "pc-reveal",
+        "reel": "right",
+        "sampling_window_s": [
+          30.67,
+          32.09
+        ],
+        "pitches_per_s": 11.18,
+        "subject": "cyan graveyard"
+      },
+      {
+        "source": "pc-reveal",
+        "reel": "right",
+        "sampling_window_s": [
+          36.29,
+          37.68
+        ],
+        "pitches_per_s": 11.1,
+        "subject": "snake at dusk"
+      }
+    ],
+    "stationary_confirmation": {
+      "source": "pc-launch",
+      "method": "Subtract local cabinet displacement from template-matched icon displacement. First >=5 successive frames below 1 px relative motion; approximate frame error ±1.",
+      "left_s": [
+        18.55,
+        18.55
+      ],
+      "middle_s": [
+        19.033,
+        19.05
+      ],
+      "right_s": [
+        19.5,
+        19.517
+      ],
+      "approx_speed_transition_frames": [
+        1,
+        2
+      ]
+    },
+    "gold_outline": {
+      "source": "pc-launch",
+      "method": "At 480×270, three local 48×58 color ROIs centered on x=192,243,294 and rows143–200. Bright gold R>175, G>120, B<0.82G, R>1.55B. An outline interval requires >280 matching pixels. Sampled 60Hz with start 19.680s. Off boundaries are first frames below threshold.",
+      "left_onset_s": 19.93,
+      "left_first_off_s": 20.347,
+      "left_duration_s": 0.417,
+      "dark_between_s": 0.117,
+      "middle_onset_s": 20.463,
+      "middle_first_off_s": 20.863,
+      "middle_duration_s": 0.4,
+      "right_outline": "no measurement in this cut"
+    }
+  },
+  "enemy_sword_spill": {
+    "method": "At 480×270, count RGB pixels above (211,167,79) in each ROI. An interval requires count > max(20,0.16*that-zone peak); the central area of the bezel ROI is excluded. Times represent threshold exposure in the recorded cut, not engine events.",
+    "roi_px_at_480x270": {
+      "crt_perimeter": [
+        158,
+        17,
+        338,
+        122
+      ],
+      "metal_bridge": [
+        326,
+        76,
+        393,
+        150
+      ],
+      "health_meter": [
+        369,
+        136,
+        415,
+        193
+      ]
+    },
+    "samples": [
+      {
+        "source": "pc-launch",
+        "warm_highlight_interval_s": {
+          "rim": [
+            57.1,
+            57.433
+          ],
+          "bridge": [
+            57.15,
+            57.483
+          ],
+          "meter": [
+            57.183,
+            57.483
+          ]
+        },
+        "first_strong_rim_to_meter_s": 0.083,
+        "meter_visible_span_s": 0.3,
+        "sampled_cut_last_frame_s": 57.783
+      },
+      {
+        "source": "console-launch",
+        "warm_highlight_interval_s": {
+          "rim": [
+            54.713,
+            54.913
+          ],
+          "bridge": [
+            54.78,
+            55.08
+          ],
+          "meter": [
+            54.83,
+            55.113
+          ]
+        },
+        "first_strong_rim_to_meter_s": 0.117,
+        "meter_visible_span_s": 0.283,
+        "sampled_cut_last_frame_s": 55.113
+      }
+    ],
+    "note": "A solid blade, cross-guard and hilt travel out of the display. Rim bulbs, the metal bridge and health meter flare in sequence. On console the measurement ends near the shot boundary; its last time is an observed lower bound."
+  },
+  "cabinet_exposure": {
+    "source": "pc-launch",
+    "sample_times_s": [
+      17.8,
+      20.5,
+      28,
+      34,
+      42,
+      56.3
+    ],
+    "method": "Decode full 960×540 RGB8 images. In each rectangle calculate the 15th/50th/85th percentiles of gamma-encoded brightness Y = 0.2126R + 0.7152G + 0.0722B, then take the median across the six shots. Approximate perceptual comparison, not a linear irradiance measurement. Regions can contain foreground props.",
+    "roi_normalized_px": [
+      {
+        "label": "upper_left",
+        "rectangle": [
+          0,
+          0,
+          113,
+          134
+        ],
+        "brightness_q15_q50_q85": [
+          13.4,
+          21.4,
+          44.8
+        ],
+        "rgb_channel_medians": [
+          19,
+          22.5,
+          19
+        ]
+      },
+      {
+        "label": "lower_left",
+        "rectangle": [
+          0,
+          448,
+          177,
+          539
+        ],
+        "brightness_q15_q50_q85": [
+          9.15,
+          15.1,
+          26.0
+        ],
+        "rgb_channel_medians": [
+          3.5,
+          18.5,
+          17.5
+        ]
+      },
+      {
+        "label": "lower_right",
+        "rectangle": [
+          820,
+          449,
+          958,
+          539
+        ],
+        "brightness_q15_q50_q85": [
+          8.65,
+          14.05,
+          27.55
+        ],
+        "rgb_channel_medians": [
+          3,
+          17,
+          17
+        ]
+      },
+      {
+        "label": "tray_patch",
+        "rectangle": [
+          125,
+          104,
+          195,
+          147
+        ],
+        "brightness_q15_q50_q85": [
+          24.85,
+          41.75,
+          65.75
+        ],
+        "rgb_channel_medians": [
+          51,
+          40.25,
+          26
+        ]
+      }
+    ],
+    "example_viewport": {
+      "source_t_s": 17.8,
+      "size": [
+        640,
+        360
+      ],
+      "approximate_lit_crt_opening_px": [
+        226,
+        55,
+        423,
+        163
+      ],
+      "note": "Camera cropping is shot-specific. Console montage contains much tighter views."
+    }
+  }
+}
