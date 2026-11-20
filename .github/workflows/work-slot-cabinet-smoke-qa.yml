@@ -1,0 +1,51 @@
+name: Work rebuilt slot cabinet - independent desktop and phone Chrome QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tests/work-slot-cabinet-smoke-browser.mjs'
+      - '.github/workflows/work-slot-cabinet-smoke-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: independent-work-slot-qa-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  real-browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 17
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax-check actual Work code and QA
+        run: |
+          node --check site/card-battle/slots-daggers/coin-art.js
+          node --check site/card-battle/slots-daggers/cabinet-art.js
+          node --check site/card-battle/slots-daggers/engine.js
+          node --check site/card-battle/slots-daggers/graphics.js
+          node --check site/card-battle/slots-daggers/reel-art.js
+          node --check site/card-battle/slots-daggers/light-field.js
+          node --check site/card-battle/slots-daggers/effects.js
+          node --check site/card-battle/slots-daggers/app.js
+          node --check tests/work-slot-cabinet-smoke-browser.mjs
+      - name: Install Chromium browser
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve actual GitHub Pages source tree
+        run: |
+          nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/work-slot-game.log 2>&1 &
+          sleep 2
+      - name: Play actual modular and standalone slot machine on desktop and phones
+        run: node tests/work-slot-cabinet-smoke-browser.mjs
+      - name: Preserve real browser screenshots video and machine-readable results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: work-slot-cabinet-independent-3-device-chrome-qa
+          path: artifacts/work-slots-cabinet-20261120/
+          if-no-files-found: warn
+          retention-days: 14
