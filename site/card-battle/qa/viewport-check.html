@@ -20,17 +20,24 @@ async function verify(f){
    assert(Math.abs(u.width-a.width)<1&&Math.abs(u.height-a.height)<1,'公共位大小');
    assert(b.left>=0&&b.right<=width+1&&b.bottom<=height+1&&b.bottom>=height-2,'底边');
   }
+  const phase=id=>parseFloat(d.getElementById(id).style.transform.split(',')[1]);
+  await until(()=>phase('road')>1);
+  const anchor=ally[0].getBoundingClientRect().y, road=phase('road'), crown=phase('crown');
+  await wait(450);assert(Math.abs(ally[0].getBoundingClientRect().y-anchor)<.5 && phase('crown')-crown>phase('road')-road,'席位固定及树冠视差');
   for(const i of [0,2]){
    decks[i].click();assert(!ally[i].disabled&&ally[(i+1)%7].disabled,'部署锁定');ally[i].click();
    await until(()=>decks[i].classList.contains('open')&&!decks[i].disabled);
    assert(!decks[1].classList.contains('open'),'其他牌堆误解锁');
+   if(i===0&&d.getElementById('board').classList.contains('on-road')){
+    d.getElementById('resolve').click();await until(()=>!d.getElementById('board').classList.contains('on-road'));
+   }
    decks[i].click();if(i===0)enemy[0].click();else field.click();
    await until(()=>!decks[i].querySelector('.drawn'));
   }
   assert(field.textContent.includes('篝火'),'场地牌未落位');
   let rounds=0;
   const resolve=d.getElementById('resolve');
-  while(resolve.textContent!=='再战'&&rounds++<12){
+  while(resolve.textContent!=='继续行军'&&rounds++<12){
     for(const i of [1,3,4,5,6]){
       if(decks[i].classList.contains('open')||decks[i].disabled)continue;
       decks[i].click();ally[i].click();await until(()=>decks[i].classList.contains('open'));
@@ -38,7 +45,8 @@ async function verify(f){
     resolve.click();await until(()=>!resolve.disabled);
   }
   assert(d.getElementById('turn-label').textContent==='胜利','战斗未胜利');
-  if(f===frame)out.textContent=width+' × '+height+' · 七列对齐、同尺寸公共位、专属牌及交锋胜利通过';
+  resolve.click();await until(()=>d.getElementById('board').classList.contains('on-road'));
+  if(f===frame)out.textContent=width+' × '+height+' · 林道视差、席位对齐、遇敌、胜利续行通过';
  }catch(e){if(f===frame)out.textContent='检查失败 · '+e.message}
 }
 function openSize(dim){[width,height]=dim.split(',').map(Number);const f=document.createElement('iframe');f.title='真实游戏视口';frame=f;f.width=width;f.height=height;f.onload=()=>verify(f);f.src='../soul-table.html';host.replaceChildren(f);out.textContent='检查中…';fit()}
