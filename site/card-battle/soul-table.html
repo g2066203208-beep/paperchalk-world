@@ -81,7 +81,7 @@ main{background:radial-gradient(ellipse at 45% 92%,#7b3825bd,transparent 61%),ra
 #board .seven .place,#board #public{border:3px ridge #655e48;background:linear-gradient(140deg,#171e19,#343c30 70%,#20251f);border-radius:4px}
 #board .public-line{display:flex;align-items:center;justify-content:center;gap:clamp(4px,1.3vw,16px)}
 .consolePane{width:min(28vw,280px);height:min(11vh,90px);border:4px ridge #665e48;position:relative;overflow:hidden;background:#171b16}
-#scope{width:100%;height:100%;image-rendering:pixelated}.wheelbank{display:flex;padding:4px;gap:3px;background:linear-gradient(#32392e,#1b211b)}
+#scope{position:relative;z-index:0;display:block;width:100%;height:100%;image-rendering:pixelated}.wheelbank{display:flex;padding:4px;gap:3px;background:linear-gradient(#32392e,#1b211b)}
 .reel{flex:1;overflow:hidden;position:relative;background:#252c20;border:2px inset #635f46;color:#c6b889;display:grid;place-items:center;font: bold clamp(16px,3vw,34px) Georgia}.reel:after{content:'';position:absolute;inset:0;background:linear-gradient(#060b09aa,transparent 38% 64%,#0c100d99)}
 .reel.stop{border-color:#d1a854;color:#ffdb86}.reel.spin b{animation:roll .11s linear infinite}@keyframes roll{from{transform:translateY(-90%)}to{transform:translateY(90%)}}
 #resolve{background:linear-gradient(#9f8147,#5d492b);border:3px ridge #c1a16a;color:white}#board .damage{color:#ffd778}#board #info{color:#f2dba4}.coinChip{position:fixed;z-index:30;width:12px;height:12px;border:2px solid #e5c86e;border-radius:50%;background:#b88b37;pointer-events:none;box-shadow:inset 2px 1px #ffe19a}
