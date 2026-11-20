@@ -60,8 +60,12 @@ main{background:radial-gradient(ellipse at 45% 92%,#7b3825bd,transparent 61%),ra
 #board.on-road .seat-info{background:#27352cdb;border-radius:2px;padding:.35em .8em}
 #world{position:absolute;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none}.depth-world #forest,.depth-world #raylight{display:none}.depth-world #board.on-road #party{opacity:0}.depth-world #board .place .card{box-shadow:none;border:none}
 #market{display:none;position:absolute;transform:translate(-50%,0);z-index:4}.in-town #market{display:block}.in-town #resolve,.in-town #camp{display:none!important}#market,#shop button{border:1px solid #b29c71;background:#293d35;color:#f4e5c8;padding:.55em .85em}#shop button{margin:.25em}#shop button:disabled{opacity:.4}#shop{max-width:min(400px,85vw);color:#e4d8b9;background:#28392e;border:1px solid #99865d;padding:1.4em}#commands #pack{display:block;font:12px/1.3 sans-serif;color:#e7dabc}#commands{flex-wrap:wrap}#mode-note[hidden]{display:none}
+#dial{width:clamp(76px,10vw,140px);text-align:center;font:12px/1.4 sans-serif;color:#f8e1b1}#dial i{display:block;position:relative;height:6px;border-radius:3px;background:linear-gradient(90deg,#474c80 10%,#dfa778 25%,#ebd590 50%,#ce8e69 75%,#474c80 90%)}#dial i:after{content:"";position:absolute;left:var(--now);top:-2px;width:3px;height:10px;background:white}
+#bag{width:min(580px,90vw);max-height:82dvh;overflow:auto;background:#25372e;color:#f1e5c9;padding:14px;border:1px solid #a99671}#bag header{display:flex;align-items:center;justify-content:space-between}#bag h2{margin:0}#bag section{padding:8px 0;border-top:1px solid #687963}#bag section small{margin-left:8px}#bag button{padding:5px 9px;margin:3px;background:#455646;color:#fff0d1;border:1px solid #9e9673}#bag button[aria-pressed=true]{background:#8d5f32}#handList strong{display:block}.stack.open:has(.drawn){background:none!important;border:0!important}.stack.open .drawn{padding:0;border:0;background:#dfc99a;color:#392f23;display:grid;align-content:center}.stack.open .drawn span{background:none;border:0;color:#6c5937;padding:0}.tag{white-space:normal}
+#board #decks{visibility:visible}#board #decks .stack{box-shadow:none}#decks .tag{font:clamp(9px,1vw,12px)/1 sans-serif;background:#26382d;color:#ffedc6;padding:2px;top:1%;bottom:auto}
+@media(max-width:600px){#board header{padding:2px 4px}#commands{gap:3px}#commands button{padding:3px 5px}#commands #pack{font-size:10px}#board header h1{font-size:14px}#board header small{font-size:9px}}
 </style>
-<main id="board" class="on-road"><canvas id="world" aria-hidden="true"></canvas><div id="forest" aria-hidden="true"><div class="scroll-layer" id="road"></div><div class="scroll-layer" id="shadow"></div><div class="scroll-layer" id="bough"></div><div class="scroll-layer" id="crown"></div></div><div id="table-rim"></div><header><div><small>渡魂牌局</small><h1>榆门古道</h1></div><div id="commands"><small id="pack"></small><small id="mode-note" hidden>兼容视图</small><span id="turn-label"></span><button id="camp" disabled>篝火牌</button><button id="resolve">交锋</button><button id="help">桌规</button></div></header><section class="seven" id="enemy" aria-label="敌方七席"></section><div class="public-line"><button id="public" class="public" aria-label="公共牌位"></button></div><section class="seven" id="player" aria-label="我方七席"></section><div class="seat-info" id="info" role="status">点路中央的人物牌组队 · 穿越林地前往榆门镇</div><section id="decks" class="seven stackrail" aria-label="七个人物牌堆"></section><button id="party" aria-label="展开或收起队伍"></button><canvas id="raylight" aria-hidden="true"></canvas><button id="market">榆门杂货铺</button></main><dialog id="shop"><h2>榆门杂货铺</h2><p id="balance"></p><p>沿途收购皮货，也备着旅人的干粮。</p><button id="buy">买口粮 · 3 银</button><button id="sell">卖皮货 · 5 银</button><button id="sellfood">卖口粮 · 1 银</button><button id="leaveShop">回到街道</button></dialog><dialog id="rules"><h2>七席牌桌</h2><p>行军每前进一段消耗一份口粮，耗尽后队员将损失体力。林地战利品可在榆门镇出售。每一列属于一位人物。先选屏幕底边的人物牌，再点同列我方席位部署，该列专属牌堆随即开放。抽到的牌点亮可选目标；场地牌打到中央公共位。</p><p>每轮可上场两人、打两张专属牌。点击交锋后，我方按从左到右的顺序出击，随后存活的敌人反击。优先攻击同列，再找最近的目标（等距先左）。敌牌左上角显示当前目标席号。掩护抵消伤害，篝火每轮为所有存活队友恢复 1 生命。敌方全灭获胜，上场队员全倒下则败退。</p><button id="closeRules">回到牌桌</button></dialog><div id="stage-fx" aria-hidden="true"></div><template id="grip-art"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-80 -210 160 320" overflow="visible" aria-hidden="true">
+<main id="board" class="on-road"><canvas id="world" aria-hidden="true"></canvas><div id="forest" aria-hidden="true"><div class="scroll-layer" id="road"></div><div class="scroll-layer" id="shadow"></div><div class="scroll-layer" id="bough"></div><div class="scroll-layer" id="crown"></div></div><div id="table-rim"></div><header><div><small>渡魂牌局</small><h1>榆门古道</h1></div><div id="commands"><div id="dial" aria-label="昼夜时间条"><b id="dialTime"></b><i></i></div><button id="bagOpen">手牌背包</button><small id="pack"></small><small id="mode-note" hidden>兼容视图</small><span id="turn-label"></span><button id="camp" disabled>篝火牌</button><button id="resolve">交锋</button><button id="help">桌规</button></div></header><section class="seven" id="enemy" aria-label="敌方七席"></section><div class="public-line"><button id="public" class="public" aria-label="公共牌位"></button></div><section class="seven" id="player" aria-label="我方七席"></section><div class="seat-info" id="info" role="status">点路中央的人物牌组队 · 穿越林地前往榆门镇</div><section id="decks" class="seven stackrail" aria-label="七个人物牌堆"></section><button id="party" aria-label="展开或收起队伍"></button><canvas id="raylight" aria-hidden="true"></canvas><button id="market">榆门杂货铺</button></main><dialog id="bag"><header><h2>手牌背包</h2><button id="bagClose">返回</button></header><p id="bagHelp"></p><div id="handList"></div></dialog><dialog id="shop"><h2>榆门杂货铺</h2><p id="balance"></p><p>沿途收购皮货，也备着旅人的干粮。</p><button id="buy">买口粮 · 3 银</button><button id="sell">卖皮货 · 5 银</button><button id="sellfood">卖口粮 · 1 银</button><button id="leaveShop">回到街道</button></dialog><dialog id="rules"><h2>七席牌桌</h2><p>每段路消耗在队人物一点饱食；空腹继续行军会损失生命，最低保留一点。背包中一份口粮可为指定人物恢复三点饱食。林地战利品可在榆门镇出售。每一列属于一位人物。先选屏幕底边的人物牌，再点同列我方席位部署，该列专属牌堆随即开放。选择明牌后点亮可选目标；场地牌打到中央公共位。</p><p>每轮可上场两人、打两张专属牌。点击交锋后，我方按从左到右的顺序出击，随后存活的敌人反击。优先攻击同列，再找最近的目标（等距先左）。敌牌左上角显示当前目标席号。掩护抵消伤害，篝火每轮为所有存活队友恢复 1 生命。敌方全灭获胜，上场队员全倒下则败退。</p><button id="closeRules">回到牌桌</button></dialog><div id="stage-fx" aria-hidden="true"></div><template id="grip-art"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-80 -210 160 320" overflow="visible" aria-hidden="true">
 <defs>
 <linearGradient id="skin" x1="0" y1=".22" x2="1" y2=".8" gradientUnits="objectBoundingBox"><stop stop-color="#3d1a21"/><stop offset=".18" stop-color="#8d3933"/><stop offset=".42" stop-color="#eb9955"/><stop offset=".52" stop-color="#df7740"/><stop offset=".76" stop-color="#a34634"/><stop offset="1" stop-color="#59242a"/></linearGradient>
 <pattern id="etch" width="7" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(21)"><path d="M0 0v3m4 3v2" stroke="#401c24" opacity=".36" stroke-width=".8"/></pattern>
@@ -172,13 +176,13 @@ let clock=16,campReady=false,drawer=false;
 function updateForest(now){
  const dt=frameTime?Math.min((now-frameTime)/1000,.15):0;frameTime=now;
  if(!document.hidden){
-  const moving=marching&&!journey.town&&dealt.some(Boolean)&&!el('rules').open, target=moving&&!campReady&&!common?1:0;
+  const moving=!el('bag').open&&marching&&!journey.town&&dealt.some(Boolean)&&!el('rules').open, target=moving&&!campReady&&!common?1:0;
   forestSpeed+=Math.min(1,dt*3.8)*(target-forestSpeed);
   if(forestSpeed<.002)forestSpeed=0;
   const step=dt*forestSpeed*(reduced()?9:36);
   visualDistance+=step;
   if(moving&&!campReady&&!common){distance=Math.min(150,distance+dt*5);meal();if(distance>=150)arrive()}
-  if(!el('rules').open)clock=(clock+dt*.11)%24;
+  if(!el('rules').open&&!el('bag').open)clock=(clock+dt*.11)%24;updateDial();
   const night=Math.max(0,Math.min(1,(Math.abs(clock-12)-4)/4));
   el('board').style.setProperty('--night',(night*.76).toFixed(2));el('board').style.setProperty('--illum',(1-night*(common?.16:.34)).toFixed(2));
   if(marching)el('turn-label').textContent=journey.town?'榆门镇 · 安全区':(common?'营地 ': '行军 ')+String(Math.floor(clock)).padStart(2,'0')+':'+String(Math.floor(clock%1*60)).padStart(2,'0');
@@ -396,30 +400,31 @@ function render(){
  board.classList.toggle('roster-open',marching&&drawer);board.classList.toggle('camp-target',marching&&campReady);board.classList.toggle('lit',!!common);
  party.replaceChildren();if(lead>=0)party.append(portrait(roster[lead]));else party.append(portrait(roster[0]));
  const count=document.createElement('small');count.textContent=lead<0?'组建队伍':'队伍 '+dealt.filter(Boolean).length+'/7';party.append(count);
- el('camp').disabled=lead<0||locked;el('camp').textContent=common?'拔营':campReady?'收回篝火牌':'篝火牌';
+ el('bagOpen').disabled=locked||!!held||campReady;el('camp').disabled=lead<0||locked||(!common&&!hands.some((h,i)=>dealt[i]&&vitality[i]&&h.includes(2)));el('camp').textContent=common?'拔营':campReady?'收回篝火牌':'篝火牌';
  const you=el('player'),enemy=el('enemy'),decks=el('decks');you.replaceChildren();enemy.replaceChildren();decks.replaceChildren();
  roster.slice(0,7).forEach((p,i)=>{
    const e=button('place','敌方第'+(i+1)+'席'+(!marching&&life[i]?' '+roster[7+rivals[i]].name:''),()=>use('enemy',i));
    if(!marching&&life[i]){e.append(portrait(roster[7+rivals[i]]));addTag(e,'♥ '+life[i]);const n=threat(i);if(n>=0){const marker=document.createElement('span');marker.className='intent';marker.textContent='↓'+(n+1);marker.title='将攻击我方第 '+(n+1)+' 席';e.append(marker)}}
    e.disabled=marching||locked||held?.kind!==0||!life[i];if(!e.disabled)e.classList.add('armed');enemy.append(e);
    const a=button('place','我方第'+(i+1)+'席'+(dealt[i]?' '+p.name:''),()=>dealt[i]?use('ally',i):deploy(i));
-   if(dealt[i]){a.append(portrait(p));addTag(a,'♥ '+vitality[i]+(guard[i]?' ◇'+guard[i]:''));a.classList.toggle('fallen',!vitality[i])}
+   if(dealt[i]){a.append(portrait(p));addTag(a,'♥'+vitality[i]+'/6 饱'+satiety[i]+'/5'+(guard[i]?' ◇'+guard[i]:''));a.classList.toggle('fallen',!vitality[i])}
    a.style.setProperty('--fan',((3-i)*110)+'%');for(const n of [a,e]){n.style.setProperty('--cast',((i-3)*1.5)+'px');n.style.setProperty('--bearing',(n===a?0:180)+(i-3)*(n===a?-15:15)+'deg')}
    a.disabled=locked||!(selected===i&&!dealt[i]||held?.kind===1&&dealt[i]&&vitality[i]);if(!a.disabled)a.classList.add('armed');you.append(a);
    const b=button('stack'+(dealt[i]?' open':''),p.name+(dealt[i]?'专属牌堆':'人物牌'),()=>select(i));
-   if(!dealt[i])b.append(portrait(p));else if(held?.owner===i)b.append(tactic(i,held.kind));else{const s=document.createElement('span');s.textContent=p.name;b.append(s)}
-   b.disabled=!!ending||locked||(!marching&&!dealt[i]&&!recruits)||(dealt[i]&&(!vitality[i]||!orders))||!!held&&held.owner!==i;
+   if(!dealt[i])b.append(portrait(p));else if(hands[i].length)b.append(tactic(i,hands[i][0]));else b.textContent='空手';
+   addTag(b,'♥'+vitality[i]+' 饱'+satiety[i]);
+   b.disabled=!!ending||locked||(!marching&&!dealt[i]&&!recruits)||(dealt[i]&&(!vitality[i]||!orders))||!!held&&held.owner!==i||dealt[i]&&!hands[i].length;
    if(selected===i||held?.owner===i)b.classList.add('armed');decks.append(b)
  });
  const pub=el('public');pub.replaceChildren();if(common)pub.append(tactic(common.owner,2));else pub.textContent='公共位';pub.disabled=!!ending||locked||held?.kind!==2;if(marching&&campReady)pub.disabled=false;pub.classList.toggle('armed',!pub.disabled);refreshHeader();
 }
 function select(i){
  if(locked||ending||(!marching&&!dealt[i]&&!recruits)||(dealt[i]&&(!orders||!vitality[i])))return;
- if(marching&&dealt[i]){say('林道行军中 · 遇敌后可使用专属牌');return}if(marching&&!dealt[i]){selected=i;deploy(i);return}if(!dealt[i]){selected=selected===i?-1:i;say(selected<0?'选择人物牌':roster[i].name+' · 点正上方亮起的我方席位上场');render();return}
+ if(marching&&dealt[i]){if(hands[i][0]===2&&!common&&!journey.town){campReady=true;render()}else openBag();return}if(marching&&!dealt[i]){selected=i;deploy(i);return}if(!dealt[i]){selected=selected===i?-1:i;say(selected<0?'选择人物牌':roster[i].name+' · 点正上方亮起的我方席位上场');render();return}
  selected=-1;
- if(held){say('请先打出已抽出的'+arts[held.kind]);return}
- let kind=(draws[i]+i)%3;if(kind===0&&!life.some(Boolean))kind=1;
- held={owner:i,kind};draws[i]++;say(arts[kind]+' · '+['点亮起的敌方人物','点亮起的己方人物','点中央公共位'][kind]);render()
+ if(held){if(held.owner===i){held=null;render()}return}
+ const kind=hands[i][0];if(kind===undefined)return;
+ held={owner:i,kind};say(arts[kind]+' · '+['点亮起的敌方人物','点亮起的己方人物','点中央公共位'][kind]);render()
 }
 async function moveCard(node,a,b){
  if(reduced())return;const rig=actor(node,false);
@@ -438,14 +443,49 @@ async function use(side,i){
  if(!(side==='enemy'&&kind===0&&life[i]||side==='ally'&&kind===1&&dealt[i]||side==='public'&&kind===2))return;
  locked=true;const dest=side==='public'?el('public'):el(side==='ally'?'player':'enemy').children[i];
  const from=center(el('decks').children[owner]),to=center(dest);render();
- try{await moveCard(tactic(owner,kind),from,to);if(kind===0)await strike('player',owner,i,2);if(kind===1)guard[i]+=2;if(kind===2)common={owner};held=null;orders--;if(!checkEnd())say(orders?'可再打出一张专属牌，或交锋':'指挥已用完 · 点击交锋')}
+ try{await moveCard(tactic(owner,kind),from,to);if(kind===0)await strike('player',owner,i,2);if(kind===1)guard[i]+=2;if(kind===2)common={owner};hands[owner].shift();held=null;orders--;if(!checkEnd())say(orders?'可再打出一张专属牌，或交锋':'指挥已用完 · 点击交锋')}
  finally{locked=false;render()}
 }
 el('resolve').onclick=clash;
 el('party').onclick=()=>{if(!locked){drawer=!drawer;render()}};
 el('camp').onclick=()=>{if(common){common=null;say('队伍拔营')}else{campReady=!campReady;say(campReady?'将篝火牌放入中央亮起的公共位':'队伍继续行军')}render()};
-el('public').onclick=()=>{if(marching&&campReady){common={owner:dealt.indexOf(true)};campReady=false;drawer=false;say('营火已点燃 · 拔营后继续行军');render()}else use('public',0)};
+el('public').onclick=()=>{if(marching&&campReady){const owner=hands.findIndex((h,j)=>dealt[j]&&vitality[j]&&h.includes(2));if(owner<0)return;hands[owner].splice(hands[owner].indexOf(2),1);common={owner};campReady=false;drawer=false;say('营火已点燃 · 拔营后继续行军');render()}else use('public',0)};
 el('help').onclick=()=>el('rules').showModal();el('closeRules').onclick=()=>el('rules').close();
+const hands=Array.from({length:7},(_,i)=>i%2?[1,0]:[0,1]);
+hands[3].push(2);
+const satiety=Array(7).fill(5);
+let picked=null,lastMinute=-1;
+function updateDial(){
+ const minute=Math.floor(clock*60);if(minute===lastMinute)return;lastMinute=minute;
+ const time=String(Math.floor(minute/60)).padStart(2,'0')+':'+String(minute%60).padStart(2,'0');
+ const phase=clock<5||clock>=20?'夜间':clock<8?'清晨':clock<17?'白昼':'黄昏';
+ el('dialTime').textContent=phase+' '+time;el('dial').style.setProperty('--now',minute/14.4+'%')
+}
+function manage(){
+ const list=el('handList');list.replaceChildren();
+ for(let i=0;i<7;i++){
+  const row=document.createElement('section'),heading=document.createElement('strong');heading.textContent=(i+1)+' · '+roster[i].name;
+  const state=document.createElement('small');state.textContent=(dealt[i]?'已部署':'待部署')+'　生命 '+vitality[i]+'/6　饱食 '+satiety[i]+'/5';
+  row.append(heading,state);
+  function action(label,fn,disabled=false){const b=button('handAction',label,fn);b.textContent=label;b.disabled=disabled;row.append(b);return b}
+  hands[i].forEach((kind,j)=>{const active=picked&&picked.i===i&&picked.j===j;
+   const b=action(arts[kind],()=>{
+    if(!picked){picked={i,j}}
+    else if(active){picked=null}
+    else{const a=hands[picked.i];[a[picked.j],hands[i][j]]=[hands[i][j],a[picked.j]];picked=null}
+    manage();render()
+   });b.setAttribute('aria-pressed',String(!!active))
+  });
+  if(picked&&picked.i!==i)action('交给此人',()=>{hands[i].push(hands[picked.i].splice(picked.j,1)[0]);picked=null;manage();render()});
+  if(picked&&picked.i===i&&picked.j>0)action('移到顶牌',()=>{hands[i].unshift(hands[i].splice(picked.j,1)[0]);picked=null;manage();render()});
+  if(satiety[i]<5)action('喂口粮',()=>{journey.food--;satiety[i]=Math.min(5,satiety[i]+3);pack();manage();render()},!journey.food||!vitality[i]);
+  list.append(row)
+ }
+ el('bagHelp').textContent=picked?'点另一张牌交换，或点「交给此人」转移。':'每人从左到右排列手牌，第一张是明牌堆顶。点一张牌可调配。';
+}
+function openBag(){if(locked||held||campReady)return;picked=null;manage();el('bag').showModal()}
+el('bagOpen').onclick=openBag;el('bagClose').onclick=()=>el('bag').close();
+
 const journey={coins:9,food:5,hides:0,rewarded:false,town:false,nextMeal:30};
 function pack(){el('pack').textContent='银币 '+journey.coins+' · 口粮 '+journey.food+' · 皮货 '+journey.hides}
 function trade(item,price,delta){
@@ -464,7 +504,8 @@ function arrive(){
 function meal(){
  if(distance<journey.nextMeal)return;
  journey.nextMeal+=30;
- if(journey.food)journey.food--;else{vitality.forEach((v,i)=>{if(dealt[i]&&v>1)vitality[i]--});say('口粮耗尽 · 在队成员损失一点体力')}
+ for(let i=0;i<7;i++)if(dealt[i]&&vitality[i]){if(satiety[i])satiety[i]--;else vitality[i]=Math.max(1,vitality[i]-1)}
+ render();
  pack()
 }
 el('buy').onclick=()=>trade('food',3,1);el('sell').onclick=()=>trade('hides',-5,-1);
