@@ -1,0 +1,34 @@
+import { chromium } from 'playwright';
+import fs from 'node:fs';
+import path from 'node:path';
+const out=path.resolve('artifacts/warband-whitebox');
+fs.mkdirSync(out,{recursive:true});
+const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--enable-unsafe-swiftshader']});
+const cases=[{name:'desktop-960x540',viewport:{width:960,height:540}},{name:'mobile-390x844',viewport:{width:390,height:844}}];
+const results=[];
+for(const item of cases){
+ const ctx=await browser.newContext({viewport:item.viewport,deviceScaleFactor:1,recordVideo:{dir:out,size:item.viewport}});
+ const page=await ctx.newPage();
+ const errors=[];
+ page.on('pageerror',e=>errors.push(String(e)));
+ page.on('console',msg=>{if(msg.type()==='error')errors.push('console '+msg.text())});
+ await page.goto('http://127.0.0.1:4173/card-battle/slots-daggers/warband/whitebox.html',{waitUntil:'domcontentloaded'});
+ await page.waitForFunction(()=>!!window.WarbandWhitebox,{timeout:16000});
+ await page.waitForTimeout(1200);
+ await page.screenshot({path:path.join(out,item.name+'-01-loaded.png')});
+ const before=await page.evaluate(()=>window.WarbandWhitebox.getState());
+ await page.evaluate(()=>window.WarbandWhitebox.scoop());
+ await page.waitForTimeout(1150);
+ await page.screenshot({path:path.join(out,item.name+'-02-falling.png')});
+ await page.waitForFunction(()=>window.WarbandWhitebox.getState().cards>=1,{timeout:18000});
+ await page.waitForTimeout(400);
+ await page.screenshot({path:path.join(out,item.name+'-03-cards.png')});
+ const after=await page.evaluate(()=>window.WarbandWhitebox.getState());
+ if(before.supply!==17||after.supply!==14||after.round!==1||after.dropped!==3||after.cards<1||after.pegs<20){throw Error('state regression: '+JSON.stringify({before,after}));}
+ if(errors.length)throw Error('browser errors: '+errors.join(' | '));
+ results.push({name:item.name,before,after,errors,success:true});
+ await ctx.close();
+ console.log('PASS',item.name,JSON.stringify(after));
+}
+fs.writeFileSync(path.join(out,'results.json'),JSON.stringify(results,null,2));
+await browser.close();
