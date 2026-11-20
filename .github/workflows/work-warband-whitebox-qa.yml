@@ -1,0 +1,42 @@
+name: Work warband recruit-machine whitebox Chrome screenshots
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/card-battle/slots-daggers/warband/whitebox.html'
+      - 'tests/warband-whitebox-browser.mjs'
+      - '.github/workflows/work-warband-whitebox-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install test Chrome
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/warband-whitebox-server.log 2>&1 &
+          sleep 2
+      - name: Run game and save live screenshots
+        run: node tests/warband-whitebox-browser.mjs
+      - name: Preserve screenshots, clips, QA, and exact Work art sources
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: warband-whitebox-work-original-art-real-browser
+          path: |
+            artifacts/warband-whitebox/
+            site/card-battle/slots-daggers/cabinet-art.js
+            site/card-battle/slots-daggers/pixel-type.js
+            site/card-battle/slots-daggers/engine.js
+          retention-days: 14
+          if-no-files-found: warn
