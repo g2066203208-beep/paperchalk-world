@@ -1,0 +1,259 @@
+{
+  "axes": "full principal diameters in 960x540 logical pixels; clockwise from screen right modulo 180 degrees",
+  "source": "Steam promo webm, frames 96-112 on 60 Hz decode; main contour (gold hue and positive temporal luminance), convex hull moments; hard shadow and chute flakes excluded; bands are ambiguous at occlusion and under digital motion blur",
+  "new": "real coin mesh rendered with game rasterizer and nearest scaling at world radius, without cast shadows or bloom counted as metal; 0 and +8.33ms bound browser capture sampling",
+  "samples": [
+    {
+      "ms": 33,
+      "ref_hue19": [
+        32.45,
+        28.06,
+        27.9
+      ],
+      "demo0_brass": [
+        31.99,
+        26.75,
+        12.7
+      ],
+      "demo0_solid": [
+        32.21,
+        29.32,
+        17.3
+      ],
+      "demo8_brass": [
+        31.97,
+        28.78,
+        9.5
+      ],
+      "demo8_solid": [
+        32.88,
+        31.63,
+        30.8
+      ]
+    },
+    {
+      "ms": 67,
+      "ref_hue19": [
+        32.51,
+        31.26,
+        33.9
+      ],
+      "demo0_brass": [
+        30.32,
+        16.74,
+        149.3
+      ],
+      "demo0_solid": [
+        32.78,
+        30.32,
+        82.8
+      ],
+      "demo8_brass": [
+        27.1,
+        13.77,
+        172.5
+      ],
+      "demo8_solid": [
+        32.84,
+        28.87,
+        81.1
+      ]
+    },
+    {
+      "ms": 100,
+      "ref_hue19": [
+        30.92,
+        22.47,
+        109.7
+      ],
+      "demo0_brass": [
+        31.85,
+        25.37,
+        104.6
+      ],
+      "demo0_solid": [
+        32.97,
+        26.9,
+        94.0
+      ],
+      "demo8_brass": [
+        31.32,
+        24.79,
+        111.5
+      ],
+      "demo8_solid": [
+        32.72,
+        26.26,
+        101.9
+      ]
+    },
+    {
+      "ms": 133,
+      "ref_hue19": [
+        28.81,
+        25.71,
+        102.7
+      ],
+      "demo0_brass": [
+        30.3,
+        23.23,
+        127.6
+      ],
+      "demo0_solid": [
+        31.43,
+        25.54,
+        118.1
+      ],
+      "demo8_brass": [
+        31.39,
+        23.43,
+        132.7
+      ],
+      "demo8_solid": [
+        31.98,
+        25.18,
+        129.4
+      ]
+    },
+    {
+      "ms": 167,
+      "ref_hue19": [
+        29.11,
+        22.59,
+        159.0
+      ],
+      "demo0_brass": [
+        31.16,
+        22.85,
+        156.2
+      ],
+      "demo0_solid": [
+        31.5,
+        24.87,
+        153.4
+      ],
+      "demo8_brass": [
+        30.45,
+        23.04,
+        163.9
+      ],
+      "demo8_solid": [
+        30.77,
+        25.08,
+        161.7
+      ]
+    },
+    {
+      "ms": 200,
+      "ref_hue19": [
+        32.88,
+        28.31,
+        168.5
+      ],
+      "demo0_brass": [
+        31.27,
+        21.91,
+        174.5
+      ],
+      "demo0_solid": [
+        31.37,
+        24.6,
+        177.1
+      ],
+      "demo8_brass": [
+        30.76,
+        22.55,
+        175.7
+      ],
+      "demo8_solid": [
+        31.47,
+        24.45,
+        2.2
+      ]
+    },
+    {
+      "ms": 233,
+      "ref_hue19": [
+        33.1,
+        24.95,
+        4.7
+      ],
+      "demo0_brass": [
+        31.09,
+        23.95,
+        11.9
+      ],
+      "demo0_solid": [
+        31.39,
+        24.98,
+        15.5
+      ],
+      "demo8_brass": [
+        29.98,
+        23.46,
+        15.1
+      ],
+      "demo8_solid": [
+        31.38,
+        25.32,
+        19.9
+      ]
+    },
+    {
+      "ms": 267,
+      "ref_hue19": [
+        31.33,
+        25.18,
+        54.3
+      ],
+      "demo0_brass": [
+        31.63,
+        24.59,
+        23.9
+      ],
+      "demo0_solid": [
+        31.58,
+        26.58,
+        30.5
+      ],
+      "demo8_brass": [
+        30.45,
+        24.43,
+        26.3
+      ],
+      "demo8_solid": [
+        31.18,
+        27.08,
+        34.6
+      ]
+    },
+    {
+      "ms": 300,
+      "ref_hue19": [
+        29.81,
+        25.99,
+        65.1
+      ],
+      "demo0_brass": [
+        30.98,
+        25.55,
+        34.8
+      ],
+      "demo0_solid": [
+        31.56,
+        27.82,
+        49.9
+      ],
+      "demo8_brass": [
+        31.09,
+        26.21,
+        36.3
+      ],
+      "demo8_solid": [
+        31.94,
+        27.96,
+        48.7
+      ]
+    }
+  ]
+}

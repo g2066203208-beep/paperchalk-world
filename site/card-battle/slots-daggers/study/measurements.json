@@ -48,7 +48,9 @@
         658
       ],
       "duration_s": 11.583,
-      "note": "标称60帧，存在完全重复的相邻画面。"
+      "note": "容器标称 60 fps，11.583 秒内实际解码 348 幅画面。按演示时间戳投到 60 Hz 对照网格时会出现重复画面。该来源相邻不同画面的精度约 33 毫秒。",
+      "decoded_picture_count": 348,
+      "timestamp_grid_hz": 60
     },
     "console-launch": {
       "name": "主机发售片，PlayStation Store 媒体",
@@ -248,7 +250,8 @@
         "first_return_vx_px_s_approx": 585
       },
       "occlusion_s": 1.9333,
-      "note": "First direction reversal in projection. Geometry of the obstructing prop, the true height above the tray and physical restitution cannot be solved from this view. The measured silhouette includes the bevel/light edge."
+      "note": "First direction reversal in projection. Geometry of the obstructing prop, the true height above the tray and physical restitution cannot be solved from this view. The measured silhouette includes the bevel/light edge.",
+      "frame_number_basis": "60 Hz presentation-time grid. f94 at 1.5667 seconds is not the 94th distinct coded picture."
     },
     "long_cast": {
       "source": "pc-launch",

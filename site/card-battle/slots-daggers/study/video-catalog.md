@@ -4,7 +4,7 @@
 
 ## 开发者发布的分项演示
 
-另取得 Friedemann 本人公开的 27 条视频贴，逐条核对公开记录的文件哈希及视频轨，共 26 份不同文件。按文件去重后共有 9,183 帧、306.10 秒，全部为 30 帧/秒，带声音。下列时码来自动画解码后的画面；同一事件的再次上传、重剪和素材版本差异均单独标明。
+另取得 Friedemann 本人公开的 39 条视频贴，逐条核对公开记录的文件哈希及视频轨，共 38 份不同文件。按文件去重后共有 23,088 帧、769.60 秒，全部为 30 帧/秒，带声音。下列时码来自动画解码后的画面；同一事件的再次上传、重剪和素材版本差异均单独标明。
 
 这些作者公开视频也可在支持 HLS 的播放器直接观看。 [出币](https://video.bsky.app/watch/did%3Aplc%3A5yls54g4apr2jw2errohsc7k/bafkreie2hqwdkl36kx7ypjukrelp7i7tk523g4uciohicosrgoy3johhne/playlist.m3u8) · [翻币材质](https://video.bsky.app/watch/did%3Aplc%3A5yls54g4apr2jw2errohsc7k/bafkreihx3olv4pcpxusb2mtsoeebocqjonknek4ha7bvyjdhfcnxtlssfy/playlist.m3u8) · [桌震与酒杯](https://video.bsky.app/watch/did%3Aplc%3A5yls54g4apr2jw2errohsc7k/bafkreig53rqwddzqcbs4gtvkn5d7yt22g7rscmrdgtwtwooqwwzvq3qwoq/playlist.m3u8) · [商店开合](https://video.bsky.app/watch/did%3Aplc%3A5yls54g4apr2jw2errohsc7k/bafkreidwdw2osjenbex37iy3b5nw3f3qxkalhp3dpm7gcimrhv3xmjzke4/playlist.m3u8) · [施法暴击](https://video.bsky.app/watch/did%3Aplc%3A5yls54g4apr2jw2errohsc7k/bafkreigz7rw5uhbj4wq5b47vqro5pcrupywzszxdo5c4t6qtsdexdwj24e/playlist.m3u8)
 
@@ -39,6 +39,18 @@
 | [Ike](https://bsky.app/profile/friedemanna.bsky.social/post/3lvoiomea2y2w) | 16.37 秒 | 0–8 秒洞窟内高大剪影，12 秒已进入结算界面。 |
 | [Mud Fairy](https://bsky.app/profile/friedemanna.bsky.social/post/3lw4isq4nmq2s) | 18.70 秒 | 0–9.33 秒林地亮绿飞行剪影与深色树木，随后进入片尾。 |
 | [发行后庆祝片](https://bsky.app/profile/friedemanna.bsky.social/post/3m4sj6wrzqp2u) | 9.43 秒 | 约 2.33 秒下方出现爱心选项，4.67–6.67 秒暖场停轮，作为发行后画面补充。 |
+| [十月出币复发](https://bsky.app/profile/friedemanna.bsky.social/post/3m2gvgf4gkc2d) | 9.33 秒 | 与八月出币演示同机位同镜头，2.33 秒与 4.67 秒的托盘画面均能对上，重新编码。 |
+| [原型与最终机台的另一版](https://bsky.app/profile/friedemanna.bsky.social/post/3m253ovt32v2e) | 14.00 秒 | 画面同时给出两天原型、四个月版本及原型图案，和七月对照片为同类素材。 |
+| [效果精选](https://bsky.app/profile/friedemanna.bsky.social/post/3lzqqimi2al2p) | 31.37 秒 | 7.67 秒冷青屏幕及暴击，15.33 秒实体修饰器，23.33 秒绿色暴击，31 秒结算。部分镜头在单项视频中也能找到。 |
+| [片头字形对比](https://bsky.app/profile/friedemanna.bsky.social/post/3lzlalouzaj2q) | 8.97 秒 | 上下同时演示像素字和清晰字版；0–4.33 秒可观察两种片头出现的顺序。 |
+| [竞技场进入](https://bsky.app/profile/friedemanna.bsky.social/post/3lznzyoigi52y) | 8.33 秒 | 0–2 秒内屏压暗，4 秒变暖亮，6 秒可见竞技场敌影。 |
+| [Yolk-Folk 角色草图](https://bsky.app/profile/friedemanna.bsky.social/post/3m2th2zlkx32g) | 115.17 秒 | 115 秒绘制过程，能看到不同蛋壳的起笔、填色和武器轮廓。28.67 秒重甲，57.33 秒头盔起稿，86.33 秒尖刺轮廓，115 秒持杆成稿。 |
+| [移动发行长预告](https://bsky.app/profile/friedemanna.bsky.social/post/3mtblvceq772y) | 60.07 秒 | 15 秒暖光，30 秒橙色内屏，44.67 秒白色爆闪，尾板注明现已登陆手机。 |
+| [移动预订长预告](https://bsky.app/profile/friedemanna.bsky.social/post/3mssnwih44b2u) | 60.03 秒 | 与移动发行长预告大量共用同序游戏画面，尾板改为预订文案。也能和 60 秒主机预告交叉比较。 |
+| [五月原型](https://bsky.app/profile/friedemanna.bsky.social/post/3lp5hzcfgg22g) | 13.57 秒 | 3.33 秒攻击亮光，6.67 秒物品选择，10 秒消息面板，13.33 秒暖场敌人；适合对比早期机身与成品。 |
+| [开发者讲解版试玩预告](https://bsky.app/profile/friedemanna.bsky.social/post/3lzgltbdufu26) | 70.73 秒 | 0 秒是左侧出币，17.67 秒暖场，35.33 秒绿场，52.67 秒修饰器；与商店宣传片存在共用镜头。 |
+| [上线后红场演示](https://bsky.app/profile/friedemanna.bsky.social/post/3m4ds5owgbv2p) | 6.87 秒 | 0–6.67 秒保持同一赤色战场，可观察敌人轮廓与停轮亮框的相对位置。 |
+| [桌面战斗总览](https://bsky.app/profile/friedemanna.bsky.social/post/3lvnz2ha4ms2o) | 65.07 秒 | 0 秒冷场，16 秒转轮特写，32.33 秒红色标题叠在机台上，48.67 秒修饰器，64.67 秒片尾。与商店公开预告复用主镜头。 |
 
 Jonas Tyroller 与 Friedemann 的 1:49:51 访谈给出了按话题跳转的章节。游戏原型、灯光、桌面物体和不同场景色调都由作者本人讨论；章节的播放器缩略图也抽样核过，画面在访谈人像与游戏之间切换。 [49:55 原型与手绘像素](https://www.youtube.com/watch?v=d0jJmaLDtbA&t=2995s) · [52:24 Unity 灯光与 Bloom](https://www.youtube.com/watch?v=d0jJmaLDtbA&t=3144s) · [55:28 动画](https://www.youtube.com/watch?v=d0jJmaLDtbA&t=3328s) · [1:02:36 音效与震动](https://www.youtube.com/watch?v=d0jJmaLDtbA&t=3756s) · [1:08:06 枝叶、酒杯](https://www.youtube.com/watch?v=d0jJmaLDtbA&t=4086s) · [1:10:27 桌面感](https://www.youtube.com/watch?v=d0jJmaLDtbA&t=4227s) · [1:15:25 换色与后处理](https://www.youtube.com/watch?v=d0jJmaLDtbA&t=4525s)
 
@@ -68,7 +80,7 @@ Jonas Tyroller 与 Friedemann 的 1:49:51 访谈给出了按话题跳转的章�
 | --- | --- | --- |
 | Steam 商店发行预告 | 视频轨 69.833 秒，1280 × 720、60 帧/秒。用于对比暖色战斗、刀光与左侧出币时序。 | [商店](https://store.steampowered.com/app/3631290/Slots__Daggers/) · [开发者视频](https://www.youtube.com/watch?v=3ji0GyAcoMw) · [店内 HLS](https://video.fastly.steamstatic.com/store_trailers/3631290/137468819/96a15bbc1e8eaddc6eef6ef203243559fdb4d14c/1761230493/hls_264_master.m3u8) |
 | Steam 首次公开预告 | 视频轨 65.017 秒，1280 × 720、60 帧/秒。较早的镜头和版本，比较机台剪影、房间明暗、转轮表面反光。 | [开发者视频](https://www.youtube.com/watch?v=1c-5tsSO6_s) · [店内 HLS](https://video.fastly.steamstatic.com/store_trailers/3631290/1491345768/dd186da5b153de9d99f0e364833621a060461050/1753299465/hls_264_master.m3u8) |
-| Steam 商品介绍里的自动循环 | 11.583 秒，1170 × 658、60 帧/秒，循环可逐帧。网页同时提供两种编码，二者共用一段动画。 | [WebM 动图](https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/3631290/extras/16b15c50d1dd18f607f74c03d30972d8.webm) · [MP4 动图](https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/3631290/extras/16b15c50d1dd18f607f74c03d30972d8.mp4) |
+| Steam 商品介绍里的自动循环 | 11.583 秒，1170 × 658，容器标称 60 帧/秒，解码为 348 幅画面，循环可逐帧。网页同时提供两种编码，二者共用一段动画。 | [WebM 动图](https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/3631290/extras/16b15c50d1dd18f607f74c03d30972d8.webm) · [MP4 动图](https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/3631290/extras/16b15c50d1dd18f607f74c03d30972d8.mp4) |
 | PlayStation 商店主机预告 | 1920 × 1080、60 帧/秒，3,601 帧，视频轨 60.017 秒。00:00 冷青开场，00:08 红色转轮，00:12 金光，00:16 暖色暴击，00:20 升级画面，00:28 暴击字，00:32 橙色内屏与堆币，00:36 结束面板，00:40 修饰器，00:52 林地，00:55 爆发后转片尾。主机剪辑和两支 Steam 预告的时长、排序均有差异，部分场面反复使用。 | [原始 MP4](https://vulcan.dl.playstation.net/img/rnd/202604/2816/44090d8c0508d1b480d9ef1d82d4c5b1040ec14eb2455d27.mp4) · [PlayStation 商店](https://store.playstation.com/en-us/concept/10018077/) · [开发者主机上市片](https://www.youtube.com/watch?v=Cv-GKTOsgaU) |
 | iPhone 商店预览 | 720 × 332、30 帧/秒，897 帧，29.900 秒。00:00 装备，00:04 区域切换，00:06–00:10 暖场敌人和逐格亮框，00:12–00:14 选择，00:16 冷场，00:18 暖场剪影，00:20 绿场施法，00:23 修饰器，00:25 林地，00:27 标题。 | [App Store](https://apps.apple.com/us/app/slots-daggers/id6762803589) · [iPhone 原始 HLS](https://apptrailers.itunes.apple.com/itunes-assets/PurpleVideo211/v4/55/6a/43/556a4390-43c2-1a5d-4462-cb037987e67f/P1448524471_default.m3u8) |
 | iPad 商店预览 | 960 × 720、30 帧/秒，898 帧，29.933 秒。与 iPhone 为同一组镜头，构图不同。上下余量、机壳及桌沿是应比较的部分。 | [iPad 商店](https://apps.apple.com/us/app/slots-daggers/id6762803589?platform=ipad) · [iPad 原始 HLS](https://apptrailers.itunes.apple.com/itunes-assets/PurpleVideo221/v4/3e/4e/0b/3e4e0be4-a146-88f4-fee6-832eb8ae35d6/P1448709504_default.m3u8) |

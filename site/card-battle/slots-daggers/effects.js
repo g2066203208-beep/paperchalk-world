@@ -53,15 +53,19 @@ function chromaticBeam(c,from,to,elapsed,power){
 function greatsword(c,from,to,age,power){
  const dx=to[0]-from[0],dy=to[1]-from[1],direction=Math.atan2(dy,dx);
  const length=Math.hypot(dx,dy),travel=clamp(age/.095,0,1);
- const distance=length*(.67+.33*(1-(1-travel)**2));
+ const distance=length*(.25+.75*(1-(1-travel)**2));
  const tipX=from[0]+Math.cos(direction)*distance,tipY=from[1]+Math.sin(direction)*distance;
  c.save();c.translate(tipX,tipY);c.rotate(direction);
- const blade=length*.62;
+ const blade=length*.32;
  const polygon=(pts,color)=>{c.beginPath();c.moveTo(...pts[0]);for(const k of pts.slice(1))c.lineTo(...k);c.closePath();c.fillStyle=color;c.fill()};
  c.globalCompositeOperation='screen';
- for(const [width,a,color] of [[65,.15,'#e3933e'],[39,.25,'#f5a143'],[19,.5,'#ffc16a']]){
-  c.globalAlpha=power*a;line(c,[[-blade-8,0],[-blade*.55,0],[0,0]],color,width);
+ const halo=c.createLinearGradient(0,-37,0,37);
+ for(const [stop,a] of [[0,0],[.18,.035],[.34,.12],[.46,.41],[.5,.57],[.54,.41],[.66,.12],[.82,.035],[1,0]]){
+  halo.addColorStop(stop,'rgba(255,193,103,'+a+')');
  }
+ c.globalAlpha=power;c.fillStyle=halo;
+ c.beginPath();c.moveTo(-blade-24,0);c.bezierCurveTo(-blade-28,-40,-blade*.35,-37,14,-6);
+ c.quadraticCurveTo(28,0,14,6);c.bezierCurveTo(-blade*.35,37,-blade-28,40,-blade-24,0);c.closePath();c.fill();
  c.globalAlpha=power;
  polygon([[-blade,-5],[-blade+21,-10],[-41,-5],[0,0],[-39,6],[-blade+16,11],[-blade,7]],'#ffeab2');
  polygon([[-blade,-5],[-blade+22,-8],[-29,-4],[0,0],[-blade+8,1]],'#fffcd6');
@@ -165,10 +169,35 @@ class CombatEffects{
   }
   this.particlesOn(c,'glass');
  }
+ rimLamps(c,g,reduce,project){
+  const wind=g.phase==='enemyWind'?g.age/.64:0;
+  const travel=g.time-this.castAt;
+  const attack=travel<0?0:Math.min(1,travel/.027)*Math.exp(-Math.max(0,travel-.25)/.107);
+  const comb=Math.max(attack,this.impactEnergy(g.time)*.65)*(reduce?.60:1);
+  if(comb<.025&&!wind)return;
+  const path=[];
+  for(let i=0;i<16;i++)path.push([332+i*21.5,46,0]);
+  for(let i=0;i<9;i++)path.push([662,60+i*20.4,1]);
+  for(let i=0;i<16;i++)path.push([655-i*21.5,239,0]);
+  for(let i=0;i<9;i++)path.push([318,225-i*20.4,1]);
+  c.save();
+  path.forEach(([bx,by,side],i)=>{
+   const [x,y]=project(bx,by),trail=((wind*path.length*2-i)%path.length+path.length)%path.length;
+   const chase=wind>0?Math.exp(-trail*.27)*Math.min(1,wind*9):0;
+   const a=Math.max(chase,comb*(side?1:.73));
+   if(a<.06)return;
+   if(a>.14){pointLight(c,x,y,side?26:13,side?32:16,'#ecac51',a*(side?.57:.27));}
+   c.globalAlpha=Math.min(.98,a*1.3);const r=side&&a>.53?3.8:2.3;
+   c.fillStyle='#ffe4a1';c.fillRect(Math.round(x-r),Math.round(y-r),r*2,r*2);
+   c.fillStyle='#fffde2';c.fillRect(Math.round(x-r*.62),Math.round(y-r*.62),r*1.24,r*1.24);
+  });
+  c.restore();
+ }
  onPortrait(c,g,reduce,local){
   const origin=targets[g.foe.id]||targets.warden,from=local('main',origin[0]+13,86),to=local('meter',813,341);
   const age=g.time-this.castAt,blade=age>=0&&age<.57?Math.min(1,age/.021)*Math.exp(-Math.max(0,age-.261)/.073):0;
   const energy=this.enemyEnergy(g.time)*(reduce?.52:1);
+  this.rimLamps(c,g,reduce,(x,y)=>local('main',x,y));
   if(blade>.007)greatsword(c,from,to,age,blade*(reduce?.58:1));
   if(energy>.005){
    pointLight(c,...to,64,41,'#ffc97e',energy*.79);
@@ -178,29 +207,13 @@ class CombatEffects{
  onCase(c,g,reduce){
   const age=g.time-this.enemyTime,energy=this.enemyEnergy(g.time)*(reduce?.54:1);
   const travelAge=g.time-this.castAt,blade=travelAge>=0&&travelAge<.57?Math.min(1,travelAge/.021)*Math.exp(-Math.max(0,travelAge-.261)/.073):0;
+  this.rimLamps(c,g,reduce,(x,y)=>[x,y]);
   if(Math.max(energy,blade)>.005){
    const origin=targets[g.foe.id]||targets.warden,from=[origin[0]+13,86],to=[813,341];
    greatsword(c,from,to,travelAge,blade*(reduce?.58:1));
    pointLight(c,to[0],to[1],104,89,'#ffc469',energy*.91);
-   c.save();c.globalAlpha=energy;star(c,to[0],to[1],36+13*Math.sin(age*19),'#fff6cb');c.restore();
-  }
-  const e=Math.max(energy,this.impactEnergy(g.time)*.78);
-  if(e>.025||g.phase==='enemyWind'){
-   c.save();const wind=g.phase==='enemyWind'?g.age/.64:0;
-   const pts=[];
-   for(let i=0;i<16;i++)pts.push([332+i*21.5,46]);
-   for(let i=0;i<9;i++)pts.push([662,60+i*20.4]);
-   for(let i=0;i<16;i++)pts.push([655-i*21.5,239]);
-   for(let i=0;i<9;i++)pts.push([318,225-i*20.4]);
-   pts.forEach(([x,y],i)=>{
-    const trail=((wind*pts.length*2-i)%pts.length+pts.length)%pts.length;
-    const chase=wind>0?Math.exp(-trail*.22)*Math.min(1,wind*9):0;
-    const a=Math.max(e*.77,chase);
-    if(a<.07)return;c.globalAlpha=Math.min(.98,a);
-    if(a>.72)pointLight(c,x,y,9,13,'#ebb35e',a*.42);
-    c.fillStyle='#efbf72';c.fillRect(x-1,y-1,4,4);
-    c.fillStyle='#fff7d7';c.fillRect(x,y,2,2);
-   });c.restore();
+   c.save();c.globalAlpha=energy;star(c,to[0],to[1],47+12*Math.sin(age*19),'#fff9e0');
+   if(energy>.32){c.fillStyle='#fff9dd';c.fillRect(to[0]-44,to[1]-2.5,83,5);c.fillRect(to[0]-2,to[1]-38,4,68)}c.restore();
   }
   this.particlesOn(c,'case');
  }

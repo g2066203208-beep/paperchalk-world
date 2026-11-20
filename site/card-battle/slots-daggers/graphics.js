@@ -225,8 +225,12 @@ class Graphics{
  }
  paint(g,portable=false){
   const c=this.c,t=g.time;c.clearRect(0,0,960,540);
-  A().desk(c,false,540,this.motion);
-  this.drawCoins(c,g);
+  if(portable){
+   c.fillStyle='#192019';c.fillRect(0,0,960,540);
+  }else{
+   A().desk(c,false,540,this.motion);
+   this.drawCoins(c,g);
+  }
   c.save();c.translate(this.motion.body*.16,-this.motion.body);
   A().chassis(c);
   if(g.phase==='shop')this.shop(c,g);

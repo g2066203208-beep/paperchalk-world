@@ -2,8 +2,78 @@
 <nav><a href="../../soul-table.html">玩原创机台</a><a href="../../soul-table.html?practice=single">试单枚折返</a><a href="../../soul-table.html?practice=coins">试金币暴击</a><a href="#measure">逐帧对照</a></nav>
 <h1>实机参考与逐帧对照</h1>
 <div class="previews"><figure><figcaption>Steam 官方循环 · 1.57 秒出币</figcaption><video preload="none" controls playsinline src="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/3631290/extras/16b15c50d1dd18f607f74c03d30972d8.mp4#t=1.5"></video></figure><figure><figcaption>PlayStation 官方预告 · 54.7 秒剑光</figcaption><video preload="none" controls playsinline src="https://vulcan.dl.playstation.net/img/rnd/202604/2816/44090d8c0508d1b480d9ef1d82d4c5b1040ec14eb2455d27.mp4#t=54"></video></figure></div>
-<h2 id="measure">金币模型的实测结果</h2><p>在 960 × 540 测量画幅下，折返轨迹 7 个取样时刻的币心距离均方根为 1.78 像素，远喷轨迹 6 点为 2.17 像素。两条样本参加了参数标定。原片能看见的最后一点取在前景或机壳完全遮住金币以前。</p>
-<p><a href="./coin-model.json">逐点下载原片坐标、模型坐标及误差</a> · <a href="./measurements.json">下载测量时码与依据</a></p><section id="slots--daggers录像与效果时码" class="level1">
+<h2 id="measure">金币模型的实测结果</h2><p>在 960 × 540 测量画幅下，折返轨迹 7 个取样时刻的币心距离均方根为 1.68 像素，远喷轨迹 6 点为 2.17 像素。两条样本参加了参数标定。原片能看见的最后一点取在前景或机壳完全遮住金币以前。</p>
+<p><a href="./coin-model.json">逐点下载原片坐标、模型坐标及误差</a> · <a href="./measurements.json">下载测量时码与依据</a></p><section id="原创网页版的模型与验证范围" class="level1">
+<h1>原创网页版的模型与验证范围</h1>
+<p>试玩含七处遭遇、七个分件敌人、三至五个卷轴、时机判定、战利品、购买升级、败北和重新开局。单个
+HTML
+可以断网运行。运行代码生成所有可见资产与声音；本目录的原作视频用于比对。</p>
+<div class="table"><table>
+<thead>
+<tr class="header">
+<th>部位</th>
+<th>网页版如何绘制和运动</th>
+<th>可以核对的动作</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>托盘金币</td>
+<td>十边实体有正反铸模、倒角和齿边。四元数更新朝向，每秒 240
+步解算接触。币面、边缘和投影使用同一姿态。高光根据法线和光源求值，达到阈值才向相邻像素扩散。</td>
+<td>近喷折返、远喷、弹地、撞币、堆叠、付款时聚成一团后落入挡板。</td>
+</tr>
+<tr class="even">
+<td>卷轴</td>
+<td>高度图和法线生成每幅浮雕，绕圆筒曲面投影。齿条先等速移到止动位置，止动闩约用
+32 毫秒锁轮。</td>
+<td>两条官方预告的四段取样为每秒 11.09–11.18 格。独立 240
+帧卷面图像反测样本为每秒 11.104 格；普通结算框约亮 0.40 秒。</td>
+</tr>
+<tr class="odd">
+<td>机壳和桌面</td>
+<td>铸件斜面、螺钉、磨痕、桌布、木纹和近景枝叶由几何和程序纹理生成。多层折射生成杯、液体与冰的外观。机体、酒杯与骰子分别按阻尼振动衰减。</td>
+<td>停轮锁紧时机壳回震；强击后骰子、杯子以不同幅度和频率复位。</td>
+</tr>
+<tr class="even">
+<td>敌人与环境</td>
+<td>七处场景由前、中、远景、雾和遮光层合成。敌人由关节带动头、躯干、肢体和武器。</td>
+<td>待机、出击、受击、死亡散解和各遭遇的独立配色。</td>
+</tr>
+<tr class="odd">
+<td>灯光与战斗</td>
+<td>有高度和法线的桌面接收局部光，遮挡沿灯光方向求解。大剑有剑柄和护手，从
+CRT 越过机壳，在血槽接触处迸出十字高光。</td>
+<td>两段原作强光从边框到血槽的实测约为 83–117 毫秒，网页版事件间距为 97
+毫秒。物体位移和强光的出现先后分开比较。</td>
+</tr>
+<tr class="even">
+<td>音效</td>
+<td>浏览器即时合成机械棘轮、铸币碰撞、击中声与背景声。</td>
+<td>硬币碰撞类型、强度和位置改变响度、音色和左右声道。</td>
+</tr>
+</tbody>
+</table></div>
+<section id="怎样读误差" class="level2">
+<h2>怎样读误差</h2>
+<p>币心误差以 960 × 540
+为共同尺度，对同一时刻原片与模型的二维位置计算欧氏距离，再对该轨迹的各个距离取均方根。两条轨迹参与了模型标定。这一结果只描述可见币心位置。碑文、角色轮廓、机壳构图、Bloom、遮挡和全部玩法各有独立差异。纸面上的模型不能证明商业游戏内部使用了相同的碰撞算法。</p>
+<p>8 种浏览器视口覆盖 320 × 568、360 × 800、390 × 844、768 × 1024、844 ×
+390、960 × 540、1024 × 768 与 1920 × 1080。960 × 540 桌面和 390 × 844
+竖屏都完成了首战、结算、购买第四个卷轴和进入下一战。物理手机硬件、系统
+WebView 与不同 GPU 上的帧率需分别测量。</p>
+</section>
+<section id="单币翻面" class="level2">
+<h2>单币翻面</h2>
+<p>用出币后 33、67、100、133、167、200、233、267、300
+毫秒的画面对照投影轮廓。原片用金色和亮度变化提取可见币体，网页版同时记录可见金属亮片和整个几何轮廓。67
+毫秒时，原片提取的主轴直径约 32.5 × 31.3 像素，新模型实体投影为 32.8 ×
+30.3 像素。100 毫秒时两者分别约 30.9 × 22.5 与 33.0 × 26.9
+像素。暗面、运动模糊及一次逻辑步的相位差都会改变能测到的亮轮廓。<a
+href="./coin-orientation.json">九个相位的完整数表</a></p>
+</section>
+</section>
+<section id="slots--daggers录像与效果时码" class="level1">
 <h1>《Slots &amp; Daggers》录像与效果时码</h1>
 <p>金币比较从安奎拉13的通关录像看起。38:53.8
 左盘还有空隙，随后约一秒半内，中上部几枚钱币持续下移，在已经堆起的币之间改向。07:51.6
@@ -16,9 +86,9 @@ href="https://vulcan.dl.playstation.net/img/rnd/202604/2816/44090d8c0508d1b480d9
 商店视频 27 秒</a></p>
 <section id="开发者发布的分项演示" class="level2">
 <h2>开发者发布的分项演示</h2>
-<p>另取得 Friedemann 本人公开的 27
-条视频贴，逐条核对公开记录的文件哈希及视频轨，共 26
-份不同文件。按文件去重后共有 9,183 帧、306.10 秒，全部为 30
+<p>另取得 Friedemann 本人公开的 39
+条视频贴，逐条核对公开记录的文件哈希及视频轨，共 38
+份不同文件。按文件去重后共有 23,088 帧、769.60 秒，全部为 30
 帧/秒，带声音。下列时码来自动画解码后的画面；同一事件的再次上传、重剪和素材版本差异均单独标明。</p>
 <p>这些作者公开视频也可在支持 HLS 的播放器直接观看。 <a
 href="https://video.bsky.app/watch/did%3Aplc%3A5yls54g4apr2jw2errohsc7k/bafkreie2hqwdkl36kx7ypjukrelp7i7tk523g4uciohicosrgoy3johhne/playlist.m3u8">出币</a>
@@ -232,6 +302,88 @@ href="https://bsky.app/profile/friedemanna.bsky.social/post/3m4sj6wrzqp2u">发�
 <td>约 2.33 秒下方出现爱心选项，4.67–6.67
 秒暖场停轮，作为发行后画面补充。</td>
 </tr>
+<tr class="even">
+<td><a
+href="https://bsky.app/profile/friedemanna.bsky.social/post/3m2gvgf4gkc2d">十月出币复发</a></td>
+<td>9.33 秒</td>
+<td>与八月出币演示同机位同镜头，2.33 秒与 4.67
+秒的托盘画面均能对上，重新编码。</td>
+</tr>
+<tr class="odd">
+<td><a
+href="https://bsky.app/profile/friedemanna.bsky.social/post/3m253ovt32v2e">原型与最终机台的另一版</a></td>
+<td>14.00 秒</td>
+<td>画面同时给出两天原型、四个月版本及原型图案，和七月对照片为同类素材。</td>
+</tr>
+<tr class="even">
+<td><a
+href="https://bsky.app/profile/friedemanna.bsky.social/post/3lzqqimi2al2p">效果精选</a></td>
+<td>31.37 秒</td>
+<td>7.67 秒冷青屏幕及暴击，15.33 秒实体修饰器，23.33 秒绿色暴击，31
+秒结算。部分镜头在单项视频中也能找到。</td>
+</tr>
+<tr class="odd">
+<td><a
+href="https://bsky.app/profile/friedemanna.bsky.social/post/3lzlalouzaj2q">片头字形对比</a></td>
+<td>8.97 秒</td>
+<td>上下同时演示像素字和清晰字版；0–4.33
+秒可观察两种片头出现的顺序。</td>
+</tr>
+<tr class="even">
+<td><a
+href="https://bsky.app/profile/friedemanna.bsky.social/post/3lznzyoigi52y">竞技场进入</a></td>
+<td>8.33 秒</td>
+<td>0–2 秒内屏压暗，4 秒变暖亮，6 秒可见竞技场敌影。</td>
+</tr>
+<tr class="odd">
+<td><a
+href="https://bsky.app/profile/friedemanna.bsky.social/post/3m2th2zlkx32g">Yolk-Folk
+角色草图</a></td>
+<td>115.17 秒</td>
+<td>115 秒绘制过程，能看到不同蛋壳的起笔、填色和武器轮廓。28.67
+秒重甲，57.33 秒头盔起稿，86.33 秒尖刺轮廓，115 秒持杆成稿。</td>
+</tr>
+<tr class="even">
+<td><a
+href="https://bsky.app/profile/friedemanna.bsky.social/post/3mtblvceq772y">移动发行长预告</a></td>
+<td>60.07 秒</td>
+<td>15 秒暖光，30 秒橙色内屏，44.67
+秒白色爆闪，尾板注明现已登陆手机。</td>
+</tr>
+<tr class="odd">
+<td><a
+href="https://bsky.app/profile/friedemanna.bsky.social/post/3mssnwih44b2u">移动预订长预告</a></td>
+<td>60.03 秒</td>
+<td>与移动发行长预告大量共用同序游戏画面，尾板改为预订文案。也能和 60
+秒主机预告交叉比较。</td>
+</tr>
+<tr class="even">
+<td><a
+href="https://bsky.app/profile/friedemanna.bsky.social/post/3lp5hzcfgg22g">五月原型</a></td>
+<td>13.57 秒</td>
+<td>3.33 秒攻击亮光，6.67 秒物品选择，10 秒消息面板，13.33
+秒暖场敌人；适合对比早期机身与成品。</td>
+</tr>
+<tr class="odd">
+<td><a
+href="https://bsky.app/profile/friedemanna.bsky.social/post/3lzgltbdufu26">开发者讲解版试玩预告</a></td>
+<td>70.73 秒</td>
+<td>0 秒是左侧出币，17.67 秒暖场，35.33 秒绿场，52.67
+秒修饰器；与商店宣传片存在共用镜头。</td>
+</tr>
+<tr class="even">
+<td><a
+href="https://bsky.app/profile/friedemanna.bsky.social/post/3m4ds5owgbv2p">上线后红场演示</a></td>
+<td>6.87 秒</td>
+<td>0–6.67 秒保持同一赤色战场，可观察敌人轮廓与停轮亮框的相对位置。</td>
+</tr>
+<tr class="odd">
+<td><a
+href="https://bsky.app/profile/friedemanna.bsky.social/post/3lvnz2ha4ms2o">桌面战斗总览</a></td>
+<td>65.07 秒</td>
+<td>0 秒冷场，16 秒转轮特写，32.33 秒红色标题叠在机台上，48.67
+秒修饰器，64.67 秒片尾。与商店公开预告复用主镜头。</td>
+</tr>
 </tbody>
 </table></div>
 <p>Jonas Tyroller 与 Friedemann 的 1:49:51
@@ -402,8 +554,8 @@ HLS</a></td>
 </tr>
 <tr class="odd">
 <td>Steam 商品介绍里的自动循环</td>
-<td>11.583 秒，1170 × 658、60
-帧/秒，循环可逐帧。网页同时提供两种编码，二者共用一段动画。</td>
+<td>11.583 秒，1170 × 658，容器标称 60 帧/秒，解码为 348
+幅画面，循环可逐帧。网页同时提供两种编码，二者共用一段动画。</td>
 <td><a
 href="https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/3631290/extras/16b15c50d1dd18f607f74c03d30972d8.webm">WebM
 动图</a> · <a
@@ -665,7 +817,8 @@ href="https://www.youtube.com/watch?v=1c-5tsSO6_s&amp;t=11s">Friedemann
 href="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3631290/extras/16b15c50d1dd18f607f74c03d30972d8.webm">Steam
 商品说明中的可循环实机视频</a></td>
 <td>1.53–1.93 秒，空托盘的一枚币从右侧喷出并折返</td>
-<td>解码 1170 × 658、标称 60 fps、11.58 秒。保留片中重复帧</td>
+<td>解码 1170 × 658、标称 60 fps、11.58 秒。实际解码 348
+幅，按时间戳取到 60 Hz 网格时保留重复画面，相邻独立画面约差 33 毫秒</td>
 </tr>
 <tr class="even">
 <td><a

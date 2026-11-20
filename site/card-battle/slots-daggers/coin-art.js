@@ -159,6 +159,12 @@
     const coated=.45+.45*alloy.metallic;
     return ambient+.44*d+.10*b**5+.30*b**27+coated*d2**highlightExponent+.075*fresnel*fresnel+.17*soft**5+.65*soft**21+rough;
   }
+  function apronReflection(nx,ny,nz,panel){
+    if(!panel)return 0;
+    const v=2*(ny*eye[1]+nz*eye[2]);
+    const spec=Math.max(0,(nx*v)*panel[0]+(ny*v-eye[1])*panel[1]+(nz*v-eye[2])*panel[2]);
+    return .32*spec**10+.055*spec**4;
+  }
   function raster(b,light,lampX,lampY){
     if(!b.sprite){
       b.sprite=document.createElement('canvas');b.sprite.width=TILE;b.sprite.height=TILE;
@@ -175,13 +181,15 @@
     ];
     const ambient=.057+b.patina+light*.26;
     const lamp=normalized((lampX-b.x)*.012+.15,(lampY-b.y)*.009,1.03);
+    // The returning face catches the pale front apron as it leaves the chute.
+    const panel=b.pattern==='return'?normalized(72-b.x,314-b.y,130-b.z):null;
     for(const f of mesh.faces){
       const norm=project(...f.normal);
       if(norm[1]*eye[1]+norm[2]*eye[2] <= .0001)continue;
       const ids=f.ids,ia=ids[0],A=vertices[ia],la=mesh.points[ia];
       const isFace=f.material<2;
       const bezel=f.material===2?.080:f.material===3?-.03:0;
-      const value=metal(...norm,bezel,ambient,lamp);
+      const value=metal(...norm,bezel,ambient,lamp)+apronReflection(...norm,panel);
       const die=dies[f.material];
       for(let ti=1;ti<ids.length-1;ti++){
         const ib=ids[ti],ic=ids[ti+1],B=vertices[ib],C=vertices[ic],lb=mesh.points[ib],lc=mesh.points[ic];
@@ -201,8 +209,8 @@
             const tx=clamp(Math.floor((lx+1)*.5*dieSize),0,dieSize-1);
             const ty=clamp(Math.floor((ly+1)*.5*dieSize),0,dieSize-1),p=(ty*dieSize+tx)*4;
             const ax=die[p],ay=die[p+1],az=die[p+2];
-            level=metal(m[0]*ax+m[1]*ay+m[2]*az,m[3]*ax+m[4]*ay+m[5]*az,
-              m[6]*ax+m[7]*ay+m[8]*az,die[p+3],ambient+(f.material===1?-.032:.018),lamp);
+            const nx=m[0]*ax+m[1]*ay+m[2]*az,ny=m[3]*ax+m[4]*ay+m[5]*az,nz=m[6]*ax+m[7]*ay+m[8]*az;
+            level=metal(nx,ny,nz,die[p+3],ambient+(f.material===1?-.032:.018),lamp)+apronReflection(nx,ny,nz,panel);
           }else if(f.material===3){
             const t=Math.atan2(ly,lx)*7.96;
             const tooth=t-Math.floor(t);
@@ -363,7 +371,7 @@
           e.count<=3&&e.id%4===3&&e.i===0;
         const specimen=!longJet&&e.i===0&&e.count<=3;
         b.pattern=specimen?'return':longJet?'skip':'scatter';
-        b.z=specimen?80.25:longJet?26+r()*7:59+r()*44;
+        b.z=specimen?85.03:longJet?26+r()*7:59+r()*44;
         b.x=CHUTE.x+(specimen?-3:longJet?-4:(r()-.5)*4);
         const startY=CHUTE.y+(specimen?2:longJet?11:(r()-.5)*12);
         b.y=startY+b.z*LIFT_Y;
@@ -371,18 +379,20 @@
         b.vx=specimen?-1570:longJet?-1940:-(820+r()*1290);
         b.vy=specimen?-765:longJet?-326:mix(-1000,160,fan);
         b.vz=specimen?-150:longJet?-125:-(85+r()*220);
-        b.rollX=specimen?1060:longJet?-1940:mix(-280,540,r());
-        b.rollY=specimen?720:longJet?122.5:mix(-370,535,r());
+        b.rollX=specimen?1074.25:longJet?-1940:mix(-280,540,r());
+        b.rollY=specimen?530:longJet?122.5:mix(-370,535,r());
         b.q=product(axis(0,0,1,r()*TAU),axis(1,.33,0,.5+r()*2));
         b.matrix=basis(b.q);b.height=extent(b);
         b.wx=37+r()*50;b.wy=-58-r()*72;b.wz=(r()-.5)*48;
         if(specimen){
-          // A repeatable edge-first contact for the measured returning throw.
-          b.r=14.535;b.q=[-.519,.430,.626,-.393];b.matrix=basis(b.q);
-          b.wx=45;b.wy=-72;b.wz=8.5;b.height=extent(b);
+          // Chute attitude and angular velocity from the broad face visible
+          // through the first two distinct frames of the returning throw.
+          b.r=15.475;b.q=[.318024,-.878656,-.225906,-.275302];b.matrix=basis(b.q);
+          b.wx=-21.72;b.wy=2.84;b.wz=35.38;b.height=extent(b);
         }
-        b.rebound=specimen?.17:.08+r()*.18;
+        b.rebound=specimen?.1286:.08+r()*.18;
         this.discs.push(b);this.flare(b.x,startY,.78,6);
+        if(specimen)this.chuteSpray(b.x,startY,b.id);
         this.sound('chute',b,.45);
         const info=this.latest;
         if(info&&info.id===e.id){
@@ -401,6 +411,20 @@
         this.flecks.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-23,age:0,life:.08+this.rand()*.13,hot:this.rand()>.66});
       }
     }
+    chuteSpray(x,y,id){
+      // Chips already inside the moving escapement are visible on the release
+      // frame. Thin flakes slow quickly in air; a few stay bright at the lip.
+      // Visual sampling has its own seed, independent of the wallet and solver.
+      const noise=random(this.seed^Math.imul(id,0x632be5ab));
+      for(let i=0;i<15;i++){
+        const jet=i<7,life=.21+noise()*.15;
+        this.flecks.push({x:x+3-noise()*(jet?20:14),y:y-11+noise()*29,
+          vx:jet?-410-noise()*970:(noise()-.70)*165,
+          vy:jet?(noise()-.40)*680:(noise()-.42)*290,
+          drag:jet?8.4+noise()*3:4.4+noise()*2.1,age:0,life,
+          chip:true,wide:noise()>.64,hot:true});
+      }
+    }
     contact(b,floor,kind,other){
       const speed=-b.vz,first=b.firstHit===null;
       b.contacts++;b.base=floor;b.z=floor+b.height;b.support=other?other.id:0;
@@ -412,10 +436,18 @@
         const dx=b.rollX-b.vx,dy=(b.rollY-b.vy)/FLOOR_Y;
         const scale=Math.min(1,Math.max(0,speed)*1.58/(Math.hypot(dx,dy)||1));
         b.vx+=dx*scale;b.vy+=dy*scale*FLOOR_Y;
-        b.wx*=.24;b.wy*=.24;b.wz*=.55;
+        const returning=b.pattern==='return';
+        b.wx*=returning?.5:.24;b.wy*=returning?.5:.24;b.wz*=returning?.5:.55;
       }else{
-        b.vx*=b.pattern==='return'?.45:b.pattern==='skip'?1:.95;b.vy*=b.pattern==='return'?.40:.95;
-        b.wx*=.59;b.wy*=.59;
+        b.vx*=b.pattern==='return'?.4215:b.pattern==='skip'?1:.95;b.vy*=b.pattern==='return'?.5766:.95;
+        const spin=b.pattern==='return'?.983:.59;b.wx*=spin;b.wy*=spin;
+      }
+      if(b.pattern==='return'){
+        // An off-centre normal impulse acts at the lowest point of the rim.
+        // The lever arm is the horizontal component of that contact point.
+        const m=b.matrix,nz=m[8];
+        const impulse=.1301*speed*nz/(b.r*Math.max(.14,Math.sqrt(1-nz*nz)));
+        b.wx+=m[5]*impulse;b.wy-=m[2]*impulse;
       }
       b.vz=speed*(first?b.rebound:.18);
       b.mode=b.vz>78?'air':'roll';if(b.mode==='roll')b.vz=0;
@@ -472,16 +504,17 @@
         b.x+=b.vx*dt;b.y+=b.vy*dt;
         if(b.mode==='roll'){
           const normalZ=b.matrix[8],side=normalZ>=0?1:-1;
-          const seek=60;
+          const grip=b.pattern==='return'?clamp(1-Math.hypot(b.vx,b.vy)/220,.361,1):1;
+          const seek=60*grip;
           b.wx+=b.matrix[5]*side*dt*seek;b.wy-=b.matrix[2]*side*dt*seek;
-          const rotDrag=Math.exp(-8.9*dt);b.wx*=rotDrag;b.wy*=rotDrag;b.wz*=Math.exp(-6.3*dt);
+          const rotDrag=Math.exp(-8.9*grip*dt);b.wx*=rotDrag;b.wy*=rotDrag;b.wz*=Math.exp(-6.3*grip*dt);
           // Settle the convex edge onto the nearest broad face instead of
           // snapping between sprite orientations.
           const tilt=normalized(b.matrix[5]*side,-b.matrix[2]*side,0);
           const away=Math.acos(clamp(normalZ*side,-1,1));
-          if(away>.0001)b.q=product(axis(...tilt,away*(1-Math.exp(-7.8*dt))),b.q);
+          if(away>.0001)b.q=product(axis(...tilt,away*(1-Math.exp(-7.8*grip*dt))),b.q);
           const slipTime=this.time-b.firstHit;
-          const drag=Math.exp(-dt*(slipTime<.25?(b.pattern==='return'?1.05:b.pattern==='skip'?.25:2.04):8.1));b.vx*=drag;b.vy*=drag;
+          const drag=Math.exp(-dt*(slipTime<.25?(b.pattern==='return'?1.303:b.pattern==='skip'?.25:2.04):8.1));b.vx*=drag;b.vy*=drag;
         }
         rotate(b,dt);b.matrix=basis(b.q);b.height=extent(b);
         if(b.mode==='air'){
@@ -508,7 +541,11 @@
       this.pairs();
       this.discs=bodies.filter(b=>b.mode!=='gone');
       if(this.discs.length>MAX_DISCS)this.condense();
-      for(const f of this.flecks){f.age+=dt;f.x+=f.vx*dt;f.y+=f.vy*dt;f.vy+=160*dt;}
+      for(const f of this.flecks){
+        f.age+=dt;f.x+=f.vx*dt;f.y+=f.vy*dt;
+        if(f.chip){const air=Math.exp(-f.drag*dt);f.vx*=air;f.vy=f.vy*air+43*dt;}
+        else f.vy+=160*dt;
+      }
       this.flecks=this.flecks.filter(f=>f.age<f.life);
       const info=this.latest;
       if(info&&this.time-info.start<2.25){
@@ -618,6 +655,14 @@
       }
       for(const f of this.flecks){
         const k=1-f.age/f.life;if(opts.reduce&&k<.40)continue;
+        if(f.chip){
+          const x=Math.round(f.x),y=Math.round(f.y);
+          c.globalAlpha=Math.min(1,k*3);c.fillStyle='#d9c195';
+          c.fillRect(x-1,y,f.wide?4:3,1);
+          if(f.wide&&k>.55)c.fillRect(x,y-1,1,3);
+          c.fillStyle='#fff5d7';c.fillRect(x,y,k>.43?2:1,k>.71?2:1);
+          continue;
+        }
         c.globalAlpha=Math.min(1,k*1.6);c.fillStyle=f.hot?'#f9d990':'#b58c47';
         const size=f.hot&&k>.60?2:1;c.fillRect(Math.round(f.x),Math.round(f.y),size,size);
       }

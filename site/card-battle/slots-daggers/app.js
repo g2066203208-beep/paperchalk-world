@@ -174,10 +174,19 @@ async function run(){
  controls();setupLayout();draw();$('loading').hidden=true;
  telemetry('点 STOP 依次停下三个卷轴，或按空格。');
  new ResizeObserver(()=>{setupLayout();draw()}).observe(display);
- let last=performance.now(),acc=0;
+ let last=performance.now(),acc=0,frame=0,watchdog=0;
+ function nextFrame(){
+  frame=requestAnimationFrame(loop);
+  if(!document.hidden&&!game.paused){
+   // Some embedded mobile browsers temporarily starve rAF while the page is visible.
+   watchdog=setTimeout(()=>{cancelAnimationFrame(frame);loop(performance.now())},54);
+  }
+ }
  document.addEventListener('visibilitychange',()=>{acc=0;last=performance.now();heldSince=0;if(document.hidden)audio.suspend();else if(audio.ac&&!game.paused)audio.unlock()});
  function loop(now){
-  const delta=clamp((now-last)/1000,0,.25);last=now;
+  clearTimeout(watchdog);
+  // Hidden tabs reset the clock below. A visible dropped frame must preserve the payout and reel cadence.
+  const delta=clamp((now-last)/1000,0,2);last=now;
   if(!document.hidden&&!game.paused){
    acc+=delta;
    while(acc>=1/120){game.update(1/120);gfx.update(1/120,game);acc-=1/120;}
@@ -186,9 +195,9 @@ async function run(){
    }
    audio.pump(game);draw();
   }
-  requestAnimationFrame(loop);
+  nextFrame();
  }
- requestAnimationFrame(loop);
+ nextFrame();
 }
 run().catch(e=>{const p=$('loading');p.textContent=e.message+' · 点击重新载入';p.onclick=()=>location.reload();console.error(e)});
 })();

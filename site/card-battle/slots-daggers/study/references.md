@@ -8,7 +8,7 @@
 | --- | --- | --- |
 | [Friedemann · PC 发售片](https://www.youtube.com/watch?v=3ji0GyAcoMw&t=17s) · [Steam 商店](https://store.steampowered.com/app/3631290/) | 17.50–19.52 秒旋转与急停，19.93–20.86 秒金框，20.48–20.63 秒远抛，21.50–21.97 秒密集进账，56.5–57.5 秒敌击 | 下载发行商视频轨，解码 1280 × 720、60 fps、69.83 秒 |
 | [Friedemann · PC 揭晓片](https://www.youtube.com/watch?v=1c-5tsSO6_s&t=11s) | 11.90–13.35 秒蛋怪、30.67–32.09 秒青色墓地、36.29–37.68 秒黄昏蛇怪 | 解码 1280 × 720、60 fps、65.02 秒。三种明暗条件独立测转速 |
-| [Steam 商品说明中的可循环实机视频](https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3631290/extras/16b15c50d1dd18f607f74c03d30972d8.webm) | 1.53–1.93 秒，空托盘的一枚币从右侧喷出并折返 | 解码 1170 × 658、标称 60 fps、11.58 秒。保留片中重复帧 |
+| [Steam 商品说明中的可循环实机视频](https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3631290/extras/16b15c50d1dd18f607f74c03d30972d8.webm) | 1.53–1.93 秒，空托盘的一枚币从右侧喷出并折返 | 解码 1170 × 658、标称 60 fps、11.58 秒。实际解码 348 幅，按时间戳取到 60 Hz 网格时保留重复画面，相邻独立画面约差 33 毫秒 |
 | [主机发售片](https://www.youtube.com/watch?v=Cv-GKTOsgaU&t=54s) · [PlayStation Store](https://store.playstation.com/en-us/concept/10018077) | 54.5–55.1 秒，敌击从 CRT 边灯跨到右侧血槽 | 解码主机商店的 1920 × 1080、60 fps、60.03 秒视频。单独剪辑，部分题材与 PC 相同 |
 | [App Store · iPhone / iPad 预览](https://apps.apple.com/us/app/slots-daggers/id6762803589) | 约 30 秒。检查横向宽屏及 4:3 的机壳范围、滚轮和下方控件 | iPhone 720 × 332、iPad 960 × 720，均为 30 fps，属于同一预览的两种构图 |
 | [Lurk名彻 · 19:44 Demo 试玩](https://www.bilibili.com/video/BV1GQnGzfEWH/?t=471) | 07:51.67–07:52.17 钱包从 21 进账到 36，随后托盘还有币在移动 | 连续实机片段的 852 × 480、30 fps 原始时间戳。独立于宣传片的现金节拍样本 |
