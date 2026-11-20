@@ -24,6 +24,12 @@ for(const item of cases){
  await page.waitForTimeout(400);
  await page.screenshot({path:path.join(out,item.name+'-03-cards.png')});
  const after=await page.evaluate(()=>window.WarbandWhitebox.getState());
+ await page.keyboard.press('v');
+ await page.waitForTimeout(250);
+ const whiteState=await page.evaluate(()=>window.WarbandWhitebox.getState());
+ if(whiteState.mode!=='white')throw Error('geometry mode not activated');
+ await page.screenshot({path:path.join(out,item.name+'-04-geometry-whitebox.png')});
+ await page.keyboard.press('v');
  if(before.supply!==17||after.supply!==14||after.round!==1||after.dropped!==3||after.cards<1||after.pegs<20){throw Error('state regression: '+JSON.stringify({before,after}));}
  if(errors.length)throw Error('browser errors: '+errors.join(' | '));
  results.push({name:item.name,before,after,errors,success:true});
