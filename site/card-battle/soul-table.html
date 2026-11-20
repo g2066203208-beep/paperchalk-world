@@ -2303,6 +2303,12 @@ window.CabinetArt={desk,chassis,portraitChassis,drawer,cap,recess,bolt,panel,pla
     const coated=.45+.45*alloy.metallic;
     return ambient+.44*d+.10*b**5+.30*b**27+coated*d2**highlightExponent+.075*fresnel*fresnel+.17*soft**5+.65*soft**21+rough;
   }
+  function apronReflection(nx,ny,nz,panel){
+    if(!panel)return 0;
+    const v=2*(ny*eye[1]+nz*eye[2]);
+    const spec=Math.max(0,(nx*v)*panel[0]+(ny*v-eye[1])*panel[1]+(nz*v-eye[2])*panel[2]);
+    return .32*spec**10+.055*spec**4;
+  }
   function raster(b,light,lampX,lampY){
     if(!b.sprite){
       b.sprite=document.createElement('canvas');b.sprite.width=TILE;b.sprite.height=TILE;
@@ -2319,13 +2325,15 @@ window.CabinetArt={desk,chassis,portraitChassis,drawer,cap,recess,bolt,panel,pla
     ];
     const ambient=.057+b.patina+light*.26;
     const lamp=normalized((lampX-b.x)*.012+.15,(lampY-b.y)*.009,1.03);
+    // The returning face catches the pale front apron as it leaves the chute.
+    const panel=b.pattern==='return'?normalized(72-b.x,314-b.y,130-b.z):null;
     for(const f of mesh.faces){
       const norm=project(...f.normal);
       if(norm[1]*eye[1]+norm[2]*eye[2] <= .0001)continue;
       const ids=f.ids,ia=ids[0],A=vertices[ia],la=mesh.points[ia];
       const isFace=f.material<2;
       const bezel=f.material===2?.080:f.material===3?-.03:0;
-      const value=metal(...norm,bezel,ambient,lamp);
+      const value=metal(...norm,bezel,ambient,lamp)+apronReflection(...norm,panel);
       const die=dies[f.material];
       for(let ti=1;ti<ids.length-1;ti++){
         const ib=ids[ti],ic=ids[ti+1],B=vertices[ib],C=vertices[ic],lb=mesh.points[ib],lc=mesh.points[ic];
@@ -2345,8 +2353,8 @@ window.CabinetArt={desk,chassis,portraitChassis,drawer,cap,recess,bolt,panel,pla
             const tx=clamp(Math.floor((lx+1)*.5*dieSize),0,dieSize-1);
             const ty=clamp(Math.floor((ly+1)*.5*dieSize),0,dieSize-1),p=(ty*dieSize+tx)*4;
             const ax=die[p],ay=die[p+1],az=die[p+2];
-            level=metal(m[0]*ax+m[1]*ay+m[2]*az,m[3]*ax+m[4]*ay+m[5]*az,
-              m[6]*ax+m[7]*ay+m[8]*az,die[p+3],ambient+(f.material===1?-.032:.018),lamp);
+            const nx=m[0]*ax+m[1]*ay+m[2]*az,ny=m[3]*ax+m[4]*ay+m[5]*az,nz=m[6]*ax+m[7]*ay+m[8]*az;
+            level=metal(nx,ny,nz,die[p+3],ambient+(f.material===1?-.032:.018),lamp)+apronReflection(nx,ny,nz,panel);
           }else if(f.material===3){
             const t=Math.atan2(ly,lx)*7.96;
             const tooth=t-Math.floor(t);
