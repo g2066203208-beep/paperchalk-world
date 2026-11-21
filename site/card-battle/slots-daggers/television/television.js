@@ -497,13 +497,13 @@ function drawTriangle(vertices,uv,kind,n,col,base,mode,pixels,worldPts=null){
     const radius=Math.hypot(wx-3.65,worldPts[0][2]*u+worldPts[1][2]*v+worldPts[2][2]*q-1.23);
     const edge=clamp(1-Math.abs(projectedNormal[2]),0,1);
     const schlick=.04+.96*edge**5;
-    const m=kind==='glassRim'?.76:kind==='glassBase'?.65:kind==='glassLiquid'?.55:.22+schlick*.35;
+    const m=kind==='glassRim'?.66:kind==='glassBase'?.50:kind==='glassLiquid'?.49:.17+schlick*.32;
     const shift=Math.round(projectedNormal[0]*2.2),shiftY=Math.round(projectedNormal[1]*2.0);
     const sx=clamp(x+shift,0,renderW-1),sy=clamp(y+shiftY,0,renderH-1),si=(sy*renderW+sx)*4;
     const amber=kind==='glassLiquid'?[145,185,195]:kind==='glassRim'?[228,239,242]:[168,207,219];
-    const spec=Math.pow(clamp(.41+projectedNormal[0]*-.29+projectedNormal[2]*.59,0,1),22)*54;
+    const spec=Math.pow(clamp(.39+projectedNormal[0]*-.29+projectedNormal[2]*.59,0,1),24)*26;
     const grain=(Math.sin(wx*89+wy*33)*.5+.5)*3;
-    const ca=kind==='glassLiquid'?.72:kind==='glassRim'?.68:kind==='glassBase'?.59:.38;
+    const ca=kind==='glassLiquid'?.52:kind==='glassRim'?.58:kind==='glassBase'?.48:.21;
     frameBuffer[o]=clamp(frameBuffer[si]*(1-ca*m)+amber[0]*ca*m+spec+grain,0,255);
     frameBuffer[o+1]=clamp(frameBuffer[si+1]*(1-ca*m)+amber[1]*ca*m+spec*.94+grain,0,255);
     frameBuffer[o+2]=clamp(frameBuffer[si+2]*(1-ca*m)+amber[2]*ca*m+spec*.87+grain,0,255);
@@ -514,7 +514,17 @@ function drawTriangle(vertices,uv,kind,n,col,base,mode,pixels,worldPts=null){
     // Actual original CabinetArt.wood() pixels UV-mapped onto 3D tabletop.
     const tu=uv[0][0]*u+uv[1][0]*v+uv[2][0]*q,tv=uv[0][1]*u+uv[1][1]*v+uv[2][1]*q;
     const sx=clamp((tu*woodWidth)|0,0,woodWidth-1),sy=clamp((tv*woodHeight)|0,0,woodHeight-1);
-    const src=(sy*woodWidth+sx)*4,k=.97+.15*(1-tv);
+    const src=(sy*woodWidth+sx)*4;
+    // Real contact shadows under the TV feet, houseplant and water glass.
+    // These darken the actual textured 3-D desktop using world XYZ positions.
+    const wx=worldPts[0][0]*u+worldPts[1][0]*v+worldPts[2][0]*q;
+    const wz=worldPts[0][2]*u+worldPts[1][2]*v+worldPts[2][2]*q;
+    const tvFoot=Math.exp(-Math.pow(Math.max(0,Math.abs(wx)-2.71)*1.65,2)-Math.pow((wz-.03)*1.15,2));
+    const plantFoot=Math.exp(-((wx+3.70)**2+(wz-1.14)**2)*7.8);
+    const glassFoot=Math.exp(-((wx-3.65)**2+(wz-1.23)**2)*13.0);
+    const ambientOcclusion=clamp(1-tvFoot*.15-plantFoot*.24-glassFoot*.25,.56,1);
+    const bounce=state.power?.065*Math.exp(-Math.pow((wx+.20)*.30,2)-Math.pow((wz-1.04)*1.4,2)):0;
+    const k=(.97+.15*(1-tv))*ambientOcclusion*(1+bounce);
     frameBuffer[o]=clamp(workWood[src]*1.29*k+18,0,255);
     frameBuffer[o+1]=clamp(workWood[src+1]*1.21*k+15,0,255);
     frameBuffer[o+2]=clamp(workWood[src+2]*1.14*k+12,0,255);
