@@ -207,8 +207,8 @@ function makeScreen(t){
  const H=h,W=w;
  const corridor=sg.createLinearGradient(0,h*.14,w*.80,h);
  corridor.addColorStop(0,'#526c3f');corridor.addColorStop(.55,'#253d24');corridor.addColorStop(1,'#142b17');
- sg.strokeStyle=corridor;sg.lineWidth=2.4;
- for(const [xx,yy] of [[.06,.26],[.20,.38],[.33,.31],[.71,.26],[.89,.36]]){
+ sg.strokeStyle=corridor;sg.lineWidth=state.channel===2?1.4:2.4;
+ for(const [xx,yy] of (state.channel===1?[[.10,.33],[.36,.38],[.75,.39]]:state.channel===2?[[.20,.22],[.48,.38],[.85,.26]]:[[.06,.26],[.20,.38],[.33,.31],[.71,.26],[.89,.36]])){
   const x=xx*W,y=yy*H;
   sg.beginPath();sg.moveTo(x,0);sg.lineTo(x*0.76+W*.12,H);sg.stroke();
  }
