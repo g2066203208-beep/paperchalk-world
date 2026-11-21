@@ -173,6 +173,7 @@ glare.position.set(-2.36,.08,.92);glare.rotation.z=-.20;
 
 // Two true metal knobs and tactile tick marks, no CSS overlay.
 const knobs={};
+const knobTickMatrices=[];
 function makeKnob(name,x,y,r){
  const axis=new THREE.Mesh(new THREE.CylinderGeometry(r*1.20,r*1.2,.045,32),
   blackMetal);axis.rotation.x=Math.PI/2;axis.position.set(x,y,.77);add(axis,name+'-black-bezel');
@@ -182,14 +183,20 @@ function makeKnob(name,x,y,r){
  const pointer=box(.016,.063,.013,x,y+r*.52,.965,blackMetal,name+'-rotating-notch');
  for(let i=0;i<12;i++){
   const a=i*2*Math.PI/12;
-  const m=new THREE.Mesh(new THREE.BoxGeometry(.013,.045,.008),nickel);
-  m.position.set(x+Math.sin(a)*r*1.50,y+Math.cos(a)*r*1.50,.79);
-  m.rotation.z=-a;add(m,name+'-engraved-tick');
+  const obj=new THREE.Object3D();
+  obj.position.set(x+Math.sin(a)*r*1.50,y+Math.cos(a)*r*1.50,.79);
+  obj.rotation.z=-a;obj.updateMatrix();knobTickMatrices.push(obj.matrix.clone());
  }
  knobs[name]={center:new THREE.Vector3(x,y,.90),pointer};
 }
 makeKnob('power',2.63,.55,.176);
 makeKnob('channel',2.63,-.43,.162);
+// One instanced GPU draw, instead of twenty-four individual tick draw calls.
+const ticks=new THREE.InstancedMesh(new THREE.BoxGeometry(.013,.045,.008),
+ nickel,knobTickMatrices.length);
+knobTickMatrices.forEach((m,i)=>ticks.setMatrixAt(i,m));
+ticks.instanceMatrix.needsUpdate=true;
+add(ticks,'both-knobs-original-pixel-machined-ticks');
 const indicator=add(new THREE.Mesh(new THREE.SphereGeometry(.048,12,8),
  new THREE.MeshBasicMaterial({color:'#efae65'})),'on-indicator');
 indicator.position.set(2.64,-1.22,.803);
@@ -201,12 +208,13 @@ for(const x of [-2.17,2.10]){
  box(.56,.047,.78,x,-2.265,-.07,blackMetal,'tv-foot-pad');
 }
 
+const stemMatrices=[];
 function makeStem(a,b,r,material,name){
  const aa=new THREE.Vector3(...a),bb=new THREE.Vector3(...b),dir=bb.clone().sub(aa);
- const mesh=new THREE.Mesh(new THREE.CylinderGeometry(r*.75,r,dir.length(),6),material);
- mesh.position.copy(aa).add(bb).multiplyScalar(.5);
- mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.normalize());
- return add(mesh,name);
+ const ob=new THREE.Object3D();
+ ob.position.copy(aa).add(bb).multiplyScalar(.5);
+ ob.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.clone().normalize());
+ ob.scale.set(r,dir.length(),r);ob.updateMatrix();stemMatrices.push(ob.matrix.clone());
 }
 const soil=mat('#40352b',.95,0),potMat=mat('#ad9e87',.74,.05),rimMat=mat('#e0cfaa',.63,.04);
 function potAndPlant(){
@@ -218,6 +226,7 @@ function potAndPlant(){
  const dirt=new THREE.Mesh(new THREE.CircleGeometry(.322,16),soil);
  dirt.rotation.x=-Math.PI/2;dirt.position.set(cx,base+.494,cz);add(dirt,'pot-soil');
  let seed=101;const rnd=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
+ const leafBuckets=[[],[],[]];
  for(let i=0;i<11;i++){
   const phi=i*2.40,reach=.38+rnd()*.35,height=.58+rnd()*.39;
   const dx=Math.cos(phi),dz=Math.sin(phi);
@@ -233,11 +242,25 @@ function potAndPlant(){
    const m=[bx+side*dz*off*.5,by+.065,bz-side*dx*off*.5];
    const vv=[bx,by,bz, m[0]+dx*.08,m[1]+.055,m[2]+dz*.08,
     ...leafTip,m[0]-dx*.07,m[1]-.025,m[2]-dz*.07];
-   const mesh=new THREE.BufferGeometry();
-   mesh.setAttribute('position',new THREE.Float32BufferAttribute(vv,3));
-   mesh.setIndex([0,1,2,0,2,3]);mesh.computeVertexNormals();
-   add(new THREE.Mesh(mesh,leafMat[(i+j)%3]),'original-game-faceted-leaf');
+   leafBuckets[(i+j)%3].push(vv);
   }
+ }
+ // All branches in one instanced draw, all leaves in only three mesh draws.
+ const branches=new THREE.InstancedMesh(
+  new THREE.CylinderGeometry(.75,1,1,6),stemMat,stemMatrices.length);
+ stemMatrices.forEach((m,i)=>branches.setMatrixAt(i,m));
+ branches.instanceMatrix.needsUpdate=true;
+ add(branches,'batched-original-pixel-plant-branches');
+ for(let b=0;b<3;b++){
+  const vectors=[],faces=[];
+  for(const vv of leafBuckets[b]){
+   const offset=vectors.length/3;vectors.push(...vv);
+   faces.push(offset,offset+1,offset+2,offset,offset+2,offset+3);
+  }
+  const mesh=new THREE.BufferGeometry();
+  mesh.setAttribute('position',new THREE.Float32BufferAttribute(vectors,3));
+  mesh.setIndex(faces);mesh.computeVertexNormals();
+  add(new THREE.Mesh(mesh,leafMat[b]),'batched-faceted-leaf-material-'+b);
  }
 }
 potAndPlant();
@@ -359,7 +382,9 @@ function tick(ms){
  if(elapsed>.8){state.fps=Math.round(realFrames/elapsed);realFrames=0;elapsed=0;}
  // 30 fps is sufficient for a stationary tabletop. Avoid busy 60fps polling
  // and never redraw the geometry pixel-by-pixel on the JavaScript main thread.
- const period=1000/(state.dragging?45:30);
+ // Desktop GPUs can display ~50 frames with no CPU software rasterization;
+ // cap smaller mobile viewports conservatively to save heat and battery.
+ const period=1000/(state.dragging?55:window.innerWidth>=1000?50:30);
  if(!invalidated&&ms-lastPaint<period)return;
  const started=performance.now();
  if(invalidated||ms-state.lastProgramAt>1000/15){
