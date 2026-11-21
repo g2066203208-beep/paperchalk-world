@@ -53,7 +53,7 @@ function ensureWorkSurface(){
 const buffer=document.createElement('canvas');buffer.width=496;buffer.height=324;
 const sg=buffer.getContext('2d',{alpha:false});
 const W=()=>window.innerWidth,H=()=>window.innerHeight;
-const state={cacheStamp:0,opaqueFacesRendered:0,yaw:-9,pitch:9,power:true,channel:0,powerDial:.36,channelDial:-.65,transition:'boot',transitionAt:performance.now()/1000,illum:.8,glare:1,seconds:0,frames:0,fps:0,dragging:false,pointerX:0,pointerY:0,viewW:1,viewH:1,meshCount:0,screenTriCount:0,errors:[],timeStep:0,flash:1,pressCount:0,metalSample:0};
+const state={cacheStamp:0,opaqueFacesRendered:0,yaw:-17,pitch:11,power:true,channel:0,powerDial:.36,channelDial:-.65,transition:'boot',transitionAt:performance.now()/1000,illum:.8,glare:1,seconds:0,frames:0,fps:0,dragging:false,pointerX:0,pointerY:0,viewW:1,viewH:1,meshCount:0,screenTriCount:0,errors:[],timeStep:0,flash:1,pressCount:0,metalSample:0};
 const model=[],transparent=[],crt=[];
 const add=(pts,kind='olive',factor=0,meta={})=>model.push({pts,kind,factor,...meta});
 function rounded(cx,cy,w,h,r,z,segments=5){
@@ -166,8 +166,8 @@ function deskMesh(){
  for(const xx of [-3.79,3.79])for(const zz of [-1.44,1.48])
   box(xx-.28,xx+.28,-3.65,-2.53,zz-.29,zz+.29,'tableLeg');
  for(const xx of [-2.25,2.13]){
-  box(xx-.42,xx+.42,-2.25,-2.05,-.39,.55,'recessDark');
-  box(xx-.40,xx+.40,-2.08,-2.025,-.36,.51,'tableEdge');
+  box(xx-.42,xx+.42,-2.29,-1.98,-.39,.55,'shadowSteel');
+  box(xx-.40,xx+.40,-2.19,-1.96,-.36,.51,'edgeMetal');
  }
 }
 function plantMesh(){
@@ -239,9 +239,9 @@ function glassMesh(){
  const ring=(r,h)=>Array.from({length:N},(_,i)=>{
   const a=i*TAU/N;return [cx+Math.cos(a)*r,y+h,cz+Math.sin(a)*r];
  });
- const outerBottom=ring(.186,.037),outerTop=ring(.224,.77);
- const innerBottom=ring(.143,.105),innerTop=ring(.185,.765);
- const waterRim=ring(.157,.46),waterCenter=[cx,y+.46,cz],baseCenter=[cx,y+.036,cz];
+ const outerBottom=ring(.186,.037),outerTop=ring(.247,.63);
+ const innerBottom=ring(.143,.105),innerTop=ring(.210,.627);
+ const waterRim=ring(.184,.37),waterCenter=[cx,y+.37,cz],baseCenter=[cx,y+.036,cz];
  for(let i=0;i<N;i++){
   const j=(i+1)%N;
   transparent.push({pts:[outerBottom[i],outerBottom[j],outerTop[j],outerTop[i]],kind:'glassClear'});
@@ -484,16 +484,16 @@ function drawTriangle(vertices,uv,kind,n,col,base,mode,pixels,worldPts=null){
     const radius=Math.hypot(wx-3.65,worldPts[0][2]*u+worldPts[1][2]*v+worldPts[2][2]*q-1.23);
     const edge=clamp(1-Math.abs(projectedNormal[2]),0,1);
     const schlick=.04+.96*edge**5;
-    const m=kind==='glassRim'?.73:kind==='glassBase'?.57:kind==='glassLiquid'?.42:.16+schlick*.38;
+    const m=kind==='glassRim'?.46:kind==='glassBase'?.30:kind==='glassLiquid'?.35:.095+schlick*.26;
     const shift=Math.round(projectedNormal[0]*2.2),shiftY=Math.round(projectedNormal[1]*2.0);
     const sx=clamp(x+shift,0,renderW-1),sy=clamp(y+shiftY,0,renderH-1),si=(sy*renderW+sx)*4;
-    const amber=kind==='glassLiquid'?[95,116,116]:kind==='glassRim'?[205,213,209]:[183,197,202];
-    const spec=Math.pow(clamp(.42+projectedNormal[0]*-.49+projectedNormal[2]*.74,0,1),16)*120;
+    const amber=kind==='glassLiquid'?[128,163,164]:kind==='glassRim'?[189,208,206]:[135,165,173];
+    const spec=Math.pow(clamp(.29+projectedNormal[0]*-.29+projectedNormal[2]*.59,0,1),22)*32;
     const grain=(Math.sin(wx*89+wy*33)*.5+.5)*3;
-    const ca=kind==='glassLiquid'?.62:kind==='glassRim'?.78:kind==='glassBase'?.66:.28;
-    frameBuffer[o]=clamp(frameBuffer[si]*(1-ca)+amber[0]*ca*m+spec+grain,0,255);
-    frameBuffer[o+1]=clamp(frameBuffer[si+1]*(1-ca)+amber[1]*ca*m+spec*.94+grain,0,255);
-    frameBuffer[o+2]=clamp(frameBuffer[si+2]*(1-ca)+amber[2]*ca*m+spec*.87+grain,0,255);
+    const ca=kind==='glassLiquid'?.43:kind==='glassRim'?.34:kind==='glassBase'?.26:.135;
+    frameBuffer[o]=clamp(frameBuffer[si]*(1-ca*m)+amber[0]*ca*m+spec+grain,0,255);
+    frameBuffer[o+1]=clamp(frameBuffer[si+1]*(1-ca*m)+amber[1]*ca*m+spec*.94+grain,0,255);
+    frameBuffer[o+2]=clamp(frameBuffer[si+2]*(1-ca*m)+amber[2]*ca*m+spec*.87+grain,0,255);
     frameBuffer[o+3]=255;
     continue;
    }
@@ -588,8 +588,8 @@ function prepareGeometry(){
  physical.width=renderW;physical.height=renderH;
  const oldW=viewW,oldH=viewH,oldScale=scale;
  viewW=renderW;viewH=renderH;
- scale=Math.min(viewW/8.5,viewH/5.65);
- if(viewW<viewH)scale=Math.min(viewW/7.2,viewH/5.45);
+ scale=Math.min(viewW/9.7,viewH/6.85);
+ if(viewW<viewH)scale=Math.min(viewW/9.8,viewH/7.55);
  scale*=1-.10*Math.abs(state.yaw)/37;
  opaqueBuffer=new Uint8ClampedArray(renderW*renderH*4);
  depthBuffer=new Float32Array(renderW*renderH);depthBuffer.fill(-1e10);
@@ -663,7 +663,7 @@ function draw(t){
   geometryDirty=true;
  }
  viewW=w;viewH=h;
- scale=Math.min(w/8.5,h/5.65);if(w<h)scale=Math.min(w/7.2,h/5.45);
+ scale=Math.min(w/9.7,h/6.85);if(w<h)scale=Math.min(w/9.8,h/7.55);
  scale*=1-.10*Math.abs(state.yaw)/37;
  g.setTransform(dpr,0,0,dpr,0,0);
  g.fillStyle='#000';g.fillRect(0,0,w,h);
@@ -743,13 +743,13 @@ screen.addEventListener('pointerup',e=>{
  if(previous.control==='channel')switchChannel(1);
 });
 screen.addEventListener('pointercancel',()=>{start=null;state.dragging=false});
-screen.addEventListener('dblclick',()=>{state.yaw=-9;state.pitch=9;geometryDirty=true;});
+screen.addEventListener('dblclick',()=>{state.yaw=-17;state.pitch=11;geometryDirty=true;});
 window.addEventListener('keydown',e=>{
  if(e.code==='Space'){e.preventDefault();if(!e.repeat)switchPower();}
  if(e.code==='ArrowLeft'){state.yaw=clamp(state.yaw-3,-37,37);geometryDirty=true;}
  if(e.code==='ArrowRight'){state.yaw=clamp(state.yaw+3,-37,37);geometryDirty=true;}
  if(e.code==='KeyC'){switchChannel(1);}
- if(e.code==='KeyR'){state.yaw=-9;state.pitch=9;if(!state.power)switchPower();geometryDirty=true;}
+ if(e.code==='KeyR'){state.yaw=-17;state.pitch=11;if(!state.power)switchPower();geometryDirty=true;}
  if(e.code==='Escape')location.href='../../soul-table.html';
 });
 requestAnimationFrame(loop);
