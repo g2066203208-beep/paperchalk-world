@@ -23,7 +23,7 @@ const output=document.createElement('canvas');output.width=496;output.height=324
 const out=output.getContext('2d',{alpha:false});
 // The actual original game's low-res scene renderer, not a substitute.
 const worldFrame=document.createElement('canvas');worldFrame.width=328;worldFrame.height=179;
-const worldContext=worldFrame.getContext('2d');let worldAt=-1;
+const worldContext=worldFrame.getContext('2d');let worldAt=-1,worldFramesRendered=0;
 out.imageSmoothingEnabled=false;
 for(const [key,url] of Object.entries(sources)){
  const im=new Image();actors[key]=im;
@@ -209,7 +209,7 @@ function documentary(t){
  // Original player's own pixel renderer fills the whole programme backdrop;
  // no fake film-style filter and no hand-copied actor.
  if(window.WorldArt?.draw){
-  if(t-worldAt>1/12){window.WorldArt.draw(worldContext,'warden',t,{wind:.14});worldAt=t;}
+  if(t-worldAt>1/12){window.WorldArt.draw(worldContext,'warden',t,{wind:.14});worldAt=t;worldFramesRendered++;}
   ctx.save();ctx.imageSmoothingEnabled=false;ctx.drawImage(worldFrame,0,16,248,130);ctx.restore();
  }
  rect(0,16,248,19,'rgba(10,17,26,.76)');
@@ -270,6 +270,6 @@ function frame(ch,t,guide=false){
 }
 window.WorkTVBroadcast=Object.freeze({
  labels,ids,scripts,channelBrief,frame,portraitSources:sources,
- status:()=>({channels:labels.length,loadedPortraits:loaded,errors:errors.slice(),hostIsCanonical:!!actors.host?.naturalWidth,hostL2D:hostReady,originalGameBreathRig:!!hostRig,originalWorldArt:!!window.WorldArt?.draw,originalPixelFont:!!window.SlotStudy?.label})
+ status:()=>({channels:labels.length,loadedPortraits:loaded,errors:errors.slice(),hostIsCanonical:!!actors.host?.naturalWidth,hostL2D:hostReady,originalGameBreathRig:!!hostRig,originalWorldArt:!!window.WorldArt?.draw,worldFramesRendered,originalPixelFont:!!window.SlotStudy?.label})
 });
 })();
