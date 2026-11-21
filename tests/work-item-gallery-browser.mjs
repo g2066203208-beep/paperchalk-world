@@ -13,7 +13,12 @@ for(const v of [{name:'desktop-1440x900',width:1440,height:900},{name:'phone-390
  const page=await ctx.newPage(),errors=[];
  page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
  await page.goto('http://127.0.0.1:4173/card-battle/slots-daggers/coin-lab/items.html',{waitUntil:'domcontentloaded'});
- await page.waitForFunction(()=>window.WorkCard3DQA?.state().ready&&window.WorkCard3DQA?.state().artwork,{timeout:25000});
+ await page.waitForTimeout(2500);
+ const startup=await page.evaluate(()=>({qa:typeof WorkCard3DQA,probe:typeof WorkCardProbe,status:document.querySelector('#renderStatus')?.textContent,qaState:window.WorkCard3DQA?.state(),images:[...document.images].slice(0,6).map(i=>({src:i.getAttribute('src'),width:i.naturalWidth}))}));
+ console.log('STARTUP',v.name,JSON.stringify({startup,errors}));
+ await page.screenshot({path:path.join(out,v.name+'-00-startup-debug.png'),fullPage:true});
+ if(errors.length)throw Error('BROWSER PAGE ERRORS: '+errors.join(' | '));
+ await page.waitForFunction(()=>window.WorkCard3DQA?.state().ready&&window.WorkCard3DQA?.state().artwork,{timeout:12000});
  await page.waitForTimeout(650);
  const initial=await page.evaluate(()=>WorkCard3DQA.state());
  if(initial.geometryVertices!==192||initial.geometryFaces!==162||initial.spriteOpaque<8000||initial.shaderScale!==380)throw Error('REAL MESH / PIXEL SHADER INVALID: '+JSON.stringify(initial));
