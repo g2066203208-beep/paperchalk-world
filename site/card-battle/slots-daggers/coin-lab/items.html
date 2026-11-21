@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#121812">
+<title>WORK · 多物品展示研究室 · 人物卡</title>
+<style>
+:root{
+  --bg:#101610;--panel:#263126;--soft:#91a088;--gold:#e4c27d;--gold2:#9c8454;--line:#7f704c;--ink:#f1e1b8;--deep:#0c130d;
+  --shadow:0 14px 34px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.04);
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:radial-gradient(circle at 50% 0%,#243124 0%,#101610 56%,#090d09 100%);color:#d3c6a5;font:14px/1.45 system-ui,"Noto Sans SC",sans-serif}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.08;background:repeating-linear-gradient(0deg,transparent 0 2px,#081008 3px 4px);mix-blend-mode:overlay}
+a{color:var(--gold)}
+button{font:inherit;color:inherit;background:none;border:none}
+.wrap{max-width:1500px;margin:0 auto;padding:18px 18px 24px}
+.header{display:flex;gap:14px;justify-content:space-between;align-items:flex-end;padding:0 0 14px;border-bottom:1px solid rgba(230,199,129,.28)}
+.brand small{display:block;color:#94a28f;font:11px/1 monospace;letter-spacing:.18em;margin-bottom:8px}
+.brand h1{margin:0;color:#f4e2b3;font:600 clamp(26px,3vw,38px)/1.1 Georgia,"Noto Serif SC",serif;letter-spacing:.04em}
+.brand p{margin:.55rem 0 0;color:#aab09c;max-width:820px;font-size:13px}
+.top-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.pill,.mini-btn{border:1px solid rgba(225,193,123,.34);background:linear-gradient(180deg,#2b392d,#161f17);border-radius:999px;padding:8px 12px;box-shadow:var(--shadow)}
+.mini-btn{border-radius:6px;cursor:pointer;padding:8px 11px;transition:.18s}
+.mini-btn:hover{transform:translateY(-1px);border-color:rgba(245,214,142,.65);color:#fff1c6}
+.layout{display:grid;grid-template-columns:300px minmax(460px,1fr) 340px;gap:16px;margin-top:16px}
+.panel{background:linear-gradient(180deg,rgba(40,52,41,.96),rgba(22,29,22,.98));border:1px solid rgba(228,194,125,.24);border-radius:12px;box-shadow:var(--shadow);min-width:0}
+.panel-inner{padding:14px}
+.panel-title{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.panel-title h2,.panel-title h3{margin:0;font:600 15px Georgia,"Noto Serif SC",serif;color:#ecd298;letter-spacing:.04em}
+.meta{font:11px monospace;color:#9faa91}
+.category-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.category{padding:7px 10px;border:1px solid rgba(221,191,127,.18);background:#182018;border-radius:6px;color:#b8b497;cursor:pointer;transition:.18s}
+.category.active{background:linear-gradient(180deg,#695637,#403524);border-color:#c8a96b;color:#fff0c1}
+.category.disabled{opacity:.5;cursor:not-allowed}
+.item-list{display:flex;flex-direction:column;gap:10px;max-height:740px;overflow:auto;padding-right:4px}
+.item-list::-webkit-scrollbar{width:8px}.item-list::-webkit-scrollbar-thumb{background:#4d563f;border-radius:10px}.item-list::-webkit-scrollbar-track{background:#182018}
+.item{display:grid;grid-template-columns:72px 1fr auto;gap:10px;align-items:center;padding:9px;border:1px solid rgba(230,198,127,.14);background:linear-gradient(180deg,#202a21,#151b16);border-radius:10px;cursor:pointer;transition:.18s;min-width:0}
+.item:hover{transform:translateY(-1px);border-color:rgba(241,212,143,.5)}
+.item.active{border-color:#d8b16b;background:linear-gradient(180deg,#433723,#272116);box-shadow:0 0 0 1px rgba(255,228,170,.08) inset, 0 8px 24px rgba(0,0,0,.28)}
+.thumb{width:72px;height:96px;border-radius:8px;background:radial-gradient(circle at 50% 28%,#455445,#111611 70%);border:1px solid rgba(224,191,117,.25);display:grid;place-items:center;overflow:hidden}
+.thumb canvas{width:62px;height:88px;display:block;border-radius:6px}
+.item-name{font-weight:700;color:#f0ddb2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item-sub{font-size:12px;color:#9fac96;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tag{font:11px monospace;color:#edcf8e;border:1px solid rgba(237,207,142,.28);padding:5px 8px;border-radius:999px;background:rgba(238,205,133,.06)}
+.stage-wrap{display:grid;grid-template-rows:auto 1fr auto;min-height:790px}
+.stage-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 0;gap:12px;flex-wrap:wrap}
+.stage-head h2{margin:0;color:#f0dcae;font:600 18px Georgia,"Noto Serif SC",serif}
+.stage-head p{margin:4px 0 0;color:#9fab93;font-size:12px}
+.stage-actions{display:flex;gap:8px;flex-wrap:wrap}
+.stage{position:relative;margin:12px 16px 0;border-radius:14px;min-height:610px;overflow:hidden;background:
+ radial-gradient(circle at 50% 30%,rgba(73,88,58,.7),transparent 38%),
+ radial-gradient(circle at 50% 72%,rgba(0,0,0,.38),transparent 38%),
+ linear-gradient(180deg,#1d261d,#0e130f 68%);
+ border:1px solid rgba(231,198,128,.22)}
+.stage::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.03) 45%,transparent 100%);pointer-events:none}
+.stage-grid{position:absolute;inset:0;background:
+ linear-gradient(rgba(255,255,255,.028) 1px,transparent 1px),
+ linear-gradient(90deg,rgba(255,255,255,.028) 1px,transparent 1px);
+ background-size:48px 48px;mask-image:linear-gradient(180deg,transparent,black 18%,black 82%,transparent)}
+.viewer{position:absolute;inset:0;display:grid;place-items:center;perspective:1400px;touch-action:none;user-select:none}
+.card-shell{width:min(53vw,380px);max-width:380px;aspect-ratio:1024/1536;position:relative;transform-style:preserve-3d;filter:drop-shadow(0 30px 40px rgba(0,0,0,.52));transition:transform .08s linear}
+.card-face{position:absolute;inset:0;border-radius:34px;overflow:hidden;backface-visibility:hidden;transform-style:preserve-3d;background:#1d241d;border:1px solid rgba(236,204,144,.26)}
+.card-face.back{transform:rotateY(180deg)}
+.card-face canvas{width:100%;height:100%;display:block}
+.floating-note{position:absolute;z-index:3;padding:8px 10px;border-radius:8px;border:1px solid rgba(227,194,123,.25);background:rgba(16,22,17,.78);backdrop-filter:blur(6px);font:11px monospace;color:#c6c59f;box-shadow:var(--shadow)}
+.floating-note.lt{left:18px;top:18px}.floating-note.rt{right:18px;top:18px}.floating-note.lb{left:18px;bottom:18px}.floating-note.rb{right:18px;bottom:18px}
+.controls{padding:12px 16px 16px;display:grid;gap:10px}
+.ctrl-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;align-items:center}
+.slider{display:grid;grid-template-columns:66px 1fr 50px;gap:10px;align-items:center;color:#cdbd94;font-size:12px}
+input[type=range]{width:100%;accent-color:#bf9f63}
+.out{font:12px monospace;color:#efd7a1;text-align:right}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.stat-box{padding:10px 12px;border:1px solid rgba(221,191,126,.18);border-radius:10px;background:linear-gradient(180deg,#1a221b,#121713)}
+.stat-box strong{display:block;color:#f0d59c;font:700 22px/1.15 Georgia,serif}.stat-box span{color:#9ba692;font:11px monospace}
+.desc{color:#bcc2af;font-size:13px;margin:0}
+.layer-list{display:grid;gap:8px}.layer{padding:10px 12px;border-radius:10px;border:1px solid rgba(228,197,129,.14);background:linear-gradient(180deg,#192119,#111711)}
+.layer strong{display:block;color:#f0d8a2;margin-bottom:3px}.layer span{color:#a3ae97;font-size:12px}
+.badge-bar{display:flex;flex-wrap:wrap;gap:6px}.badge{font:11px monospace;color:#ebcd8a;border:1px solid rgba(235,205,138,.24);border-radius:999px;padding:4px 8px;background:rgba(235,205,138,.05)}
+.foot{margin-top:16px;color:#92a089;font:11px monospace;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+@media (max-width:1180px){.layout{grid-template-columns:280px 1fr}.side-info{grid-column:1 / -1}.stage-wrap{min-height:unset}}
+@media (max-width:780px){.wrap{padding:12px}.layout{grid-template-columns:1fr}.stage{min-height:520px}.card-shell{width:min(78vw,330px)}.header{align-items:flex-start;flex-direction:column}.top-actions{justify-content:flex-start}.stage-head{padding-top:12px}.stats{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="header">
+    <div class="brand">
+      <small>WORK · CHARACTER CARD SHOWCASE / PROTOTYPE</small>
+      <h1>多物品展示研究室 · 人物卡首版</h1>
+      <p>把原来单物品展示界面，扩成可浏览多个物品的展示台：左侧总览选择，中央单件聚焦，右侧拆解材质与开发说明。当前先做“人物卡”，后续可继续接入遗物、设施、消耗品与召唤物。</p>
+    </div>
+    <div class="top-actions"><a class="mini-btn" href="./index.html">← 金币3D研究室</a><a class="mini-btn" href="../../soul-table.html">原老虎机</a>
+      <div class="pill">当前分类：人物卡</div>
+      <button id="autoBtn" class="mini-btn">自动旋转 · ON</button>
+      <button id="flipBtn" class="mini-btn">翻面</button>
+      <button id="resetBtn" class="mini-btn">重置视角</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel">
+      <div class="panel-inner">
+        <div class="panel-title"><h2>物品总览</h2><span class="meta">GALLERY / SELECT ONE</span></div>
+        <div class="category-bar">
+          <button class="category active">人物卡</button>
+          <button class="category disabled">遗物</button>
+          <button class="category disabled">设施</button>
+          <button class="category disabled">消耗品</button>
+        </div>
+        <div id="itemList" class="item-list"></div>
+      </div>
+    </section>
+
+    <section class="panel stage-wrap">
+      <div class="stage-head">
+        <div>
+          <h2 id="heroTitle">—</h2>
+          <p id="heroSubtitle">—</p>
+        </div>
+        <div class="stage-actions badge-bar" id="heroBadges"></div>
+      </div>
+
+      <div class="stage">
+        <div class="stage-grid"></div>
+        <div class="floating-note lt">CLICK ITEM / DRAG CARD</div>
+        <div class="floating-note rt" id="noteRarity">RARITY · —</div>
+        <div class="floating-note lb" id="noteFrame">WORK METAL FRAME / EMBOSSED</div>
+        <div class="floating-note rb" id="noteStats">ATK 0 / HP 0</div>
+        <div id="viewer" class="viewer">
+          <div id="cardShell" class="card-shell">
+            <div class="card-face front"><canvas id="cardFront" width="1024" height="1536"></canvas></div>
+            <div class="card-face back"><canvas id="cardBack" width="1024" height="1536"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="ctrl-row">
+          <label class="slider"><span>水平</span><input id="yaw" type="range" min="-38" max="38" value="-10"><output id="yawOut" class="out">-10°</output></label>
+          <label class="slider"><span>俯仰</span><input id="pitch" type="range" min="-28" max="28" value="8"><output id="pitchOut" class="out">8°</output></label>
+        </div>
+        <p class="desc" id="heroDesc"></p>
+      </div>
+    </section>
+
+    <aside class="panel side-info">
+      <div class="panel-inner">
+        <div class="panel-title"><h3>卡牌拆解</h3><span class="meta">SAME WORK LANGUAGE / NEW OBJECT</span></div>
+        <div class="stats">
+          <div class="stat-box"><strong id="costStat">0</strong><span>召募费用 / COST</span></div>
+          <div class="stat-box"><strong id="rareStat">—</strong><span>稀有度 / RARITY</span></div>
+          <div class="stat-box"><strong id="atkStat">0</strong><span>攻击 / ATTACK</span></div>
+          <div class="stat-box"><strong id="hpStat">0</strong><span>生命 / HEALTH</span></div>
+        </div>
+        <div class="panel-title" style="margin-top:14px"><h3>材质层级</h3><span class="meta">DEVELOPMENT NOTES</span></div>
+        <div class="layer-list" id="layerList"></div>
+        <div class="panel-title" style="margin-top:14px"><h3>设计原则</h3><span class="meta">WHY THIS LAYOUT WORKS</span></div>
+        <div class="layer-list">
+          <div class="layer"><strong>1. 左总览 / 中聚焦 / 右拆解</strong><span>一次能看很多物品，但视觉重心只保留一个对象，适合你后面继续把遗物、武器、设施都塞进来。</span></div>
+          <div class="layer"><strong>2. 卡牌视觉语言参考 Work 的金属光照</strong><span>当前为厚卡、金属边、压印层、受光高光和翻面演示；尚未接入金币原版 CPU 浮雕光栅器及 GitHub 角色立绘。</span></div>
+          <div class="layer"><strong>3. 先做人物卡，后面横向扩展最快</strong><span>卡体结构、控制台、筛选总览都已经搭好，后续只要换模型与浮雕内容即可扩类。</span></div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="foot">
+    <span>Prototype focus：把单物品研究台升级为“多物品单件审阅台”。</span>
+    <span>当前仅完成人物卡分类，但已具备多物品浏览骨架。</span>
+  </footer>
+</div>
+
+<script>
+const characters = [
+  {
+    id:'hunter',
+    name:'猎人团长',
+    org:'猎人团 / 冷峻讨伐线',
+    role:'远程压制 · 首席追猎',
+    rarity:'SSR', cost:5, atk:8, hp:11, frame:'#caa56b', accent:'#8a4f3e', panel:'#3a2b24',
+    symbol:'✦', portrait:'hunter', badges:['HUNTER','RANGED','COMMAND'],
+    desc:'以 Work 金属边框语汇做成长方厚卡：重框、压印徽章、浮雕边条、局部珐琅色块，整体更像一件可握在手中的贵重实体卡。',
+    skill:'追猎号令',
+    layers:[
+      ['金属外框','厚实黄铜边框，倒角比金币更缓，保留 Work 式暖金高光。'],
+      ['中央肖像窗','用弧拱形肖像窗聚焦角色轮廓，替代金币的圆形主纹章。'],
+      ['下方数据铭板','费用、攻击、生命独立压印在底部铭板，更利于读数。'],
+      ['卡背印记','翻面后是组织纹章与十字导轨，便于抽卡和叠牌时识别。'],
+    ]
+  },
+  {
+    id:'doctor',
+    name:'猎人医生',
+    org:'猎人团 / 医师支援线',
+    role:'治疗净化 · 战地医师',
+    rarity:'SR', cost:4, atk:4, hp:10, frame:'#c0aa75', accent:'#52726a', panel:'#253334',
+    symbol:'✚', portrait:'doctor', badges:['DOCTOR','SUPPORT','PURIFY'],
+    desc:'同样的厚卡体，但把主色压到冷绿青铜，突出“药剂、净化、医疗器械”气质；不破坏整套 Work 风格的一致性。',
+    skill:'净化注剂',
+    layers:[
+      ['金属外框','与主卡体一致的黄铜压边，但在内缘增加冷绿釉色。'],
+      ['肖像浮雕','帽檐、面罩和针剂轮廓做成浅浮雕，受光时比平涂更有层次。'],
+      ['技能带','采用细长釉面铭条承载技能名，像旧式仪器铭牌。'],
+      ['底部统计区','数值板块与角色肖像分层，避免大面积信息互相打架。'],
+    ]
+  },
+  {
+    id:'engineer',
+    name:'农耕工程师',
+    org:'农民组织 / 后勤建造线',
+    role:'搭建设施 · 机关布置',
+    rarity:'SR', cost:3, atk:3, hp:9, frame:'#c5a871', accent:'#6f7e44', panel:'#2e3320',
+    symbol:'⚙', portrait:'engineer', badges:['ENGINEER','UTILITY','BUILD'],
+    desc:'工程师版更强调工具、齿轮和木铁混合工艺；同一个卡体结构，换内容就能快速扩展整套人物卡。',
+    skill:'野战工棚',
+    layers:[
+      ['主框工艺','上层金属、下层暗绿底板，边缘增加铆钉感。'],
+      ['中央角色窗','角色手持工具的轮廓读起来明确，方便后续接真正立绘。'],
+      ['职业纹章','用齿轮取代皇冠形徽章，形成职业识别。'],
+      ['背面标识','卡背保留统一组织编号和收藏序号。'],
+    ]
+  },
+  {
+    id:'vampire',
+    name:'吸血鬼少女',
+    org:'吸血鬼 / 夜宴系',
+    role:'吸血连击 · 生命夺取',
+    rarity:'SSR', cost:5, atk:7, hp:9, frame:'#caa56b', accent:'#6f3152', panel:'#2f1d28',
+    symbol:'☾', portrait:'vampire', badges:['VAMPIRE','LEECH','NIGHT'],
+    desc:'保留 Work 的黄铜框，但把角色窗和装饰花纹拉向夜宴感，后续更适合与哥特或戏剧组织并存。',
+    skill:'绯夜连吻',
+    layers:[
+      ['外框金属','温暖黄铜与暗紫珐琅形成对比，保住整体系列感。'],
+      ['肖像窗','长发、披肩与礼服轮廓会比金币图腾更具人物识别度。'],
+      ['装饰纹样','花叶、月牙、血滴符号都放进浮雕层，而不是平涂图案。'],
+      ['底部数据区','保留可读性优先，避免因为华丽花纹影响战斗读数。'],
+    ]
+  },
+  {
+    id:'ringmaster',
+    name:'马戏团团长',
+    org:'马戏团 / 演出调度线',
+    role:'召唤表演 · 控场增益',
+    rarity:'R', cost:2, atk:2, hp:6, frame:'#bf9b60', accent:'#8b4331', panel:'#33251f',
+    symbol:'♜', portrait:'ringmaster', badges:['CIRCUS','CONTROL','SHOW'],
+    desc:'这张卡更像旧戏院的贵宾戏票：边框结构不变，但中央视觉改成舞台拱门与高礼帽形轮廓。',
+    skill:'开幕礼炮',
+    layers:[
+      ['门型肖像框','用舞台拱门替换常规肖像窗，直接体现组织气质。'],
+      ['装饰金边','仍沿用 Work 金属反光风格，避免跳成另一套美术。'],
+      ['标题铭牌','更适合展示角色名和职业名，利于系列统一。'],
+      ['背面图章','背面纹章可继续扩展为整组组织卡背系统。'],
+    ]
+  },
+  {
+    id:'guard',
+    name:'木桶守卫',
+    org:'农民组织 / 防守线',
+    role:'前排承伤 · 护卫掩体',
+    rarity:'N', cost:1, atk:1, hp:7, frame:'#b9985e', accent:'#665a3d', panel:'#2c271a',
+    symbol:'🛡', portrait:'guard', badges:['GUARD','TANK','COMMON'],
+    desc:'最低稀有度也不是廉价 UI，而是结构更朴素、装饰更少的实体卡，读起来依旧统一。',
+    skill:'锅盖防线',
+    layers:[
+      ['基础框体','减少复杂装饰，但保留同一套厚度与受光规则。'],
+      ['角色轮廓','木桶帽和锅盖盾牌让低稀有度角色也有明确识别。'],
+      ['信息区','基础卡更应强调一眼读懂，因此装饰最少。'],
+      ['卡背统一','低稀有度仍用统一卡背，保证整套牌叠放观感。'],
+    ]
+  },
+];
+
+const itemList = document.getElementById('itemList');
+const heroTitle = document.getElementById('heroTitle');
+const heroSubtitle = document.getElementById('heroSubtitle');
+const heroBadges = document.getElementById('heroBadges');
+const heroDesc = document.getElementById('heroDesc');
+const costStat = document.getElementById('costStat');
+const rareStat = document.getElementById('rareStat');
+const atkStat = document.getElementById('atkStat');
+const hpStat = document.getElementById('hpStat');
+const layerList = document.getElementById('layerList');
+const noteRarity = document.getElementById('noteRarity');
+const noteStats = document.getElementById('noteStats');
+const noteFrame = document.getElementById('noteFrame');
+const cardShell = document.getElementById('cardShell');
+const frontCanvas = document.getElementById('cardFront');
+const backCanvas = document.getElementById('cardBack');
+const fctx = frontCanvas.getContext('2d');
+const bctx = backCanvas.getContext('2d');
+let current = characters[0];
+let flipped = false, auto = true;
+let yaw = -10, pitch = 8;
+let drag = null;
+let spin = -10;
+
+const rarityMap = {N:'普通',R:'稀有',SR:'超稀有',SSR:'史诗'};
+const rarityTone = {N:'#a78e60',R:'#b98d57',SR:'#c1a97a',SSR:'#dfb76d'};
+
+function roundedRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+function fillRounded(ctx,x,y,w,h,r,fill,stroke){roundedRect(ctx,x,y,w,h,r);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.stroke();}}
+function drawMetalFrame(ctx,w,h,main){
+  ctx.save();
+  const g = ctx.createLinearGradient(0,0,w,h);
+  g.addColorStop(0,'#80663d'); g.addColorStop(.16,'#f1d291'); g.addColorStop(.42,main); g.addColorStop(.68,'#6b5635'); g.addColorStop(1,'#e6ca8b');
+  fillRounded(ctx,42,42,w-84,h-84,46,g,'rgba(255,235,186,.28)');
+  const g2 = ctx.createLinearGradient(0,80,0,h-80);
+  g2.addColorStop(0,'rgba(255,255,255,.26)'); g2.addColorStop(.18,'rgba(255,255,255,.05)'); g2.addColorStop(.8,'rgba(0,0,0,.18)'); g2.addColorStop(1,'rgba(0,0,0,.35)');
+  fillRounded(ctx,74,74,w-148,h-148,34,g2);
+  for(let i=0;i<12;i++){
+    const x = 90 + i*((w-180)/11); const y1=66,y2=h-66;
+    ctx.fillStyle=i%2?'rgba(255,242,196,.12)':'rgba(77,55,20,.18)';
+    ctx.beginPath();ctx.arc(x,y1,7,0,Math.PI*2);ctx.arc(x,y2,7,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+}
+function drawPortrait(ctx,c){
+  const x=168,y=320,w=688,h=660;
+  const g=ctx.createLinearGradient(x,y,x+w,y+h);
+  g.addColorStop(0,'rgba(255,255,255,.08)');g.addColorStop(1,'rgba(0,0,0,.15)');
+  fillRounded(ctx,x,y,w,h,42,g,null);
+  ctx.save();
+  roundedRect(ctx,x,y,w,h,42);ctx.clip();
+  const bg=ctx.createRadialGradient(x+w*0.5,y+h*0.22,20,x+w*0.5,y+h*0.48,h*0.72);
+  bg.addColorStop(0,hexAlpha(c.accent,.42));bg.addColorStop(.55,hexAlpha(c.accent,.16));bg.addColorStop(1,'rgba(10,14,10,.08)');
+  ctx.fillStyle=bg;ctx.fillRect(x,y,w,h);
+  // ornamental rays
+  ctx.translate(x+w/2,y+h/2);
+  for(let i=0;i<24;i++){
+    ctx.rotate(Math.PI*2/24);
+    ctx.fillStyle=i%2?'rgba(255,235,186,.05)':'rgba(255,235,186,.025)';
+    ctx.fillRect(-4,-h*.44,8,170);
+  }
+  ctx.setTransform(1,0,0,1,0,0);
+  // arch frame
+  ctx.lineWidth=4;ctx.strokeStyle='rgba(247,218,153,.42)';
+  roundedRect(ctx,x+40,y+34,w-80,h-68,34);ctx.stroke();
+  // portrait silhouette
+  ctx.save();ctx.translate(x+w/2,y+h*.57);ctx.fillStyle='rgba(255,240,205,.16)';
+  ctx.shadowBlur=26;ctx.shadowColor='rgba(255,224,161,.3)';
+  drawSilhouette(ctx,c.portrait,c);
+  ctx.fill();
+  ctx.restore();
+  // embossed symbol
+  ctx.save();ctx.font='700 134px Georgia';ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowBlur=12;ctx.shadowColor='rgba(0,0,0,.3)';
+  ctx.fillStyle='rgba(255,232,185,.09)';ctx.fillText(c.symbol,x+w/2,y+108);
+  ctx.restore();
+  ctx.restore();
+}
+function drawSilhouette(ctx,type,c){
+  ctx.beginPath();
+  // common bust base
+  ctx.arc(0,-170,92,0,Math.PI*2);
+  ctx.moveTo(-170,120); ctx.quadraticCurveTo(-130,-28,-58,-42); ctx.lineTo(58,-42); ctx.quadraticCurveTo(130,-28,170,120); ctx.lineTo(0,206); ctx.closePath();
+  if(type==='hunter'){
+    ctx.moveTo(16,-202);ctx.lineTo(176,-26);ctx.lineTo(136,-4);ctx.lineTo(22,-122);ctx.closePath();
+    ctx.moveTo(88,54);ctx.lineTo(198,26);ctx.lineTo(214,52);ctx.lineTo(104,84);ctx.closePath();
+  } else if(type==='doctor'){
+    ctx.moveTo(-86,-126);ctx.lineTo(86,-126);ctx.lineTo(112,-76);ctx.lineTo(-112,-76);ctx.closePath();
+    ctx.moveTo(116,-10);ctx.lineTo(196,-40);ctx.lineTo(206,-14);ctx.lineTo(126,18);ctx.closePath();
+  } else if(type==='engineer'){
+    ctx.moveTo(-156,-16);ctx.lineTo(-42,-120);ctx.lineTo(-14,-88);ctx.lineTo(-118,6);ctx.closePath();
+    ctx.moveTo(82,22);ctx.arc(120,44,44,0,Math.PI*2);
+  } else if(type==='vampire'){
+    ctx.moveTo(-154,-8);ctx.quadraticCurveTo(-190,44,-172,118);ctx.lineTo(-64,144);ctx.closePath();
+    ctx.moveTo(154,-8);ctx.quadraticCurveTo(190,44,172,118);ctx.lineTo(64,144);ctx.closePath();
+  } else if(type==='ringmaster'){
+    ctx.moveTo(-84,-204);ctx.lineTo(84,-204);ctx.lineTo(68,-136);ctx.lineTo(-68,-136);ctx.closePath();
+    ctx.moveTo(-146,-102);ctx.lineTo(146,-102);ctx.lineTo(146,-80);ctx.lineTo(-146,-80);ctx.closePath();
+    ctx.moveTo(126,-16);ctx.lineTo(202,-66);ctx.lineTo(218,-40);ctx.lineTo(144,8);ctx.closePath();
+  } else if(type==='guard'){
+    ctx.moveTo(-148,10);ctx.arc(-114,38,54,-1.8,1.8);ctx.closePath();
+    ctx.moveTo(134,-70);ctx.lineTo(188,88);ctx.lineTo(152,100);ctx.lineTo(96,-58);ctx.closePath();
+  }
+}
+function drawFront(ctx,c){
+  const w=ctx.canvas.width,h=ctx.canvas.height;ctx.clearRect(0,0,w,h);
+  const bg=ctx.createLinearGradient(0,0,0,h);bg.addColorStop(0,'#131915');bg.addColorStop(1,'#0c110c');ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);
+  drawMetalFrame(ctx,w,h,c.frame);
+  // card body
+  const panel=ctx.createLinearGradient(0,100,0,h-100);panel.addColorStop(0,shade(c.panel,18));panel.addColorStop(.5,c.panel);panel.addColorStop(1,shade(c.panel,-20));
+  fillRounded(ctx,96,96,w-192,h-192,32,panel,'rgba(245,222,177,.16)');
+  // top title panel
+  const header=ctx.createLinearGradient(0,148,w,248);header.addColorStop(0,'rgba(255,244,221,.12)');header.addColorStop(.5,hexAlpha(c.accent,.24));header.addColorStop(1,'rgba(255,244,221,.08)');
+  fillRounded(ctx,146,132,w-292,132,24,header,'rgba(255,228,170,.2)');
+  // name
+  ctx.textAlign='center';ctx.fillStyle='#f7e5b9';ctx.font='700 66px Georgia';ctx.fillText(c.name,w/2,210);
+  ctx.fillStyle='rgba(233,218,179,.85)';ctx.font='600 26px system-ui';ctx.fillText(c.role,w/2,250);
+  drawPortrait(ctx,c);
+  // role crest
+  const crestX=142,crestY=300; fillRounded(ctx,crestX,crestY,92,116,24,hexAlpha(c.accent,.18),'rgba(255,230,180,.2)');
+  ctx.fillStyle='rgba(249,225,169,.9)';ctx.font='700 54px Georgia';ctx.fillText(c.symbol,crestX+46,crestY+72);
+  // right rarity plaque
+  fillRounded(ctx,790,302,100,106,24,'rgba(255,241,206,.06)','rgba(255,228,170,.2)');
+  ctx.fillStyle=rarityTone[c.rarity]||'#d9ba77';ctx.font='700 46px Georgia';ctx.fillText(c.rarity,840,366);
+  ctx.fillStyle='rgba(233,219,182,.85)';ctx.font='600 20px system-ui';ctx.fillText('RARE',840,390);
+  // bottom stats bar
+  fillRounded(ctx,126,1106,772,224,28,'rgba(255,248,235,.055)','rgba(255,228,170,.18)');
+  // cost medallion
+  drawStatDisc(ctx,170,1230,64,'费',String(c.cost),c.accent);
+  drawStatDisc(ctx,854,1230,64,'血',String(c.hp),c.accent);
+  // middle title skill
+  fillRounded(ctx,260,1132,504,62,18,hexAlpha(c.accent,.16),'rgba(255,232,187,.18)');
+  ctx.fillStyle='#f3e4bc';ctx.font='700 36px Georgia';ctx.fillText(c.skill,w/2,1173);
+  ctx.fillStyle='rgba(230,220,189,.9)';ctx.font='500 23px system-ui';
+  wrapText(ctx, c.org, w/2, 1230, 410, 28, true);
+  ctx.textAlign='left';ctx.fillStyle='rgba(205,205,190,.82)';ctx.font='500 22px system-ui';
+  wrapText(ctx, c.desc, 264, 1268, 502, 28, false, 2);
+  // attack blade badge
+  fillRounded(ctx,410,1110,206,114,24,'rgba(255,255,255,.055)','rgba(255,230,179,.18)');
+  ctx.textAlign='center';ctx.fillStyle='#f6e7bc';ctx.font='700 68px Georgia';ctx.fillText(c.atk,513,1182);
+  ctx.font='700 22px monospace';ctx.fillStyle='rgba(238,222,187,.9)';ctx.fillText('ATTACK',513,1208);
+  // badges
+  let bx=154, by=1368;
+  c.badges.forEach((b,i)=>{
+    const width = 116 + b.length*4;
+    fillRounded(ctx,bx,by,width,40,18,'rgba(255,236,199,.05)','rgba(255,225,166,.15)');
+    ctx.fillStyle='rgba(242,219,165,.92)';ctx.font='700 18px monospace';ctx.fillText(b,bx+width/2,by+26);
+    bx += width + 12;
+  });
+  // inner highlights
+  ctx.save();
+  ctx.globalCompositeOperation='screen';
+  const hg = ctx.createLinearGradient(0,120,0,420);hg.addColorStop(0,'rgba(255,255,255,.12)');hg.addColorStop(1,'rgba(255,255,255,0)');
+  fillRounded(ctx,108,108,w-216,280,34,hg,null);
+  ctx.restore();
+}
+function drawBack(ctx,c){
+  const w=ctx.canvas.width,h=ctx.canvas.height;ctx.clearRect(0,0,w,h);
+  const bg=ctx.createLinearGradient(0,0,0,h);bg.addColorStop(0,'#131915');bg.addColorStop(1,'#0c110c');ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);
+  drawMetalFrame(ctx,w,h,c.frame);
+  fillRounded(ctx,104,104,w-208,h-208,30,shade(c.panel,-8),'rgba(255,230,180,.12)');
+  ctx.save();ctx.translate(w/2,h/2);
+  // crossed decorative guides
+  ctx.strokeStyle='rgba(251,228,176,.12)';ctx.lineWidth=10;ctx.beginPath();ctx.moveTo(-260,0);ctx.lineTo(260,0);ctx.moveTo(0,-420);ctx.lineTo(0,420);ctx.stroke();
+  for(let i=0;i<4;i++){
+    ctx.save();ctx.rotate(i*Math.PI/2);
+    fillRounded(ctx,-48,-520,96,96,24,'rgba(255,236,194,.05)','rgba(255,227,176,.14)');
+    ctx.restore();
+  }
+  // big emblem
+  ctx.fillStyle='rgba(255,232,180,.1)';ctx.font='700 320px Georgia';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(c.symbol,0,-20);
+  ctx.strokeStyle='rgba(255,232,180,.22)';ctx.lineWidth=6;ctx.beginPath();ctx.arc(0,0,250,0,Math.PI*2);ctx.stroke();
+  ctx.beginPath();ctx.arc(0,0,190,0,Math.PI*2);ctx.stroke();
+  // serial plate
+  fillRounded(ctx,-270,366,540,116,26,hexAlpha(c.accent,.14),'rgba(255,231,180,.18)');
+  ctx.fillStyle='#f5e3b4';ctx.font='700 52px Georgia';ctx.fillText(c.org,0,420);
+  ctx.fillStyle='rgba(231,221,194,.9)';ctx.font='600 24px monospace';ctx.fillText('WORK CHARACTER CARD / '+c.id.toUpperCase(),0,456);
+  ctx.restore();
+}
+function drawStatDisc(ctx,x,y,r,label,value,accent){
+  const g=ctx.createRadialGradient(x-r*.25,y-r*.35,8,x,y,r);
+  g.addColorStop(0,'#f4dba4');g.addColorStop(.38,'#ba9a63');g.addColorStop(.78,'#5f4b2d');g.addColorStop(1,'#e6c27b');
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+  ctx.lineWidth=5;ctx.strokeStyle='rgba(255,236,193,.35)';ctx.stroke();
+  ctx.fillStyle='#231707';ctx.textAlign='center';ctx.font='700 40px Georgia';ctx.fillText(value,x,y+16);
+  ctx.font='700 18px monospace';ctx.fillText(label,x,y-24);
+}
+function wrapText(ctx,text,x,y,maxW,lineH,center=false,maxLines=99){
+  const words=[...text];let line='',lines=[];
+  for(const ch of words){const test=line+ch;if(ctx.measureText(test).width>maxW && line){lines.push(line);line=ch;} else line=test;}
+  if(line)lines.push(line);lines=lines.slice(0,maxLines);
+  ctx.textAlign=center?'center':'left';
+  lines.forEach((ln,i)=>ctx.fillText(ln,x, y+i*lineH));
+}
+function shade(hex, amt){
+  const c=parseInt(hex.slice(1),16); let r=(c>>16)+amt,g=((c>>8)&255)+amt,b=(c&255)+amt;
+  r=Math.max(0,Math.min(255,r));g=Math.max(0,Math.min(255,g));b=Math.max(0,Math.min(255,b));
+  return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
+}
+function hexAlpha(hex,a){
+  const c=parseInt(hex.slice(1),16); const r=c>>16,g=(c>>8)&255,b=c&255; return `rgba(${r},${g},${b},${a})`;
+}
+function renderCard(){ drawFront(fctx,current); drawBack(bctx,current); updateTransform(); }
+function updateTransform(){
+  document.getElementById('yawOut').textContent = `${Math.round(yaw)}°`;
+  document.getElementById('pitchOut').textContent = `${Math.round(pitch)}°`;
+  cardShell.style.transform = `rotateX(${pitch}deg) rotateY(${yaw}deg) ${flipped?'rotateY(180deg)':''}`;
+}
+function populateList(){
+  itemList.innerHTML='';
+  characters.forEach((c,idx)=>{
+    const el=document.createElement('button');
+    el.className='item'+(idx===0?' active':'');
+    el.dataset.id=c.id;
+    el.innerHTML=`<div class="thumb"><canvas width="124" height="176"></canvas></div><div><div class="item-name">${c.name}</div><div class="item-sub">${c.org} · ${c.role}</div></div><span class="tag">${c.rarity}</span>`;
+    itemList.appendChild(el);
+    const cv=el.querySelector('canvas'),ctx=cv.getContext('2d');
+    const preview=document.createElement('canvas');preview.width=1024;preview.height=1536;drawFront(preview.getContext('2d'),c);ctx.drawImage(preview,0,0,cv.width,cv.height);
+    el.addEventListener('click',()=>selectItem(c.id));
+  });
+}
+function selectItem(id){
+  current = characters.find(c=>c.id===id) || characters[0];
+  [...itemList.children].forEach(it=>it.classList.toggle('active',it.dataset.id===id));
+  heroTitle.textContent = current.name;
+  heroSubtitle.textContent = `${current.org} · ${current.role}`;
+  heroDesc.textContent = current.desc;
+  costStat.textContent = current.cost;
+  rareStat.textContent = current.rarity;
+  atkStat.textContent = current.atk;
+  hpStat.textContent = current.hp;
+  noteRarity.textContent = `RARITY · ${current.rarity} / ${rarityMap[current.rarity]}`;
+  noteStats.textContent = `ATK ${current.atk} / HP ${current.hp}`;
+  noteFrame.textContent = `${current.skill} / EMBOSSED CHARACTER CARD`;
+  heroBadges.innerHTML=''; current.badges.forEach(b=>{const span=document.createElement('span'); span.className='badge'; span.textContent=b; heroBadges.appendChild(span);});
+  layerList.innerHTML=''; current.layers.forEach(([title,desc])=>{const d=document.createElement('div'); d.className='layer'; d.innerHTML=`<strong>${title}</strong><span>${desc}</span>`; layerList.appendChild(d);});
+  renderCard();
+}
+function setupControls(){
+  const yawRange=document.getElementById('yaw'); const pitchRange=document.getElementById('pitch');
+  yawRange.addEventListener('input',()=>{yaw=+yawRange.value;auto=false;document.getElementById('autoBtn').textContent='自动旋转 · OFF';updateTransform();});
+  pitchRange.addEventListener('input',()=>{pitch=+pitchRange.value;auto=false;document.getElementById('autoBtn').textContent='自动旋转 · OFF';updateTransform();});
+  document.getElementById('autoBtn').addEventListener('click',()=>{auto=!auto;document.getElementById('autoBtn').textContent=`自动旋转 · ${auto?'ON':'OFF'}`;});
+  document.getElementById('flipBtn').addEventListener('click',()=>{flipped=!flipped;updateTransform();});
+  document.getElementById('resetBtn').addEventListener('click',()=>{yaw=-10;pitch=8;spin=-10;flipped=false;document.getElementById('yaw').value=yaw;document.getElementById('pitch').value=pitch;updateTransform();});
+  const viewer=document.getElementById('viewer');
+  viewer.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,yaw,pitch};viewer.setPointerCapture(e.pointerId);});
+  viewer.addEventListener('pointermove',e=>{if(!drag)return; auto=false; document.getElementById('autoBtn').textContent='自动旋转 · OFF'; yaw = drag.yaw + (e.clientX-drag.x)*0.16; pitch = Math.max(-28, Math.min(28, drag.pitch - (e.clientY-drag.y)*0.13)); document.getElementById('yaw').value = Math.max(-38,Math.min(38,yaw)); document.getElementById('pitch').value = pitch; updateTransform();});
+  viewer.addEventListener('pointerup',()=>drag=null);viewer.addEventListener('pointerleave',()=>drag=null);
+}
+function animate(){
+  if(auto && !drag){spin += 0.12; yaw = Math.sin(spin*0.015)*18 - 8; document.getElementById('yaw').value = yaw; updateTransform();}
+  requestAnimationFrame(animate);
+}
+populateList(); setupControls(); selectItem('hunter'); animate();
+</script>
+</body>
+</html>
