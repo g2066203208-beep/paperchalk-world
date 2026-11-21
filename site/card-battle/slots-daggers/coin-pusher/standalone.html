@@ -2184,7 +2184,7 @@ function glass(){
  ctx.restore();
 }
 function fallingCoins(){
- coins.discs=discs.concat(fallers);coins.time=clock;
+ coins.discs=discs.concat(fallers);
  ctx.save();ctx.beginPath();ctx.rect(218,101,529,348);ctx.clip();
  coins.draw(ctx,{time:clock,light:{x:370+23*Math.sin(clock*.13),y:109+20*Math.cos(clock*.15)},flash});
  coins.discs=discs;
