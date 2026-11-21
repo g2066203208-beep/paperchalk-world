@@ -1,52 +1,54 @@
-# WORK 3D 监视电视 / Black Room Monitor
+# WORK · 3D 八角电视与实体木桌场景（2026-11-21 重制）
 
-**线上入口**：`site/card-battle/slots-daggers/television/index.html`（在 Work 原老虎机的第二个页面入口进入）。
+## 唯一线上场景
+- [GitHub Pages](https://g2066203208-beep.github.io/paperchalk-world/card-battle/slots-daggers/television/index.html)
+- 原老虎机主菜单保留；旧推币塔、物品研究室入口已改为跳转
+- 场景：纯黑环境、单台低多边形金属电视、真实木桌、玻璃杯、盆栽花枝
+- **不要新增无意义的装饰螺丝、假通风条、浮在空中的 UI 组件**
+- 两个实物旋钮各有真实交互：电源（开关机显像管亮线）和频道切换；点击/拖动都可操作
 
-## 正式场景约束
+## 取自原版 WORK 的准确素材与函数
 
-- 场景**只有一台实体电视**，没有桌面、地板、房间、卡牌展台或外部 UI；背景为绝对黑色。
-- 电视本体占桌面视口画面的大部分。允许轻微拖动改变观察角度，直接验证真实厚度。
-- 主机体：暗绿工业金属，收窄的黄铜实体倒角、更大的 CRT 显示面积、缩小的旋钮及控制侧栏、后部退进、螺丝、透气栅格和支脚。
-- 曲面 CRT：**532 个真正投影的三角形**；仅在相机变化时光栅化一次三角形，缓存 Z/UV/菲涅耳映射，日常帧只更新磷光像素；玻璃菲涅耳和扫描线单独计算。
-- 背景不是 AI 图片，电视也不是 AI 画的一张正面贴图；本机实时生成网格和受光。
-- 电视既保留 Work 的金属语汇，又将屏幕控制在很暗的磷光亮度，不用夸张的赛博霓虹。
+全部代码均直接从当前 GitHub 文件引用，不是仿色或外部 AI 原画：
 
-## 不改变原 Work shader
+1. `../coin-art.js` 中 `metal(nx,ny,nz,rough,ambient,lamp)` **在 `television.js` 中逐字符原样复制**，保留反射向量、Fresnel、三种虚拟灯、指数量级的高光；原币源文件不改
+2. `../cabinet-art.js` 原版 `CabinetArt.panel()` 用于生成材料纹理，按投影位置映射于电视实体外壳
+3. `CabinetArt.wood(ctx,512,320)` 原函数渲染木板的接缝、纹理、木节、划痕、照明，透过两组三角形 **UV 映射到三维桌面几何**
+4. `CabinetArt.glass(ctx,x,y,s)` 原杯子光线追踪/折射/吸收程序直接渲染杯子，可见玻璃和琥珀色反光
+5. `CabinetArt.nearIvy(8)` 为原程序化枝叶素材，和八面花盆、三角叶与小花的实体低多边形模型结合
+6. `../reel-art.js` 的 `ReelArt.face()` **原雕刻高度场、法线、压印和金属色的金币、匕首、星星**直接组成电视内频道广告
+7. CRT 仍沿用独立帧内容/反射、加法暖辉光、磷光遮罩、显像管开机水平线动画
 
-- 原文件 `../coin-art.js` 不改动，Git blob SHA: `244779b322b33559c31aa1ae11bf6f0f7d15fe0c`。
-- 电视 `television.js` 中 `metal(nx,ny,nz,rough,ambient,lamp)` 与原币函数按字符完全一致；保留原金币的暖窗反射、擦边/菲涅耳、高亮指数和多级光源。
-- 黄铜色级直接复用原 CoinArt 的 **256 级 palette**；采用不同金属表面明度分配给包边和旋钮。
-- **直接加载 `../cabinet-art.js`**，调用原版 `CabinetArt.plaque()` 生成的深绿铸造金属纹理，通过三维表面像素着色映射到电视外壳；不是只借用绿色。没有把旧机台的平面布局粘到电视上。
-- 玻璃使用 Work 杯子光学模型的空气-玻璃折射率 `1 → 1.5`，Fresnel-Schlick 计算反射率；还考虑暖色环境反射。
-- 电视外壳与屏幕共用**逐像素深度缓冲**，避免靠 Canvas painter 排序产生三角形穿透/错层。
-- 独立采样的 CRT phosphor：弱行扫描纹、边缘暗化、轻微闪烁与暖色窗光反射。CRT 更新约 28Hz，但浏览器输入仍在正常刷新率采集；**不再每帧重新光栅化 532 个三角形**。CPU 内部画布最大宽度约 780 像素，减少昂贵的全屏像素缓冲复制。
+`CabinetArt` 新增公开 `wood,glass,nearIvy,texture` 四个现有函数导出，**没有重写函数内部的旧老虎机代码**。所有旧机台仍能调用原 API。
 
-## 外部设计资料
+## 重新建模的几何与比例
 
-- CRT phosphor mask 对比普通 emissive image：Francesco Milanese, *How to Create a CRT Monitor Effect in Blender*, https://www.francescomilanese.com/tutorials-en-all/tut-212-en-b3d-mask-for-crt-display-rendering?format=html
-- CRT 视觉要素（scanlines、curved screen、phosphor glow、vignette）：https://designmd.app/library/crt
+- 电视 `contour()` 使用固定 **8 顶点切角轮廓**，不再使用弧线细分形成塑料圆边
+- 外壳七道独立倒角圈层：机体后缘、外缘、前缘、金属镶边、暗槽
+- CRT 与镶边共用八角轮廓，屏幕通过曲面顶点向外凸起；CRT 7 圈 x 8 顶点合计 **104 个曲面三角形**
+- 两个旋钮是实体盘片，有浮雕刻度，可点击和拖动
+- 桌面有真实木质上表面、侧厚、裙边、四条桌腿
+- 两只电视脚分别跨接机体底部和桌面，防止电视浮空
+- 八面花盆、泥土、茎杆、叶片、花瓣均采用真实三维面片（另外结合 Work 原程序化藤叶）
 
-**参考的是 CRT 的结构与材质原则，不是套用参考网站 UI。**
+## 避免再次做错的约束
 
-## 功能和清理
+- 电视不是贴到方形画面上的平面屏幕，屏幕的轮廓必须和机壳开口、垫圈、倒角配套
+- 建模先看整机剪影、厚度、主体比例和真实接地，再加金属浮雕
+- 游戏自带的桌子/杯子/植物是高价值原生代码，不要另造一套质感不一致的假的
+- 黑色背景留作空间感，不要加入多余的展示面板
+- 不要把本机称为 WebGL / GPU PBR：它是 CPU 真实三维坐标+逐像素深度缓冲；镜头不动时缓存外壳遮挡和屏幕 UV
+- 原版玻璃杯多次折射被完整直接调用；CRT 玻璃**仍是简化菲涅耳反射而不是完整的多次光线追踪**，两者不要混淆
 
-- 原老虎机不修改机台游戏逻辑，仅更改导航按钮到电视。
-- 旧 02 推币塔与 03 物品展示已下线：旧 `coin-pusher/index.html`、`coin-lab/index.html`、`items.html` 仅保留跳转，原功能脚本和旧 QA 已从 main 删除。
-- 点击最上方黄铜旋钮：开关机；点击第二旋钮：切频道；拖动电视：观察实体厚度；双击：恢复角度。
-- 键盘：空格开关机，左右键看侧面，R 重置，Esc 返回原老虎机。
+## 专业学习与对比记录
 
-## QA
+- https://80.lv/articles/modeling-and-texturing-an-old-crt-tv-prop — 先 blockout 完整体积和比例，再 bevel/low-poly，消除无用拓扑
+- https://gamesartist.co.uk/tv-ps1/ — 大形体、中形体、微小细节分阶段；low-poly 保留硬边、微倒角
+- GitHub Actions Workflow: `.github/workflows/work-television-3d-qa.yml`
+- GitHub Pages Workflow: `.github/workflows/work-television-pages.yml`（经过 Chromium 检查后才部署，和游戏其它 QA 的发布门闸分开）
+
+### 必须每次浏览器实际验证
 
 `node tests/work-television-3d-browser.mjs`
 
-CI 归档真实 Chromium 截图（正面、3D侧面、断电）和录像，覆盖 1280×720、960×540、390×844，并逐字符核对原 Work metal()，检查所有旧路由跳转。
-
-注意：这是自写的三维软件栅格器（真实三维网格+Z Buffer），**不是**基于 WebGL 或 GPU PBR 的 Three.js。受性能与光学模型限制，不声称做到了完全物理真实的多次折射/光追。
-
-## 复用范围与诚实限制（2026-11-21 视觉和性能回归）
-
-- **真正复用**：原版金币的 `metal()`（逐字相同）、256 级金色级调；原版 `CabinetArt.plaque()` 的真实金属纹理输出，映射至独立 3D 外壳。
-- **参考算法但未完整复制**：原版玻璃杯的复杂多界面追踪 / 吸收 / 折射；电视使用空气与玻璃 IOR 1.5 的菲涅耳和环境反射简化版，不是完整的原杯光路。
-- **未直接复用**：为旧老虎机桌面和战斗场景定制的 `DeskLights` 空间坐标、树荫及木桌全景。黑色空间 TV 模型需要重新绑定几何、法线、屏幕内光源，直接把旧二维坐标硬套到 TV 不会正确。
-- **性能根因**：旧代码每个动画帧同时重算 496×324 磷光像素、532 个 CRT 三角形、帧缓存与逐像素 Z。现在把机壳及 CRT UV/Z/Fresnel 缓存在视角变化时计算，静止机身只在约 28Hz 更新显示图像；CPU 渲染分辨率由 ~1050 降至最高 780 内部像素宽度。
-- **验证建议**：检查 `WorkTVQA.state()` 中的 `originalCabinetTexture`、`screenMappingPixels`、`frameRenderMs`、`fps`；以真实浏览器正/侧面截图和手机测试为准。测试成功不等同于美术最终满意。
+桌面1280×720、手机390×844及横屏844×390：检查真实木纹、真实玻璃杯、真实藤叶、3D桌腿、104三角形CRT、旋钮开关、频道轮换、原版金属着色函数逐字符相同、性能、前端零报错、旧 URL 跳转。保存截图和实机视频，然后人工审美评估，测试通过不等于美术最终满意。
