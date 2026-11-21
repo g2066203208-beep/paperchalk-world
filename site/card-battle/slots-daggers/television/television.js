@@ -73,11 +73,19 @@ function rounded(cx,cy,w,h,r,z,segments=5){
 // Explicit control-point outline: a four-corner rounded rectangle with one
 // consistent winding direction (side edges must not collapse / self-intersect).
 // Eight machined flat faces and precise corner cuts, modelled like Work's faceted coin.
+// Four curved corners with four points apiece, not a crude 8-sided vault.
+// Shared vertex winding keeps the front bezel and every 3-D shell layer watertight.
 function contour(cx,cy,w,h,r,z,N=1){
- const X=w*.5,Y=h*.5,a=Math.min(r,X*.42,Y*.42);
- return [[cx+X-a,cy+Y,z],[cx-X+a,cy+Y,z],[cx-X,cy+Y-a,z],
- [cx-X,cy-Y+a,z],[cx-X+a,cy-Y,z],[cx+X-a,cy-Y,z],
- [cx+X,cy-Y+a,z],[cx+X,cy+Y-a,z]];
+ const X=w*.5,Y=h*.5,a=Math.min(r,X*.42,Y*.42),pts=[];
+ for(const [x,y,start] of [
+  [cx-X+a,cy+Y-a,90],[cx-X+a,cy-Y+a,180],
+  [cx+X-a,cy-Y+a,270],[cx+X-a,cy+Y-a,0]]){
+  for(let k=0;k<4;k++){
+   const ang=(start+k*30)*Math.PI/180;
+   pts.push([x+Math.cos(ang)*a,y+Math.sin(ang)*a,z]);
+  }
+ }
+ return pts;
 }
 // The contour above is top-right → top-left → bottom-left → bottom-right.
 function bridge(a,b,kind,base=0){for(let i=0;i<a.length;i++){let j=(i+1)%a.length;add([a[i],a[j],b[j],b[i]],kind,base);}}
@@ -295,7 +303,7 @@ function makeCrt(){
  crt.length=0;
  const cx=-.40,cy=.025,W=4.75,H=3.46,R=.27;
  const rings=[.18,.34,.50,.66,.82,.92,1];
- const N=1,vertexCount=8;
+ const N=1,vertexCount=16;
  const center=surf(0,0);
  let old=null;
  for(const f of rings){
@@ -771,5 +779,5 @@ window.addEventListener('keydown',e=>{
  if(e.code==='Escape')location.href='../../soul-table.html';
 });
 requestAnimationFrame(loop);
-window.WorkTVQA={state:()=>({workCpu:(window.WorkTVCPU?.stats||null),workCpuNormalMap:window.WorkTVCPU?.dieSize||0,originalPaletteCount:window.WorkTVCPU?.paletteSize||0,geometryBuildMs:state.geometryBuildMs||0,meshResolution:[renderW,renderH],isReal3D:true,meshFaces:state.meshCount,crtTriangles:state.screenTriCount,power:state.power,channel:state.channel,yaw:state.yaw,pitch:state.pitch,metalSource:'Work coin-art.js metal() copied unchanged',renderCache:state.cacheStamp,solidFaces:state.opaqueFacesRendered,crtPixelCoverage:screenMaskPixels,glassIOR:1.5,frames:state.frames,fps:state.fps,screenSize:[buffer.width,buffer.height],viewport:[viewW,viewH],pressCount:state.pressCount,frameRenderMs:Math.round(frameRenderMs*10)/10,rasterPasses,screenMappingPixels:screenCoverage?.length||0,originalCabinetTexture:workSurfaceUsed,powerTransition:state.transition,transitionAge:Math.round((performance.now()/1000-state.transitionAt)*100)/100,frontScrews:0,controlPositions:{power:proj([2.64,.53,.90]).slice(0,2),channel:proj([2.64,-.45,.89]).slice(0,2)},screenShape:'deep tapered eight-faceted CRT housing with machined collar and convex glass',screenPrograms:window.WorkTVBroadcast?.labels.length||reelAds.length,showGuide:state.showGuide,programScripts:window.WorkTVBroadcast?.scripts?.length||0,actualReelArt:!!window.ReelArt,broadcast:window.WorkTVBroadcast?.status()||null,realGlass3DFaces:transparent.length,glassMethod:'hollow 16-facet depth-rasterized geometry, Fresnel-refraction approximation',modelColor:'Work faceted cast enamel + machined bezel + 3D timber desk',deskRealMesh:!!model.find(x=>x.kind==='woodTop'),originalWoodTexture:!!workWood,originalGlassSprite:!!workGlass,originalIvyAsset:!!workIvy,physicalFurnitureFaces:model.filter(x=>['tableEdge','tableLeg','woodTop'].includes(x.kind)).length,physicalPlantFaces:model.filter(x=>['pot','stem','leafA','leafB','leafC','petal'].includes(x.kind)).length}),setAngles:(yaw,pitch)=>{state.yaw=clamp(yaw,-37,37);state.pitch=clamp(pitch,-19,18);geometryDirty=true;},setPower:(v)=>{if(state.power!==!!v)switchPower();},nextChannel:()=>switchChannel(1)};
+window.WorkTVQA={state:()=>({workCpu:(window.WorkTVCPU?.stats||null),workCpuNormalMap:window.WorkTVCPU?.dieSize||0,originalPaletteCount:window.WorkTVCPU?.paletteSize||0,geometryBuildMs:state.geometryBuildMs||0,meshResolution:[renderW,renderH],isReal3D:true,meshFaces:state.meshCount,crtTriangles:state.screenTriCount,power:state.power,channel:state.channel,yaw:state.yaw,pitch:state.pitch,metalSource:'Work coin-art.js metal() copied unchanged',renderCache:state.cacheStamp,solidFaces:state.opaqueFacesRendered,crtPixelCoverage:screenMaskPixels,glassIOR:1.5,frames:state.frames,fps:state.fps,screenSize:[buffer.width,buffer.height],viewport:[viewW,viewH],pressCount:state.pressCount,frameRenderMs:Math.round(frameRenderMs*10)/10,rasterPasses,screenMappingPixels:screenCoverage?.length||0,originalCabinetTexture:workSurfaceUsed,powerTransition:state.transition,transitionAge:Math.round((performance.now()/1000-state.transitionAt)*100)/100,frontScrews:0,controlPositions:{power:proj([2.64,.53,.90]).slice(0,2),channel:proj([2.64,-.45,.89]).slice(0,2)},screenShape:'deep tapered softly faceted consumer CRT housing with curved glass',screenPrograms:window.WorkTVBroadcast?.labels.length||reelAds.length,showGuide:state.showGuide,programScripts:window.WorkTVBroadcast?.scripts?.length||0,actualReelArt:!!window.ReelArt,broadcast:window.WorkTVBroadcast?.status()||null,realGlass3DFaces:transparent.length,glassMethod:'hollow 16-facet depth-rasterized geometry, Fresnel-refraction approximation',modelColor:'Work faceted cast enamel + machined bezel + 3D timber desk',deskRealMesh:!!model.find(x=>x.kind==='woodTop'),originalWoodTexture:!!workWood,originalGlassSprite:!!workGlass,originalIvyAsset:!!workIvy,physicalFurnitureFaces:model.filter(x=>['tableEdge','tableLeg','woodTop'].includes(x.kind)).length,physicalPlantFaces:model.filter(x=>['pot','stem','leafA','leafB','leafC','petal'].includes(x.kind)).length}),setAngles:(yaw,pitch)=>{state.yaw=clamp(yaw,-37,37);state.pitch=clamp(pitch,-19,18);geometryDirty=true;},setPower:(v)=>{if(state.power!==!!v)switchPower();},nextChannel:()=>switchChannel(1)};
 })();
