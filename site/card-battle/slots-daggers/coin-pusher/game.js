@@ -53,7 +53,7 @@ function sparkle(x,y,energy=1,n=8){
 }
 function qm(q,p){return [q[3]*p[0]+q[0]*p[3]+q[1]*p[2]-q[2]*p[1],q[3]*p[1]-q[0]*p[2]+q[1]*p[3]+q[2]*p[0],q[3]*p[2]+q[0]*p[1]-q[1]*p[0]+q[2]*p[3],q[3]*p[3]-q[0]*p[0]-q[1]*p[1]-q[2]*p[2]];}
 function axis(x,y,z,angle){let m=Math.hypot(x,y,z)||1,s=Math.sin(angle*.5)/m;return [s*x,s*y,s*z,Math.cos(angle*.5)];}
-function mat(q){const [x,y,z,w]=q;return [1-2*(y*y+z*z),2*(x*y-w*z),2*(x*z+w*y),2*(x*y+w*z),1-2*(x*x+z*z),2*(y*z-w*x),2*(y*z+w*x),1-2*(x*x+y*y)];}
+function mat(q){const [x,y,z,w]=q;return [1-2*(y*y+z*z),2*(x*y-w*z),2*(x*z+w*y),2*(x*y+w*z),1-2*(x*x+z*z),2*(y*z-w*x),2*(x*z-w*y),2*(y*z+w*x),1-2*(x*x+y*y)];}
 function rotation(b,h,amount=1){
  const spin=Math.hypot(b.wx,b.wy,b.wz);
  if(spin*amount*h>.00001){
@@ -398,7 +398,7 @@ window.addEventListener('keydown',e=>{
 });
 build();requestAnimationFrame(animate);
 window.CoinPusherQA={
- state:()=>({credits,prize,inserted,coins:discs.length,tower:towerBroken,front:Math.round(front),time:Math.round(clock*100)/100,fps,auto,paused,gameOver}),
+ state:()=>({credits,prize,inserted,coins:discs.length,tower:towerBroken,front:Math.round(front),time:Math.round(clock*100)/100,fps,auto,paused,gameOver,visibleSprites:discs.filter(b=>b.sprite&&b.buf&&b.buf.data.some((v,i)=>i%4===3&&v>0)).length,badMatrices:discs.filter(b=>b.matrix.length!==9||!Number.isFinite(b.z)||!Number.isFinite(b.height)).length}),
  drop:()=>dropped(),reset:()=>build(),setAim:x=>{dropX=clamp(x,G.left+20,G.right-20);},
  auto:on=>{auto=!!on;clickAt=clock;},pause:on=>{paused=!!on;}
 };
