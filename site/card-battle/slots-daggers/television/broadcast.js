@@ -15,8 +15,10 @@ const scripts=[
 const channelBrief=['城市要闻 / 午夜直播','WORK 原创 / 品牌片','城市人物 / 深夜对谈','舞台现场 / 互动竞演','城市档案 / 夜行记','三日气象 / 城市观察'];
 const sources={host:'../../../assets/characters/protagonist-front.webp',guest:'../../../assets/characters/char-002/front.png'};
 const actors={},renderActors={},bounds={};let loaded=0,errors=[],hostRig=null,hostReady=false,lastHostPose=0;
-const canvas=document.createElement('canvas');canvas.width=248;canvas.height=162;
-const ctx=canvas.getContext('2d',{alpha:false});
+// Draw news text and the canonical L2D host at native CRT resolution.
+// Keep the original 248x162 design coordinates, but never blur-upscale them.
+const canvas=document.createElement('canvas');canvas.width=496;canvas.height=324;
+const ctx=canvas.getContext('2d',{alpha:false});ctx.setTransform(2,0,0,2,0,0);
 const output=document.createElement('canvas');output.width=496;output.height=324;
 const out=output.getContext('2d',{alpha:false});
 out.imageSmoothingEnabled=false;
