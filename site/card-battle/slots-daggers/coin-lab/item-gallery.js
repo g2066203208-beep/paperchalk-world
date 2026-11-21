@@ -173,7 +173,8 @@ requestAnimationFrame(animate);
 window.WorkMuseumQA={
  state:()=>({selected:state.item,count:all.length,coinVisible:!coinPane.hidden,cardVisible:!cardPane.hidden,
   cardReady:state.ready,artwork:state.artwork,vertices:P.mesh.points.length,faces:P.mesh.faces.length,
-  yaw:state.yaw,back:card.matrix[8]<0,painted:card.buf?[...card.buf.data].filter((v,i)=>i%4===3&&v>0).length:0,renders:state.renders}),
+  meshAspect:(()=>{const xs=P.mesh.points.map(p=>p[0]),ys=P.mesh.points.map(p=>p[1]);return (Math.max(...xs)-Math.min(...xs))/(Math.max(...ys)-Math.min(...ys));})(),
+  canvasSize:[stage.width,stage.height],yaw:state.yaw,back:card.matrix[8]<0,painted:card.buf?[...card.buf.data].filter((v,i)=>i%4===3&&v>0).length:0,renders:state.renders}),
  select:(id)=>select(id,true),setCardAngles:(yaw,pitch)=>{pause();state.yaw=yaw;state.pitch=pitch;q();draw();syncSliders();}
 };
 })();
