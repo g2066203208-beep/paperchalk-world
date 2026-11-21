@@ -508,7 +508,10 @@ function prepareGeometry(){
  const materialBuildStart=performance.now();
  ensureWorkSurface();makeWorkProps();
  window.WorkTVCPU?.resetStats();
- renderW=Math.min(740,Math.max(320,Math.round(viewW))); // adaptive Work-scale internal CPU resolution
+ // CoinTable also lowers pixel work while bodies move and rerenders once
+ // settled. Keep original Work sampling on EVERY interactive pixel, but use
+ // a smaller temporary render target during drag; restore crisp detail on release.
+ renderW=Math.min(state.dragging?370:740,Math.max(260,Math.round(viewW))); // adaptive Work-scale internal CPU resolution
  renderH=Math.max(200,Math.round(renderW*viewH/viewW));
  physical.width=renderW;physical.height=renderH;
  const oldW=viewW,oldH=viewH,oldScale=scale;
@@ -662,7 +665,8 @@ screen.addEventListener('pointermove',e=>{
 });
 screen.addEventListener('pointerup',e=>{
  if(!start)return;
- const previous=start;start=null;state.dragging=false;
+ const previous=start;start=null;const wasDragging=state.dragging;state.dragging=false;
+ if(wasDragging)geometryDirty=true; // full-detail Work pixels on release
  if(previous.activated||previous.control===null&&previous.moved)return;
  if(previous.control==='power')switchPower();
  if(previous.control==='channel')switchChannel(1);
@@ -678,5 +682,5 @@ window.addEventListener('keydown',e=>{
  if(e.code==='Escape')location.href='../../soul-table.html';
 });
 requestAnimationFrame(loop);
-window.WorkTVQA={state:()=>({workCpu:(window.WorkTVCPU?.stats||null),workCpuNormalMap:window.WorkTVCPU?.dieSize||0,originalPaletteCount:window.WorkTVCPU?.paletteSize||0,geometryBuildMs:state.geometryBuildMs||0,isReal3D:true,meshFaces:state.meshCount,crtTriangles:state.screenTriCount,power:state.power,channel:state.channel,yaw:state.yaw,pitch:state.pitch,metalSource:'Work coin-art.js metal() copied unchanged',renderCache:state.cacheStamp,solidFaces:state.opaqueFacesRendered,crtPixelCoverage:screenMaskPixels,glassIOR:1.5,frames:state.frames,fps:state.fps,screenSize:[buffer.width,buffer.height],viewport:[viewW,viewH],pressCount:state.pressCount,frameRenderMs:Math.round(frameRenderMs*10)/10,rasterPasses,screenMappingPixels:screenCoverage?.length||0,originalCabinetTexture:workSurfaceUsed,powerTransition:state.transition,transitionAge:Math.round((performance.now()/1000-state.transitionAt)*100)/100,frontScrews:0,controlPositions:{power:proj([2.76,.53,.90]).slice(0,2),channel:proj([2.76,-.45,.89]).slice(0,2)},screenShape:'eight-faceted chamfered curved CRT mesh',screenPrograms:reelAds.length,actualReelArt:!!window.ReelArt,modelColor:'Work faceted cast enamel + machined bezel + 3D timber desk',deskRealMesh:!!model.find(x=>x.kind==='woodTop'),originalWoodTexture:!!workWood,originalGlassSprite:!!workGlass,originalIvyAsset:!!workIvy,physicalFurnitureFaces:model.filter(x=>['tableEdge','tableLeg','woodTop'].includes(x.kind)).length,physicalPlantFaces:model.filter(x=>['pot','stem','leafA','leafB','leafC','petal'].includes(x.kind)).length}),setAngles:(yaw,pitch)=>{state.yaw=clamp(yaw,-37,37);state.pitch=clamp(pitch,-19,18);geometryDirty=true;},setPower:(v)=>{if(state.power!==!!v)switchPower();},nextChannel:()=>switchChannel(1)};
+window.WorkTVQA={state:()=>({workCpu:(window.WorkTVCPU?.stats||null),workCpuNormalMap:window.WorkTVCPU?.dieSize||0,originalPaletteCount:window.WorkTVCPU?.paletteSize||0,geometryBuildMs:state.geometryBuildMs||0,meshResolution:[renderW,renderH],isReal3D:true,meshFaces:state.meshCount,crtTriangles:state.screenTriCount,power:state.power,channel:state.channel,yaw:state.yaw,pitch:state.pitch,metalSource:'Work coin-art.js metal() copied unchanged',renderCache:state.cacheStamp,solidFaces:state.opaqueFacesRendered,crtPixelCoverage:screenMaskPixels,glassIOR:1.5,frames:state.frames,fps:state.fps,screenSize:[buffer.width,buffer.height],viewport:[viewW,viewH],pressCount:state.pressCount,frameRenderMs:Math.round(frameRenderMs*10)/10,rasterPasses,screenMappingPixels:screenCoverage?.length||0,originalCabinetTexture:workSurfaceUsed,powerTransition:state.transition,transitionAge:Math.round((performance.now()/1000-state.transitionAt)*100)/100,frontScrews:0,controlPositions:{power:proj([2.76,.53,.90]).slice(0,2),channel:proj([2.76,-.45,.89]).slice(0,2)},screenShape:'eight-faceted chamfered curved CRT mesh',screenPrograms:reelAds.length,actualReelArt:!!window.ReelArt,modelColor:'Work faceted cast enamel + machined bezel + 3D timber desk',deskRealMesh:!!model.find(x=>x.kind==='woodTop'),originalWoodTexture:!!workWood,originalGlassSprite:!!workGlass,originalIvyAsset:!!workIvy,physicalFurnitureFaces:model.filter(x=>['tableEdge','tableLeg','woodTop'].includes(x.kind)).length,physicalPlantFaces:model.filter(x=>['pot','stem','leafA','leafB','leafC','petal'].includes(x.kind)).length}),setAngles:(yaw,pitch)=>{state.yaw=clamp(yaw,-37,37);state.pitch=clamp(pitch,-19,18);geometryDirty=true;},setPower:(v)=>{if(state.power!==!!v)switchPower();},nextChannel:()=>switchChannel(1)};
 })();
