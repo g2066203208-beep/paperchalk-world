@@ -1,5 +1,5 @@
 <!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#171e17"><title>WORK · 铸币三维解剖实验室</title>
+<meta name="theme-color" content="#171e17"><title>WORK · 03 全物品观赏 · 金币与人物卡</title>
 <style>
 :root{--bg:#101710;--panel:#263126;--soft:#88977e;--gold:#e4c27d;--gold2:#a48c5a;--line:#877550;--ink:#f0e0b6;--deep:#0e1510}
 *{box-sizing:border-box}html{scroll-behavior:smooth}html,body{margin:0;min-height:100%;background:var(--bg);color:#d1c4a1;font:13px/1.5 system-ui,'Noto Sans SC',sans-serif}
@@ -30,9 +30,72 @@ input[type=range]{width:100%;accent-color:#b99c65;cursor:pointer}select{border:1
 footer{margin:20px 0 0;color:#99a288;font:11px monospace;display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap}
 @media(max-width:1000px){.main{grid-template-columns:1fr}.side{display:grid;grid-template-columns:1fr 1fr}.hero-box{min-height:300px}#hero{max-width:540px}.lower{grid-template-columns:1fr 1fr}}
 @media(max-width:680px){.wrap{padding:12px 10px 24px}header{flex-direction:column;align-items:flex-start}.brand h1{font-size:23px}.brand p{font-size:11px}.main,.lower,.side,.code-panel{grid-template-columns:1fr}.side{display:flex}.hero-box{min-height:290px}.compact-guide{gap:6px}.stat{padding:10px}.stat strong{font-size:21px}.control{grid-template-columns:58px 1fr 44px}.bar button{flex:1}.section-head{margin-top:17px}.duo{gap:8px}}
+
+
+/* 03 · Unified Work object museum. Restrained object-first layout. */
+[hidden]{display:none!important}
+.wrap{max-width:1480px}
+.museum-bar{margin:17px 0 19px;border:1px solid #4b573f;border-radius:7px;background:linear-gradient(180deg,#243026,#151e17);padding:13px 14px 12px;box-shadow:inset 0 1px #d9c88a16,0 9px 23px #050a0670}
+.museum-bar-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:11px}
+.museum-bar-heading strong{font:600 15px Georgia,"Noto Serif SC",serif;color:#f0d8a3;letter-spacing:.045em}
+.museum-bar-heading span{color:#9eab95;font:11px monospace}
+.museum-choices{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:9px}
+.object-option{display:flex;align-items:center;gap:9px;text-align:left;min-width:0;min-height:76px;padding:8px;background:#17221a;border:1px solid #536147;border-radius:5px;transition:background .18s,border-color .18s,transform .18s}
+.object-option:hover{border-color:#b59a65;background:#283528;transform:translateY(-1px)}
+.object-option[aria-pressed=true]{background:linear-gradient(125deg,#4a4830,#273a2b 70%);border-color:#d7b678;box-shadow:inset 0 0 0 1px #e0c28635,0 0 0 1px #0c170e}
+.object-picture{display:flex;flex:0 0 46px;width:46px;height:58px;align-items:center;justify-content:center;background:radial-gradient(circle at 48% 28%,#48543c,#182019 67%);border:1px solid #766b4a;border-radius:3px;overflow:hidden}
+.object-picture img{width:100%;height:100%;object-fit:contain;object-position:center 55%;filter:drop-shadow(0 2px 2px #071008)}
+.coin-icon{width:39px;height:39px;border:4px ridge #d4b372;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle at 30% 25%,#fff0b2,#aa7e3d 48%,#4e3d23);color:#f9e0a1;font:24px Georgia,serif;text-shadow:0 1px 3px #37230d;box-shadow:0 3px 8px #070b0788}
+.object-data{display:block;min-width:0}
+.object-data strong{display:block;color:#ecd6a7;font:600 12px/1.35 system-ui,"Noto Sans SC",sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.object-data span{display:block;color:#a8b099;font:10px/1.55 system-ui,"Noto Sans SC",sans-serif;margin-top:4px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.museum-count{font:10px monospace;color:#bbad85}
+.card-gallery{display:grid;grid-template-columns:minmax(0,1.55fr) 310px;gap:15px;margin-top:10px}
+.card-main,.card-detail{border:1px solid #70674c;border-radius:7px;background:linear-gradient(155deg,#263329,#18231b);box-shadow:inset 0 1px #d3c28f1d,0 12px 27px #080e08ad;min-width:0}
+.card-main{padding:13px}
+.card-section-heading{display:flex;gap:10px;align-items:center;justify-content:space-between;margin:1px 0 12px}
+.card-section-heading h2{font:600 20px Georgia,"Noto Serif SC",serif;color:#f0d7a2;margin:0}
+.card-section-heading p{color:#adb6a0;font:11px monospace;margin:5px 0 0}
+.card-state{color:#d9bf81;border:1px solid #817147;border-radius:20px;padding:6px 10px;font:10px monospace}
+.card-scene{position:relative;overflow:hidden;min-height:480px;border:1px solid #506046;border-radius:5px;background:#111c14}
+.card-scene:before{content:"";position:absolute;pointer-events:none;inset:0;border:1px solid #bca77c19;z-index:1}
+.card-scene canvas{display:block;width:100%;height:auto;aspect-ratio:820/620;touch-action:none;cursor:grab}
+.card-scene canvas:active{cursor:grabbing}
+.card-scene-mark{position:absolute;pointer-events:none;z-index:2;font:10px monospace;color:#b1b69e}
+.card-scene-mark.top{top:12px;left:13px}.card-scene-mark.bottom{bottom:12px;right:13px}
+.card-controlbar{margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.card-controlbar button{min-height:36px;padding:7px 12px;border:1px solid #8e8056;background:linear-gradient(#42513e,#263429);color:#e8d4a8;border-radius:4px}
+.card-controlbar button:hover{border-color:#d2b678;color:#fff0bb}
+.card-controlbar button[aria-pressed=true]{background:linear-gradient(#7c6c45,#4e482f);border-color:#c1a56f}
+.card-render-status{margin-left:auto;color:#a9b9a1;font:11px monospace}
+.card-sliders{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:11px}
+.card-control{display:grid;grid-template-columns:38px 1fr 41px;align-items:center;gap:7px;font:11px monospace;color:#c6c1a2}
+.card-control input{width:100%;accent-color:#b89b64}.card-control output{color:#e8d5a6;text-align:right}
+.card-detail{padding:15px}.card-detail-head{display:flex;justify-content:space-between;align-items:center;gap:8px;border-bottom:1px solid #475b46;padding-bottom:10px;margin-bottom:13px}
+.card-detail-head h3{font:600 15px Georgia,"Noto Serif SC",serif;color:#ebd19c;margin:0}
+.card-detail-head span{color:#9caa95;font:10px monospace}
+.card-wire{border:1px solid #4e5e46;background:#101d15;border-radius:4px;overflow:hidden;height:180px}
+.card-wire canvas{width:100%;height:100%;display:block}
+.card-figure{color:#acb79e;font:10px/1.6 monospace;margin:8px 0 15px}
+.card-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.card-stat{padding:11px;background:#17241b;border:1px solid #465940;border-radius:4px}
+.card-stat b{display:block;color:#e8cf92;font:600 21px/1.2 Georgia,serif}
+.card-stat span{font:10px monospace;color:#9eac99}
+.card-desc{color:#b8c2ad;font:12px/1.8 system-ui,"Noto Sans SC",sans-serif;margin:15px 0}
+.card-desc strong{color:#ead29d}
+.card-workflow{padding:10px 11px;background:#17241b;border:1px solid #4c6048;border-left:2px solid #a99263;color:#b6c5ad;font:11px/1.7 monospace}
+.museum-small-note{margin:15px 0 4px;color:#a4b39e;font:11px monospace}
+@media(max-width:1160px){.museum-choices{grid-template-columns:repeat(4,minmax(0,1fr))}.card-gallery{grid-template-columns:minmax(0,1fr) 270px}}
+@media(max-width:780px){.museum-bar{padding:11px 10px}.museum-choices{display:flex;overflow-x:auto;gap:8px;padding-bottom:5px;scroll-snap-type:x mandatory}.object-option{flex:0 0 155px;min-height:74px;scroll-snap-align:start}.museum-bar-heading{align-items:flex-start}.museum-bar-heading span{max-width:175px;font-size:10px;text-align:right}.card-gallery{grid-template-columns:1fr}.card-scene{min-height:0}.card-main{padding:9px}.card-sliders{grid-template-columns:1fr;gap:7px}.card-render-status{margin-left:0}.card-section-heading h2{font-size:18px}.card-detail{padding:12px}.card-wire{height:170px}.card-detail .card-stats{grid-template-columns:repeat(3,1fr)}}
+
 </style></head><body><div class="wrap">
-<header><div class="brand"><small>WORK · ORIGINAL STRUCK BRASS / 3D FORENSIC LAB</small><h1>原版金币 · 三维解剖台</h1><p>基于 Work 原始源码逐像素复现 · 同一份金币结构与材质算法 · 可自由旋转研究</p></div>
-<nav><a href="../../soul-table.html">01 原老虎机</a><a href="../coin-pusher/index.html">02 推币塔</a><a class="active" href="./index.html">03 金币研究室</a><a href="./items.html">04 多物品 / 人物卡</a></nav></header>
+<header><div class="brand"><small>WORK · ORIGINAL STRUCK BRASS / 3D FORENSIC LAB</small><h1>全物品观赏 · Work 实体研究室</h1><p>一处浏览所有物品 · 选择金币或人物卡单独观赏 · 原版三维光照与模型结构</p></div>
+<nav><a href="../../soul-table.html">01 原老虎机</a><a href="../coin-pusher/index.html">02 推币塔</a><a class="active" href="./index.html">03 全物品观赏</a></nav></header>
+<section class="museum-bar" aria-label="选择展示的物品">
+ <div class="museum-bar-heading"><strong>物品藏品 · 选择一件单独观赏</strong><span><span id="objectIndex">01 / 07</span> · <span id="selectionInfo">原版 Work 金币模型 · 保留全部研究工具</span></span></div>
+ <div id="objectPicker" class="museum-choices" role="group" aria-label="当前可选物品"></div>
+</section>
+<div id="coin-pane">
 <div class="section-head"><h2>01 / 真正的三维金币 · 原版材质</h2><small>拖拽金币旋转 · 双击恢复视角 · 镜头位置保持 Work 原值</small></div>
 <div class="main"><section class="cell"><div class="topline"><span class="title">WORK 原始 CPU 光栅器 · LIVE</span><span id="status" class="meta">VERIFYING SOURCE...</span></div>
 <div class="hero-box"><div class="hero-corner lt">PHYSICALLY THICK PLANCHET / 10 FACETS</div><div class="hero-corner rt" id="resolutionTag">43 × 43 PX</div><canvas id="hero" width="560" height="560" aria-label="以 Work 原版金币渲染代码实时绘制的可旋转三维金币"></canvas><div class="hero-corner lb">DRAG / ROTATE · CLICK FLIP · NO IMAGE GENERATION</div></div>
@@ -56,6 +119,43 @@ footer{margin:20px 0 0;color:#99a288;font:11px monospace;display:flex;gap:10px;j
 <div class="code-panel"><section class="cell"><div class="title">A · 几何与法线</div><p>六圈十边形顶点组成**真实厚币实体**：正反两个面、两侧斜倒角、中心刻齿边圈。浮雕本身不增加网格面数，而由 <code>dieHeight()</code> 求偏导生成连续法线，旋转时与实体一起变换。</p><hr class="thin-rule"><p><code>planchet() → mesh.faces</code> · <code>dieHeight() → makeDies()</code> · <code>basis(q)</code></p><p><a href="https://github.com/g2066203208-beep/paperchalk-world/blob/main/site/card-battle/slots-daggers/coin-art.js#L60-L136" target="_blank" rel="noopener">查看几何与浮雕原代码</a></p></section>
 <section class="cell"><div class="title">B · 逐像素金属反光</div><p>在 CPU 上用三角形重心坐标填像素。逐点取法线，计算方向漫反射、擦边高光、双重锐利镜面波瓣、近似菲涅耳，再经 **256 色深金色查找表**得到最终像素；强亮度区额外叠加暖金色辉光。</p><hr class="thin-rule"><p><code>metal() → raster() → putImageData() → drawBloom()</code></p><p><a href="https://github.com/g2066203208-beep/paperchalk-world/blob/main/site/card-battle/slots-daggers/coin-art.js#L137-L243" target="_blank" rel="noopener">查看光照与渲染原代码</a></p></section></div>
 <footer><span>BASELINE: <code>244779b322b33559c31aa1ae11bf6f0f7d15fe0c</code> · Work 原版金币 Blob SHA</span><span>原版金币文件保持不动 · 高分辨率是研究室对同一光栅器的采样提升</span></footer>
+</div><!-- original 03 coin analysis, preserved intact -->
+<section id="card-pane" class="card-gallery" aria-label="人物卡实体展示" hidden>
+ <div class="card-main">
+  <div class="card-section-heading">
+   <div><h2 id="cardName">人物卡</h2><p id="cardGroup">GitHub 原画 · 金属实体卡</p></div><span class="card-state" id="cardSide">正面 · 原画</span>
+  </div>
+  <div class="card-scene">
+   <div class="card-scene-mark top">WORK METAL / TRUE MESH</div>
+   <canvas id="cardStage" width="820" height="620" aria-label="程序化实体人物卡；可以用鼠标或手指旋转并看到厚度和背面"></canvas>
+   <div class="card-scene-mark bottom">DRAG · ROTATE / DOUBLE TAP · RESET</div>
+  </div>
+  <div class="card-controlbar">
+   <button id="cardAuto" aria-pressed="true">Ⅱ 暂停自动展示</button>
+   <button id="cardFlip">翻面</button>
+   <button id="cardReset">复位</button>
+   <button id="cardWireButton">线框 · 开</button>
+   <span id="cardStatus" class="card-render-status">准备加载原版立绘</span>
+  </div>
+  <div class="card-sliders">
+   <label class="card-control">水平 <input id="cardYaw" type="range" min="-180" max="180" step="1" value="-7"><output id="cardYawOut">-7°</output></label>
+   <label class="card-control">俯仰 <input id="cardPitch" type="range" min="-75" max="75" step="1" value="-9"><output id="cardPitchOut">-9°</output></label>
+  </div>
+ </div>
+ <aside class="card-detail">
+  <div class="card-detail-head"><h3>实体结构 / 材质研究</h3><span>WORK 3D</span></div>
+  <div class="card-wire"><canvas id="cardWire" width="330" height="190" aria-label="实体卡牌网格线框"></canvas></div>
+  <p class="card-figure">真实的六圈圆角矩形实体；表面不是 CSS 翻页。</p>
+  <div class="card-stats">
+   <div class="card-stat"><b>192</b><span>VERTICES</span></div>
+   <div class="card-stat"><b>162</b><span>FACETS</span></div>
+   <div class="card-stat"><b>96²</b><span>双面浮雕</span></div>
+  </div>
+  <p class="card-desc"><strong id="cardInfo">原版角色立绘</strong><br>人物保持原画比例和完整轮廓。卡框采用真正的薄实体金属倒角；光线沿用金币的 <code>metal()</code>，但不再用厚重装饰压住人物。</p>
+  <div class="card-workflow">Original Work coin shader<br>6 bevel rings → face normals<br>Emboss → metal reflections → bloom</div>
+  <p class="museum-small-note">修改物品只在上方选择，无需跳转网页。金币原有的线框、法线、碰撞、材质对照保留在同一处。</p>
+ </aside>
+</section>
 </div>
 <script>
 /* Original struck brass: a faceted, solid planchet, two relief dies and a
@@ -1548,6 +1648,7 @@ function drawHero(){
  h.fillText('R = '+coin.r.toFixed(2)+'   /   Q = '+coin.q.map(x=>x.toFixed(2)).join('  '),CW/2,503);h.textAlign='start';
 }
 function animate(time){
+ if(document.getElementById('coin-pane')?.hidden){last=time;requestAnimationFrame(animate);return;}
  const dt=Math.min(.044,Math.max(0,(time-last)/1000||0));last=time;tm+=dt;
  if(state.playing){state.yaw+=dt*19;state.roll+=dt*26;
   if(state.yaw>180)state.yaw-=360;if(state.roll>180)state.roll-=360;
@@ -1598,4 +1699,4 @@ window.WorkCoin3DQA={
 };
 })();
 
-</script></body></html>
+</script><script src="card-probe.js"></script><script src="item-gallery.js"></script></body></html>
