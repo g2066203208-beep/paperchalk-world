@@ -59,6 +59,7 @@ for(const v of viewports){
    throw Error('Unnecessarily high pixel-cost resolution: '+a.pixelResolution);
   if(a.broadcast.loadedPortraits<2||a.broadcast.errors.length)
    throw Error('Broadcast assets missing '+JSON.stringify(a.broadcast));
+  if(a.sceneDrawCalls>80)throw Error('GPU prop batching regressed: '+a.sceneDrawCalls+' draw calls');
   if(a.programFrames<2||a.frameRenderMs>180)
    throw Error('Insufficient animated programme rendering or stall '+JSON.stringify(a));
   await page.waitForTimeout(1200);
@@ -91,6 +92,8 @@ for(const v of viewports){
   await page.screenshot({path:path.join(out,v.name+'-04-talk-original-host.png')});
   await page.keyboard.press('Digit5');
   await page.waitForTimeout(340);
+  const world=await page.evaluate(()=>WorkTVQA.state().broadcast.worldFramesRendered);
+  if(world<1)throw Error('Original WorldArt.draw renderer has never rendered a real frame');
   await page.screenshot({path:path.join(out,v.name+'-05-original-world-art-documentary.png')});
   await page.keyboard.press('i');
   await page.waitForTimeout(250);
