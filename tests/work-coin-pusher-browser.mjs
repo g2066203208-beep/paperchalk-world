@@ -31,12 +31,13 @@ for(const tc of cases){
  await page.waitForTimeout(7200);
  await page.screenshot({path:path.join(out,tc.name+'-03-tower-pusher-and-payout.png')});
  const after=await page.evaluate(()=>CoinPusherQA.state());
- if(initial.credits!==72||initial.coins<36||initial.tower!==0)throw Error(tc.name+' initial balance or untouched tower is broken '+JSON.stringify(initial));
+ if(initial.credits!==72||initial.coins<36||initial.tower!==0||initial.stacked<10)throw Error(tc.name+' initial supported 3D coin tower is broken '+JSON.stringify(initial));
+ if(!initial.nativeFixedPhysics||initial.nativeTime<.1)throw Error(tc.name+' Work CoinTable native 240Hz physics not running '+JSON.stringify(initial));
  if(initial.visibleSprites<30 || initial.badMatrices!==0)throw Error(tc.name+' GOLD INVISIBLE OR INVALID ROTATION '+JSON.stringify(initial));
  if(after.inserted!==8||after.credits!==64)throw Error(tc.name+' drop/game economy broken '+JSON.stringify(after));
  if(after.visibleSprites<20||after.badMatrices!==0)throw Error(tc.name+' original gold rendering invalid after motion '+JSON.stringify(after));
  if(!Number.isFinite(after.front)||!Number.isFinite(after.prize)||after.prize<0||!Number.isFinite(after.fps))throw Error(tc.name+' broken physics state '+JSON.stringify(after));
- if(after.time<=initial.time+3)throw Error(tc.name+' motor did not run '+JSON.stringify(after));
+ if(after.time<=initial.time+3||after.nativeTime<=initial.nativeTime+3)throw Error(tc.name+' native CoinTable physics or plunger did not advance '+JSON.stringify(after));
  const pixels=await page.evaluate(()=>{
   const c=document.querySelector('#screen'),a=c.getContext('2d').getImageData(0,0,960,540).data;
   let nonblack=0;for(let y=30;y<510;y+=19)for(let x=30;x<930;x+=19){const i=(y*960+x)*4;if(a[i]+a[i+1]+a[i+2]>100)nonblack++;}
@@ -48,6 +49,27 @@ for(const tc of cases){
  console.log('PASS',tc.name,JSON.stringify({initial,after,nonblack:pixels}));
  await browserCtx.close();
 }
+// The ACTUAL hosted slot cabinet is page 1 and physical coin pusher is page 2.
+// Click the same on-screen controls players use, and verify both directions.
+const navCtx=await browser.newContext({viewport:{width:960,height:540},deviceScaleFactor:1});
+const navPage=await navCtx.newPage(),navErrors=[];
+navPage.on('pageerror',e=>navErrors.push(String(e)));
+await navPage.goto('http://127.0.0.1:4173/card-battle/soul-table.html',{waitUntil:'domcontentloaded'});
+await navPage.waitForFunction(()=>document.getElementById('loading')?.hidden===true,{timeout:20000});
+if(await navPage.locator('nav.work-arcade-pages a').count()!==2)throw Error('Work hosted slot cabinet page navigation missing');
+await navPage.screenshot({path:path.join(out,'hosted-page-1-original-slot.png')});
+await navPage.locator('nav.work-arcade-pages a').nth(1).click();
+await navPage.waitForURL('**/coin-pusher/index.html',{timeout:15000});
+await navPage.waitForFunction(()=>window.CoinPusherQA?.state()?.visibleSprites>=30,{timeout:20000});
+await navPage.screenshot({path:path.join(out,'hosted-page-2-native-physics-coin-pusher.png')});
+const routeState=await navPage.evaluate(()=>CoinPusherQA.state());
+await navPage.locator('nav.work-arcade-pages a').first().click();
+await navPage.waitForURL('**/soul-table.html',{timeout:15000});
+await navPage.waitForFunction(()=>document.getElementById('loading')?.hidden===true,{timeout:20000});
+if(!routeState.nativeFixedPhysics || routeState.stacked<10 || navErrors.length)throw Error('hosted two-page arcade navigation or native coin stacking failed '+JSON.stringify({routeState,navErrors}));
+result.push({viewport:'hosted-two-page-navigation',routeState,errors:navErrors});
+console.log('PASS hosted slot <-> coin pusher navigation',JSON.stringify(routeState));
+await navCtx.close();
 // Offline build embeds exactly the original Work renderer (no network dependencies).
 const portable=await browser.newContext({viewport:{width:960,height:540},deviceScaleFactor:1});
 const portablePage=await portable.newPage(),portableErrors=[];
