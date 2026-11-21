@@ -1,0 +1,39 @@
+name: Work multi-item gallery hosted browser QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/card-battle/slots-daggers/coin-lab/items.html'
+      - 'site/card-battle/slots-daggers/coin-lab/index.html'
+      - 'tests/work-item-gallery-browser.mjs'
+      - '.github/workflows/work-item-gallery-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real-browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve GitHub Pages source tree
+        run: |
+          nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/work-item-gallery-server.log 2>&1 &
+          sleep 2
+      - name: Run hosted gallery selection, 3D flip, thumbnail and responsive QA
+        run: node tests/work-item-gallery-browser.mjs
+      - name: Preserve actual running screenshots and videos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: work-hosted-multi-item-gallery-browser
+          path: artifacts/work-item-gallery/
+          retention-days: 14
+          if-no-files-found: warn
