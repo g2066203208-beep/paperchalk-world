@@ -62,171 +62,129 @@ function rotation(b,h,amount=1){
  }
  b.height=b.r*(Math.sqrt(Math.max(0,1-b.matrix[8]*b.matrix[8]))+.134*Math.abs(b.matrix[8]));
 }
-function addCoin(x,y,tier=0,kind='pile'){
+/*
+ * IMPORTANT: The complete original WORK CoinTable solver is reused here.
+ * CoinTable.update() -> CoinTable.step() -> contact()/pairs()/rotate()/bounds().
+ * We override only cabinet geometry in bounds and add a moving plunger.
+ * All original 3D coin support, angular momentum, face settlement, rendering
+ * and contact impulse code remains in ../coin-art.js unchanged.
+ */
+const fallers=[];
+function setPose(b,q){
+ b.q=q;b.matrix=mat(q);const z=b.matrix[8];
+ b.height=b.r*(Math.sqrt(Math.max(0,1-z*z))+.134*Math.abs(z));
+}
+function addCoin(x,y,kind='pile',below=null){
  const b=coins.make(1,0);b.x=x;b.y=y;b.kind=kind;
- b.base=tier*3.9;b.q=qm(axis(0,0,1,rand()*TAU),axis(1,0,0,(rand()-.5)*.16));
- b.matrix=mat(b.q);b.height=b.r*.134+1.2;b.z=b.base+b.height;
- b.vx=0;b.vy=0;b.vz=0;b.wx=0;b.wy=0;b.wz=0;
- b.mode='rest';b.age=0;b.tower=tier>0||kind==='tower';b.towerFree=false;b.hitAt=0;
- b.heat=0;b.falling=false;b.scored=false;b.settled=0;b.noise=rand();
- discs.push(b);return b;
+ setPose(b,qm(axis(0,0,1,rand()*TAU),axis(1,0,0,(rand()-.5)*.15)));
+ b.base=below?below.z+below.height:0;
+ b.z=b.base+b.height;b.support=below?below.id:0;
+ b.vx=b.vy=b.vz=b.wx=b.wy=b.wz=0;
+ b.mode='rest';b.firstHit=null;b.age=0;
+ b.tower=kind==='tower';b.towerFree=false;
+ coins.discs.push(b);discs=coins.discs;return b;
 }
 function build(){
- coins.reset(0);discs=[];credits=72;prize=0;inserted=0;clock=0;accum=0;
+ coins.reset(0);discs=coins.discs;fallers.length=0;
+ credits=72;prize=0;inserted=0;clock=0;accum=0;
  front=196;oldFront=196;frontV=0;auto=false;paused=false;gameOver=false;
  rumble=0;flash=0;bursts=[];collecting=[];towerBroken=0;towerBreakingStarted=false;dropX=485;
- // Genuine repoussé coins on the physical steel pusher bed, not sprites.
  const positions=[
   [257,284],[288,314],[319,273],[349,327],[376,287],[405,341],
   [449,347],[480,334],[517,347],[566,334],[604,282],[650,319],[686,280],
   [265,355],[323,358],[390,361],[589,360],[667,355],
   [290,241],[354,244],[416,255],[558,254],[637,236]
  ];
- for(const [x,y] of positions)addCoin(x,y,0,'loose');
- // A stacked, physically separate four-storey coin tower in the centre.
+ for(const [x,y] of positions)addCoin(x,y,'pile');
+ // The tower is not held up by an artificial per-tier height flag.
+ // Each coin references an actual lower coin, exactly like Work reset().
+ const tiers=[];
  for(let tier=0;tier<5;tier++){
-  const rad=tier===0?24:tier===1?21:tier===2?17:tier===3?12:6;
-  const count=tier<3?5:tier===3?4:2;
+  const radius=[22,19,15,10,4][tier],count=[5,5,5,4,2][tier];
+  const level=[];
   for(let i=0;i<count;i++){
-   const a=TAU*i/count+(tier%2)*.38;
-   const b=addCoin(480+Math.cos(a)*rad,278+Math.sin(a)*rad*.72,tier,'tower');
-   b.base=tier*4.1;b.z=b.base+b.height;
+   const angle=TAU*i/count+(tier%2)*.23;
+   const x=480+Math.cos(angle)*radius,y=278+Math.sin(angle)*radius*.72;
+   const below=tier===0?null:tiers[tier-1].reduce((best,c)=>!best||Math.hypot(c.x-x,c.y-y)<Math.hypot(best.x-x,best.y-y)?c:best,null);
+   const coin=addCoin(x,y,'tower',below);level.push(coin);
   }
+  tiers.push(level);
  }
- coins.discs=discs;
+ // Preserve the original world's 240-Hz stepped solver, including stack
+ // supports, actual 3D rim heights, pair contacts and quaternion rotation.
+ // Only bounds/overflow differ from the old felt tray.
+ coins.bounds=pusherBounds;
 }
 function dropped(){
- if(paused||credits<1||gameOver||discs.length>=MAX)return false;
- credits--;inserted++;const b=addCoin(clamp(dropX+(rand()-.5)*11,248,714),119,0,'drop');
- b.mode='air';b.z=68+rand()*28;b.vz=-25-rand()*35;b.vy=102+rand()*95;b.vx=(rand()-.5)*115;
- b.wx=(rand()-.5)*24;b.wy=(rand()-.5)*29;b.wz=(rand()-.5)*19;
- b.firstHit=null;b.tower=false;b.towerFree=true;
- sparkle(b.x,118,.44,5);sound(1220,.28);
+ if(paused||credits<1||gameOver||coins.discs.length>=MAX)return false;
+ credits--;inserted++;
+ const b=addCoin(clamp(dropX+(rand()-.5)*11,248,714),155,'drop');
+ b.mode='air';b.firstHit=null;
+ b.z=68+rand()*28;b.y=151+b.z*.67;
+ b.vz=-60-rand()*140;b.vy=155+rand()*180;b.vx=(rand()-.5)*210;
+ b.wx=(rand()-.5)*32;b.wy=(rand()-.5)*43;b.wz=(rand()-.5)*23;
+ setPose(b,qm(axis(0,0,1,rand()*TAU),axis(1,.33,0,1.1+rand()*2)));
+ sparkle(b.x,132,.5,5);sound(1220,.28);
  flash=Math.max(flash,.34);return true;
 }
-function breakTower(b,impact=80){
- if(!b.tower||b.towerFree)return;
- b.towerFree=true;b.mode='roll';b.hitAt=clock;towerBroken++;towerBreakingStarted=true;
- b.vx+=(rand()-.5)*Math.min(impact,220)*.6;b.vy+=Math.min(impact,150)*.63;
- b.wx=(rand()-.5)*6;b.wy=(rand()-.5)*6;b.wz=(rand()-.5)*20;
- b.base=0;b.vz=72+rand()*72;b.mode='air';
- sparkle(b.x,b.y-b.z*.67,.55,4);
-}
-function impact(a,b){
- const dx=a.x-b.x,dy=a.y-b.y,dist=Math.hypot(dx,dy)||.001;
- const lim=(a.r+b.r)*.84;
- if(dist>=lim || a.falling||b.falling)return;
- // Physical overlaps and impulses on Work's solid coin planchets.
- const nx=dx/dist,ny=dy/dist;
- const dz=Math.abs((a.z-a.height)-(b.z-b.height));
- if(dz>13.5 && (a.towerFree||b.towerFree))return;
- const va=(a.vx-b.vx)*nx+(a.vy-b.vy)*ny;
- const overlap=lim-dist;
- const ma=a.tower&&!a.towerFree?8:1,mb=b.tower&&!b.towerFree?8:1;
- const shareA=mb/(ma+mb),shareB=ma/(ma+mb);
- a.x+=nx*overlap*shareA*.83;a.y+=ny*overlap*shareA*.83;
- b.x-=nx*overlap*shareB*.83;b.y-=ny*overlap*shareB*.83;
- if(va<0){
-  const j=-va*.67;
-  a.vx+=nx*j*shareA;a.vy+=ny*j*shareA;
-  b.vx-=nx*j*shareB;b.vy-=ny*j*shareB;
-  a.wx+=ny*j*.035;b.wy+=nx*j*.025;
-  const intensity=-va;
-  if(intensity>44){
-   if(a.tower&&!a.towerFree)breakTower(a,intensity);
-   if(b.tower&&!b.towerFree)breakTower(b,intensity);
-   if(clock-(a.hitAt||0)>.13 && clock-(b.hitAt||0)>.13){
-     a.hitAt=b.hitAt=clock;coinSound({frequency:1600+rand()*850,power:Math.min(.65,intensity/750)});
-     if(intensity>97){sparkle((a.x+b.x)*.5,(a.y+b.y)*.5,Math.min(.9,intensity/300),3);rumble=Math.max(rumble,Math.min(3,intensity*.012));}
-   }
-  }
+function pusherBounds(b){
+ if(b.mode==='gone')return;
+ const moving=b.mode!=='rest';
+ const limL=G.left+b.r*.7,limR=G.right-b.r*.7;
+ let wallSpeed=0;
+ if(b.x<limL){wallSpeed=Math.abs(b.vx);b.x=limL;b.vx=Math.abs(b.vx)*.26;}
+ if(b.x>limR){wallSpeed=Math.abs(b.vx);b.x=limR;b.vx=-Math.abs(b.vx)*.26;}
+ if(b.y<G.y+b.r*.48){wallSpeed=Math.max(wallSpeed,Math.abs(b.vy));b.y=G.y+b.r*.48;b.vy=Math.abs(b.vy)*.27;}
+ if(wallSpeed>100){coins.sound('wall',b,wallSpeed/700);b.wz+=(rand()-.5)*wallSpeed*.018;}
+ if(b.y>G.front+1 && b.firstHit!==null){
+  const falling={...b,q:b.q.slice(),matrix:b.matrix.slice(),mode:'air',vz:-60-rand()*85,vy:Math.max(130,b.vy+90),fallAge:0,scored:false};
+  fallers.push(falling);b.mode='gone';b.value=0;
+  coins.sound('wall',b,.44);
+  return;
  }
+ // Gravity-like slope affects sliding coins, not static stacks.
+ if(moving && b.mode==='roll' && b.y>238)b.vy+=.08;
 }
 function step(h){
- clock+=h;
- const phase=clock*3.32;
- oldFront=front;
- front=192+38*Math.sin(phase);frontV=(front-oldFront)/h;
- // The moving shelf has a positive stroke, then retracts without pulling coins back.
- for(const b of discs){
-  b.age+=h;
-  if(b.falling){
-   b.x+=b.vx*h;b.y+=b.vy*h;b.z+=b.vz*h-.5*3000*h*h;b.vz-=3000*h;
-   rotation(b,h,.65);
-   if(b.y>446 || b.z< -80){b.scored=true;if(b.x>G.left+12&&b.x<G.right-12){prize+=1;collecting.push({x:b.x,y:442,age:0});sparkle(clamp(b.x,363,635),445,.85,9);sound(1300+rand()*700,.55);flash=Math.max(flash,.75);}}
-   continue;
-  }
-  if(b.tower&&!b.towerFree){
-   // The top pieces keep their own support until a real lower-tier impact.
-   b.z=b.base+b.height;
-   continue;
-  }
-  if(b.mode==='air'){
-   b.x+=b.vx*h;b.y+=b.vy*h;
-   b.z+=b.vz*h-.5*2600*h*h;b.vz-=2600*h;
-   rotation(b,h,.82);
-   if(b.z-b.height<=0){
-    const hit=-b.vz;b.z=b.height;
-    if(hit>175&&b.firstHit===null){sparkle(b.x,b.y,.42,4);coinSound({frequency:2050,power:Math.min(.5,hit/850)});}
-    b.firstHit=clock;
-    b.vz=hit>.2?hit*(hit>350?.12:.055):0;
-    if(b.vz<60){b.vz=0;b.mode='roll';b.base=0;}
-    b.wx*=.32;b.wy*=.32;b.wz*=.72;
-   }
-   continue;
-  }
-  b.x+=b.vx*h;b.y+=b.vy*h;
-  const drag=Math.exp(-(b.mode==='rest'?8.5:3.9)*h);
-  b.vx*=drag;b.vy*=drag;
-  // Slower turn while sliding. A bevel catches specular highlights as it spins.
-  b.wz=b.wz*.91+clamp(b.vx*.009,-2.6,2.6)*.09;
-  b.wx*=Math.exp(-5*h);b.wy*=Math.exp(-5*h);
-  rotation(b,h,.55);
-  b.base=0;
-  b.z=b.height;
-  if(b.mode!=='rest' && Math.hypot(b.vx,b.vy)<1.0&&Math.hypot(b.wx,b.wy,b.wz)<.23){
-    b.mode='rest';b.vx=b.vy=b.wx=b.wy=b.wz=0;
-  }else if(Math.hypot(b.vx,b.vy)>1.4)b.mode='roll';
-  // Sweeping plunger surface has its own collision, driven by a motor stroke.
-  if(b.y < front+b.r*.83 && b.y>G.y+3 && b.x>G.left+4 && b.x<G.right-4){
-   if(frontV>0){
-    b.y=front+b.r*.83;
-    b.vy=Math.max(b.vy,frontV*.86+6);
-    b.mode='roll';
-    b.wx+=frontV*.013;b.wz+=(rand()-.5)*.28;
-   }else if(b.y<front+b.r*.50) b.y=front+b.r*.50;
-  }
-  // Advance slowly on a tilted, worn steel playfield.
-  if(b.y>225){b.vy+=20*h;if(b.mode==='rest')b.mode='roll';}
-  if(b.x<G.left+b.r*.58){b.x=G.left+b.r*.58;b.vx=Math.abs(b.vx)*.28;}
-  if(b.x>G.right-b.r*.58){b.x=G.right-b.r*.58;b.vx=-Math.abs(b.vx)*.28;}
-  if(b.y>G.front && !b.falling){
-   b.falling=true;b.mode='air';b.vz=-80-rand()*85;b.vy=Math.max(110,b.vy+55);
-   b.wx=(rand()-.5)*19;b.wy=(rand()-.5)*23;b.wz=(rand()-.5)*18;
-   coinSound({frequency:1290,power:.3});
-  }
- }
- // The struck-brass bodies push one another, propagating force through the tower.
- for(let iteration=0;iteration<2;iteration++){
-  for(let i=0;i<discs.length;i++){
-   const a=discs[i];if(a.falling||a.scored)continue;
-   for(let j=i+1;j<discs.length;j++){
-    const b=discs[j];if(b.falling||b.scored)continue;
-    if(Math.abs(a.x-b.x)>32||Math.abs(a.y-b.y)>32)continue;
-    impact(a,b);
+ clock+=h;oldFront=front;
+ front=192+38*Math.sin(clock*3.32);frontV=(front-oldFront)/h;
+ // The pusher is an actual moving contact boundary; the normal
+ // impulse propagates through Work's unmodified CoinTable.pairs().
+ if(frontV>0){
+  for(const b of coins.discs){
+   if(b.mode==='air'||b.mode==='gone'||b.mode==='spend')continue;
+   if(b.x<G.left+2||b.x>G.right-2||b.y<G.y||b.y>G.front)continue;
+   const lip=front+b.r*.76;
+   if(b.y<lip && b.y>front-20){
+    b.y=lip;
+    b.vy=Math.max(b.vy,frontV*.92+29);
+    b.mode='roll';b.firstHit=b.firstHit??(coins.time-.24);
+    b.wx+=frontV*.012;b.wz+=(rand()-.5)*.5;
    }
   }
  }
- // A top-tier stack can be destabilised when its bottom pieces move away.
+ // This is the original fixed-step 3D body solver, NOT an imitation.
+ coins.update(h);
+ discs=coins.discs;
  for(const b of discs){
-  if(!towerBreakingStarted||!b.tower||b.towerFree||b.base<2)continue;
-  const below=discs.some(a=>a!==b&&a.tower&&a.base<b.base&&b.base-a.base<6.5&&!a.falling&&Math.hypot(a.x-b.x,a.y-b.y)<19.5);
-  if(!below)breakTower(b,75);
+  if(b.tower && !b.towerFree && b.mode!=='rest'){
+   b.towerFree=true;towerBreakingStarted=true;towerBroken++;
+   sparkle(b.x,b.y-b.z*.67,.38,3);
+  }
  }
- const gone=discs.filter(d=>d.scored);
- if(gone.length){
-  discs=discs.filter(d=>!d.scored);
-  coins.discs=discs;
+ for(let i=fallers.length-1;i>=0;i--){
+  const b=fallers[i];b.fallAge+=h;
+  b.x+=b.vx*h;b.y+=b.vy*h;b.z+=b.vz*h-.5*2600*h*h;b.vz-=2600*h;
+  b.q=qm(axis(b.wx,b.wy,b.wz,Math.hypot(b.wx,b.wy,b.wz)*h),b.q);
+  let len=Math.hypot(...b.q)||1;setPose(b,b.q.map(v=>v/len));
+  if(b.y>449 || b.fallAge>1.1){
+   if(b.x>G.left+12 && b.x<G.right-12){
+    prize++;collecting.push({x:b.x,y:442,age:0});
+    sparkle(clamp(b.x,363,635),445,.85,9);sound(1300+rand()*700,.55);
+    flash=Math.max(flash,.75);
+   }
+   fallers.splice(i,1);
+  }
  }
  for(const p of collecting)p.age+=h;
  collecting=collecting.filter(p=>p.age<1.3);
@@ -302,9 +260,10 @@ function glass(){
  ctx.restore();
 }
 function fallingCoins(){
- coins.discs=discs;coins.time=clock;
+ coins.discs=discs.concat(fallers);coins.time=clock;
  ctx.save();ctx.beginPath();ctx.rect(218,101,529,348);ctx.clip();
  coins.draw(ctx,{time:clock,light:{x:370+23*Math.sin(clock*.13),y:109+20*Math.cos(clock*.15)},flash});
+ coins.discs=discs;
  ctx.restore();
  for(const p of bursts){
   const u=1-p.age/p.life;
@@ -398,7 +357,7 @@ window.addEventListener('keydown',e=>{
 });
 build();requestAnimationFrame(animate);
 window.CoinPusherQA={
- state:()=>({credits,prize,inserted,coins:discs.length,tower:towerBroken,front:Math.round(front),time:Math.round(clock*100)/100,fps,auto,paused,gameOver,visibleSprites:discs.filter(b=>b.sprite&&b.buf&&b.buf.data.some((v,i)=>i%4===3&&v>0)).length,badMatrices:discs.filter(b=>b.matrix.length!==9||!Number.isFinite(b.z)||!Number.isFinite(b.height)).length}),
+ state:()=>({credits,prize,inserted,coins:discs.length,tower:towerBroken,stacked:discs.filter(b=>b.support>0).length,airborne:discs.filter(b=>b.mode==='air').length,fallers:fallers.length,nativeFixedPhysics:!!coins.step&&!!coins.contact&&!!coins.pairs,front:Math.round(front),time:Math.round(clock*100)/100,fps,auto,paused,gameOver,visibleSprites:discs.filter(b=>b.sprite&&b.buf&&b.buf.data.some((v,i)=>i%4===3&&v>0)).length,badMatrices:discs.filter(b=>b.matrix.length!==9||!Number.isFinite(b.z)||!Number.isFinite(b.height)).length}),
  drop:()=>dropped(),reset:()=>build(),setAim:x=>{dropX=clamp(x,G.left+20,G.right-20);},
  auto:on=>{auto=!!on;clickAt=clock;},pause:on=>{paused=!!on;}
 };
