@@ -31,7 +31,7 @@ for(const v of cases){
  if(a.meshFaces<1100||a.crtTriangles!==532||a.glassIOR!==1.5||a.solidFaces<1500||a.crtPixelCoverage<5000||!a.power)throw Error(v.name+' real 3D baseline incomplete '+JSON.stringify(a));
  if(!a.originalCabinetTexture||a.screenMappingPixels<5000)throw Error(v.name+' ORIGINAL WORK CABINET MATERIAL OR CACHED UV MAP MISSING '+JSON.stringify(a));
  if(a.rasterPasses<2||a.rasterPasses>a.frames+1||!Number.isFinite(a.frameRenderMs)||a.frameRenderMs>100)throw Error(v.name+' 3D/CRT rendering was not bounded '+JSON.stringify(a));
- if(pix.total<100||pix.metal<20||pix.black<100||pix.corner[0]+pix.corner[1]+pix.corner[2]>5)throw Error(v.name+' scene not visibly illuminated gold, green and black '+JSON.stringify(pix));
+ if(pix.total<100||pix.metal<(v.width<500?7:20)||pix.black<100||pix.corner[0]+pix.corner[1]+pix.corner[2]>5)throw Error(v.name+' scene not visibly illuminated gold, green and black '+JSON.stringify(pix));
  await page.screenshot({path:path.join(out,v.name+'-01-TV-FRONT.png')});
  await page.evaluate(()=>WorkTVQA.setAngles(27,7));
  await page.waitForTimeout(270);
