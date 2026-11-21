@@ -21,6 +21,9 @@ const canvas=document.createElement('canvas');canvas.width=496;canvas.height=324
 const ctx=canvas.getContext('2d',{alpha:false});ctx.setTransform(2,0,0,2,0,0);
 const output=document.createElement('canvas');output.width=496;output.height=324;
 const out=output.getContext('2d',{alpha:false});
+// The actual original game's low-res scene renderer, not a substitute.
+const worldFrame=document.createElement('canvas');worldFrame.width=328;worldFrame.height=179;
+const worldContext=worldFrame.getContext('2d');let worldAt=-1;
 out.imageSmoothingEnabled=false;
 for(const [key,url] of Object.entries(sources)){
  const im=new Image();actors[key]=im;
@@ -86,7 +89,11 @@ function line(x1,y1,x2,y2,c='#d1ab68',width=1){
  ctx.strokeStyle=c;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(x1+.5,y1+.5);ctx.lineTo(x2+.5,y2+.5);ctx.stroke();
 }
 function txt(str,x,y,size=9,color='#f9e6c4',align='left',weight=700){
- ctx.fillStyle=color;ctx.textAlign=align;ctx.font=weight+' '+size+'px "Microsoft YaHei","Noto Sans CJK SC",sans-serif';ctx.fillText(str,x,y);
+ if(/^[\x20-\x7E]+$/.test(str) && window.SlotStudy?.label){
+  window.SlotStudy.label(ctx,str,x,y-size*.85,Math.max(.6,size/7),color,align,250);
+ }else{
+  ctx.fillStyle=color;ctx.textAlign=align;ctx.font=weight+' '+size+'px "Microsoft YaHei","Noto Sans CJK SC",sans-serif';ctx.fillText(str,x,y);
+ }
 }
 function gradient(top,bottom){
  const g=ctx.createLinearGradient(0,0,0,162);g.addColorStop(0,top);g.addColorStop(1,bottom);
@@ -199,11 +206,16 @@ function show(t){
 }
 function documentary(t){
  gradient('#111d27','#354750');
+ // Draw a real frame from the existing Slots & Daggers pixel WorldArt.
+ if(window.WorldArt?.draw){
+  if(t-worldAt>1/12){window.WorldArt.draw(worldContext,'warden',t,{wind:.11});worldAt=t;}
+  ctx.save();ctx.imageSmoothingEnabled=false;ctx.drawImage(worldFrame,0,18,140,105);ctx.restore();
+ }
  for(let i=0;i<13;i++){const x=i*23-8;rect(x,78+(i%4)*6,18,67,'#1b2e39');rect(x+3,87,3,3,'#bda775');}
  for(let i=0;i<3;i++)line(-20,130+i*10,270,119+i*8,'rgba(229,197,135,.18)');
  person('host',145,35,103,108,t);
  rect(0,23,144,67,'rgba(10,18,26,.68)');
- txt('城市档案',12,43,15,'#eed6aa');
+ txt('游戏世界档案',12,43,13,'#eed6aa');
  txt('CITY / FIELD NOTES',12,60,8,'#afc5c7');
  txt(['走进暗处的街角','从一个故事看一座城','寻找被时间隐藏的线索'][Math.floor(t/6)%3],12,79,8,'#f0e6d7');
  network(4,t);ticker(t,'原创纪录片 · 虚构都市的街道与记忆');
@@ -257,6 +269,6 @@ function frame(ch,t,guide=false){
 }
 window.WorkTVBroadcast=Object.freeze({
  labels,ids,scripts,channelBrief,frame,portraitSources:sources,
- status:()=>({channels:labels.length,loadedPortraits:loaded,errors:errors.slice(),hostIsCanonical:!!actors.host?.naturalWidth,hostL2D:hostReady,originalGameBreathRig:!!hostRig})
+ status:()=>({channels:labels.length,loadedPortraits:loaded,errors:errors.slice(),hostIsCanonical:!!actors.host?.naturalWidth,hostL2D:hostReady,originalGameBreathRig:!!hostRig,originalWorldArt:!!window.WorldArt?.draw,originalPixelFont:!!window.SlotStudy?.label})
 });
 })();
