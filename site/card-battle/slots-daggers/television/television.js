@@ -171,34 +171,85 @@ function deskMesh(){
  }
 }
 function plantMesh(){
- // Octagonal planter, geometric stem and leaves, plus sparse amber blossoms.
- const cx=-3.72,cz=1.20,yy=-2.28;
- const lower=[],upper=[];
- for(let i=0;i<8;i++){
-  const a=i*TAU/8,dx=Math.cos(a),dz=Math.sin(a);
-  lower.push([cx+dx*.26,yy,cz+dz*.26]);
-  upper.push([cx+dx*.39,yy+.52,cz+dz*.39]);
- }
- for(let i=0;i<8;i++){
-  const j=(i+1)%8;add([lower[i],lower[j],upper[j],upper[i]],i%2?'tableEdge':'pot');
- }
- add(upper,'rimMetal');
- add(upper.map(v=>[cx+(v[0]-cx)*.77,yy+.53,cz+(v[2]-cz)*.77]),'soil');
- const seeds=[[-.12,-.12,1.09],[.17,.03,.90],[-.34,.13,1.00],[.35,.1,.83],[.06,-.29,1.18],[-.04,.30,.75]];
- for(let i=0;i<seeds.length;i++){
-  const [dx,dz,len]=seeds[i],base=[cx,yy+.52,cz],tip=[cx+dx,yy+.52+len,cz+dz];
-  add([[base[0]-.018,base[1],base[2]],[base[0]+.018,base[1],base[2]],tip],'stem');
-  for(let h=0;h<3;h++){
-   const k=.36+h*.22,sy=yy+.52+len*k,sx=cx+dx*k,sz=cz+dz*k;
-   const side=h%2?1:-1,wh=.22+(h===0?.04:0);
-   add([[sx,sy,sz],[sx+side*wh*.52,sy+.07,sz+.04],
-       [sx+side*wh,sy+.26,sz+.11],[sx+side*wh*.65,sy+.24,sz-.08]],h%2?'leafA':'leafB');
+ // Actual volumetric faceted ceramic pot, soil, curved branch tubes and
+ // folded leaves: every silhouette, thickness and light response comes from XYZ.
+ const cx=-3.70,cz=1.14,y=-2.28,ns=10;
+ const ring=(radius,h)=>Array.from({length:ns},(_,i)=>{
+   const a=i*TAU/ns;return [cx+Math.cos(a)*radius,y+h,cz+Math.sin(a)*radius];
+ });
+ const bottom=ring(.245,.025),shoulder=ring(.352,.45),lip=ring(.384,.51),inner=ring(.297,.51);
+ bridge(bottom,shoulder,'pot');bridge(shoulder,lip,'rimMetal');
+ bridge(lip,inner,'pot');
+ const soil=ring(.292,.465),cc=[cx,y+.465,cz];
+ for(let k=0;k<ns;k++)add([cc,soil[k],soil[(k+1)%ns]],'soil');
+ // Small 5-faced branch cylinders with a real 3D cross section.
+ const tube=(a,b,r,kind='stem')=>{
+  const dx=b[0]-a[0],dy=b[1]-a[1],dz=b[2]-a[2],l=Math.hypot(dx,dy,dz)||1;
+  let ux=-dz/l,uz=dx/l;if(Math.abs(dx)+Math.abs(dz)<.05){ux=1;uz=0;}
+  const vx=(dy*uz)/l,vy=(-dx*uz+dz*ux)/l,vz=-(dy*ux)/l;
+  const loop=(p,size)=>Array.from({length:5},(_,i)=>{
+   const ang=TAU*i/5;return [p[0]+size*(ux*Math.cos(ang)+vx*Math.sin(ang)),
+    p[1]+size*vy*Math.sin(ang),p[2]+size*(uz*Math.cos(ang)+vz*Math.sin(ang))];
+  });
+  bridge(loop(a,r),loop(b,r*.63),kind);
+ };
+ const branches=[
+  [-.13,-.08,1.20], [.12,.10,1.12],[-.34,.17,1.07],
+  [.34,-.13,1.09],[-.16,.31,.98],[.23,.28,.94],[.02,-.30,1.06]
+ ];
+ const leaf=(base,tip,width,kind)=>{
+  const dx=tip[0]-base[0],dz=tip[2]-base[2],l=Math.hypot(dx,dz)||1;
+  const nx=-dz/l,nz=dx/l,center=[
+   mix(base[0],tip[0],.52),mix(base[1],tip[1],.52)+.055,mix(base[2],tip[2],.52)];
+  const left=[center[0]+nx*width,center[1]+.065,center[2]+nz*width+.045];
+  const right=[center[0]-nx*width,center[1]-.015,center[2]-nz*width-.05];
+  const ridge=[center[0],center[1]+.13,center[2]+.055];
+  add([base,left,ridge],kind);add([base,ridge,right],kind);
+  add([ridge,left,tip],kind);add([ridge,tip,right],kind);
+ };
+ for(let i=0;i<branches.length;i++){
+  const [dx,dz,h]=branches[i],root=[cx+dx*.16,y+.47,cz+dz*.16],
+   joint=[cx+dx*.54,y+.49+h*.48,cz+dz*.54],
+   end=[cx+dx,y+.46+h,cz+dz];
+  tube(root,joint,.031,i%2?'stem':'leafA');tube(joint,end,.023,'stem');
+  for(let k=0;k<4;k++){
+   const f=.27+k*.19,side=((i+k)%2)*2-1;
+   const b=[mix(root[0],end[0],f),mix(root[1],end[1],f),mix(root[2],end[2],f)];
+   const tt=[b[0]+side*(.21+.06*k),b[1]+.16+.02*k,b[2]+(k%2?.14:-.13)];
+   tube(b,[mix(b[0],tt[0],.38),mix(b[1],tt[1],.38),mix(b[2],tt[2],.38)],.012,'stem');
+   leaf(b,tt,.105+(k%2)*.045,['leafA','leafB','leafC'][(i+k)%3]);
   }
-  if(i<3)for(let k=0;k<5;k++){
-   const a=k*TAU/5;
-   add([tip,[tip[0]+Math.cos(a-.3)*.12,tip[1]+Math.sin(a-.3)*.15,tip[2]+.03],
-       [tip[0]+Math.cos(a+.3)*.12,tip[1]+Math.sin(a+.3)*.15,tip[2]+.03]],'petal');
+  if(i<3){
+   const p=end;
+   for(let k=0;k<5;k++){
+    const a=k*TAU/5;
+    const q=[p[0]+Math.cos(a)*.107,p[1]+Math.sin(a)*.096,p[2]+.035];
+    add([p,q,[p[0]+Math.cos(a+.40)*.11,p[1]+Math.sin(a+.40)*.10,p[2]-.035]],'petal');
+   }
   }
+ }
+}
+
+function glassMesh(){
+ // Genuine hollow 16-facet glass tumbler. The cup has an outer wall, inner
+ // wall, finite-thickness open lip, thick base and a refractive liquid disk.
+ // Back-to-front transparency is rasterized against the shared XYZ Z-buffer.
+ transparent.length=0;
+ const cx=3.65,cz=1.23,y=-2.27,N=16;
+ const ring=(r,h)=>Array.from({length:N},(_,i)=>{
+  const a=i*TAU/N;return [cx+Math.cos(a)*r,y+h,cz+Math.sin(a)*r];
+ });
+ const outerBottom=ring(.186,.037),outerTop=ring(.224,.77);
+ const innerBottom=ring(.143,.105),innerTop=ring(.185,.765);
+ const waterRim=ring(.157,.46),waterCenter=[cx,y+.46,cz],baseCenter=[cx,y+.036,cz];
+ for(let i=0;i<N;i++){
+  const j=(i+1)%N;
+  transparent.push({pts:[outerBottom[i],outerBottom[j],outerTop[j],outerTop[i]],kind:'glassClear'});
+  transparent.push({pts:[innerTop[i],innerTop[j],innerBottom[j],innerBottom[i]],kind:'glassClear'});
+  transparent.push({pts:[outerTop[i],outerTop[j],innerTop[j],innerTop[i]],kind:'glassRim'});
+  transparent.push({pts:[innerBottom[i],innerBottom[j],outerBottom[j],outerBottom[i]],kind:'glassBase'});
+  transparent.push({pts:[waterCenter,waterRim[i],waterRim[j]],kind:'glassLiquid'});
+  transparent.push({pts:[baseCenter,outerBottom[i],outerBottom[j]],kind:'glassBase'});
  }
 }
 
@@ -261,7 +312,7 @@ function makeCrt(){
  state.screenTriCount=crt.length;
 }
 
-casing();deskMesh();plantMesh();makeCrt();state.meshCount=model.length;
+casing();deskMesh();plantMesh();glassMesh();makeCrt();state.meshCount=model.length;
 function rotation(v){
  const yaw=state.yaw*Math.PI/180,pitch=state.pitch*Math.PI/180;
  const ca=Math.cos(yaw),sa=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);
@@ -358,7 +409,7 @@ function makeScreen(t){
  sg.fillStyle='#07090f';sg.fillRect(0,0,w,h);
  if(height<=0)return;
  sg.save();sg.beginPath();sg.rect(0,(1-height)*h*.5,w,h*height);sg.clip();
- const p=poster(state.channel);
+ const p=window.WorkTVBroadcast?.frame(state.channel,t)||poster(state.channel);
  sg.drawImage(p,0,0);
  const glitch=state.transition==='switch'?Math.max(0,1-(t-state.transitionAt)/.44):0;
  if(glitch>.01){sg.fillStyle='rgba(237,221,198,'+(glitch*.15)+')';
@@ -425,6 +476,27 @@ function drawTriangle(vertices,uv,kind,n,col,base,mode,pixels,worldPts=null){
    if(z<depthBuffer[i]-.0003)continue;
    depthBuffer[i]=z;
    const o=i*4;
+   if(mode==='glass3D'){
+    // Snell-inspired offset, Fresnel edge reflection and true XYZ faceted
+    // silhouette, blended with the existing depth-tested 3D scene.
+    const wx=worldPts[0][0]*u+worldPts[1][0]*v+worldPts[2][0]*q;
+    const wy=worldPts[0][1]*u+worldPts[1][1]*v+worldPts[2][1]*q;
+    const radius=Math.hypot(wx-3.65,worldPts[0][2]*u+worldPts[1][2]*v+worldPts[2][2]*q-1.23);
+    const edge=clamp(1-Math.abs(projectedNormal[2]),0,1);
+    const schlick=.04+.96*edge**5;
+    const m=kind==='glassRim'?.73:kind==='glassBase'?.57:kind==='glassLiquid'?.42:.16+schlick*.38;
+    const shift=Math.round(projectedNormal[0]*2.2),shiftY=Math.round(projectedNormal[1]*2.0);
+    const sx=clamp(x+shift,0,renderW-1),sy=clamp(y+shiftY,0,renderH-1),si=(sy*renderW+sx)*4;
+    const amber=kind==='glassLiquid'?[95,116,116]:kind==='glassRim'?[205,213,209]:[183,197,202];
+    const spec=Math.pow(clamp(.42+projectedNormal[0]*-.49+projectedNormal[2]*.74,0,1),16)*120;
+    const grain=(Math.sin(wx*89+wy*33)*.5+.5)*3;
+    const ca=kind==='glassLiquid'?.62:kind==='glassRim'?.78:kind==='glassBase'?.66:.28;
+    frameBuffer[o]=clamp(frameBuffer[si]*(1-ca)+amber[0]*ca*m+spec+grain,0,255);
+    frameBuffer[o+1]=clamp(frameBuffer[si+1]*(1-ca)+amber[1]*ca*m+spec*.94+grain,0,255);
+    frameBuffer[o+2]=clamp(frameBuffer[si+2]*(1-ca)+amber[2]*ca*m+spec*.87+grain,0,255);
+    frameBuffer[o+3]=255;
+    continue;
+   }
    if(mode==='wood'){
     // Actual original CabinetArt.wood() pixels UV-mapped onto 3D tabletop.
     const tu=uv[0][0]*u+uv[1][0]*v+uv[2][0]*q,tv=uv[0][1]*u+uv[1][1]*v+uv[2][1]*q;
@@ -533,6 +605,18 @@ function prepareGeometry(){
      [face.pts[0],face.pts[i],face.pts[i+1]]);bodyFaces++;
   }
  }
+ // Transparent triangles have genuine depth/geometry. Sort the cup walls
+ // back-to-front before compositing; there is no 2D cup sprite after this.
+ const glassTriangles=[];
+ for(const face of transparent){
+  const n=norm(face.pts);
+  for(let k=1;k<face.pts.length-1;k++){
+   const pts=[face.pts[0],face.pts[k],face.pts[k+1]];
+   glassTriangles.push({pts,n,kind:face.kind,z:pts.reduce((a,p)=>a+proj(p)[2],0)/3});
+  }
+ }
+ glassTriangles.sort((a,b)=>a.z-b.z);
+ for(const face of glassTriangles)drawTriangle(face.pts.map(proj),null,face.kind,face.n,null,0,'glass3D',null,face.pts);
  opaqueBuffer=opaqueBuffer.slice();
  const geometryDepth=depthBuffer.slice();
  screenSource=new Int32Array(renderW*renderH);
@@ -588,21 +672,8 @@ function draw(t){
  rasterScene(t);
  g.imageSmoothingEnabled=true;
  g.drawImage(physical,0,0,w,h);
- // EXACT authored Work cabinet-art.js physical glass raytrace sprite
- // (screen reflection and multiple refractive interfaces) projected onto
- // a contact point of the now-solid wood tabletop.
- if(workGlass){
-  const p=proj([3.50,-2.19,1.28]),sz=clamp(scale/115,.60,1.14);
-  g.save();g.translate(p[0],p[1]);g.scale(sz,sz);
-  g.drawImage(workGlass,-76,-128);g.restore();
- }
- if(workIvy){
-  // The original CabinetArt nearIvy foliage is an ambient accent behind
-  // the already-modelled plant, not a replacement for its geometry.
-  const p=proj([-4.10,-2.07,1.07]);
-  g.save();g.globalAlpha=.35;g.translate(p[0],p[1]);g.scale(.43,.51);
-  g.drawImage(workIvy,-145,-182);g.restore();
- }
+ // The tumbler, water, ceramic and folded leaves are now real rasterized
+ // 3D meshes with shared depth; never paint a flat glass/ivy image on top.
  // Legible, small silk-screened function labels on the real control housing.
  // No panel outside the television, no decorative screw/bolt art.
  g.font=Math.round(clamp(scale*.07,8,12))+'px ui-monospace,monospace';
@@ -619,8 +690,8 @@ function draw(t){
  state.seconds=t;state.frames++;
 }
 
-function switchPower(){state.power=!state.power;state.transition=state.power?'boot':'shutdown';state.transitionAt=performance.now()/1000;state.powerDial=state.power?.36:-.78;state.pressCount++;casing();deskMesh();plantMesh();state.meshCount=model.length;geometryDirty=true;document.getElementById('sr').textContent=state.power?'电视正在开机':'电视正在关机';}
-function switchChannel(delta){state.channel=(state.channel+delta+3)%3;state.channelDial=state.channel*.85-.65;state.pressCount++;state.transition='switch';state.transitionAt=performance.now()/1000;casing();deskMesh();plantMesh();state.meshCount=model.length;geometryDirty=true;document.getElementById('sr').textContent='频道 '+(state.channel+1)+'，正在播放 WORK 广告';}
+function switchPower(){state.power=!state.power;state.transition=state.power?'boot':'shutdown';state.transitionAt=performance.now()/1000;state.powerDial=state.power?.36:-.78;state.pressCount++;casing();deskMesh();plantMesh();glassMesh();state.meshCount=model.length;geometryDirty=true;document.getElementById('sr').textContent=state.power?'电视正在开机':'电视正在关机';}
+function switchChannel(delta){state.channel=(state.channel+delta+window.WorkTVBroadcast.labels.length*10)%window.WorkTVBroadcast.labels.length;state.channelDial=state.channel*.85-.65;state.pressCount++;state.transition='switch';state.transitionAt=performance.now()/1000;casing();deskMesh();plantMesh();state.meshCount=model.length;geometryDirty=true;document.getElementById('sr').textContent='频道 '+(state.channel+1)+'，'+window.WorkTVBroadcast.labels[state.channel];}
 function hitKnob(x,y){
  const p=proj([2.76,.53,.90]),p2=proj([2.76,-.45,.89]);
  return Math.hypot(x-p[0],y-p[1])<Math.max(24,scale*.25)?'power':Math.hypot(x-p2[0],y-p2[1])<Math.max(24,scale*.23)?'channel':null;
@@ -682,5 +753,5 @@ window.addEventListener('keydown',e=>{
  if(e.code==='Escape')location.href='../../soul-table.html';
 });
 requestAnimationFrame(loop);
-window.WorkTVQA={state:()=>({workCpu:(window.WorkTVCPU?.stats||null),workCpuNormalMap:window.WorkTVCPU?.dieSize||0,originalPaletteCount:window.WorkTVCPU?.paletteSize||0,geometryBuildMs:state.geometryBuildMs||0,meshResolution:[renderW,renderH],isReal3D:true,meshFaces:state.meshCount,crtTriangles:state.screenTriCount,power:state.power,channel:state.channel,yaw:state.yaw,pitch:state.pitch,metalSource:'Work coin-art.js metal() copied unchanged',renderCache:state.cacheStamp,solidFaces:state.opaqueFacesRendered,crtPixelCoverage:screenMaskPixels,glassIOR:1.5,frames:state.frames,fps:state.fps,screenSize:[buffer.width,buffer.height],viewport:[viewW,viewH],pressCount:state.pressCount,frameRenderMs:Math.round(frameRenderMs*10)/10,rasterPasses,screenMappingPixels:screenCoverage?.length||0,originalCabinetTexture:workSurfaceUsed,powerTransition:state.transition,transitionAge:Math.round((performance.now()/1000-state.transitionAt)*100)/100,frontScrews:0,controlPositions:{power:proj([2.76,.53,.90]).slice(0,2),channel:proj([2.76,-.45,.89]).slice(0,2)},screenShape:'eight-faceted chamfered curved CRT mesh',screenPrograms:reelAds.length,actualReelArt:!!window.ReelArt,modelColor:'Work faceted cast enamel + machined bezel + 3D timber desk',deskRealMesh:!!model.find(x=>x.kind==='woodTop'),originalWoodTexture:!!workWood,originalGlassSprite:!!workGlass,originalIvyAsset:!!workIvy,physicalFurnitureFaces:model.filter(x=>['tableEdge','tableLeg','woodTop'].includes(x.kind)).length,physicalPlantFaces:model.filter(x=>['pot','stem','leafA','leafB','leafC','petal'].includes(x.kind)).length}),setAngles:(yaw,pitch)=>{state.yaw=clamp(yaw,-37,37);state.pitch=clamp(pitch,-19,18);geometryDirty=true;},setPower:(v)=>{if(state.power!==!!v)switchPower();},nextChannel:()=>switchChannel(1)};
+window.WorkTVQA={state:()=>({workCpu:(window.WorkTVCPU?.stats||null),workCpuNormalMap:window.WorkTVCPU?.dieSize||0,originalPaletteCount:window.WorkTVCPU?.paletteSize||0,geometryBuildMs:state.geometryBuildMs||0,meshResolution:[renderW,renderH],isReal3D:true,meshFaces:state.meshCount,crtTriangles:state.screenTriCount,power:state.power,channel:state.channel,yaw:state.yaw,pitch:state.pitch,metalSource:'Work coin-art.js metal() copied unchanged',renderCache:state.cacheStamp,solidFaces:state.opaqueFacesRendered,crtPixelCoverage:screenMaskPixels,glassIOR:1.5,frames:state.frames,fps:state.fps,screenSize:[buffer.width,buffer.height],viewport:[viewW,viewH],pressCount:state.pressCount,frameRenderMs:Math.round(frameRenderMs*10)/10,rasterPasses,screenMappingPixels:screenCoverage?.length||0,originalCabinetTexture:workSurfaceUsed,powerTransition:state.transition,transitionAge:Math.round((performance.now()/1000-state.transitionAt)*100)/100,frontScrews:0,controlPositions:{power:proj([2.76,.53,.90]).slice(0,2),channel:proj([2.76,-.45,.89]).slice(0,2)},screenShape:'eight-faceted chamfered curved CRT mesh',screenPrograms:window.WorkTVBroadcast?.labels.length||reelAds.length,actualReelArt:!!window.ReelArt,broadcast:window.WorkTVBroadcast?.status()||null,realGlass3DFaces:transparent.length,glassMethod:'hollow 16-facet depth-rasterized geometry, Fresnel-refraction approximation',modelColor:'Work faceted cast enamel + machined bezel + 3D timber desk',deskRealMesh:!!model.find(x=>x.kind==='woodTop'),originalWoodTexture:!!workWood,originalGlassSprite:!!workGlass,originalIvyAsset:!!workIvy,physicalFurnitureFaces:model.filter(x=>['tableEdge','tableLeg','woodTop'].includes(x.kind)).length,physicalPlantFaces:model.filter(x=>['pot','stem','leafA','leafB','leafC','petal'].includes(x.kind)).length}),setAngles:(yaw,pitch)=>{state.yaw=clamp(yaw,-37,37);state.pitch=clamp(pitch,-19,18);geometryDirty=true;},setPower:(v)=>{if(state.power!==!!v)switchPower();},nextChannel:()=>switchChannel(1)};
 })();
