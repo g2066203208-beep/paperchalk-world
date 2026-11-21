@@ -280,8 +280,8 @@ function colorFor(kind,n,base){
  // Keep the exact Work metal response, but decouple it from the Work coin's
  // brass COLOR. Off-white porcelain body + satin nickel, high depth contrast.
  const tones={
- bodyEnamel:[98,84,67,.44,.47],edgeMetal:[143,117,78,.70,.37],
- rimMetal:[188,160,103,.79,.36],controlInset:[76,69,56,.47,.32],
+ bodyEnamel:[98,84,67,.44,.47],edgeMetal:[167,139,95,.82,.43],
+ rimMetal:[202,173,119,.90,.43],controlInset:[76,69,56,.47,.32],
  porcelain:[113,103,83,.49,.45],pearl:[159,148,118,.53,.44],
  frontCast:[103,95,79,.47,.38],base:[43,48,43,.38,.26],
  shadowSteel:[31,33,31,.27,.22],rubber:[13,15,13,.23,.14],
@@ -291,8 +291,8 @@ function colorFor(kind,n,base){
  engraving:[27,27,23,.21,.18],tableEdge:[81,65,41,.42,.27],
  tableLeg:[56,46,34,.41,.24],pot:[81,70,53,.56,.29],
  soil:[26,29,23,.10,.16],stem:[44,69,43,.14,.19],
- leafA:[67,87,52,.19,.27],leafB:[82,101,59,.22,.28],
- leafC:[111,119,64,.22,.28],petal:[183,134,77,.28,.35],
+ leafA:[135,159,88,.27,.43],leafB:[153,171,102,.29,.44],
+ leafC:[162,175,105,.30,.44],petal:[218,166,80,.46,.48],
  woodTop:[70,53,39,.22,.33]
  };
  const [r,g,b,gain,ambi]=tones[kind]||tones.porcelain;
@@ -438,11 +438,11 @@ function drawTriangle(vertices,uv,kind,n,col,base,mode,pixels){
     const tu=uv[0][0]*u+uv[1][0]*v+uv[2][0]*q,tv=uv[0][1]*u+uv[1][1]*v+uv[2][1]*q;
     const tx=clamp((tu*buffer.width)|0,0,buffer.width-1),ty=clamp((tv*buffer.height)|0,0,buffer.height-1);
     const xx=tu*2-1,yy=tv*2-1;
-    const strip=Math.exp(-Math.pow((xx+yy*.30+.65)/.19,2))*.12;
-    const edge=Math.pow(clamp(Math.max(Math.abs(xx),Math.abs(yy))-.68,0,1),2)*.18;
+    const strip=Math.exp(-Math.pow((xx+yy*.24+.60)/.15,2))*Math.exp(-Math.pow((yy+.45)/.79,2))*.22;
+    const edge=Math.pow(clamp(Math.max(Math.abs(xx),Math.abs(yy))-.68,0,1),2)*.22;
     const localAngle=Math.hypot(xx*.23,yy*.36);
     const glassFres=.04+.96*Math.pow(1-clamp(.98-localAngle,0,1),5);
-    const reflect=clamp((glassFres*.7+strip+edge),0,.23);
+    const reflect=clamp((glassFres*.78+strip+edge),0,.30);
     screenSource[i]=(ty*buffer.width+tx)*4;
     screenBlend[i]=Math.round(reflect*255);
     if(!screenVisited[i]){screenVisited[i]=1;screenCoverage.push(i);}
