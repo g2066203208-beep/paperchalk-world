@@ -4,6 +4,15 @@
 (()=>{'use strict';
 const labels=['午夜新闻','WORK 广告','人物访谈','夜间综艺','城市纪录','天气播报'];
 const ids=['NEWS','AD','TALK','SHOW','DOC','WEATHER'];
+const scripts=[
+ ['各位观众晚上好，欢迎收看午夜新闻。','城市旧书店今晚重新开灯，新的调查仍在继续。','天气提示：凌晨可能出现阵雨，请注意出行安全。'],
+ ['WORK 原创系列，献给所有喜欢金属与光的收藏者。','每一枚金币，每一枚星徽，都有属于自己的重量。','今夜打开 WORK，让另一个故事开始。'],
+ ['主持：欢迎来到午夜访谈，今天聊聊夜晚的城市。','嘉宾：有些故事，白天不容易被人发现。','主持：感谢分享，我们下一期节目再见。'],
+ ['今晚的舞台已经准备好，欢迎各位观众！','下一轮游戏即将开始，你准备好了吗？','恭喜本轮优胜者！精彩演出继续。'],
+ ['一座城市的故事，从普通的街道开始。','在旧路灯的光里，许多记忆被重新发现。','记录真实的脚步，也记录未被讲述的时刻。'],
+ ['晚上好，下面关注虚构城市未来三天的天气。','明日多云，气温有所下降，请注意保暖。','后日有小雨，外出请携带雨具。']
+];
+const channelBrief=['城市要闻 / 午夜直播','WORK 原创 / 品牌片','城市人物 / 深夜对谈','舞台现场 / 互动竞演','城市档案 / 夜行记','三日气象 / 城市观察'];
 const sources={host:'../../../assets/characters/protagonist-front.webp',guest:'../../../assets/characters/char-002/front.png'};
 const actors={},renderActors={},bounds={};let loaded=0,errors=[],hostRig=null,hostReady=false,lastHostPose=0;
 const canvas=document.createElement('canvas');canvas.width=248;canvas.height=162;
@@ -210,7 +219,7 @@ function weather(t){
  network(5,t);ticker(t,'游戏世界气象 · 所有数值均为虚构示意');
 }
 const scenes=[news,advert,talk,show,documentary,weather];
-function frame(ch,t){
+function frame(ch,t,guide=false){
  if(hostReady&&hostRig&&t*1000-lastHostPose>120){
    // Rendering here is a sampled offscreen L2D update; the television and
    // the main game never share mutable rig state or schedule a second loop.
@@ -218,11 +227,24 @@ function frame(ch,t){
  }
  const index=((ch%scenes.length)+scenes.length)%scenes.length;
  ctx.clearRect(0,0,248,162);scenes[index](t);
+ if(guide){
+   rect(18,19,212,126,'rgba(5,10,18,.96)');
+   rect(18,19,212,3,'#c9a66c');
+   txt('WORK NETWORK  /  节目指南',28,36,10,'#f5dbaa');
+   for(let i=0;i<labels.length;i++){
+     const y=47+i*15;
+     rect(26,y-9,197,14,index===i?'#355268':'#14232f');
+     if(index===i)rect(26,y-9,3,14,'#e0b475');
+     txt(String(i+1).padStart(2,'0')+'  '+labels[i],34,y,8,'#eee1d1');
+     txt(channelBrief[i],215,y,7,'#b1c3c7','right');
+   }
+   txt('按 1–6 选择频道  ·  I 关闭指南',124,142,7,'#b8a88f','center');
+ }
  out.imageSmoothingEnabled=false;out.drawImage(canvas,0,0,496,324);
  return output;
 }
 window.WorkTVBroadcast=Object.freeze({
- labels,ids,frame,portraitSources:sources,
+ labels,ids,scripts,channelBrief,frame,portraitSources:sources,
  status:()=>({channels:labels.length,loadedPortraits:loaded,errors:errors.slice(),hostIsCanonical:!!actors.host?.naturalWidth,hostL2D:hostReady,originalGameBreathRig:!!hostRig})
 });
 })();
