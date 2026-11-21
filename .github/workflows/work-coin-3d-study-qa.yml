@@ -1,0 +1,42 @@
+name: Work original coin 3D geometry and shading real-browser study
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/card-battle/slots-daggers/coin-lab/**'
+      - 'tests/work-coin-3d-study-browser.mjs'
+      - '.github/workflows/work-coin-3d-study-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  chromium-geometry-shader:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify source and research test syntax
+        run: |
+          git hash-object site/card-battle/slots-daggers/coin-art.js
+          node --check tests/work-coin-3d-study-browser.mjs
+      - name: Install Chromium
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve actual hosted page
+        run: |
+          nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/work-coin-lab-http.log 2>&1 &
+          sleep 2
+      - name: Check exact source pixel parity, model, 3D rotation, shader quality and physics on desktop and phone
+        run: node tests/work-coin-3d-study-browser.mjs
+      - name: Preserve actual screenshots, videos and results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: work-original-coin-3d-mesh-shader-lab-real-browser
+          path: artifacts/work-coin-3d-study/
+          if-no-files-found: warn
+          retention-days: 14
