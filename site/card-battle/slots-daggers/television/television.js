@@ -423,6 +423,17 @@ function drawTriangle(vertices,uv,kind,n,col,base,mode,pixels){
    if(z<depthBuffer[i]-.0003)continue;
    depthBuffer[i]=z;
    const o=i*4;
+   if(mode==='wood'){
+    // Actual original CabinetArt.wood() pixels UV-mapped onto 3D tabletop.
+    const tu=uv[0][0]*u+uv[1][0]*v+uv[2][0]*q,tv=uv[0][1]*u+uv[1][1]*v+uv[2][1]*q;
+    const sx=clamp((tu*woodWidth)|0,0,woodWidth-1),sy=clamp((tv*woodHeight)|0,0,woodHeight-1);
+    const src=(sy*woodWidth+sx)*4,k=.97+.15*(1-tv);
+    frameBuffer[o]=clamp(workWood[src]*1.18*k+12,0,255);
+    frameBuffer[o+1]=clamp(workWood[src+1]*1.14*k+11,0,255);
+    frameBuffer[o+2]=clamp(workWood[src+2]*1.13*k+10,0,255);
+    frameBuffer[o+3]=255;
+    continue;
+   }
    if(mode==='screenMap'){
     const tu=uv[0][0]*u+uv[1][0]*v+uv[2][0]*q,tv=uv[0][1]*u+uv[1][1]*v+uv[2][1]*q;
     const tx=clamp((tu*buffer.width)|0,0,buffer.width-1),ty=clamp((tv*buffer.height)|0,0,buffer.height-1);
@@ -479,7 +490,7 @@ function drawTriangle(vertices,uv,kind,n,col,base,mode,pixels){
  }
 }
 function prepareGeometry(){
- ensureWorkSurface();
+ ensureWorkSurface();makeWorkProps();
  renderW=Math.min(780,Math.max(320,Math.round(viewW))); // adaptive Work-scale internal CPU resolution
  renderH=Math.max(200,Math.round(renderW*viewH/viewW));
  physical.width=renderW;physical.height=renderH;
@@ -497,7 +508,8 @@ function prepareGeometry(){
   const n=norm(face.pts),col=colorComponents(face.kind,n,face.factor||0);
   const pts=face.pts.map(proj);
   for(let i=1;i<pts.length-1;i++){
-   drawTriangle([pts[0],pts[i],pts[i+1]],null,face.kind,n,col,0,'metal');bodyFaces++;
+   const uv=face.uv?[face.uv[0],face.uv[i],face.uv[i+1]]:null;
+   drawTriangle([pts[0],pts[i],pts[i+1]],uv,face.kind,n,col,0,face.kind==='woodTop'&&workWood?'wood':'metal');bodyFaces++;
   }
  }
  opaqueBuffer=opaqueBuffer.slice();
@@ -554,6 +566,21 @@ function draw(t){
  rasterScene(t);
  g.imageSmoothingEnabled=true;
  g.drawImage(physical,0,0,w,h);
+ // EXACT authored Work cabinet-art.js physical glass raytrace sprite
+ // (screen reflection and multiple refractive interfaces) projected onto
+ // a contact point of the now-solid wood tabletop.
+ if(workGlass){
+  const p=proj([3.50,-2.19,1.28]),sz=clamp(scale/115,.60,1.14);
+  g.save();g.translate(p[0],p[1]);g.scale(sz,sz);
+  g.drawImage(workGlass,-76,-128);g.restore();
+ }
+ if(workIvy){
+  // The original CabinetArt nearIvy foliage is an ambient accent behind
+  // the already-modelled plant, not a replacement for its geometry.
+  const p=proj([-4.10,-2.07,1.07]);
+  g.save();g.globalAlpha=.35;g.translate(p[0],p[1]);g.scale(.43,.51);
+  g.drawImage(workIvy,-145,-182);g.restore();
+ }
  // Legible, small silk-screened function labels on the real control housing.
  // No panel outside the television, no decorative screw/bolt art.
  g.font=Math.round(clamp(scale*.07,8,12))+'px ui-monospace,monospace';
@@ -632,5 +659,5 @@ window.addEventListener('keydown',e=>{
  if(e.code==='Escape')location.href='../../soul-table.html';
 });
 requestAnimationFrame(loop);
-window.WorkTVQA={state:()=>({isReal3D:true,meshFaces:state.meshCount,crtTriangles:state.screenTriCount,power:state.power,channel:state.channel,yaw:state.yaw,pitch:state.pitch,metalSource:'Work coin-art.js metal() copied unchanged',renderCache:state.cacheStamp,solidFaces:state.opaqueFacesRendered,crtPixelCoverage:screenMaskPixels,glassIOR:1.5,frames:state.frames,fps:state.fps,screenSize:[buffer.width,buffer.height],viewport:[viewW,viewH],pressCount:state.pressCount,frameRenderMs:Math.round(frameRenderMs*10)/10,rasterPasses,screenMappingPixels:screenCoverage?.length||0,originalCabinetTexture:workSurfaceUsed,powerTransition:state.transition,transitionAge:Math.round((performance.now()/1000-state.transitionAt)*100)/100,frontScrews:0,controlPositions:{power:proj([2.77,.53,.90]).slice(0,2),channel:proj([2.77,-.45,.89]).slice(0,2)},screenShape:'rounded curved integrated mesh',screenPrograms:reelAds.length,actualReelArt:!!window.ReelArt,modelColor:'pearl ceramic + satin silver'}),setAngles:(yaw,pitch)=>{state.yaw=clamp(yaw,-37,37);state.pitch=clamp(pitch,-19,18);geometryDirty=true;},setPower:(v)=>{if(state.power!==!!v)switchPower();},nextChannel:()=>switchChannel(1)};
+window.WorkTVQA={state:()=>({isReal3D:true,meshFaces:state.meshCount,crtTriangles:state.screenTriCount,power:state.power,channel:state.channel,yaw:state.yaw,pitch:state.pitch,metalSource:'Work coin-art.js metal() copied unchanged',renderCache:state.cacheStamp,solidFaces:state.opaqueFacesRendered,crtPixelCoverage:screenMaskPixels,glassIOR:1.5,frames:state.frames,fps:state.fps,screenSize:[buffer.width,buffer.height],viewport:[viewW,viewH],pressCount:state.pressCount,frameRenderMs:Math.round(frameRenderMs*10)/10,rasterPasses,screenMappingPixels:screenCoverage?.length||0,originalCabinetTexture:workSurfaceUsed,powerTransition:state.transition,transitionAge:Math.round((performance.now()/1000-state.transitionAt)*100)/100,frontScrews:0,controlPositions:{power:proj([2.77,.53,.90]).slice(0,2),channel:proj([2.77,-.45,.89]).slice(0,2)},screenShape:'rounded curved integrated mesh',screenPrograms:reelAds.length,actualReelArt:!!window.ReelArt,modelColor:'Work faceted cast enamel + machined bezel + 3D timber desk',deskRealMesh:!!model.find(x=>x.kind==='woodTop'),originalWoodTexture:!!workWood,originalGlassSprite:!!workGlass,originalIvyAsset:!!workIvy,physicalFurnitureFaces:model.filter(x=>['tableEdge','tableLeg','woodTop'].includes(x.kind)).length,physicalPlantFaces:model.filter(x=>['pot','stem','leafA','leafB','leafC','petal'].includes(x.kind)).length}),setAngles:(yaw,pitch)=>{state.yaw=clamp(yaw,-37,37);state.pitch=clamp(pitch,-19,18);geometryDirty=true;},setPower:(v)=>{if(state.power!==!!v)switchPower();},nextChannel:()=>switchChannel(1)};
 })();
