@@ -4,6 +4,10 @@ on:
     branches: [main]
     paths:
       - 'site/card-battle/slots-daggers/television/**'
+      - 'site/card-battle/slots-daggers/world-art.js'
+      - 'site/card-battle/slots-daggers/pixel-type.js'
+      - 'site/card-battle/slots-daggers/cabinet-art.js'
+      - 'site/card-battle/vendor/three.module.js'
       - 'site/card-battle/slots-daggers/coin-pusher/index.html'
       - 'site/card-battle/slots-daggers/coin-lab/index.html'
       - 'site/card-battle/soul-table.html'
@@ -24,7 +28,7 @@ jobs:
       - name: Syntax check the actual scene
         run: |
           node --check site/card-battle/slots-daggers/television/television.js
-          node --check site/card-battle/slots-daggers/television/work-tv-cpu.js
+          node --input-type=module --check < site/card-battle/slots-daggers/television/television-gpu.js
           node --check site/card-battle/slots-daggers/television/broadcast.js
           node --check tests/work-television-3d-browser.mjs
       - name: Install real Chromium
@@ -35,7 +39,7 @@ jobs:
         run: |
           nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/work-3d-tv-http.log 2>&1 &
           sleep 2
-      - name: Verify TV render, gold shader, glass, mobile and historical route cleanup
+      - name: Verify original pixel renderer, WebGL frame budget, broadcasts and mobile controls
         run: node tests/work-television-3d-browser.mjs
       - uses: actions/upload-artifact@v4
         if: always()
