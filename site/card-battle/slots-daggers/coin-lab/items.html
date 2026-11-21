@@ -16,7 +16,6 @@ html,body{margin:0;min-height:100%;background:radial-gradient(ellipse 72% 84% at
 <aside class="panel spec"><div class="spec-inner"><div class="kicker"><strong>建模 / 浮雕 / 光照</strong><span>NOT CSS 3D</span></div><div class="swatch"><canvas id="mesh" width="380" height="195" aria-label="由同一批三维模型顶点绘制的线框"></canvas><p>6 层倒角 · 前背实体 · 5 层侧面</p></div><div class="metric"><div><b id="verts">192</b><span>实体顶点 / VERTICES</span></div><div><b id="polys">162</b><span>面片 / POLYGONS</span></div><div><b id="engrave">96×96</b><span>双面浮雕法线场</span></div><div><b id="resolution">380²</b><span>CPU 光栅 / PIXELS</span></div></div><ul class="tech"><li><strong>01 · 金币的模型，只换轮廓</strong><span>复用 planchet() 的六个厚度环；十边形改圆角矩形。拖动到侧面可见真实厚度。</span></li><li><strong>02 · 金币的压印，换纹样</strong><span>保留 dieHeight() → makeDies() 的高度微分生成法线；压印改成卡框和职业章。</span></li><li><strong>03 · 金币的反射，原式照搬</strong><span>metal()、256 级黄铜色阶、三角形光栅和原版金色 bloom 不改公式；人物肖像单独做哑光上釉层。</span></li><li><strong>04 · 正版原画，不再用剪影</strong><span>选卡后将 GitHub 中的原始人物立绘贴入受光的正面牌芯，不生成替身角色。</span></li></ul><div class="proof" id="proof"><strong>源码比对：</strong> Work 原版 coin-art.js 的 metal() 光照函数保持逐字符一致。</div></div></aside></div>
 <div class="footer"><span>WORK COIN → CHARACTER CARD 3D · ALGORITHM-LINEAGE / SAME BRASS SHADER</span><a target="_blank" rel="noopener" href="https://github.com/g2066203208-beep/paperchalk-world/blob/main/site/card-battle/slots-daggers/coin-art.js">原版金币光照源代码</a></div>
 </div><script>
-/* WORK native coin shader derivative: card-art.js */
 /* Research derivative of WORK coin-art.js git blob 244779b322b33559c31aa1ae11bf6f0f7d15fe0c
  * ONLY changes: render sampling scale and read-only internal instrumentation.
  * See build-probe.py for the entire precise diff. */
@@ -109,6 +108,7 @@ html,body{margin:0;min-height:100%;background:radial-gradient(ellipse 72% 84% at
     return {points,faces};
   }
   const mesh = planchet();
+  const dieSize = 96;
   // WORK original die-height -> finite difference normal field. The sole
   // artwork change is rectangular seals, corner chase and character crest.
   let mark=0;
@@ -789,7 +789,6 @@ html,body{margin:0;min-height:100%;background:radial-gradient(ellipse 72% 84% at
 })();
 
 </script><script>
-/* WORK native coin shader derivative: items-3d.js */
 /* WORK object viewer: use a real 3D rounded-rect derivative of native coin raster.
    All portraits are original, unchanged images in this user's GitHub repo. */
 (()=>{'use strict';
