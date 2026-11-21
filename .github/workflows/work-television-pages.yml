@@ -47,13 +47,21 @@ jobs:
         run: |
           for i in $(seq 1 24); do
             count=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts" --jq '[.artifacts[] | select(.name=="github-pages" and .expired==false)] | length' || echo 0)
-            [ "${count}" -ge 1 ] && exit 0
+            if [ "${count}" -ge 1 ]; then echo "Pages artifact visible; allowing CDN/API metadata to settle"; sleep 45; exit 0; fi
             sleep 5
           done
           echo "Pages upload artifact not visible" >&2
           exit 1
       - name: Deploy verified current site with TV
         id: deployment
+        continue-on-error: true
+        uses: actions/deploy-pages@v4
+      - name: Retry after eventual Pages artifact metadata consistency
+        if: steps.deployment.outcome == 'failure'
+        run: sleep 45
+      - name: Retry verified Pages deployment after metadata settles
+        if: steps.deployment.outcome == 'failure'
+        id: deployment_retry
         uses: actions/deploy-pages@v4
       - name: Record the verified live address
         run: |
