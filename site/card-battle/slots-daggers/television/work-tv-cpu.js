@@ -92,9 +92,12 @@
 
 
   const warmLamp=normalized(-.27,-.41,1.03);
-  let patina=null,stats={pixelShaders:0,normalMapHits:0,goldPixels:0,materialTexels:0,dieSize};
+  let patina=null,stats={pixelShaders:0,normalMapHits:0,goldPixels:0,materialTexels:0,lightEvaluations:0,normalCacheHits:0,dieSize};
+  // Cache original Work metal() result by snapped normal as CoinTable does for
+  // rotated coin sprites: 2k reflections, not 260k expensive power calls.
+  const normalLightCache=new Map();
   function attachCabinetPixels(pixels){patina=pixels;}
-  function resetStats(){stats.pixelShaders=stats.normalMapHits=stats.goldPixels=stats.materialTexels=0;}
+  function resetStats(){stats.pixelShaders=stats.normalMapHits=stats.goldPixels=stats.materialTexels=stats.lightEvaluations=stats.normalCacheHits=0;}
   const mat={
     // Work cabinet procedural casting is the base texel pigment;
     // Work CoinTable metal() supplies each visible pixel's environment reflection.
@@ -139,7 +142,15 @@
     let a=nx+du*tx+dv*bx,b=ny+du*ty+dv*by,c=nz+du*tz+dv*bz;
     const inv=1/(Math.hypot(a,b,c)||1);a*=inv;b*=inv;c*=inv;
     // Work's original normal -> exact metal() -> original palette.
-    const light=metal(a,b,c,rough,t[4],warmLamp);
+    const na=clamp(Math.round(a*127)+127,0,254),nb=clamp(Math.round(b*127)+127,0,254),nc=clamp(Math.round(c*127)+127,0,254);
+    const keyCode=(na<<16)|(nb<<8)|nc;
+    let reflection=normalLightCache.get(keyCode);
+    if(reflection===undefined){
+      reflection=metal(a,b,c,0,0,warmLamp); // ORIGINAL unmodified Work shader
+      normalLightCache.set(keyCode,reflection);
+      stats.lightEvaluations++;
+    }else stats.normalCacheHits++;
+    const light=reflection+rough+t[4];
     const grit=((Math.sin(wx*47.2+wy*29.4+wz*10.9)*.5+.5)-.5)*3.4;
     const exposure=clamp(.79+light*.80,.43,1.80);
     let r=t[0]*exposure,g=t[1]*exposure,bcol=t[2]*exposure;
