@@ -46,6 +46,7 @@ function ensureWorkSurface(){
   window.CabinetArt.panel(context,0,0,192,144);
   workSurfacePixels=context.getImageData(0,0,192,144).data;
   workSurfaceUsed=true;
+  window.WorkTVCPU?.attachCabinetPixels(workSurfacePixels);
  }catch(err){console.warn('Work CabinetArt material unavailable:',err);}
 }
 
@@ -398,7 +399,7 @@ function colorComponents(kind,n,base){
  if(!values||values.length<3)return [8,11,8];
  return [Number(values[0]),Number(values[1]),Number(values[2])];
 }
-function drawTriangle(vertices,uv,kind,n,col,base,mode,pixels){
+function drawTriangle(vertices,uv,kind,n,col,base,mode,pixels,worldPts=null){
  const A=vertices[0],B=vertices[1],C=vertices[2];
  const x0=A[0],y0=A[1],x1=B[0],y1=B[1],x2=C[0],y2=C[1];
  const den=(y1-y2)*(x0-x2)+(x2-x1)*(y0-y2);
@@ -409,7 +410,8 @@ function drawTriangle(vertices,uv,kind,n,col,base,mode,pixels){
  const tex=pixels;
  const [R,G,Bc]=col||[0,0,0];
  const baseFres=.04;
- const fres=baseFres+(1-baseFres)*Math.pow(1-Math.abs(rotation(n)[2]),5);
+ const projectedNormal=rotation(n);
+ const fres=baseFres+(1-baseFres)*Math.pow(1-Math.abs(projectedNormal[2]),5);
  for(let y=ymin;y<=ymax;y++){
   const py=y+.5,at=y*renderW;
   for(let x=xmin;x<=xmax;x++){
@@ -464,6 +466,19 @@ function drawTriangle(vertices,uv,kind,n,col,base,mode,pixels){
     frameBuffer[o+2]=clamp(tex[p+2]*(1-a)+139*a+grain*.4,0,255);
     frameBuffer[o+3]=255;
     screenMaskPixels++;
+   }else if(mode==='metal'&&worldPts&&window.WorkTVCPU){
+    // Real WORK CPU fragment path: barycentric mesh position -> original
+    // 48x48 struck-die normals -> original metal() -> original alloy palette.
+    // This is intentionally evaluated per visible metal/ceramic pixel,
+    // NOT a shaded-once-per-triangle flat fill or a Canvas gradient.
+    const wx=worldPts[0][0]*u+worldPts[1][0]*v+worldPts[2][0]*q;
+    const wy=worldPts[0][1]*u+worldPts[1][1]*v+worldPts[2][1]*q;
+    const wz=worldPts[0][2]*u+worldPts[1][2]*v+worldPts[2][2]*q;
+    const rgb=window.WorkTVCPU.shade(kind,projectedNormal[0],projectedNormal[1],projectedNormal[2],wx,wy,wz);
+    frameBuffer[o]=(rgb>>>16)&255;
+    frameBuffer[o+1]=(rgb>>>8)&255;
+    frameBuffer[o+2]=rgb&255;
+    frameBuffer[o+3]=255;
    }else{
     const depth=(((x+y*17)*13)&31)*.022;
     let workPatina=1;
@@ -490,8 +505,10 @@ function drawTriangle(vertices,uv,kind,n,col,base,mode,pixels){
  }
 }
 function prepareGeometry(){
+ const materialBuildStart=performance.now();
  ensureWorkSurface();makeWorkProps();
- renderW=Math.min(780,Math.max(320,Math.round(viewW))); // adaptive Work-scale internal CPU resolution
+ window.WorkTVCPU?.resetStats();
+ renderW=Math.min(740,Math.max(320,Math.round(viewW))); // adaptive Work-scale internal CPU resolution
  renderH=Math.max(200,Math.round(renderW*viewH/viewW));
  physical.width=renderW;physical.height=renderH;
  const oldW=viewW,oldH=viewH,oldScale=scale;
@@ -509,7 +526,8 @@ function prepareGeometry(){
   const pts=face.pts.map(proj);
   for(let i=1;i<pts.length-1;i++){
    const uv=face.uv?[face.uv[0],face.uv[i],face.uv[i+1]]:null;
-   drawTriangle([pts[0],pts[i],pts[i+1]],uv,face.kind,n,col,0,face.kind==='woodTop'&&workWood?'wood':'metal');bodyFaces++;
+   drawTriangle([pts[0],pts[i],pts[i+1]],uv,face.kind,n,col,0,face.kind==='woodTop'&&workWood?'wood':'metal',null,
+     [face.pts[0],face.pts[i],face.pts[i+1]]);bodyFaces++;
   }
  }
  opaqueBuffer=opaqueBuffer.slice();
@@ -528,6 +546,7 @@ function prepareGeometry(){
  // The depth buffer remains body-only: phosphors never erase the housing.
  state.geometryDepth=geometryDepth;
  geometryDirty=false;
+ state.geometryBuildMs=Math.round((performance.now()-materialBuildStart)*10)/10;
 }
 function rasterScene(t){
  if(geometryDirty||!opaqueBuffer||Math.abs(renderW/Math.max(1,renderH)-viewW/Math.max(1,viewH))>.02)prepareGeometry();
@@ -659,5 +678,5 @@ window.addEventListener('keydown',e=>{
  if(e.code==='Escape')location.href='../../soul-table.html';
 });
 requestAnimationFrame(loop);
-window.WorkTVQA={state:()=>({isReal3D:true,meshFaces:state.meshCount,crtTriangles:state.screenTriCount,power:state.power,channel:state.channel,yaw:state.yaw,pitch:state.pitch,metalSource:'Work coin-art.js metal() copied unchanged',renderCache:state.cacheStamp,solidFaces:state.opaqueFacesRendered,crtPixelCoverage:screenMaskPixels,glassIOR:1.5,frames:state.frames,fps:state.fps,screenSize:[buffer.width,buffer.height],viewport:[viewW,viewH],pressCount:state.pressCount,frameRenderMs:Math.round(frameRenderMs*10)/10,rasterPasses,screenMappingPixels:screenCoverage?.length||0,originalCabinetTexture:workSurfaceUsed,powerTransition:state.transition,transitionAge:Math.round((performance.now()/1000-state.transitionAt)*100)/100,frontScrews:0,controlPositions:{power:proj([2.76,.53,.90]).slice(0,2),channel:proj([2.76,-.45,.89]).slice(0,2)},screenShape:'eight-faceted chamfered curved CRT mesh',screenPrograms:reelAds.length,actualReelArt:!!window.ReelArt,modelColor:'Work faceted cast enamel + machined bezel + 3D timber desk',deskRealMesh:!!model.find(x=>x.kind==='woodTop'),originalWoodTexture:!!workWood,originalGlassSprite:!!workGlass,originalIvyAsset:!!workIvy,physicalFurnitureFaces:model.filter(x=>['tableEdge','tableLeg','woodTop'].includes(x.kind)).length,physicalPlantFaces:model.filter(x=>['pot','stem','leafA','leafB','leafC','petal'].includes(x.kind)).length}),setAngles:(yaw,pitch)=>{state.yaw=clamp(yaw,-37,37);state.pitch=clamp(pitch,-19,18);geometryDirty=true;},setPower:(v)=>{if(state.power!==!!v)switchPower();},nextChannel:()=>switchChannel(1)};
+window.WorkTVQA={state:()=>({workCpu:(window.WorkTVCPU?.stats||null),workCpuNormalMap:window.WorkTVCPU?.dieSize||0,originalPaletteCount:window.WorkTVCPU?.paletteSize||0,geometryBuildMs:state.geometryBuildMs||0,isReal3D:true,meshFaces:state.meshCount,crtTriangles:state.screenTriCount,power:state.power,channel:state.channel,yaw:state.yaw,pitch:state.pitch,metalSource:'Work coin-art.js metal() copied unchanged',renderCache:state.cacheStamp,solidFaces:state.opaqueFacesRendered,crtPixelCoverage:screenMaskPixels,glassIOR:1.5,frames:state.frames,fps:state.fps,screenSize:[buffer.width,buffer.height],viewport:[viewW,viewH],pressCount:state.pressCount,frameRenderMs:Math.round(frameRenderMs*10)/10,rasterPasses,screenMappingPixels:screenCoverage?.length||0,originalCabinetTexture:workSurfaceUsed,powerTransition:state.transition,transitionAge:Math.round((performance.now()/1000-state.transitionAt)*100)/100,frontScrews:0,controlPositions:{power:proj([2.76,.53,.90]).slice(0,2),channel:proj([2.76,-.45,.89]).slice(0,2)},screenShape:'eight-faceted chamfered curved CRT mesh',screenPrograms:reelAds.length,actualReelArt:!!window.ReelArt,modelColor:'Work faceted cast enamel + machined bezel + 3D timber desk',deskRealMesh:!!model.find(x=>x.kind==='woodTop'),originalWoodTexture:!!workWood,originalGlassSprite:!!workGlass,originalIvyAsset:!!workIvy,physicalFurnitureFaces:model.filter(x=>['tableEdge','tableLeg','woodTop'].includes(x.kind)).length,physicalPlantFaces:model.filter(x=>['pot','stem','leafA','leafB','leafC','petal'].includes(x.kind)).length}),setAngles:(yaw,pitch)=>{state.yaw=clamp(yaw,-37,37);state.pitch=clamp(pitch,-19,18);geometryDirty=true;},setPower:(v)=>{if(state.power!==!!v)switchPower();},nextChannel:()=>switchChannel(1)};
 })();
