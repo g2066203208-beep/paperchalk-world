@@ -219,6 +219,16 @@ function weather(t){
  network(5,t);ticker(t,'游戏世界气象 · 所有数值均为虚构示意');
 }
 const scenes=[news,advert,talk,show,documentary,weather];
+function drawCaption(index,t){
+ const lines=scripts[index];
+ const message=lines[Math.floor(t/8)%lines.length];
+ // Real timed editorial copy, not a static poster. TV scale is intentionally
+ // limited to a small two-color phosphor subtitle strip.
+ rect(7,106,234,15,'rgba(7,14,20,.86)');
+ rect(7,106,2,15,'#be9860');
+ txt(message,124,116,7,'#f4e7ce','center',500);
+}
+
 function frame(ch,t,guide=false){
  if(hostReady&&hostRig&&t*1000-lastHostPose>120){
    // Rendering here is a sampled offscreen L2D update; the television and
@@ -226,7 +236,7 @@ function frame(ch,t,guide=false){
    hostRig.render(performance.now(),true);lastHostPose=t*1000;
  }
  const index=((ch%scenes.length)+scenes.length)%scenes.length;
- ctx.clearRect(0,0,248,162);scenes[index](t);
+ ctx.clearRect(0,0,248,162);scenes[index](t);drawCaption(index,t);
  if(guide){
    rect(18,19,212,126,'rgba(5,10,18,.96)');
    rect(18,19,212,3,'#c9a66c');
