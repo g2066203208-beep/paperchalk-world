@@ -40,6 +40,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: work-original-gold-coin-pusher-real-browser
-          path: artifacts/work-coin-pusher/
+          path: |
+            artifacts/work-coin-pusher/
+            site/card-battle/slots-daggers/coin-pusher/standalone.html
+            site/card-battle/slots-daggers/coin-pusher/README.md
+            site/card-battle/slots-daggers/coin-art.js
+            site/card-battle/slots-daggers/coin-pusher/game.js
           retention-days: 14
           if-no-files-found: warn
