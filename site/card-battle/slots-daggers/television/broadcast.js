@@ -5,7 +5,7 @@
 const labels=['午夜新闻','WORK 广告','人物访谈','夜间综艺','城市纪录','天气播报'];
 const ids=['NEWS','AD','TALK','SHOW','DOC','WEATHER'];
 const sources={host:'../../../assets/characters/protagonist-front.webp',guest:'../../../assets/characters/char-002/front.png'};
-const actors={},renderActors={},bounds={};let loaded=0,errors=[];
+const actors={},renderActors={},bounds={};let loaded=0,errors=[],hostRig=null,hostReady=false,lastHostPose=0;
 const canvas=document.createElement('canvas');canvas.width=248;canvas.height=162;
 const ctx=canvas.getContext('2d',{alpha:false});
 const output=document.createElement('canvas');output.width=496;output.height=324;
@@ -13,7 +13,22 @@ const out=output.getContext('2d',{alpha:false});
 out.imageSmoothingEnabled=false;
 for(const [key,url] of Object.entries(sources)){
  const im=new Image();actors[key]=im;
- im.onload=()=>{loaded++;renderActors[key]=key==='guest'?whiteKeyBackground(im):im;bounds[key]=alphaBounds(renderActors[key]);};
+ im.onload=()=>{
+  loaded++;
+  renderActors[key]=key==='guest'?whiteKeyBackground(im):im;
+  bounds[key]=alphaBounds(renderActors[key]);
+  if(key==='host' && window.PaperchalkL2DRig){
+   // Reuse the game's original breathing/eye-blink mesh on the canonical
+   // character, sampled at 8Hz for the TV to avoid costly duplicate RAFs.
+   const stage=document.createElement('canvas');stage.width=384;stage.height=384;
+   const rig=new window.PaperchalkL2DRig(im,stage,{
+    amplitude:.24,period:4.6,softness:.80,cleanup:true,playing:true,featurePreset:'heroine-front'
+   });
+   rig.ready.then(()=>{
+    hostRig=rig;renderActors[key]=stage;bounds[key]=alphaBounds(stage);hostReady=true;
+   }).catch(e=>errors.push('host L2D initialization: '+String(e)));
+  }
+ };
  im.onerror=()=>errors.push('missing portrait: '+url);
  im.src=url;
 }
@@ -196,6 +211,11 @@ function weather(t){
 }
 const scenes=[news,advert,talk,show,documentary,weather];
 function frame(ch,t){
+ if(hostReady&&hostRig&&t*1000-lastHostPose>120){
+   // Rendering here is a sampled offscreen L2D update; the television and
+   // the main game never share mutable rig state or schedule a second loop.
+   hostRig.render(performance.now(),true);lastHostPose=t*1000;
+ }
  const index=((ch%scenes.length)+scenes.length)%scenes.length;
  ctx.clearRect(0,0,248,162);scenes[index](t);
  out.imageSmoothingEnabled=false;out.drawImage(canvas,0,0,496,324);
@@ -203,6 +223,6 @@ function frame(ch,t){
 }
 window.WorkTVBroadcast=Object.freeze({
  labels,ids,frame,portraitSources:sources,
- status:()=>({channels:labels.length,loadedPortraits:loaded,errors:errors.slice(),hostIsCanonical:!!actors.host?.naturalWidth})
+ status:()=>({channels:labels.length,loadedPortraits:loaded,errors:errors.slice(),hostIsCanonical:!!actors.host?.naturalWidth,hostL2D:hostReady,originalGameBreathRig:!!hostRig})
 });
 })();
