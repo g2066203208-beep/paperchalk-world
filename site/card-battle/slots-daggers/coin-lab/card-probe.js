@@ -64,7 +64,7 @@
   // Same six-ring physical planchet topology as WORK's coin. ONLY change
   // its outline from 10-sided circle to rounded-rectangle portrait card.
   // Three dimensions, 6 bevel steps, front and reverse caps, faceted sides.
-  const HALFW=.56, HALFH=1.0, CORNER=.124, SEG=8, SIDECOUNT=SEG*4;
+  const HALFW=.666667, HALFH=1.0, CORNER=.124, SEG=8, SIDECOUNT=SEG*4;
   function planchet() {
     const points=[],faces=[];
     const rings=[[.972,.022],[.992,.019],[1,.012],[1,-.012],[.992,-.019],[.972,-.022]];
@@ -322,10 +322,10 @@
           highlight+=over;hotX+=over*(x+.5);hotY+=over*(y+.5);
           const p=(y*TILE+x)*4;
           const col=palette[clamp(Math.round(level*255),0,255)];
-          if(isFace&&texture[f.material]&&Math.abs(lx)<.527&&Math.abs(ly)<.945){
+          if(isFace&&texture[f.material]&&Math.abs(lx)<.625&&Math.abs(ly)<.945){
             // Embossed image paper is a separate finish. WORK metal() and
             // brass palette remain untouched for the thick model and bevel.
-            const ux=clamp(Math.floor((lx/.527+1)*.5*TEXTURE_W),0,TEXTURE_W-1);
+            const ux=clamp(Math.floor((lx/.625+1)*.5*TEXTURE_W),0,TEXTURE_W-1);
             const uy=clamp(Math.floor((ly/.945+1)*.5*TEXTURE_H),0,TEXTURE_H-1);
             const o=(uy*TEXTURE_W+ux)*4,t=texture[f.material],alpha=t[o+3]/255;
             const coat=clamp(.89+level*.16,.78,1.11),gloss=Math.pow(Math.max(0,level-.76),2)*36;
