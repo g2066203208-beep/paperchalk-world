@@ -31,12 +31,17 @@ jobs:
           test -s site/card-battle/slots-daggers/reel-art.js
           test -s site/card-battle/slots-daggers/cabinet-art.js
           test -s site/card-battle/slots-daggers/television/index.html
-          test -s site/card-battle/slots-daggers/television/television.js
-          node --check site/card-battle/slots-daggers/television/television.js
+          test -s site/card-battle/slots-daggers/television/television-gpu.js
+          test -s site/card-battle/slots-daggers/world-art.js
+          test -s site/card-battle/slots-daggers/pixel-type.js
+          test -s site/card-battle/vendor/three.module.js
+          node --input-type=module --check < site/card-battle/slots-daggers/television/television-gpu.js
+          grep -Fq 'src="television-gpu.js"' site/card-battle/slots-daggers/television/index.html
+          ! grep -Fq 'src="television.js"' site/card-battle/slots-daggers/television/index.html
           grep -Fq 'window.CabinetArt={desk,chassis,portraitChassis,drawer,cap,recess,bolt,panel,plaque,light,leafShade,wood,glass,nearIvy,texture}' site/card-battle/slots-daggers/cabinet-art.js
-          grep -Fq 'deskMesh()' site/card-battle/slots-daggers/television/television.js
-          grep -Fq 'workGlass' site/card-battle/slots-daggers/television/television.js
-          echo 'PASS real original Work assets, 3D table and actual TV geometry'
+          grep -Fq 'CabinetArt.wood' site/card-battle/slots-daggers/television/television-gpu.js
+          grep -Fq 'WorldArt.draw' site/card-battle/slots-daggers/television/broadcast.js
+          echo 'PASS actual original pixel art + real 3D GPU CRT'
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
