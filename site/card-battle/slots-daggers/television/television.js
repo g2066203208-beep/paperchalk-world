@@ -53,7 +53,7 @@ function ensureWorkSurface(){
 const buffer=document.createElement('canvas');buffer.width=496;buffer.height=324;
 const sg=buffer.getContext('2d',{alpha:false});
 const W=()=>window.innerWidth,H=()=>window.innerHeight;
-const state={cacheStamp:0,opaqueFacesRendered:0,yaw:-22,pitch:11,power:true,channel:0,powerDial:.36,channelDial:-.65,transition:'boot',transitionAt:performance.now()/1000,illum:.8,glare:1,seconds:0,frames:0,fps:0,dragging:false,pointerX:0,pointerY:0,viewW:1,viewH:1,meshCount:0,screenTriCount:0,errors:[],timeStep:0,flash:1,pressCount:0,metalSample:0};
+const state={cacheStamp:0,opaqueFacesRendered:0,yaw:-22,pitch:11,power:true,channel:0,showGuide:false,powerDial:.36,channelDial:-.65,transition:'boot',transitionAt:performance.now()/1000,illum:.8,glare:1,seconds:0,frames:0,fps:0,dragging:false,pointerX:0,pointerY:0,viewW:1,viewH:1,meshCount:0,screenTriCount:0,errors:[],timeStep:0,flash:1,pressCount:0,metalSample:0};
 const model=[],transparent=[],crt=[];
 const add=(pts,kind='olive',factor=0,meta={})=>model.push({pts,kind,factor,...meta});
 function rounded(cx,cy,w,h,r,z,segments=5){
@@ -412,7 +412,7 @@ function makeScreen(t){
  sg.fillStyle='#07090f';sg.fillRect(0,0,w,h);
  if(height<=0)return;
  sg.save();sg.beginPath();sg.rect(0,(1-height)*h*.5,w,h*height);sg.clip();
- const p=window.WorkTVBroadcast?.frame(state.channel,t)||poster(state.channel);
+ const p=window.WorkTVBroadcast?.frame(state.channel,t,state.showGuide)||poster(state.channel);
  sg.drawImage(p,0,0);
  const glitch=state.transition==='switch'?Math.max(0,1-(t-state.transitionAt)/.44):0;
  if(glitch>.01){sg.fillStyle='rgba(237,221,198,'+(glitch*.15)+')';
@@ -694,7 +694,7 @@ function draw(t){
 }
 
 function switchPower(){state.power=!state.power;state.transition=state.power?'boot':'shutdown';state.transitionAt=performance.now()/1000;state.powerDial=state.power?.36:-.78;state.pressCount++;casing();deskMesh();plantMesh();glassMesh();state.meshCount=model.length;geometryDirty=true;document.getElementById('sr').textContent=state.power?'电视正在开机':'电视正在关机';}
-function switchChannel(delta){state.channel=(state.channel+delta+window.WorkTVBroadcast.labels.length*10)%window.WorkTVBroadcast.labels.length;state.channelDial=state.channel*.85-.65;state.pressCount++;state.transition='switch';state.transitionAt=performance.now()/1000;casing();deskMesh();plantMesh();state.meshCount=model.length;geometryDirty=true;document.getElementById('sr').textContent='频道 '+(state.channel+1)+'，'+window.WorkTVBroadcast.labels[state.channel];}
+function switchChannel(delta){state.showGuide=false;state.channel=(state.channel+delta+window.WorkTVBroadcast.labels.length*10)%window.WorkTVBroadcast.labels.length;state.channelDial=state.channel*.85-.65;state.pressCount++;state.transition='switch';state.transitionAt=performance.now()/1000;casing();deskMesh();plantMesh();state.meshCount=model.length;geometryDirty=true;document.getElementById('sr').textContent='频道 '+(state.channel+1)+'，'+window.WorkTVBroadcast.labels[state.channel];}
 function hitKnob(x,y){
  const p=proj([2.76,.53,.90]),p2=proj([2.76,-.45,.89]);
  return Math.hypot(x-p[0],y-p[1])<Math.max(24,scale*.25)?'power':Math.hypot(x-p2[0],y-p2[1])<Math.max(24,scale*.23)?'channel':null;
@@ -752,11 +752,12 @@ window.addEventListener('keydown',e=>{
  if(e.code==='ArrowLeft'){state.yaw=clamp(state.yaw-3,-37,37);geometryDirty=true;}
  if(e.code==='ArrowRight'){state.yaw=clamp(state.yaw+3,-37,37);geometryDirty=true;}
  if(e.code==='KeyC'||e.code==='ArrowUp'){switchChannel(1);}
+ if(e.code==='KeyI'){state.showGuide=!state.showGuide;document.getElementById('sr').textContent=state.showGuide?'节目指南已打开':'节目指南已关闭';}
  if(e.code==='ArrowDown'){switchChannel(-1);}
  if(/^Digit[1-6]$/.test(e.code)){switchChannel(Number(e.code.slice(5))-1-state.channel);}
  if(e.code==='KeyR'){state.yaw=-17;state.pitch=11;if(!state.power)switchPower();geometryDirty=true;}
  if(e.code==='Escape')location.href='../../soul-table.html';
 });
 requestAnimationFrame(loop);
-window.WorkTVQA={state:()=>({workCpu:(window.WorkTVCPU?.stats||null),workCpuNormalMap:window.WorkTVCPU?.dieSize||0,originalPaletteCount:window.WorkTVCPU?.paletteSize||0,geometryBuildMs:state.geometryBuildMs||0,meshResolution:[renderW,renderH],isReal3D:true,meshFaces:state.meshCount,crtTriangles:state.screenTriCount,power:state.power,channel:state.channel,yaw:state.yaw,pitch:state.pitch,metalSource:'Work coin-art.js metal() copied unchanged',renderCache:state.cacheStamp,solidFaces:state.opaqueFacesRendered,crtPixelCoverage:screenMaskPixels,glassIOR:1.5,frames:state.frames,fps:state.fps,screenSize:[buffer.width,buffer.height],viewport:[viewW,viewH],pressCount:state.pressCount,frameRenderMs:Math.round(frameRenderMs*10)/10,rasterPasses,screenMappingPixels:screenCoverage?.length||0,originalCabinetTexture:workSurfaceUsed,powerTransition:state.transition,transitionAge:Math.round((performance.now()/1000-state.transitionAt)*100)/100,frontScrews:0,controlPositions:{power:proj([2.76,.53,.90]).slice(0,2),channel:proj([2.76,-.45,.89]).slice(0,2)},screenShape:'deep tapered eight-faceted CRT housing with machined collar and convex glass',screenPrograms:window.WorkTVBroadcast?.labels.length||reelAds.length,actualReelArt:!!window.ReelArt,broadcast:window.WorkTVBroadcast?.status()||null,realGlass3DFaces:transparent.length,glassMethod:'hollow 16-facet depth-rasterized geometry, Fresnel-refraction approximation',modelColor:'Work faceted cast enamel + machined bezel + 3D timber desk',deskRealMesh:!!model.find(x=>x.kind==='woodTop'),originalWoodTexture:!!workWood,originalGlassSprite:!!workGlass,originalIvyAsset:!!workIvy,physicalFurnitureFaces:model.filter(x=>['tableEdge','tableLeg','woodTop'].includes(x.kind)).length,physicalPlantFaces:model.filter(x=>['pot','stem','leafA','leafB','leafC','petal'].includes(x.kind)).length}),setAngles:(yaw,pitch)=>{state.yaw=clamp(yaw,-37,37);state.pitch=clamp(pitch,-19,18);geometryDirty=true;},setPower:(v)=>{if(state.power!==!!v)switchPower();},nextChannel:()=>switchChannel(1)};
+window.WorkTVQA={state:()=>({workCpu:(window.WorkTVCPU?.stats||null),workCpuNormalMap:window.WorkTVCPU?.dieSize||0,originalPaletteCount:window.WorkTVCPU?.paletteSize||0,geometryBuildMs:state.geometryBuildMs||0,meshResolution:[renderW,renderH],isReal3D:true,meshFaces:state.meshCount,crtTriangles:state.screenTriCount,power:state.power,channel:state.channel,yaw:state.yaw,pitch:state.pitch,metalSource:'Work coin-art.js metal() copied unchanged',renderCache:state.cacheStamp,solidFaces:state.opaqueFacesRendered,crtPixelCoverage:screenMaskPixels,glassIOR:1.5,frames:state.frames,fps:state.fps,screenSize:[buffer.width,buffer.height],viewport:[viewW,viewH],pressCount:state.pressCount,frameRenderMs:Math.round(frameRenderMs*10)/10,rasterPasses,screenMappingPixels:screenCoverage?.length||0,originalCabinetTexture:workSurfaceUsed,powerTransition:state.transition,transitionAge:Math.round((performance.now()/1000-state.transitionAt)*100)/100,frontScrews:0,controlPositions:{power:proj([2.76,.53,.90]).slice(0,2),channel:proj([2.76,-.45,.89]).slice(0,2)},screenShape:'deep tapered eight-faceted CRT housing with machined collar and convex glass',screenPrograms:window.WorkTVBroadcast?.labels.length||reelAds.length,showGuide:state.showGuide,programScripts:window.WorkTVBroadcast?.scripts?.length||0,actualReelArt:!!window.ReelArt,broadcast:window.WorkTVBroadcast?.status()||null,realGlass3DFaces:transparent.length,glassMethod:'hollow 16-facet depth-rasterized geometry, Fresnel-refraction approximation',modelColor:'Work faceted cast enamel + machined bezel + 3D timber desk',deskRealMesh:!!model.find(x=>x.kind==='woodTop'),originalWoodTexture:!!workWood,originalGlassSprite:!!workGlass,originalIvyAsset:!!workIvy,physicalFurnitureFaces:model.filter(x=>['tableEdge','tableLeg','woodTop'].includes(x.kind)).length,physicalPlantFaces:model.filter(x=>['pot','stem','leafA','leafB','leafC','petal'].includes(x.kind)).length}),setAngles:(yaw,pitch)=>{state.yaw=clamp(yaw,-37,37);state.pitch=clamp(pitch,-19,18);geometryDirty=true;},setPower:(v)=>{if(state.power!==!!v)switchPower();},nextChannel:()=>switchChannel(1)};
 })();
