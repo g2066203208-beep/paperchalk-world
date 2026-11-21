@@ -123,7 +123,7 @@
       // ORIGINAL 48x48 Work dieHeight() / makeDies() normal field,
       // applied to the two real metal dials, not to a fake face bitmap.
       const second=wy<0?1:0,die=dies[second];
-      const cx=2.76,cy=wy<0?-.45:.53;
+      const cx=2.64,cy=wy<0?-.45:.53;
       const x=clamp((wx-cx)/.158,-1,1),y=clamp((wy-cy)/.158,-1,1);
       const i=(clamp(Math.floor((x+1)*.5*dieSize),0,dieSize-1)+clamp(Math.floor((y+1)*.5*dieSize),0,dieSize-1)*dieSize)*4;
       du=die[i]*.33;dv=die[i+1]*.33;rough=die[i+3]*.20;
