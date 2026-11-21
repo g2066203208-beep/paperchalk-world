@@ -9,7 +9,7 @@ const tv=fs.readFileSync('site/card-battle/slots-daggers/television/television.j
 const html=fs.readFileSync('site/card-battle/slots-daggers/television/index.html','utf8');
 if(!metal(coin)||metal(coin)!==metal(tv))throw Error('Original Work coin metallic shading function was modified');
 if(!html.includes('src="../reel-art.js"')||!html.includes('src="../cabinet-art.js"'))throw Error('Slot ReelArt/CabinetArt originals were not wired to the television');
-if(!tv.includes('frontScrews:0')||!tv.includes('rounded curved integrated mesh'))throw Error('Curved glass integration or unnecessary screw removal missing');
+if(!tv.includes('frontScrews:0')||!tv.includes('deskMesh()')||!tv.includes('plantMesh()')||!tv.includes('woodQuad('))throw Error('Real table and faceted TV mesh missing');
 const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--enable-unsafe-swiftshader']});
 const viewports=[{name:'desktop-1280x720',width:1280,height:720},{name:'phone-portrait-390x844',width:390,height:844},{name:'phone-landscape-844x390',width:844,height:390}];
 const results=[];
@@ -20,11 +20,11 @@ for(const v of viewports){
  try{
   await page.goto('http://127.0.0.1:4173/card-battle/slots-daggers/television/index.html',{waitUntil:'domcontentloaded'});
   await page.waitForFunction(()=>window.WorkTVQA?.state().screenMappingPixels>5000&&window.WorkTVQA?.state().actualReelArt&&window.WorkTVQA?.state().originalCabinetTexture,{timeout:22000});
-  await page.waitForTimeout(1750);
+  await page.waitForTimeout(2250);
   const a=await page.evaluate(()=>WorkTVQA.state());
-  if(a.meshFaces<900||a.crtTriangles!==676||a.frontScrews!==0||a.screenPrograms!==3||a.powerTransition!=='on'||a.crtPixelCoverage<5000)throw Error('TV 3D design/genuine symbols incomplete '+JSON.stringify(a));
-  if(!a.modelColor.includes('ceramic')||!a.screenShape.includes('rounded curved')||a.frameRenderMs>80)throw Error('Model style or performance regression '+JSON.stringify(a));
-  await page.screenshot({path:path.join(out,v.name+'-01-original-slot-reel-tv-on.png')});
+  if(a.meshFaces<175||a.crtTriangles!==104||a.frontScrews!==0||a.screenPrograms!==3||a.powerTransition!=='on'||a.crtPixelCoverage<3000)throw Error('Low-poly TV model / Work CRT incomplete '+JSON.stringify(a));
+  if(!a.modelColor.includes('Work')||!a.screenShape.includes('faceted')||!a.deskRealMesh||!a.originalWoodTexture||!a.originalGlassSprite||!a.originalIvyAsset||a.physicalFurnitureFaces<20||a.physicalPlantFaces<25||a.frameRenderMs>160)throw Error('Work material reuse, real desk, plant or performance regression '+JSON.stringify(a));
+  await page.screenshot({path:path.join(out,v.name+'-01-table-original-wood-glass-ivy.png')});
   const offPos=a.controlPositions.power;
   await page.mouse.click(offPos[0],offPos[1]);
   await page.waitForTimeout(850);
