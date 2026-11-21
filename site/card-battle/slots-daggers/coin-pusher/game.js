@@ -14,7 +14,7 @@ const R=(seed)=>{let a=seed>>>0;return ()=>{a+=0x6d2b79f5;let t=Math.imul(a^a>>>
 const rand=R(20261121);
 const coins=new window.CoinTable(20261121,e=>coinSound(e));
 let discs=[],credits=72,prize=0,inserted=0,dropX=485,clock=0,accum=0,front=196,oldFront=196,frontV=0,auto=false,paused=false,gameOver=false;
-let rumble=0,flash=0,bursts=[],collecting=[],toneClock=0,towerBroken=0;
+let rumble=0,flash=0,bursts=[],collecting=[],toneClock=0,towerBroken=0,towerBreakingStarted=false;
 let audio=null,clickAt=0, last=0,seed=1, frameCount=0, fps=60, frameT=0, frames=0;
 const MAX=68,TARGET=24,STEP=1/180;
 const mouse={down:false,x:480,y:250};
@@ -74,7 +74,7 @@ function addCoin(x,y,tier=0,kind='pile'){
 function build(){
  coins.reset(0);discs=[];credits=72;prize=0;inserted=0;clock=0;accum=0;
  front=196;oldFront=196;frontV=0;auto=false;paused=false;gameOver=false;
- rumble=0;flash=0;bursts=[];collecting=[];towerBroken=0;dropX=485;
+ rumble=0;flash=0;bursts=[];collecting=[];towerBroken=0;towerBreakingStarted=false;dropX=485;
  // Genuine repoussé coins on the physical steel pusher bed, not sprites.
  const positions=[
   [257,284],[288,314],[319,273],[349,327],[376,287],[405,341],
@@ -106,7 +106,7 @@ function dropped(){
 }
 function breakTower(b,impact=80){
  if(!b.tower||b.towerFree)return;
- b.towerFree=true;b.mode='roll';b.hitAt=clock;towerBroken++;
+ b.towerFree=true;b.mode='roll';b.hitAt=clock;towerBroken++;towerBreakingStarted=true;
  b.vx+=(rand()-.5)*Math.min(impact,220)*.6;b.vy+=Math.min(impact,150)*.63;
  b.wx=(rand()-.5)*6;b.wy=(rand()-.5)*6;b.wz=(rand()-.5)*20;
  b.base=0;b.vz=72+rand()*72;b.mode='air';
@@ -219,7 +219,7 @@ function step(h){
  }
  // A top-tier stack can be destabilised when its bottom pieces move away.
  for(const b of discs){
-  if(!b.tower||b.towerFree||b.base<2)continue;
+  if(!towerBreakingStarted||!b.tower||b.towerFree||b.base<2)continue;
   const below=discs.some(a=>a!==b&&a.tower&&a.base<b.base&&b.base-a.base<6.5&&!a.falling&&Math.hypot(a.x-b.x,a.y-b.y)<19.5);
   if(!below)breakTower(b,75);
  }
