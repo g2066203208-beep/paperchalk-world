@@ -86,49 +86,47 @@ function casing(){
  model.length=0; // machining rebuilt only on dial movement, never on every frame
  // Ceramic CRT body, one continuous cast shell. The metal light response is
  // the original Work coin() shader; its color is NOT the old brass palette.
+ // A restrained consumer CRT: deep moulded shell and small softened corners.
  const body=[
-  // A genuinely deep, tapered back casting with broad faceted shoulder,
-  // then a thick machined front collar. Not a flat billboard extrusion.
-  [5.55,3.30,.35,-1.74,'shadowSteel'],
-  [5.77,3.48,.38,-1.55,'bodyEnamel'],
-  [6.18,3.90,.46,-1.05,'bodyEnamel'],
-  [6.50,4.17,.53,-.65,'bodyEnamel'],
-  [6.53,4.20,.54,.29,'bodyEnamel'],
-  [6.48,4.15,.51,.47,'edgeMetal'],
-  [6.38,4.04,.47,.59,'bodyEnamel'],
-  [6.29,3.94,.43,.70,'rimMetal'],
+  [5.48,3.53,.23,-1.54,'shadowSteel'],
+  [5.73,3.69,.28,-1.38,'bodyEnamel'],
+  [5.98,3.88,.30,-.98,'bodyEnamel'],
+  [6.14,4.02,.34,-.49,'bodyEnamel'],
+  [6.16,4.04,.34,.37,'bodyEnamel'],
+  [6.12,4.00,.33,.50,'edgeMetal'],
+  [6.06,3.94,.32,.61,'bodyEnamel'],
+  [6.02,3.90,.32,.70,'rimMetal'],
  ];
  let last=null;
  for(const [w,h,r,z,mat] of body){let now=contour(0,0,w,h,r,z,9);if(last)bridge(last,now,mat);last=now;}
- plate(0,0,6.29,3.94,.43,.70,'bodyEnamel',.015);
+ plate(0,0,6.02,3.90,.32,.70,'bodyEnamel',.015);
  // The screen is a rounded, curved glass body INSIDE the continuous bezel.
  // The black 3-D elastomer gasket goes INTO the chassis. Its inner edge joins
  // the actual CRT's outermost mesh ring; no rectangular screen quad remains.
- const cx=-.37,cy=.025;
+ const cx=-.40,cy=.025;
  const screenRings=[
-  [5.43,3.59,.46,.702,'bodyEnamel'],
-  [5.32,3.51,.44,.748,'rimMetal'],
-  [5.23,3.44,.43,.758,'edgeMetal'],
-  [5.12,3.36,.42,.735,'recessDark'],
-  [5.02,3.29,.41,.748,'rubber'],
-  [4.92,3.22,.40,.778,'glassEdge'],
+  [5.07,3.74,.31,.702,'bodyEnamel'],
+  [4.99,3.68,.30,.727,'edgeMetal'],
+  [4.91,3.63,.29,.750,'recessDark'],
+  [4.84,3.55,.28,.749,'rubber'],
+  [4.75,3.46,.27,.779,'glassEdge'],
  ];
  last=null;
  for(const [w,h,r,z,mat] of screenRings){const now=contour(cx,cy,w,h,r,z,12);if(last)bridge(last,now,mat);last=now;}
  // Narrow, inset control cassette. It contains TWO real functions, not
  // decoration: upper click rotates the power selector, lower tunes a channel.
- const p0=contour(2.76,0,.71,2.79,.12,.700);
- const p1=contour(2.76,0,.61,2.69,.10,.725);
- bridge(p0,p1,'rimMetal');
- plate(2.76,0,.61,2.69,.10,.726,'controlInset',-.02);
- knob(2.76,.53,.134,.743,.102,12,false,state.powerDial||0);
- knob(2.76,-.45,.113,.743,.096,12,false,state.channelDial||0);
+ const p0=contour(2.64,0,.60,2.55,.09,.700);
+ const p1=contour(2.64,0,.53,2.48,.08,.725);
+ bridge(p0,p1,'edgeMetal');
+ plate(2.64,0,.53,2.48,.08,.726,'controlInset',-.02);
+ knob(2.64,.53,.154,.743,.103,24,false,state.powerDial||0);
+ knob(2.64,-.45,.135,.743,.096,24,false,state.channelDial||0);
  // A single genuine indicator lamp is useful: power + warmup feedback.
  // Unlike the previous fake bolt pattern, nothing is present without purpose.
- const lightHalo=contour(2.76,-1.045,.17,.08,.028,.742);
- const lightInner=contour(2.76,-1.045,.135,.055,.022,.757);
+ const lightHalo=contour(2.64,-1.045,.17,.08,.028,.742);
+ const lightInner=contour(2.64,-1.045,.135,.055,.022,.757);
  bridge(lightHalo,lightInner,'brushed');
- plate(2.76,-1.045,.135,.055,.022,.760,'lamp');
+ plate(2.64,-1.045,.135,.055,.022,.760,'lamp');
  // Side cooling ports are functional rear shell perforations, never exposed
  // as random stripes on the main face or across the glass.
  // Blank rear-side cast housing; no decorative fake vent slits.
@@ -288,10 +286,10 @@ function norm(points){
  return normalized(u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]);
 }
 function lens(x,y){return .192*Math.pow(Math.max(0,1-x*x),1.25)*Math.pow(Math.max(0,1-y*y),1.25);}
-function surf(x,y){return [-.37+x*2.46,.025+y*1.61,.780+lens(x,y)];}
+function surf(x,y){return [-.40+x*2.375,.025+y*1.73,.786+lens(x,y)];}
 function makeCrt(){
  crt.length=0;
- const cx=-.37,cy=.025,W=4.92,H=3.22,R=.40;
+ const cx=-.40,cy=.025,W=4.75,H=3.46,R=.27;
  const rings=[.18,.34,.50,.66,.82,.92,1];
  const N=1,vertexCount=8;
  const center=surf(0,0);
@@ -565,7 +563,7 @@ function drawTriangle(vertices,uv,kind,n,col,base,mode,pixels,worldPts=null){
     }
     let soft=['bodyEnamel','porcelain','pearl','frontCast'].includes(kind)?(Math.sin(x*.083+y*.044)*.011+depth*.022):0;
     if(kind==='dialFace'){
-      const centers=[[2.76,.53,.91],[2.76,-.45,.90]];
+      const centers=[[2.64,.53,.91],[2.64,-.45,.90]];
       let picked=centers[0],best=1e8;
       for(const center of centers){const cp=proj(center);const d=(cp[0]-x)**2+(cp[1]-y)**2;if(d<best){best=d;picked=cp;}}
       const theta=Math.atan2(y-picked[1],x-picked[0]),rho=Math.sqrt(best);
@@ -681,12 +679,12 @@ function draw(t){
  // No panel outside the television, no decorative screw/bolt art.
  g.font=Math.round(clamp(scale*.07,8,12))+'px ui-monospace,monospace';
  g.textAlign='center';g.fillStyle='rgba(214,213,212,.66)';
- for(const [label,world] of [['PWR',[2.76,.205,.751]],['CH',[2.76,-.748,.751]]]){
+ for(const [label,world] of [['PWR',[2.64,.205,.751]],['CH',[2.64,-.748,.751]]]){
   const pt=proj(world);g.fillText(label,pt[0],pt[1]);
  }
  g.textAlign='left';
  if(state.power){
-  const p=proj([2.76,-1.045,.81]);
+  const p=proj([2.64,-1.045,.81]);
   g.globalCompositeOperation='screen';glowAt(p[0],p[1],Math.max(16,scale*.24),true);
   g.globalCompositeOperation='source-over';
  }
@@ -696,7 +694,7 @@ function draw(t){
 function switchPower(){state.power=!state.power;state.transition=state.power?'boot':'shutdown';state.transitionAt=performance.now()/1000;state.powerDial=state.power?.36:-.78;state.pressCount++;casing();deskMesh();plantMesh();glassMesh();state.meshCount=model.length;geometryDirty=true;document.getElementById('sr').textContent=state.power?'电视正在开机':'电视正在关机';}
 function switchChannel(delta){state.showGuide=false;state.channel=(state.channel+delta+window.WorkTVBroadcast.labels.length*10)%window.WorkTVBroadcast.labels.length;state.channelDial=state.channel*.85-.65;state.pressCount++;state.transition='switch';state.transitionAt=performance.now()/1000;casing();deskMesh();plantMesh();state.meshCount=model.length;geometryDirty=true;document.getElementById('sr').textContent='频道 '+(state.channel+1)+'，'+window.WorkTVBroadcast.labels[state.channel];}
 function hitKnob(x,y){
- const p=proj([2.76,.53,.90]),p2=proj([2.76,-.45,.89]);
+ const p=proj([2.64,.53,.90]),p2=proj([2.64,-.45,.89]);
  return Math.hypot(x-p[0],y-p[1])<Math.max(24,scale*.25)?'power':Math.hypot(x-p2[0],y-p2[1])<Math.max(24,scale*.23)?'channel':null;
 }
 let last=0,frames=0,elapsed=0,lastPresented=-1000;
@@ -759,5 +757,5 @@ window.addEventListener('keydown',e=>{
  if(e.code==='Escape')location.href='../../soul-table.html';
 });
 requestAnimationFrame(loop);
-window.WorkTVQA={state:()=>({workCpu:(window.WorkTVCPU?.stats||null),workCpuNormalMap:window.WorkTVCPU?.dieSize||0,originalPaletteCount:window.WorkTVCPU?.paletteSize||0,geometryBuildMs:state.geometryBuildMs||0,meshResolution:[renderW,renderH],isReal3D:true,meshFaces:state.meshCount,crtTriangles:state.screenTriCount,power:state.power,channel:state.channel,yaw:state.yaw,pitch:state.pitch,metalSource:'Work coin-art.js metal() copied unchanged',renderCache:state.cacheStamp,solidFaces:state.opaqueFacesRendered,crtPixelCoverage:screenMaskPixels,glassIOR:1.5,frames:state.frames,fps:state.fps,screenSize:[buffer.width,buffer.height],viewport:[viewW,viewH],pressCount:state.pressCount,frameRenderMs:Math.round(frameRenderMs*10)/10,rasterPasses,screenMappingPixels:screenCoverage?.length||0,originalCabinetTexture:workSurfaceUsed,powerTransition:state.transition,transitionAge:Math.round((performance.now()/1000-state.transitionAt)*100)/100,frontScrews:0,controlPositions:{power:proj([2.76,.53,.90]).slice(0,2),channel:proj([2.76,-.45,.89]).slice(0,2)},screenShape:'deep tapered eight-faceted CRT housing with machined collar and convex glass',screenPrograms:window.WorkTVBroadcast?.labels.length||reelAds.length,showGuide:state.showGuide,programScripts:window.WorkTVBroadcast?.scripts?.length||0,actualReelArt:!!window.ReelArt,broadcast:window.WorkTVBroadcast?.status()||null,realGlass3DFaces:transparent.length,glassMethod:'hollow 16-facet depth-rasterized geometry, Fresnel-refraction approximation',modelColor:'Work faceted cast enamel + machined bezel + 3D timber desk',deskRealMesh:!!model.find(x=>x.kind==='woodTop'),originalWoodTexture:!!workWood,originalGlassSprite:!!workGlass,originalIvyAsset:!!workIvy,physicalFurnitureFaces:model.filter(x=>['tableEdge','tableLeg','woodTop'].includes(x.kind)).length,physicalPlantFaces:model.filter(x=>['pot','stem','leafA','leafB','leafC','petal'].includes(x.kind)).length}),setAngles:(yaw,pitch)=>{state.yaw=clamp(yaw,-37,37);state.pitch=clamp(pitch,-19,18);geometryDirty=true;},setPower:(v)=>{if(state.power!==!!v)switchPower();},nextChannel:()=>switchChannel(1)};
+window.WorkTVQA={state:()=>({workCpu:(window.WorkTVCPU?.stats||null),workCpuNormalMap:window.WorkTVCPU?.dieSize||0,originalPaletteCount:window.WorkTVCPU?.paletteSize||0,geometryBuildMs:state.geometryBuildMs||0,meshResolution:[renderW,renderH],isReal3D:true,meshFaces:state.meshCount,crtTriangles:state.screenTriCount,power:state.power,channel:state.channel,yaw:state.yaw,pitch:state.pitch,metalSource:'Work coin-art.js metal() copied unchanged',renderCache:state.cacheStamp,solidFaces:state.opaqueFacesRendered,crtPixelCoverage:screenMaskPixels,glassIOR:1.5,frames:state.frames,fps:state.fps,screenSize:[buffer.width,buffer.height],viewport:[viewW,viewH],pressCount:state.pressCount,frameRenderMs:Math.round(frameRenderMs*10)/10,rasterPasses,screenMappingPixels:screenCoverage?.length||0,originalCabinetTexture:workSurfaceUsed,powerTransition:state.transition,transitionAge:Math.round((performance.now()/1000-state.transitionAt)*100)/100,frontScrews:0,controlPositions:{power:proj([2.64,.53,.90]).slice(0,2),channel:proj([2.64,-.45,.89]).slice(0,2)},screenShape:'deep tapered eight-faceted CRT housing with machined collar and convex glass',screenPrograms:window.WorkTVBroadcast?.labels.length||reelAds.length,showGuide:state.showGuide,programScripts:window.WorkTVBroadcast?.scripts?.length||0,actualReelArt:!!window.ReelArt,broadcast:window.WorkTVBroadcast?.status()||null,realGlass3DFaces:transparent.length,glassMethod:'hollow 16-facet depth-rasterized geometry, Fresnel-refraction approximation',modelColor:'Work faceted cast enamel + machined bezel + 3D timber desk',deskRealMesh:!!model.find(x=>x.kind==='woodTop'),originalWoodTexture:!!workWood,originalGlassSprite:!!workGlass,originalIvyAsset:!!workIvy,physicalFurnitureFaces:model.filter(x=>['tableEdge','tableLeg','woodTop'].includes(x.kind)).length,physicalPlantFaces:model.filter(x=>['pot','stem','leafA','leafB','leafC','petal'].includes(x.kind)).length}),setAngles:(yaw,pitch)=>{state.yaw=clamp(yaw,-37,37);state.pitch=clamp(pitch,-19,18);geometryDirty=true;},setPower:(v)=>{if(state.power!==!!v)switchPower();},nextChannel:()=>switchChannel(1)};
 })();
