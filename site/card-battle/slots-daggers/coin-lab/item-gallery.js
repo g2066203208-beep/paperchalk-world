@@ -101,7 +101,7 @@ function draw(){
  // Reuse the unchanged Work CPU metal lighting; only the model silhouette,
  // detailed normal field, and restrained original painting are different.
  P.rasterCard(card,211+36*Math.sin(time*.36),91+24*Math.cos(time*.39),.33);
- const scale=Math.min(W/610,H/520)*1.11;
+ const scale=W<600&&H>W ? 1.55 : Math.min(W/610,H/520)*1.11;
  const side=P.tileSize*scale,cx=W*.50,cy=H*.50;
  c.save();c.shadowColor='rgba(0,0,0,.72)';c.shadowBlur=29;c.shadowOffsetY=19;
  c.imageSmoothingEnabled=true;
@@ -109,8 +109,9 @@ function draw(){
  c.restore();
  P.drawBloom(c,card,cx,cy,side);
  c.fillStyle='rgba(222,207,164,.75)';c.font='11px monospace';
- c.fillText('WORK · REAL 3D PLANCHET  /  '+P.mesh.points.length+' VERTICES',20,H-18);
- c.textAlign='right';c.fillText(P.tileSize+' px · CPU RASTER',W-20,H-18);c.textAlign='left';
+ if(W<600){c.fillText('WORK · ORIGINAL 3D / '+P.mesh.points.length+' VERTICES',16,H-17);}
+ else{c.fillText('WORK · REAL 3D PLANCHET / '+P.mesh.points.length+' VERTICES',20,H-18);
+ c.textAlign='right';c.fillText(P.tileSize+' px · CPU RASTER',W-20,H-18);c.textAlign='left';}
  const front=card.matrix[8]>=0;$('#cardSide').textContent=front?'正面 · 原画':'背面 · 压印';
  drawWire();state.renders++;state.drawAt=performance.now();
 }
@@ -140,7 +141,14 @@ function animate(t){
  }
  requestAnimationFrame(animate);
 }
+function resizeStage(){
+ const narrow=window.matchMedia('(max-width: 780px)').matches;
+ const W=narrow?540:820,H=narrow?650:620;
+ if(stage.width!==W||stage.height!==H){stage.width=W;stage.height=H;state.dirty=true;}
+ if(state.item!=='coin'&&state.ready)draw();
+}
 function bind(){
+ window.addEventListener('resize',resizeStage,{passive:true});
  const canvas=stage;let drag=null;
  canvas.addEventListener('pointerdown',e=>{pause();drag={x:e.clientX,y:e.clientY,yaw:state.yaw,pitch:state.pitch};canvas.setPointerCapture(e.pointerId);});
  canvas.addEventListener('pointermove',e=>{if(!drag)return;
@@ -159,7 +167,7 @@ function bind(){
  $('#cardWireButton').addEventListener('click',()=>{state.wire=!state.wire;$('#cardWireButton').textContent=state.wire?'线框 · 开':'线框 · 关';drawWire();});
  window.addEventListener('popstate',()=>select(new URLSearchParams(location.search).get('item')||'coin',false));
 }
-buildPicker();bind();q();syncSliders();
+buildPicker();bind();resizeStage();q();syncSliders();
 select(new URLSearchParams(location.search).get('item')||'coin',false);
 requestAnimationFrame(animate);
 window.WorkMuseumQA={
