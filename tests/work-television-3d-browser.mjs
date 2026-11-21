@@ -75,6 +75,15 @@ for(const v of viewports){
    throw Error('Canonical characters not loaded as live broadcast hosts '+JSON.stringify(broadcastStatus));
   await page.evaluate(()=>WorkTVQA.nextChannel()); // wraps the physical tuner to NEWS
   if((await page.evaluate(()=>WorkTVQA.state().channel))!==0)throw Error('Channel dial did not wrap to NEWS');
+  await page.keyboard.press('i');
+  await page.waitForTimeout(120);
+  const guide=await page.evaluate(()=>WorkTVQA.state());
+  if(!guide.showGuide||guide.programScripts!==6)throw Error('Real CRT 6-channel electronic program guide unavailable '+JSON.stringify(guide));
+  await page.screenshot({path:path.join(out,v.name+'-07-native-crt-channel-guide.png')});
+  await page.keyboard.press('i');
+  if((await page.evaluate(()=>WorkTVQA.state().showGuide)))throw Error('I cannot close TV native guide');
+  await page.keyboard.press('Digit4');
+  if((await page.evaluate(()=>WorkTVQA.state().channel))!==3)throw Error('Direct keyboard tuning channel 4 failed');
   await page.evaluate(()=>WorkTVQA.setAngles(26,7));
   await page.waitForTimeout(290);
   const turned=await page.evaluate(()=>WorkTVQA.state());
