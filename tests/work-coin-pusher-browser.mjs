@@ -48,5 +48,22 @@ for(const tc of cases){
  console.log('PASS',tc.name,JSON.stringify({initial,after,nonblack:pixels}));
  await browserCtx.close();
 }
+// Offline build embeds exactly the original Work renderer (no network dependencies).
+const portable=await browser.newContext({viewport:{width:960,height:540},deviceScaleFactor:1});
+const portablePage=await portable.newPage(),portableErrors=[];
+portablePage.on('pageerror',e=>portableErrors.push(String(e)));
+await portablePage.goto('http://127.0.0.1:4173/card-battle/slots-daggers/coin-pusher/standalone.html',{waitUntil:'domcontentloaded'});
+await portablePage.waitForFunction(()=>window.CoinPusherQA&&CoinPusherQA.state().visibleSprites>=35,{timeout:20000});
+const portableInitial=await portablePage.evaluate(()=>CoinPusherQA.state());
+await portablePage.locator('#screen').click({position:{x:820,y:250}});
+await portablePage.waitForTimeout(1000);
+const portableFinal=await portablePage.evaluate(()=>CoinPusherQA.state());
+await portablePage.screenshot({path:path.join(out,'offline-standalone-actual-coin-pusher.png')});
+if(portableInitial.badMatrices||portableFinal.badMatrices||portableFinal.inserted!==1||portableFinal.credits!==71||portableErrors.length){
+ throw Error('portable standalone broken '+JSON.stringify({portableInitial,portableFinal,portableErrors}));
+}
+result.push({viewport:'offline-standalone',portableInitial,portableFinal,errors:portableErrors});
+console.log('PASS offline-standalone',JSON.stringify(portableFinal));
+await portable.close();
 await browser.close();
 fs.writeFileSync(path.join(out,'results.json'),JSON.stringify(result,null,2));
