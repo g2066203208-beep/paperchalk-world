@@ -2028,7 +2028,7 @@ function build(){
   const level=[];
   for(let i=0;i<count;i++){
    const angle=TAU*i/count+(tier%2)*.23;
-   const x=480+Math.cos(angle)*radius,y=278+Math.sin(angle)*radius*.72;
+   const x=480+Math.cos(angle)*radius,y=258+Math.sin(angle)*radius*.72;
    const below=tier===0?null:tiers[tier-1].reduce((best,c)=>!best||Math.hypot(c.x-x,c.y-y)<Math.hypot(best.x-x,best.y-y)?c:best,null);
    const coin=addCoin(x,y,'tower',below);level.push(coin);
   }
@@ -2067,7 +2067,7 @@ function pusherBounds(b){
   return;
  }
  // Gravity-like slope affects sliding coins, not static stacks.
- if(moving && b.mode==='roll' && b.y>238)b.vy+=.08;
+ if(moving && b.mode==='roll' && b.y>238)b.vy+=.95;
 }
 function step(h){
  clock+=h;oldFront=front;
