@@ -1,9 +1,11 @@
-name: Work multi-item gallery hosted browser QA
+name: Work 03 unified coin and character object gallery QA
 on:
   push:
     branches: [main]
     paths:
       - 'site/card-battle/slots-daggers/coin-lab/items.html'
+      - 'site/card-battle/slots-daggers/coin-lab/card-probe.js'
+      - 'site/card-battle/slots-daggers/coin-lab/item-gallery.js'
       - 'site/card-battle/slots-daggers/coin-lab/index.html'
       - 'tests/work-item-gallery-browser.mjs'
       - '.github/workflows/work-item-gallery-qa.yml'
