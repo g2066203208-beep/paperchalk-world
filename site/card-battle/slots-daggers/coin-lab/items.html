@@ -1,531 +1,872 @@
-<!doctype html>
-<html lang="zh-CN">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#121812">
-<title>WORK · 多物品展示研究室 · 人物卡</title>
-<style>
-:root{
-  --bg:#101610;--panel:#263126;--soft:#91a088;--gold:#e4c27d;--gold2:#9c8454;--line:#7f704c;--ink:#f1e1b8;--deep:#0c130d;
-  --shadow:0 14px 34px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.04);
-}
-*{box-sizing:border-box}
-html,body{margin:0;min-height:100%;background:radial-gradient(circle at 50% 0%,#243124 0%,#101610 56%,#090d09 100%);color:#d3c6a5;font:14px/1.45 system-ui,"Noto Sans SC",sans-serif}
-body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.08;background:repeating-linear-gradient(0deg,transparent 0 2px,#081008 3px 4px);mix-blend-mode:overlay}
-a{color:var(--gold)}
-button{font:inherit;color:inherit;background:none;border:none}
-.wrap{max-width:1500px;margin:0 auto;padding:18px 18px 24px}
-.header{display:flex;gap:14px;justify-content:space-between;align-items:flex-end;padding:0 0 14px;border-bottom:1px solid rgba(230,199,129,.28)}
-.brand small{display:block;color:#94a28f;font:11px/1 monospace;letter-spacing:.18em;margin-bottom:8px}
-.brand h1{margin:0;color:#f4e2b3;font:600 clamp(26px,3vw,38px)/1.1 Georgia,"Noto Serif SC",serif;letter-spacing:.04em}
-.brand p{margin:.55rem 0 0;color:#aab09c;max-width:820px;font-size:13px}
-.top-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-.pill,.mini-btn{border:1px solid rgba(225,193,123,.34);background:linear-gradient(180deg,#2b392d,#161f17);border-radius:999px;padding:8px 12px;box-shadow:var(--shadow)}
-.mini-btn{border-radius:6px;cursor:pointer;padding:8px 11px;transition:.18s}
-.mini-btn:hover{transform:translateY(-1px);border-color:rgba(245,214,142,.65);color:#fff1c6}
-.layout{display:grid;grid-template-columns:300px minmax(460px,1fr) 340px;gap:16px;margin-top:16px}
-.panel{background:linear-gradient(180deg,rgba(40,52,41,.96),rgba(22,29,22,.98));border:1px solid rgba(228,194,125,.24);border-radius:12px;box-shadow:var(--shadow);min-width:0}
-.panel-inner{padding:14px}
-.panel-title{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
-.panel-title h2,.panel-title h3{margin:0;font:600 15px Georgia,"Noto Serif SC",serif;color:#ecd298;letter-spacing:.04em}
-.meta{font:11px monospace;color:#9faa91}
-.category-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-.category{padding:7px 10px;border:1px solid rgba(221,191,127,.18);background:#182018;border-radius:6px;color:#b8b497;cursor:pointer;transition:.18s}
-.category.active{background:linear-gradient(180deg,#695637,#403524);border-color:#c8a96b;color:#fff0c1}
-.category.disabled{opacity:.5;cursor:not-allowed}
-.item-list{display:flex;flex-direction:column;gap:10px;max-height:740px;overflow:auto;padding-right:4px}
-.item-list::-webkit-scrollbar{width:8px}.item-list::-webkit-scrollbar-thumb{background:#4d563f;border-radius:10px}.item-list::-webkit-scrollbar-track{background:#182018}
-.item{display:grid;grid-template-columns:72px 1fr auto;gap:10px;align-items:center;padding:9px;border:1px solid rgba(230,198,127,.14);background:linear-gradient(180deg,#202a21,#151b16);border-radius:10px;cursor:pointer;transition:.18s;min-width:0}
-.item:hover{transform:translateY(-1px);border-color:rgba(241,212,143,.5)}
-.item.active{border-color:#d8b16b;background:linear-gradient(180deg,#433723,#272116);box-shadow:0 0 0 1px rgba(255,228,170,.08) inset, 0 8px 24px rgba(0,0,0,.28)}
-.thumb{width:72px;height:96px;border-radius:8px;background:radial-gradient(circle at 50% 28%,#455445,#111611 70%);border:1px solid rgba(224,191,117,.25);display:grid;place-items:center;overflow:hidden}
-.thumb canvas{width:62px;height:88px;display:block;border-radius:6px}
-.item-name{font-weight:700;color:#f0ddb2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.item-sub{font-size:12px;color:#9fac96;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tag{font:11px monospace;color:#edcf8e;border:1px solid rgba(237,207,142,.28);padding:5px 8px;border-radius:999px;background:rgba(238,205,133,.06)}
-.stage-wrap{display:grid;grid-template-rows:auto 1fr auto;min-height:790px}
-.stage-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 0;gap:12px;flex-wrap:wrap}
-.stage-head h2{margin:0;color:#f0dcae;font:600 18px Georgia,"Noto Serif SC",serif}
-.stage-head p{margin:4px 0 0;color:#9fab93;font-size:12px}
-.stage-actions{display:flex;gap:8px;flex-wrap:wrap}
-.stage{position:relative;margin:12px 16px 0;border-radius:14px;min-height:610px;overflow:hidden;background:
- radial-gradient(circle at 50% 30%,rgba(73,88,58,.7),transparent 38%),
- radial-gradient(circle at 50% 72%,rgba(0,0,0,.38),transparent 38%),
- linear-gradient(180deg,#1d261d,#0e130f 68%);
- border:1px solid rgba(231,198,128,.22)}
-.stage::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.03) 45%,transparent 100%);pointer-events:none}
-.stage-grid{position:absolute;inset:0;background:
- linear-gradient(rgba(255,255,255,.028) 1px,transparent 1px),
- linear-gradient(90deg,rgba(255,255,255,.028) 1px,transparent 1px);
- background-size:48px 48px;mask-image:linear-gradient(180deg,transparent,black 18%,black 82%,transparent)}
-.viewer{position:absolute;inset:0;display:grid;place-items:center;perspective:1400px;touch-action:none;user-select:none}
-.card-shell{width:min(53vw,380px);max-width:380px;aspect-ratio:1024/1536;position:relative;transform-style:preserve-3d;filter:drop-shadow(0 30px 40px rgba(0,0,0,.52));transition:transform .08s linear}
-.card-face{position:absolute;inset:0;border-radius:34px;overflow:hidden;backface-visibility:hidden;transform-style:preserve-3d;background:#1d241d;border:1px solid rgba(236,204,144,.26)}
-.card-face.back{transform:rotateY(180deg)}
-.card-face canvas{width:100%;height:100%;display:block}
-.floating-note{position:absolute;z-index:3;padding:8px 10px;border-radius:8px;border:1px solid rgba(227,194,123,.25);background:rgba(16,22,17,.78);backdrop-filter:blur(6px);font:11px monospace;color:#c6c59f;box-shadow:var(--shadow)}
-.floating-note.lt{left:18px;top:18px}.floating-note.rt{right:18px;top:18px}.floating-note.lb{left:18px;bottom:18px}.floating-note.rb{right:18px;bottom:18px}
-.controls{padding:12px 16px 16px;display:grid;gap:10px}
-.ctrl-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;align-items:center}
-.slider{display:grid;grid-template-columns:66px 1fr 50px;gap:10px;align-items:center;color:#cdbd94;font-size:12px}
-input[type=range]{width:100%;accent-color:#bf9f63}
-.out{font:12px monospace;color:#efd7a1;text-align:right}
-.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.stat-box{padding:10px 12px;border:1px solid rgba(221,191,126,.18);border-radius:10px;background:linear-gradient(180deg,#1a221b,#121713)}
-.stat-box strong{display:block;color:#f0d59c;font:700 22px/1.15 Georgia,serif}.stat-box span{color:#9ba692;font:11px monospace}
-.desc{color:#bcc2af;font-size:13px;margin:0}
-.layer-list{display:grid;gap:8px}.layer{padding:10px 12px;border-radius:10px;border:1px solid rgba(228,197,129,.14);background:linear-gradient(180deg,#192119,#111711)}
-.layer strong{display:block;color:#f0d8a2;margin-bottom:3px}.layer span{color:#a3ae97;font-size:12px}
-.badge-bar{display:flex;flex-wrap:wrap;gap:6px}.badge{font:11px monospace;color:#ebcd8a;border:1px solid rgba(235,205,138,.24);border-radius:999px;padding:4px 8px;background:rgba(235,205,138,.05)}
-.foot{margin-top:16px;color:#92a089;font:11px monospace;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
-@media (max-width:1180px){.layout{grid-template-columns:280px 1fr}.side-info{grid-column:1 / -1}.stage-wrap{min-height:unset}}
-@media (max-width:780px){.wrap{padding:12px}.layout{grid-template-columns:1fr}.stage{min-height:520px}.card-shell{width:min(78vw,330px)}.header{align-items:flex-start;flex-direction:column}.top-actions{justify-content:flex-start}.stage-head{padding-top:12px}.stats{grid-template-columns:1fr 1fr}}
-</style>
-</head>
-<body>
-<div class="wrap">
-  <header class="header">
-    <div class="brand">
-      <small>WORK · CHARACTER CARD SHOWCASE / PROTOTYPE</small>
-      <h1>多物品展示研究室 · 人物卡首版</h1>
-      <p>把原来单物品展示界面，扩成可浏览多个物品的展示台：左侧总览选择，中央单件聚焦，右侧拆解材质与开发说明。当前先做“人物卡”，后续可继续接入遗物、设施、消耗品与召唤物。</p>
-    </div>
-    <div class="top-actions"><a class="mini-btn" href="./index.html">← 金币3D研究室</a><a class="mini-btn" href="../../soul-table.html">原老虎机</a>
-      <div class="pill">当前分类：人物卡</div>
-      <button id="autoBtn" class="mini-btn">自动旋转 · ON</button>
-      <button id="flipBtn" class="mini-btn">翻面</button>
-      <button id="resetBtn" class="mini-btn">重置视角</button>
-    </div>
-  </header>
-
-  <main class="layout">
-    <section class="panel">
-      <div class="panel-inner">
-        <div class="panel-title"><h2>物品总览</h2><span class="meta">GALLERY / SELECT ONE</span></div>
-        <div class="category-bar">
-          <button class="category active">人物卡</button>
-          <button class="category disabled">遗物</button>
-          <button class="category disabled">设施</button>
-          <button class="category disabled">消耗品</button>
-        </div>
-        <div id="itemList" class="item-list"></div>
-      </div>
-    </section>
-
-    <section class="panel stage-wrap">
-      <div class="stage-head">
-        <div>
-          <h2 id="heroTitle">—</h2>
-          <p id="heroSubtitle">—</p>
-        </div>
-        <div class="stage-actions badge-bar" id="heroBadges"></div>
-      </div>
-
-      <div class="stage">
-        <div class="stage-grid"></div>
-        <div class="floating-note lt">CLICK ITEM / DRAG CARD</div>
-        <div class="floating-note rt" id="noteRarity">RARITY · —</div>
-        <div class="floating-note lb" id="noteFrame">WORK METAL FRAME / EMBOSSED</div>
-        <div class="floating-note rb" id="noteStats">ATK 0 / HP 0</div>
-        <div id="viewer" class="viewer">
-          <div id="cardShell" class="card-shell">
-            <div class="card-face front"><canvas id="cardFront" width="1024" height="1536"></canvas></div>
-            <div class="card-face back"><canvas id="cardBack" width="1024" height="1536"></canvas></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="controls">
-        <div class="ctrl-row">
-          <label class="slider"><span>水平</span><input id="yaw" type="range" min="-38" max="38" value="-10"><output id="yawOut" class="out">-10°</output></label>
-          <label class="slider"><span>俯仰</span><input id="pitch" type="range" min="-28" max="28" value="8"><output id="pitchOut" class="out">8°</output></label>
-        </div>
-        <p class="desc" id="heroDesc"></p>
-      </div>
-    </section>
-
-    <aside class="panel side-info">
-      <div class="panel-inner">
-        <div class="panel-title"><h3>卡牌拆解</h3><span class="meta">SAME WORK LANGUAGE / NEW OBJECT</span></div>
-        <div class="stats">
-          <div class="stat-box"><strong id="costStat">0</strong><span>召募费用 / COST</span></div>
-          <div class="stat-box"><strong id="rareStat">—</strong><span>稀有度 / RARITY</span></div>
-          <div class="stat-box"><strong id="atkStat">0</strong><span>攻击 / ATTACK</span></div>
-          <div class="stat-box"><strong id="hpStat">0</strong><span>生命 / HEALTH</span></div>
-        </div>
-        <div class="panel-title" style="margin-top:14px"><h3>材质层级</h3><span class="meta">DEVELOPMENT NOTES</span></div>
-        <div class="layer-list" id="layerList"></div>
-        <div class="panel-title" style="margin-top:14px"><h3>设计原则</h3><span class="meta">WHY THIS LAYOUT WORKS</span></div>
-        <div class="layer-list">
-          <div class="layer"><strong>1. 左总览 / 中聚焦 / 右拆解</strong><span>一次能看很多物品，但视觉重心只保留一个对象，适合你后面继续把遗物、武器、设施都塞进来。</span></div>
-          <div class="layer"><strong>2. 卡牌视觉语言参考 Work 的金属光照</strong><span>当前为厚卡、金属边、压印层、受光高光和翻面演示；尚未接入金币原版 CPU 浮雕光栅器及 GitHub 角色立绘。</span></div>
-          <div class="layer"><strong>3. 先做人物卡，后面横向扩展最快</strong><span>卡体结构、控制台、筛选总览都已经搭好，后续只要换模型与浮雕内容即可扩类。</span></div>
-        </div>
-      </div>
-    </aside>
-  </main>
-
-  <footer class="foot">
-    <span>Prototype focus：把单物品研究台升级为“多物品单件审阅台”。</span>
-    <span>当前仅完成人物卡分类，但已具备多物品浏览骨架。</span>
-  </footer>
-</div>
-
-<script>
-const characters = [
-  {
-    id:'hunter',
-    name:'猎人团长',
-    org:'猎人团 / 冷峻讨伐线',
-    role:'远程压制 · 首席追猎',
-    rarity:'SSR', cost:5, atk:8, hp:11, frame:'#caa56b', accent:'#8a4f3e', panel:'#3a2b24',
-    symbol:'✦', portrait:'hunter', badges:['HUNTER','RANGED','COMMAND'],
-    desc:'以 Work 金属边框语汇做成长方厚卡：重框、压印徽章、浮雕边条、局部珐琅色块，整体更像一件可握在手中的贵重实体卡。',
-    skill:'追猎号令',
-    layers:[
-      ['金属外框','厚实黄铜边框，倒角比金币更缓，保留 Work 式暖金高光。'],
-      ['中央肖像窗','用弧拱形肖像窗聚焦角色轮廓，替代金币的圆形主纹章。'],
-      ['下方数据铭板','费用、攻击、生命独立压印在底部铭板，更利于读数。'],
-      ['卡背印记','翻面后是组织纹章与十字导轨，便于抽卡和叠牌时识别。'],
-    ]
-  },
-  {
-    id:'doctor',
-    name:'猎人医生',
-    org:'猎人团 / 医师支援线',
-    role:'治疗净化 · 战地医师',
-    rarity:'SR', cost:4, atk:4, hp:10, frame:'#c0aa75', accent:'#52726a', panel:'#253334',
-    symbol:'✚', portrait:'doctor', badges:['DOCTOR','SUPPORT','PURIFY'],
-    desc:'同样的厚卡体，但把主色压到冷绿青铜，突出“药剂、净化、医疗器械”气质；不破坏整套 Work 风格的一致性。',
-    skill:'净化注剂',
-    layers:[
-      ['金属外框','与主卡体一致的黄铜压边，但在内缘增加冷绿釉色。'],
-      ['肖像浮雕','帽檐、面罩和针剂轮廓做成浅浮雕，受光时比平涂更有层次。'],
-      ['技能带','采用细长釉面铭条承载技能名，像旧式仪器铭牌。'],
-      ['底部统计区','数值板块与角色肖像分层，避免大面积信息互相打架。'],
-    ]
-  },
-  {
-    id:'engineer',
-    name:'农耕工程师',
-    org:'农民组织 / 后勤建造线',
-    role:'搭建设施 · 机关布置',
-    rarity:'SR', cost:3, atk:3, hp:9, frame:'#c5a871', accent:'#6f7e44', panel:'#2e3320',
-    symbol:'⚙', portrait:'engineer', badges:['ENGINEER','UTILITY','BUILD'],
-    desc:'工程师版更强调工具、齿轮和木铁混合工艺；同一个卡体结构，换内容就能快速扩展整套人物卡。',
-    skill:'野战工棚',
-    layers:[
-      ['主框工艺','上层金属、下层暗绿底板，边缘增加铆钉感。'],
-      ['中央角色窗','角色手持工具的轮廓读起来明确，方便后续接真正立绘。'],
-      ['职业纹章','用齿轮取代皇冠形徽章，形成职业识别。'],
-      ['背面标识','卡背保留统一组织编号和收藏序号。'],
-    ]
-  },
-  {
-    id:'vampire',
-    name:'吸血鬼少女',
-    org:'吸血鬼 / 夜宴系',
-    role:'吸血连击 · 生命夺取',
-    rarity:'SSR', cost:5, atk:7, hp:9, frame:'#caa56b', accent:'#6f3152', panel:'#2f1d28',
-    symbol:'☾', portrait:'vampire', badges:['VAMPIRE','LEECH','NIGHT'],
-    desc:'保留 Work 的黄铜框，但把角色窗和装饰花纹拉向夜宴感，后续更适合与哥特或戏剧组织并存。',
-    skill:'绯夜连吻',
-    layers:[
-      ['外框金属','温暖黄铜与暗紫珐琅形成对比，保住整体系列感。'],
-      ['肖像窗','长发、披肩与礼服轮廓会比金币图腾更具人物识别度。'],
-      ['装饰纹样','花叶、月牙、血滴符号都放进浮雕层，而不是平涂图案。'],
-      ['底部数据区','保留可读性优先，避免因为华丽花纹影响战斗读数。'],
-    ]
-  },
-  {
-    id:'ringmaster',
-    name:'马戏团团长',
-    org:'马戏团 / 演出调度线',
-    role:'召唤表演 · 控场增益',
-    rarity:'R', cost:2, atk:2, hp:6, frame:'#bf9b60', accent:'#8b4331', panel:'#33251f',
-    symbol:'♜', portrait:'ringmaster', badges:['CIRCUS','CONTROL','SHOW'],
-    desc:'这张卡更像旧戏院的贵宾戏票：边框结构不变，但中央视觉改成舞台拱门与高礼帽形轮廓。',
-    skill:'开幕礼炮',
-    layers:[
-      ['门型肖像框','用舞台拱门替换常规肖像窗，直接体现组织气质。'],
-      ['装饰金边','仍沿用 Work 金属反光风格，避免跳成另一套美术。'],
-      ['标题铭牌','更适合展示角色名和职业名，利于系列统一。'],
-      ['背面图章','背面纹章可继续扩展为整组组织卡背系统。'],
-    ]
-  },
-  {
-    id:'guard',
-    name:'木桶守卫',
-    org:'农民组织 / 防守线',
-    role:'前排承伤 · 护卫掩体',
-    rarity:'N', cost:1, atk:1, hp:7, frame:'#b9985e', accent:'#665a3d', panel:'#2c271a',
-    symbol:'🛡', portrait:'guard', badges:['GUARD','TANK','COMMON'],
-    desc:'最低稀有度也不是廉价 UI，而是结构更朴素、装饰更少的实体卡，读起来依旧统一。',
-    skill:'锅盖防线',
-    layers:[
-      ['基础框体','减少复杂装饰，但保留同一套厚度与受光规则。'],
-      ['角色轮廓','木桶帽和锅盖盾牌让低稀有度角色也有明确识别。'],
-      ['信息区','基础卡更应强调一眼读懂，因此装饰最少。'],
-      ['卡背统一','低稀有度仍用统一卡背，保证整套牌叠放观感。'],
-    ]
-  },
-];
-
-const itemList = document.getElementById('itemList');
-const heroTitle = document.getElementById('heroTitle');
-const heroSubtitle = document.getElementById('heroSubtitle');
-const heroBadges = document.getElementById('heroBadges');
-const heroDesc = document.getElementById('heroDesc');
-const costStat = document.getElementById('costStat');
-const rareStat = document.getElementById('rareStat');
-const atkStat = document.getElementById('atkStat');
-const hpStat = document.getElementById('hpStat');
-const layerList = document.getElementById('layerList');
-const noteRarity = document.getElementById('noteRarity');
-const noteStats = document.getElementById('noteStats');
-const noteFrame = document.getElementById('noteFrame');
-const cardShell = document.getElementById('cardShell');
-const frontCanvas = document.getElementById('cardFront');
-const backCanvas = document.getElementById('cardBack');
-const fctx = frontCanvas.getContext('2d');
-const bctx = backCanvas.getContext('2d');
-let current = characters[0];
-let flipped = false, auto = true;
-let yaw = -10, pitch = 8;
-let drag = null;
-let spin = -10;
-
-const rarityMap = {N:'普通',R:'稀有',SR:'超稀有',SSR:'史诗'};
-const rarityTone = {N:'#a78e60',R:'#b98d57',SR:'#c1a97a',SSR:'#dfb76d'};
-
-function roundedRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
-function fillRounded(ctx,x,y,w,h,r,fill,stroke){roundedRect(ctx,x,y,w,h,r);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.stroke();}}
-function drawMetalFrame(ctx,w,h,main){
-  ctx.save();
-  const g = ctx.createLinearGradient(0,0,w,h);
-  g.addColorStop(0,'#80663d'); g.addColorStop(.16,'#f1d291'); g.addColorStop(.42,main); g.addColorStop(.68,'#6b5635'); g.addColorStop(1,'#e6ca8b');
-  fillRounded(ctx,42,42,w-84,h-84,46,g,'rgba(255,235,186,.28)');
-  const g2 = ctx.createLinearGradient(0,80,0,h-80);
-  g2.addColorStop(0,'rgba(255,255,255,.26)'); g2.addColorStop(.18,'rgba(255,255,255,.05)'); g2.addColorStop(.8,'rgba(0,0,0,.18)'); g2.addColorStop(1,'rgba(0,0,0,.35)');
-  fillRounded(ctx,74,74,w-148,h-148,34,g2);
-  for(let i=0;i<12;i++){
-    const x = 90 + i*((w-180)/11); const y1=66,y2=h-66;
-    ctx.fillStyle=i%2?'rgba(255,242,196,.12)':'rgba(77,55,20,.18)';
-    ctx.beginPath();ctx.arc(x,y1,7,0,Math.PI*2);ctx.arc(x,y2,7,0,Math.PI*2);ctx.fill();
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#101810"><title>WORK / 物品实体研究室 · 人物卡 3D</title><style>
+:root{--bg:#101811;--p:#233026;--p2:#19241d;--gold:#d8bc7e;--rim:#6e694e;--text:#e4d5ad;--dim:#a4a995;--accent:#e4c784}*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:radial-gradient(ellipse 72% 84% at 50% 2%,#2a3a2b,#101811 65%,#0a100c);color:var(--text);font-family:system-ui,-apple-system,'Noto Sans SC',sans-serif}button,a,select{font:inherit}button{cursor:pointer}a{color:inherit}
+#app{max-width:1500px;margin:auto;padding:17px 24px 28px}.mast{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;border-bottom:1px solid #7c6d4c;padding-bottom:16px;margin-bottom:18px}.mast small{font:11px monospace;color:#9bac93;letter-spacing:.22em}.mast h1{font:600 clamp(22px,2.5vw,34px)/1.2 Georgia,'Noto Serif SC',serif;letter-spacing:.03em;color:#f3dfaa;margin:5px 0 3px}.mast p{font-size:12px;color:#b0ae98;margin:0}.nav{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.nav a{font:11px monospace;text-decoration:none;padding:9px 12px;border:1px solid #776b4b;background:#273527;border-radius:4px;color:#c5bea1}.nav a.active{background:#615138;color:#fae6b0;border-color:#b49a66}
+.grid{display:grid;grid-template-columns:254px minmax(420px,1fr) 288px;gap:15px}.panel{border-radius:9px;border:1px solid #756b4d;background:linear-gradient(145deg,#2a382b,#19251d 55%,#1d271f);box-shadow:inset 0 0 0 2px #142018,inset 0 1px 0 3px #374934,0 13px 35px #050a078c;min-width:0}.side-inner,.spec-inner{padding:14px}.kicker{display:flex;justify-content:space-between;align-items:center;gap:6px;border-bottom:1px solid #455540;padding-bottom:10px;margin-bottom:12px}.kicker strong{font:600 14px Georgia,'Noto Serif SC',serif;color:#f0d6a0}.kicker span{font:10px monospace;color:#9ba995}.category{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 13px}.cat{font:11px monospace;border:1px solid #596448;background:#1b281f;padding:6px 8px;color:#a6ac97;border-radius:4px;white-space:nowrap}.cat.on{border-color:#bca36f;background:#625339;color:#f9e2ad}.items{display:flex;flex-direction:column;gap:7px}.pick{display:grid;grid-template-columns:56px 1fr;gap:10px;width:100%;padding:7px;text-align:left;color:inherit;border:1px solid #4c5c46;border-radius:6px;background:linear-gradient(150deg,#253429,#16231b);align-items:center;min-width:0;transition:border-color .18s,background .18s}.pick:hover,.pick:focus-visible{border-color:#d1b076;outline:0}.pick[aria-selected=true]{border-color:#d1b579;background:linear-gradient(150deg,#51482f,#262e22);box-shadow:inset 0 0 0 1px #937e56}.thumb{width:56px;height:74px;overflow:hidden;background:radial-gradient(ellipse at 50% 20%,#475840,#141b15 80%);border:2px ridge #978253;position:relative}.thumb img{width:100%;height:100%;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 2px 2px #09100b)}.pick .name{font-weight:650;color:#ead8aa;font-size:13px;white-space:nowrap}.pick .brief{font:10px/1.5 monospace;color:#a2ae95;letter-spacing:.02em;margin-top:4px}.pick .rank{font:10px monospace;color:#ead199;margin-top:3px}
+.hero{display:flex;flex-direction:column;min-height:740px}.hero-heading{padding:12px 14px 10px;display:flex;justify-content:space-between;align-items:center;gap:8px}.hero-heading h2{font:600 18px Georgia,'Noto Serif SC',serif;color:#f5db9f;margin:0}.hero-heading p{font:11px monospace;color:#aab39e;margin:4px 0 0}.tag{font:10px monospace;padding:5px 9px;border:1px solid #977f53;color:#e5cd93;border-radius:30px}.hero-shell{position:relative;margin:0 12px;min-height:558px;flex:1;overflow:hidden;border:1px solid #515f44;border-radius:6px;background:radial-gradient(circle at 42% 30%,#415342,#1a281e 54%,#0d1710 91%)}.hero-shell::before{content:"";position:absolute;inset:0;background:linear-gradient(0deg,#080e0942,transparent 40%),repeating-linear-gradient(90deg,transparent 0 32px,#c9d9b906 33px 34px);pointer-events:none}.hero-shell canvas{width:100%;height:100%;display:block;touch-action:none;cursor:grab}.hero-shell canvas:active{cursor:grabbing}.corner{position:absolute;pointer-events:none;font:10px monospace;color:#adab89;z-index:1}.corner.tl{top:15px;left:15px}.corner.tr{top:15px;right:15px;text-align:right}.corner.bl{bottom:12px;left:15px}
+.controls{padding:12px 14px 14px}.buttons{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.btn{min-height:35px;padding:7px 12px;border:1px solid #a68e5d;background:linear-gradient(#565f42,#253629);color:#f0dfb4;border-radius:4px;box-shadow:inset 0 1px #d5c18b54;transition:filter .15s}.btn:hover{filter:brightness(1.12)}.btn.on{background:linear-gradient(#9b8353,#544630);color:#fff0c5}.hint{font:11px monospace;color:#99a694;margin-left:auto}.range{display:grid;grid-template-columns:53px 1fr 46px;gap:8px;align-items:center;margin-top:11px;font:11px monospace;color:#d2c09d}input[type=range]{accent-color:#c5a36b;width:100%}output{text-align:right;color:#eed29b}
+.spec .swatch{border:1px solid #516044;border-radius:5px;background:radial-gradient(circle at 60% 24%,#394a35,#121e15 82%);height:195px;margin-bottom:12px;position:relative;overflow:hidden}.spec canvas{width:100%;height:100%;display:block}.spec .swatch p{position:absolute;bottom:6px;left:8px;font:10px monospace;color:#bfc9a7;margin:0;pointer-events:none}.metric{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:0 0 13px}.metric div{padding:9px 10px;border:1px solid #4a5a42;background:#152219;border-radius:4px}.metric b{font:700 19px Georgia,serif;color:#f2d59e;display:block}.metric span{font:10px monospace;color:#a7b099}.tech{margin:0;padding:0;list-style:none;display:grid;gap:9px}.tech li{border-left:2px solid #a78f59;padding-left:9px}.tech strong{font-size:12px;color:#ddc48e;display:block}.tech span{font-size:11px;color:#adb9a3;line-height:1.5;display:block;margin-top:2px}.proof{padding:9px 10px;margin-top:13px;background:#16251c;border:1px solid #4a6549;font:10px/1.65 monospace;color:#adbc9b}.proof strong{color:#e7cf93}.footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:15px;font:10px monospace;color:#98a58d}.footer a{color:#dec38e}
+@media(max-width:1160px){.grid{grid-template-columns:210px minmax(320px,1fr)}.spec{grid-column:1/-1}.spec-inner{display:grid;grid-template-columns:250px 1fr;gap:16px}.spec-inner .kicker{grid-column:1/-1}.spec .swatch{grid-row:2 / span 3}.metric{grid-column:2}.tech{grid-column:2}.proof{grid-column:1/-1}.hero-shell{min-height:540px}}
+@media(max-width:690px){#app{padding:10px}.mast{flex-direction:column;align-items:flex-start}.nav{justify-content:flex-start}.grid{display:flex;flex-direction:column}.side-inner{padding:11px}.items{flex-direction:row;overflow-x:auto;padding:0 0 10px}.pick{flex:0 0 167px;grid-template-columns:46px 1fr;padding:6px;gap:6px}.thumb{width:46px;height:65px}.pick .name{font-size:12px}.pick .brief{font-size:9px}.hero-shell{margin:0 7px;min-height:505px;height: min(128vw,600px);flex:unset}.hero{min-height:0}.hero-heading{padding:11px 9px 8px}.hero-heading h2{font-size:16px}.spec-inner{display:block}.spec .swatch{height:190px}.metric{grid-template-columns:1fr 1fr}.hint{margin-left:0;width:100%}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head><body><div id="app">
+<header class="mast"><div><small>WORK / PHYSICAL OBJECT LIBRARY · VER 02</small><h1>物品实体研究室</h1><p>保留原版金币的实体建模、浮雕法线和金属光照。左侧选物，中间只研究当前这一个。</p></div><nav class="nav"><a href="../../soul-table.html">01 原老虎机</a><a href="../coin-pusher/index.html">02 推币塔</a><a href="./index.html">03 金币3D</a><a class="active" href="./items.html">04 人物卡3D</a></nav></header>
+<div class="grid"><aside class="panel"><div class="side-inner"><div class="kicker"><strong>物品索引</strong><span>01 / CARDS</span></div><div class="category"><span class="cat on">人物卡 · 6</span><span class="cat">遗物 · 后续</span><span class="cat">设施 · 后续</span></div><div class="items" id="items" role="listbox" aria-label="选择要单独展示的人物卡"></div></div></aside>
+<section class="panel hero"><div class="hero-heading"><div><h2 id="name">猎人团长</h2><p id="subtitle">源立绘 · 实体卡 · 三维视角</p></div><span class="tag" id="rarity">SSR / GOLD INLAY</span></div><div class="hero-shell"><div class="corner tl">WORK ORIGINAL METAL SHADER<br>6 RINGS / SOLID RECTANGULAR MESH</div><div class="corner tr" id="faceLabel">FRONT · EMBOSSED</div><canvas id="stage" width="760" height="660" aria-label="实际 CPU 三维光栅渲染的人物卡，拖动可翻转"></canvas><div class="corner bl" id="modelNote">拖动旋转 · 点击翻面 · 按 R 重置</div></div><div class="controls"><div class="buttons"><button class="btn on" id="auto">Ⅱ 暂停旋转</button><button class="btn" id="flip">翻面</button><button class="btn" id="reset">复位</button><button class="btn" id="wire">线框 · ON</button><span class="hint" id="renderStatus">原版 shader 光栅准备中</span></div><label class="range">水平 <input id="yaw" type="range" min="-180" max="180" step="1" value="-18"><output id="yawVal">-18°</output></label><label class="range">俯仰 <input id="pitch" type="range" min="-75" max="75" step="1" value="-18"><output id="pitchVal">-18°</output></label></div></section>
+<aside class="panel spec"><div class="spec-inner"><div class="kicker"><strong>建模 / 浮雕 / 光照</strong><span>NOT CSS 3D</span></div><div class="swatch"><canvas id="mesh" width="380" height="195" aria-label="由同一批三维模型顶点绘制的线框"></canvas><p>6 层倒角 · 前背实体 · 5 层侧面</p></div><div class="metric"><div><b id="verts">192</b><span>实体顶点 / VERTICES</span></div><div><b id="polys">162</b><span>面片 / POLYGONS</span></div><div><b id="engrave">96×96</b><span>双面浮雕法线场</span></div><div><b id="resolution">380²</b><span>CPU 光栅 / PIXELS</span></div></div><ul class="tech"><li><strong>01 · 金币的模型，只换轮廓</strong><span>复用 planchet() 的六个厚度环；十边形改圆角矩形。拖动到侧面可见真实厚度。</span></li><li><strong>02 · 金币的压印，换纹样</strong><span>保留 dieHeight() → makeDies() 的高度微分生成法线；压印改成卡框和职业章。</span></li><li><strong>03 · 金币的反射，原式照搬</strong><span>metal()、256 级黄铜色阶、三角形光栅和原版金色 bloom 不改公式；人物肖像单独做哑光上釉层。</span></li><li><strong>04 · 正版原画，不再用剪影</strong><span>选卡后将 GitHub 中的原始人物立绘贴入受光的正面牌芯，不生成替身角色。</span></li></ul><div class="proof" id="proof"><strong>源码比对：</strong> Work 原版 coin-art.js 的 metal() 光照函数保持逐字符一致。</div></div></aside></div>
+<div class="footer"><span>WORK COIN → CHARACTER CARD 3D · ALGORITHM-LINEAGE / SAME BRASS SHADER</span><a target="_blank" rel="noopener" href="https://github.com/g2066203208-beep/paperchalk-world/blob/main/site/card-battle/slots-daggers/coin-art.js">原版金币光照源代码</a></div>
+</div><script>
+/* WORK native coin shader derivative: card-art.js */
+/* Research derivative of WORK coin-art.js git blob 244779b322b33559c31aa1ae11bf6f0f7d15fe0c
+ * ONLY changes: render sampling scale and read-only internal instrumentation.
+ * See build-probe.py for the entire precise diff. */
+/* Original struck brass: a faceted, solid planchet, two relief dies and a
+   fixed-step table solver. All geometry, normals and pixels originate here. */
+(() => {
+  'use strict';
+  const TAU = Math.PI * 2;
+  const STEP = 1 / 240;
+  const G = 24600;
+  const FLOOR_Y = .82, LIFT_Y = .67;
+  let TILE = 380, CENTRE = 190, TILE_RADIUS = 167;
+  const MAX_DISCS = 96;
+  const clamp = (v,lo,hi) => Math.max(lo,Math.min(v,hi));
+  const mix = (a,b,t) => a + (b-a)*t;
+  const round = n => Math.round(n*1000)/1000;
+  const normalized = (x,y,z) => {
+    const l = Math.hypot(x,y,z) || 1;
+    return [x/l,y/l,z/l];
+  };
+  const eye = normalized(0,LIFT_Y,FLOOR_Y);
+  function random(seed) {
+    let s = seed >>> 0;
+    return () => {
+      s += 0x6d2b79f5;
+      let a = Math.imul(s ^ s >>> 15, 1 | s);
+      a ^= a + Math.imul(a ^ a >>> 7, 61 | a);
+      return ((a ^ a >>> 14) >>> 0) / 4294967296;
+    };
   }
-  ctx.restore();
-}
-function drawPortrait(ctx,c){
-  const x=168,y=320,w=688,h=660;
-  const g=ctx.createLinearGradient(x,y,x+w,y+h);
-  g.addColorStop(0,'rgba(255,255,255,.08)');g.addColorStop(1,'rgba(0,0,0,.15)');
-  fillRounded(ctx,x,y,w,h,42,g,null);
-  ctx.save();
-  roundedRect(ctx,x,y,w,h,42);ctx.clip();
-  const bg=ctx.createRadialGradient(x+w*0.5,y+h*0.22,20,x+w*0.5,y+h*0.48,h*0.72);
-  bg.addColorStop(0,hexAlpha(c.accent,.42));bg.addColorStop(.55,hexAlpha(c.accent,.16));bg.addColorStop(1,'rgba(10,14,10,.08)');
-  ctx.fillStyle=bg;ctx.fillRect(x,y,w,h);
-  // ornamental rays
-  ctx.translate(x+w/2,y+h/2);
-  for(let i=0;i<24;i++){
-    ctx.rotate(Math.PI*2/24);
-    ctx.fillStyle=i%2?'rgba(255,235,186,.05)':'rgba(255,235,186,.025)';
-    ctx.fillRect(-4,-h*.44,8,170);
+  // Quaternions use x,y,z,w. All angular velocities below are in world axes.
+  function product(a,b) {
+    return [
+      a[3]*b[0]+a[0]*b[3]+a[1]*b[2]-a[2]*b[1],
+      a[3]*b[1]-a[0]*b[2]+a[1]*b[3]+a[2]*b[0],
+      a[3]*b[2]+a[0]*b[1]-a[1]*b[0]+a[2]*b[3],
+      a[3]*b[3]-a[0]*b[0]-a[1]*b[1]-a[2]*b[2]
+    ];
   }
-  ctx.setTransform(1,0,0,1,0,0);
-  // arch frame
-  ctx.lineWidth=4;ctx.strokeStyle='rgba(247,218,153,.42)';
-  roundedRect(ctx,x+40,y+34,w-80,h-68,34);ctx.stroke();
-  // portrait silhouette
-  ctx.save();ctx.translate(x+w/2,y+h*.57);ctx.fillStyle='rgba(255,240,205,.16)';
-  ctx.shadowBlur=26;ctx.shadowColor='rgba(255,224,161,.3)';
-  drawSilhouette(ctx,c.portrait,c);
-  ctx.fill();
-  ctx.restore();
-  // embossed symbol
-  ctx.save();ctx.font='700 134px Georgia';ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowBlur=12;ctx.shadowColor='rgba(0,0,0,.3)';
-  ctx.fillStyle='rgba(255,232,185,.09)';ctx.fillText(c.symbol,x+w/2,y+108);
-  ctx.restore();
-  ctx.restore();
-}
-function drawSilhouette(ctx,type,c){
-  ctx.beginPath();
-  // common bust base
-  ctx.arc(0,-170,92,0,Math.PI*2);
-  ctx.moveTo(-170,120); ctx.quadraticCurveTo(-130,-28,-58,-42); ctx.lineTo(58,-42); ctx.quadraticCurveTo(130,-28,170,120); ctx.lineTo(0,206); ctx.closePath();
-  if(type==='hunter'){
-    ctx.moveTo(16,-202);ctx.lineTo(176,-26);ctx.lineTo(136,-4);ctx.lineTo(22,-122);ctx.closePath();
-    ctx.moveTo(88,54);ctx.lineTo(198,26);ctx.lineTo(214,52);ctx.lineTo(104,84);ctx.closePath();
-  } else if(type==='doctor'){
-    ctx.moveTo(-86,-126);ctx.lineTo(86,-126);ctx.lineTo(112,-76);ctx.lineTo(-112,-76);ctx.closePath();
-    ctx.moveTo(116,-10);ctx.lineTo(196,-40);ctx.lineTo(206,-14);ctx.lineTo(126,18);ctx.closePath();
-  } else if(type==='engineer'){
-    ctx.moveTo(-156,-16);ctx.lineTo(-42,-120);ctx.lineTo(-14,-88);ctx.lineTo(-118,6);ctx.closePath();
-    ctx.moveTo(82,22);ctx.arc(120,44,44,0,Math.PI*2);
-  } else if(type==='vampire'){
-    ctx.moveTo(-154,-8);ctx.quadraticCurveTo(-190,44,-172,118);ctx.lineTo(-64,144);ctx.closePath();
-    ctx.moveTo(154,-8);ctx.quadraticCurveTo(190,44,172,118);ctx.lineTo(64,144);ctx.closePath();
-  } else if(type==='ringmaster'){
-    ctx.moveTo(-84,-204);ctx.lineTo(84,-204);ctx.lineTo(68,-136);ctx.lineTo(-68,-136);ctx.closePath();
-    ctx.moveTo(-146,-102);ctx.lineTo(146,-102);ctx.lineTo(146,-80);ctx.lineTo(-146,-80);ctx.closePath();
-    ctx.moveTo(126,-16);ctx.lineTo(202,-66);ctx.lineTo(218,-40);ctx.lineTo(144,8);ctx.closePath();
-  } else if(type==='guard'){
-    ctx.moveTo(-148,10);ctx.arc(-114,38,54,-1.8,1.8);ctx.closePath();
-    ctx.moveTo(134,-70);ctx.lineTo(188,88);ctx.lineTo(152,100);ctx.lineTo(96,-58);ctx.closePath();
+  function axis(x,y,z,angle) {
+    const k=Math.sin(angle*.5)/(Math.hypot(x,y,z)||1);
+    return [x*k,y*k,z*k,Math.cos(angle*.5)];
   }
-}
-function drawFront(ctx,c){
-  const w=ctx.canvas.width,h=ctx.canvas.height;ctx.clearRect(0,0,w,h);
-  const bg=ctx.createLinearGradient(0,0,0,h);bg.addColorStop(0,'#131915');bg.addColorStop(1,'#0c110c');ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);
-  drawMetalFrame(ctx,w,h,c.frame);
-  // card body
-  const panel=ctx.createLinearGradient(0,100,0,h-100);panel.addColorStop(0,shade(c.panel,18));panel.addColorStop(.5,c.panel);panel.addColorStop(1,shade(c.panel,-20));
-  fillRounded(ctx,96,96,w-192,h-192,32,panel,'rgba(245,222,177,.16)');
-  // top title panel
-  const header=ctx.createLinearGradient(0,148,w,248);header.addColorStop(0,'rgba(255,244,221,.12)');header.addColorStop(.5,hexAlpha(c.accent,.24));header.addColorStop(1,'rgba(255,244,221,.08)');
-  fillRounded(ctx,146,132,w-292,132,24,header,'rgba(255,228,170,.2)');
-  // name
-  ctx.textAlign='center';ctx.fillStyle='#f7e5b9';ctx.font='700 66px Georgia';ctx.fillText(c.name,w/2,210);
-  ctx.fillStyle='rgba(233,218,179,.85)';ctx.font='600 26px system-ui';ctx.fillText(c.role,w/2,250);
-  drawPortrait(ctx,c);
-  // role crest
-  const crestX=142,crestY=300; fillRounded(ctx,crestX,crestY,92,116,24,hexAlpha(c.accent,.18),'rgba(255,230,180,.2)');
-  ctx.fillStyle='rgba(249,225,169,.9)';ctx.font='700 54px Georgia';ctx.fillText(c.symbol,crestX+46,crestY+72);
-  // right rarity plaque
-  fillRounded(ctx,790,302,100,106,24,'rgba(255,241,206,.06)','rgba(255,228,170,.2)');
-  ctx.fillStyle=rarityTone[c.rarity]||'#d9ba77';ctx.font='700 46px Georgia';ctx.fillText(c.rarity,840,366);
-  ctx.fillStyle='rgba(233,219,182,.85)';ctx.font='600 20px system-ui';ctx.fillText('RARE',840,390);
-  // bottom stats bar
-  fillRounded(ctx,126,1106,772,224,28,'rgba(255,248,235,.055)','rgba(255,228,170,.18)');
-  // cost medallion
-  drawStatDisc(ctx,170,1230,64,'费',String(c.cost),c.accent);
-  drawStatDisc(ctx,854,1230,64,'血',String(c.hp),c.accent);
-  // middle title skill
-  fillRounded(ctx,260,1132,504,62,18,hexAlpha(c.accent,.16),'rgba(255,232,187,.18)');
-  ctx.fillStyle='#f3e4bc';ctx.font='700 36px Georgia';ctx.fillText(c.skill,w/2,1173);
-  ctx.fillStyle='rgba(230,220,189,.9)';ctx.font='500 23px system-ui';
-  wrapText(ctx, c.org, w/2, 1230, 410, 28, true);
-  ctx.textAlign='left';ctx.fillStyle='rgba(205,205,190,.82)';ctx.font='500 22px system-ui';
-  wrapText(ctx, c.desc, 264, 1268, 502, 28, false, 2);
-  // attack blade badge
-  fillRounded(ctx,410,1110,206,114,24,'rgba(255,255,255,.055)','rgba(255,230,179,.18)');
-  ctx.textAlign='center';ctx.fillStyle='#f6e7bc';ctx.font='700 68px Georgia';ctx.fillText(c.atk,513,1182);
-  ctx.font='700 22px monospace';ctx.fillStyle='rgba(238,222,187,.9)';ctx.fillText('ATTACK',513,1208);
-  // badges
-  let bx=154, by=1368;
-  c.badges.forEach((b,i)=>{
-    const width = 116 + b.length*4;
-    fillRounded(ctx,bx,by,width,40,18,'rgba(255,236,199,.05)','rgba(255,225,166,.15)');
-    ctx.fillStyle='rgba(242,219,165,.92)';ctx.font='700 18px monospace';ctx.fillText(b,bx+width/2,by+26);
-    bx += width + 12;
+  function basis(q) {
+    const [x,y,z,w]=q;
+    return [1-2*(y*y+z*z),2*(x*y-w*z),2*(x*z+w*y),
+      2*(x*y+w*z),1-2*(x*x+z*z),2*(y*z-w*x),
+      2*(x*z-w*y),2*(y*z+w*x),1-2*(x*x+y*y)];
+  }
+  function extent(b) {
+    const z=b.matrix[8];
+    return b.r*(Math.sqrt(Math.max(0,1-z*z))+.134*Math.abs(z));
+  }
+  function rotate(b,dt) {
+    const a=Math.hypot(b.wx,b.wy,b.wz);
+    if(a<.0005)return;
+    b.q=product(axis(b.wx,b.wy,b.wz,a*dt),b.q);
+    const l=Math.hypot(...b.q);
+    b.q=b.q.map(x=>x/l);
+    b.matrix=basis(b.q);
+  }
+
+  // Same six-ring physical planchet topology as WORK's coin. ONLY change
+  // its outline from 10-sided circle to rounded-rectangle portrait card.
+  // Three dimensions, 6 bevel steps, front and reverse caps, faceted sides.
+  const HALFW=.56, HALFH=1.0, CORNER=.124, SEG=8, SIDECOUNT=SEG*4;
+  function planchet() {
+    const points=[],faces=[];
+    const rings=[[.925,.047],[.979,.044],[1,.026],[1,-.026],[.979,-.044],[.925,-.047]];
+    const outline=[];
+    for(const [cx,cy,a0] of [[HALFW-CORNER,HALFH-CORNER,0],[-HALFW+CORNER,HALFH-CORNER,Math.PI/2],[-HALFW+CORNER,-HALFH+CORNER,Math.PI],[HALFW-CORNER,-HALFH+CORNER,Math.PI*1.5]]){
+      for(let k=0;k<SEG;k++){
+        const t=a0+(k/(SEG-1))*Math.PI*.5;
+        outline.push([cx+CORNER*Math.cos(t),cy+CORNER*Math.sin(t)]);
+      }
+    }
+    for(const [r,z] of rings)for(const [x,y] of outline)points.push([x*r,y*r,z]);
+    function face(ids,material,side) {
+      const [a,b,c]=ids.map(i=>points[i]);
+      const u=b.map((t,i)=>t-a[i]),v=c.map((t,i)=>t-a[i]);
+      const n=normalized(u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]);
+      faces.push({ids,material,side,normal:n});
+    }
+    face(Array.from({length:SIDECOUNT},(_,i)=>i),0,0);
+    face(Array.from({length:SIDECOUNT},(_,i)=>6*SIDECOUNT-1-i),1,0);
+    for(let j=0;j<5;j++)for(let i=0;i<SIDECOUNT;i++){
+      const a=j*SIDECOUNT+i,b=j*SIDECOUNT+(i+1)%SIDECOUNT;
+      face([b,a,a+SIDECOUNT,b+SIDECOUNT],j===2?3:2,i);
+    }
+    return {points,faces};
+  }
+  const mesh = planchet();
+  // WORK original die-height -> finite difference normal field. The sole
+  // artwork change is rectangular seals, corner chase and character crest.
+  let mark=0;
+  const insignia=[
+    [[-.24,-.14,0,-.43],[0,-.43,.24,-.14],[.24,-.14,.15,.11],[.15,.11,0,.22],[0,.22,-.15,.11],[-.15,.11,-.24,-.14]],
+    [[-.36,-.27,.36,-.27],[0,-.41,0,.25],[-.33,.29,.33,.29],[-.23,.42,.23,.42]]
+  ];
+  function seg(x,y,a,b,c,d){
+    const dx=c-a,dy=d-b,t=clamp(((x-a)*dx+(y-b)*dy)/(dx*dx+dy*dy),0,1);
+    return Math.hypot(x-a-dx*t,y-b-dy*t);
+  }
+  function rectangularRing(x,y,w,h,thick){
+    const r=Math.max(Math.abs(x)/w,Math.abs(y)/h);
+    return clamp(1-Math.abs(r-1)/thick,0,1);
+  }
+  function dieHeight(x,y,k) {
+    // x,y use the SAME normalized local-space coordinates as WORK's coin.
+    const rim=.048*rectangularRing(x,y,.83,.864,.035);
+    const inner=.020*rectangularRing(x,y,.72,.79,.024);
+    const outer=.016*rectangularRing(x,y,.90,.938,.022);
+    // Hairline machining and two stamped rectangular panel dividers.
+    const rulings=.012*clamp(1-Math.abs(y+.69)/.012,0,1)*clamp((.69-Math.abs(x))/.035,0,1)
+      +.018*clamp(1-Math.abs(y-.674)/.019,0,1)*clamp((.69-Math.abs(x))/.035,0,1);
+    const crestLine=insignia[(mark+k)%2];
+    let d=3;
+    for(const s of crestLine)d=Math.min(d,seg(x,y,...s));
+    const crest=.051*clamp((.092-d)*13,0,1)*clamp((Math.abs(y)-.10)/.15,0,1);
+    const cornerScratch=.010*Math.max(0,Math.cos((x+y)*20+mark*1.1)) * clamp((Math.abs(x)-.70)/.17,0,1);
+    const planished=.13*Math.max(0,.22-.82*x+.43*y)+.037*Math.max(0,-.37-.21*x-.71*y);
+    return planished+rim+inner+outer+rulings+crest+cornerScratch;
+  }
+  function inside(x,y,vertices){
+    let winding=false;
+    for(let i=0,j=vertices.length-1;i<vertices.length;j=i++){
+      const a=vertices[i],b=vertices[j];
+      if((a[1]>y)!==(b[1]>y)&&x<(b[0]-a[0])*(y-a[1])/(b[1]-a[1])+a[0])winding=!winding;
+    }
+    return winding;
+  }
+  const punches=[
+    [[-.48,-.72],[.48,-.72],[.48,.57],[-.48,.57]],
+    [[-.42,-.55],[.42,-.55],[.42,.55],[-.42,.55]]
+  ];
+  function makeDies(){
+    return [0,1].map(side=>{
+      const data=new Float32Array(dieSize*dieSize*4),grain=random(57299+side*83);
+      for(let y=0;y<dieSize;y++)for(let x=0;x<dieSize;x++){
+        const u=(x+.5)/dieSize*2-1,v=(y+.5)/dieSize*2-1,i=(y*dieSize+x)*4;
+        const h=dieHeight(u,v,side),e=.031;
+        const nx=-(dieHeight(u+e,v,side)-dieHeight(u-e,v,side))/(2*e);
+        const ny=-(dieHeight(u,v+e,side)-dieHeight(u,v-e,side))/(2*e);
+        const normal=normalized(nx,ny,1);
+        data[i]=normal[0];data[i+1]=normal[1];data[i+2]=side?-normal[2]:normal[2];
+        data[i+3]=.022*(grain()-.5)+(inside(u,v,punches[side])?-.18:0)+(h>.038?.022:0)+(h<-.002?-.06:0);
+      }
+      return data;
+    });
+  }
+  let dies=makeDies();
+  const texture=[];
+  const palette=Array.from({length:256},(_,i)=>{
+    const x=i/255;
+    const stops=[[0,28,27,22],[.20,65,53,34],[.42,119,94,49],[.64,179,141,72],
+      [.80,217,177,95],[.93,247,214,134],[1,255,241,188]];
+    let j=1;while(j<stops.length-1&&stops[j][0]<x)j++;
+    const a=stops[j-1],b=stops[j],t=clamp((x-a[0])/(b[0]-a[0]),0,1);
+    return [1,2,3].map(c=>Math.round(mix(a[c],b[c],t)));
   });
-  // inner highlights
-  ctx.save();
-  ctx.globalCompositeOperation='screen';
-  const hg = ctx.createLinearGradient(0,120,0,420);hg.addColorStop(0,'rgba(255,255,255,.12)');hg.addColorStop(1,'rgba(255,255,255,0)');
-  fillRounded(ctx,108,108,w-216,280,34,hg,null);
-  ctx.restore();
-}
-function drawBack(ctx,c){
-  const w=ctx.canvas.width,h=ctx.canvas.height;ctx.clearRect(0,0,w,h);
-  const bg=ctx.createLinearGradient(0,0,0,h);bg.addColorStop(0,'#131915');bg.addColorStop(1,'#0c110c');ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);
-  drawMetalFrame(ctx,w,h,c.frame);
-  fillRounded(ctx,104,104,w-208,h-208,30,shade(c.panel,-8),'rgba(255,230,180,.12)');
-  ctx.save();ctx.translate(w/2,h/2);
-  // crossed decorative guides
-  ctx.strokeStyle='rgba(251,228,176,.12)';ctx.lineWidth=10;ctx.beginPath();ctx.moveTo(-260,0);ctx.lineTo(260,0);ctx.moveTo(0,-420);ctx.lineTo(0,420);ctx.stroke();
-  for(let i=0;i<4;i++){
-    ctx.save();ctx.rotate(i*Math.PI/2);
-    fillRounded(ctx,-48,-520,96,96,24,'rgba(255,236,194,.05)','rgba(255,227,176,.14)');
-    ctx.restore();
+  const alloy={metallic:.20,smoothness:.60};
+  const highlightExponent=2+82*alloy.smoothness*alloy.smoothness;
+  const key=normalized(-.38,-.63,.72);
+  const fill=normalized(.80,.05,.47);
+  const burnish=normalized(-.33,-.14,.93);
+  function metal(nx,ny,nz,rough,ambient,lamp) {
+    const d=Math.max(0,nx*key[0]+ny*key[1]+nz*key[2]);
+    const viewDot=nx*eye[0]+ny*eye[1]+nz*eye[2];
+    // Virtual amber window and a smaller grazing strip light reflected in brass.
+    const rx=2*viewDot*nx-eye[0],ry=2*viewDot*ny-eye[1],rz=2*viewDot*nz-eye[2];
+    const b=Math.max(0,rx*burnish[0]+ry*burnish[1]+rz*burnish[2]);
+    const d2=Math.max(0,rx*fill[0]+ry*fill[1]+rz*fill[2]);
+    const soft=Math.max(0,rx*lamp[0]+ry*lamp[1]+rz*lamp[2]);
+    const fresnel=1-clamp(viewDot,0,1);
+    const coated=.45+.45*alloy.metallic;
+    return ambient+.44*d+.10*b**5+.30*b**27+coated*d2**highlightExponent+.075*fresnel*fresnel+.17*soft**5+.65*soft**21+rough;
   }
-  // big emblem
-  ctx.fillStyle='rgba(255,232,180,.1)';ctx.font='700 320px Georgia';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(c.symbol,0,-20);
-  ctx.strokeStyle='rgba(255,232,180,.22)';ctx.lineWidth=6;ctx.beginPath();ctx.arc(0,0,250,0,Math.PI*2);ctx.stroke();
-  ctx.beginPath();ctx.arc(0,0,190,0,Math.PI*2);ctx.stroke();
-  // serial plate
-  fillRounded(ctx,-270,366,540,116,26,hexAlpha(c.accent,.14),'rgba(255,231,180,.18)');
-  ctx.fillStyle='#f5e3b4';ctx.font='700 52px Georgia';ctx.fillText(c.org,0,420);
-  ctx.fillStyle='rgba(231,221,194,.9)';ctx.font='600 24px monospace';ctx.fillText('WORK CHARACTER CARD / '+c.id.toUpperCase(),0,456);
-  ctx.restore();
+  function apronReflection(nx,ny,nz,panel){
+    if(!panel)return 0;
+    const v=2*(ny*eye[1]+nz*eye[2]);
+    const spec=Math.max(0,(nx*v)*panel[0]+(ny*v-eye[1])*panel[1]+(nz*v-eye[2])*panel[2]);
+    return .32*spec**10+.055*spec**4;
+  }
+  const TEXTURE_W=256,TEXTURE_H=384;
+  let artworkReady=false;
+  function rgba(hex,a){const n=parseInt(hex.slice(1),16);return `rgba(${n>>16},${n>>8&255},${n&255},${a})`;}
+  function prepareTexture(item,img){
+    const name=item.name||'CHARACTER',short=item.short||'WORK',accent=item.accent||'#a98a50';
+    const front=document.createElement('canvas');front.width=TEXTURE_W;front.height=TEXTURE_H;
+    const cc=front.getContext('2d',{willReadFrequently:true});
+    let g=cc.createLinearGradient(0,0,0,384);g.addColorStop(0,'#273126');g.addColorStop(.45,'#18241d');g.addColorStop(1,'#101711');cc.fillStyle=g;cc.fillRect(0,0,256,384);
+    // Near-black enamel behind the original character painting. This is not a
+    // substituted drawing: uploaded original Anima art is sampled directly.
+    cc.fillStyle='#171c18';cc.fillRect(15,58,226,268);
+    const rim=cc.createLinearGradient(14,53,245,332);
+    rim.addColorStop(0,'#d5b87b');rim.addColorStop(.38,'#5c5739');rim.addColorStop(1,'#b39a63');
+    cc.strokeStyle=rim;cc.lineWidth=2.2;cc.strokeRect(14,56,228,274);
+    cc.strokeStyle='rgba(236,207,140,.30)';cc.lineWidth=1;cc.strokeRect(18,60,220,266);
+    const matte=cc.createRadialGradient(123,140,15,126,244,172);matte.addColorStop(0,rgba(accent,.45));matte.addColorStop(1,'#101710');
+    cc.fillStyle=matte;cc.fillRect(20,62,216,264);
+    if(img&&img.complete&&img.naturalWidth){
+      const pad=4,iw=img.naturalWidth,ih=img.naturalHeight;
+      const scale=Math.min((214-pad*2)/iw,(262-pad*2)/ih);
+      const dx=128-iw*scale/2,dy=326-ih*scale-2;
+      cc.drawImage(img,dx,dy,iw*scale,ih*scale);
+      artworkReady=true;
+    }else artworkReady=false;
+    // Restrained stamped typography and a cut-glass amber title plaque.
+    const hg=cc.createLinearGradient(0,9,0,53);hg.addColorStop(0,'#594c32');hg.addColorStop(.5,'#262c24');hg.addColorStop(1,'#161c17');
+    cc.fillStyle=hg;cc.fillRect(12,12,232,39);
+    cc.strokeStyle='#a8915f';cc.lineWidth=1.6;cc.strokeRect(12.5,12.5,231,38);
+    cc.fillStyle='#f0d9a0';cc.textAlign='center';cc.font='bold 15px Georgia, serif';cc.fillText(name,128,29);
+    cc.font='8px monospace';cc.fillStyle='#aeae8a';cc.fillText(short,128,43);
+    const bg=cc.createLinearGradient(0,333,0,369);bg.addColorStop(0,'#323426');bg.addColorStop(1,'#171b17');cc.fillStyle=bg;cc.fillRect(12,334,232,35);
+    cc.strokeStyle='#ad935f';cc.strokeRect(12.5,334.5,231,34);
+    cc.textAlign='left';cc.fillStyle='#e7d5aa';cc.font='bold 11px monospace';cc.fillText('ATK  '+item.atk,22,354);cc.fillText('HP  '+item.hp,89,354);
+    cc.fillStyle='#f2d28e';cc.fillText(item.tier||'SR',197,354);
+    for(let i=0;i<4;i++) {cc.fillStyle=i%2?'#c8ac72':'#7f7151';cc.fillRect(21+i*53,375,26,1);}
+    const back=document.createElement('canvas');back.width=TEXTURE_W;back.height=TEXTURE_H;
+    const bc=back.getContext('2d',{willReadFrequently:true});
+    const bkg=bc.createRadialGradient(130,175,8,130,190,260);bkg.addColorStop(0,'#4b5035');bkg.addColorStop(.48,'#273326');bkg.addColorStop(1,'#0f1711');bc.fillStyle=bkg;bc.fillRect(0,0,256,384);
+    bc.strokeStyle='#d0b277';bc.lineWidth=4;bc.strokeRect(15,15,226,354);bc.lineWidth=1;bc.strokeStyle='#85764e';bc.strokeRect(24,24,208,336);
+    bc.beginPath();bc.arc(128,186,87,0,Math.PI*2);bc.strokeStyle='#bb9c62';bc.lineWidth=4;bc.stroke();
+    bc.beginPath();bc.arc(128,186,77,0,Math.PI*2);bc.strokeStyle='#706241';bc.lineWidth=1;bc.stroke();
+    bc.fillStyle='#e8cf98';bc.textAlign='center';bc.font='bold 66px Georgia';bc.fillText(item.symbol||'✦',128,209);
+    bc.font='bold 11px monospace';bc.fillText('W O R K  /  A R C H I V E',128,35);
+    bc.font='10px monospace';bc.fillStyle='#a79b7d';bc.fillText('CHARACTER · '+(item.index+1).toString().padStart(2,'0'),128,351);
+    texture[0]=cc.getImageData(0,0,TEXTURE_W,TEXTURE_H).data;
+    texture[1]=bc.getImageData(0,0,TEXTURE_W,TEXTURE_H).data;
+    dies=makeDies();
+  }
+  function raster(b,light,lampX,lampY){
+    if(!b.sprite || b.sprite.width!==TILE){
+      b.sprite=document.createElement('canvas');b.sprite.width=TILE;b.sprite.height=TILE;
+      b.sctx=b.sprite.getContext('2d');b.buf=b.sctx.createImageData(TILE,TILE);
+    }
+    const data=b.buf.data;data.fill(0);
+    let highlight=0,hotX=0,hotY=0;
+    const m=b.matrix,a=TILE_RADIUS,vertices=mesh.points.map(([x,y,z])=>{
+      const wx=m[0]*x+m[1]*y+m[2]*z,wy=m[3]*x+m[4]*y+m[5]*z,wz=m[6]*x+m[7]*y+m[8]*z;
+      return [CENTRE+wx*a,CENTRE+(wy*FLOOR_Y-wz*LIFT_Y)*a];
+    });
+    const project=(nx,ny,nz)=>[
+      m[0]*nx+m[1]*ny+m[2]*nz,m[3]*nx+m[4]*ny+m[5]*nz,m[6]*nx+m[7]*ny+m[8]*nz
+    ];
+    const ambient=.057+b.patina+light*.26;
+    const lamp=normalized((lampX-b.x)*.012+.15,(lampY-b.y)*.009,1.03);
+    // The returning face catches the pale front apron as it leaves the chute.
+    const panel=b.pattern==='return'?normalized(72-b.x,314-b.y,130-b.z):null;
+    for(const f of mesh.faces){
+      const norm=project(...f.normal);
+      if(norm[1]*eye[1]+norm[2]*eye[2] <= .0001)continue;
+      const ids=f.ids,ia=ids[0],A=vertices[ia],la=mesh.points[ia];
+      const isFace=f.material<2;
+      const bezel=f.material===2?.080:f.material===3?-.03:0;
+      const value=metal(...norm,bezel,ambient,lamp)+apronReflection(...norm,panel);
+      const die=dies[f.material];
+      for(let ti=1;ti<ids.length-1;ti++){
+        const ib=ids[ti],ic=ids[ti+1],B=vertices[ib],C=vertices[ic],lb=mesh.points[ib],lc=mesh.points[ic];
+        const bx=B[0]-A[0],by=B[1]-A[1],cx=C[0]-A[0],cy=C[1]-A[1],den=bx*cy-by*cx;
+        if(Math.abs(den)<.005)continue;
+        const inv=1/den,x0=clamp(Math.floor(Math.min(A[0],B[0],C[0])),0,TILE-1);
+        const x1=clamp(Math.ceil(Math.max(A[0],B[0],C[0])),0,TILE-1);
+        const y0=clamp(Math.floor(Math.min(A[1],B[1],C[1])),0,TILE-1);
+        const y1=clamp(Math.ceil(Math.max(A[1],B[1],C[1])),0,TILE-1);
+        for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){
+          const dx=x+.5-A[0],dy=y+.5-A[1],u=(dx*cy-dy*cx)*inv,v=(bx*dy-by*dx)*inv;
+          if(u<-.001||v<-.001||u+v>1.001)continue;
+          let level=value;
+          const lx=la[0]+u*(lb[0]-la[0])+v*(lc[0]-la[0]);
+          const ly=la[1]+u*(lb[1]-la[1])+v*(lc[1]-la[1]);
+          if(isFace){
+            const tx=clamp(Math.floor((lx/HALFW+1)*.5*dieSize),0,dieSize-1);
+            const ty=clamp(Math.floor((ly/HALFH+1)*.5*dieSize),0,dieSize-1),p=(ty*dieSize+tx)*4;
+            const ax=die[p],ay=die[p+1],az=die[p+2];
+            const nx=m[0]*ax+m[1]*ay+m[2]*az,ny=m[3]*ax+m[4]*ay+m[5]*az,nz=m[6]*ax+m[7]*ay+m[8]*az;
+            level=metal(nx,ny,nz,die[p+3],ambient+(f.material===1?-.032:.018),lamp)+apronReflection(nx,ny,nz,panel);
+          }else if(f.material===3){
+            const t=Math.atan2(ly,lx)*7.96;
+            const tooth=t-Math.floor(t);
+            level+=tooth<.20?-.18:tooth>.80?.09:.015;
+          }
+          const over=Math.max(0,level-.82);
+          highlight+=over;hotX+=over*(x+.5);hotY+=over*(y+.5);
+          const p=(y*TILE+x)*4;
+          const col=palette[clamp(Math.round(level*255),0,255)];
+          if(isFace&&texture[f.material]&&Math.abs(lx)<.46&&Math.abs(ly)<.88){
+            // Embossed image paper is a separate finish. WORK metal() and
+            // brass palette remain untouched for the thick model and bevel.
+            const ux=clamp(Math.floor((lx/.46+1)*.5*TEXTURE_W),0,TEXTURE_W-1);
+            const uy=clamp(Math.floor((ly/.88+1)*.5*TEXTURE_H),0,TEXTURE_H-1);
+            const o=(uy*TEXTURE_W+ux)*4,t=texture[f.material],alpha=t[o+3]/255;
+            const coat=clamp(.57+level*.53,.24,1.27),gloss=Math.pow(Math.max(0,level-.62),2)*100;
+            data[p]=clamp(Math.round((t[o]*coat+gloss)*alpha+col[0]*(1-alpha)),0,255);
+            data[p+1]=clamp(Math.round((t[o+1]*coat+gloss*.8)*alpha+col[1]*(1-alpha)),0,255);
+            data[p+2]=clamp(Math.round((t[o+2]*coat+gloss*.49)*alpha+col[2]*(1-alpha)),0,255);
+          }else{data[p]=col[0];data[p+1]=col[1];data[p+2]=col[2];}
+          data[p+3]=255;
+        }
+      }
+    }
+    b.hot=clamp(highlight/39,0,1);
+    b.hotX=highlight?hotX/highlight/TILE-.5:0;b.hotY=highlight?hotY/highlight/TILE-.5:0;
+    b.sctx.putImageData(b.buf,0,0);
+  }
+  let glowKernel;
+  function drawBloom(c,b,x,y,width){
+    if(b.hot<.025||window.WorkCardProbe?.bloom===false)return;
+    if(!glowKernel){
+      glowKernel=document.createElement('canvas');glowKernel.width=80;glowKernel.height=80;
+      const a=glowKernel.getContext('2d'),g=a.createRadialGradient(40,40,0,40,40,40);
+      g.addColorStop(0,'rgba(255,232,145,.94)');g.addColorStop(.14,'rgba(255,215,111,.45)');
+      g.addColorStop(.41,'rgba(255,197,92,.15)');g.addColorStop(1,'rgba(246,162,65,0)');
+      a.fillStyle=g;a.fillRect(0,0,80,80);
+    }
+    const size=width*(1.24+b.hot*.68);
+    c.save();c.globalCompositeOperation='screen';c.globalAlpha=.65*b.hot;
+    c.drawImage(glowKernel,x+b.hotX*width-size*.5,y+b.hotY*width-size*.5,size,size);c.restore();
+  }
+  const rimPoints=mesh.points.slice(SIDECOUNT*2,SIDECOUNT*3);
+  function cross2(a,b,c){return (b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);}
+  function shadowShape(c,b,sx,sy,pad){
+    // Project both faces of the solid rim onto its support plane, then take the
+    // convex silhouette. A turning coin casts a turning and narrowing shadow.
+    const corners=[],m=b.matrix,rx=b.r+pad,ground=b.z-b.base;
+    for(const v of rimPoints)for(const zg of [-.041,.041]){
+      const wx=m[0]*v[0]+m[1]*v[1]+m[2]*zg;
+      const wy=m[3]*v[0]+m[4]*v[1]+m[5]*zg;
+      const wz=m[6]*v[0]+m[7]*v[1]+m[8]*zg;
+      corners.push([b.x+wx*rx+(ground+wz*rx)*sx,
+        b.y-b.base*LIFT_Y+wy*rx*FLOOR_Y+(ground+wz*rx)*sy]);
+    }
+    corners.sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+    const lower=[],upper=[];
+    for(const p of corners){
+      while(lower.length>=2&&cross2(lower.at(-2),lower.at(-1),p)<=0)lower.pop();
+      lower.push(p);
+    }
+    for(let j=corners.length-1;j>=0;j--){
+      const p=corners[j];
+      while(upper.length>=2&&cross2(upper.at(-2),upper.at(-1),p)<=0)upper.pop();
+      upper.push(p);
+    }
+    lower.pop();upper.pop();const points=lower.concat(upper);
+    c.beginPath();c.moveTo(points[0][0],points[0][1]);for(let k=1;k<points.length;k++)c.lineTo(points[k][0],points[k][1]);
+    c.closePath();c.fill();
+  }
+  const cadence=[0,.039,.108,.219,.257,.332,.407,.475,.483,.562,.636,.674,.853,1];
+  function phaseAt(t) {
+    const x=clamp(t,0,1)*(cadence.length-1),i=Math.floor(x);
+    return mix(cadence[i],cadence[Math.min(cadence.length-1,i+1)],x-i);
+  }
+  const CHUTE={x:285,y:162};
+  class CoinTable {
+    constructor(seed=1,onClink=()=>{}){
+      this.seed=seed>>>0;this.onClink=typeof onClink==='function'?onClink:()=>{};
+      this.reset(11);
+    }
+    reset(balance=11){
+      this.time=0;this.acc=0;this.rand=random(this.seed);this.nextId=1;this.batchId=0;
+      this.balance=Math.max(0,Math.floor(balance));this.discs=[];this.queue=[];this.flecks=[];
+      this.collisionAt=new Map();this.latest=null;this.purchase=null;
+      const n=Math.min(this.balance,70);
+      for(let i=0;i<n;i++){
+        const val=Math.floor((i+1)*this.balance/n)-Math.floor(i*this.balance/n);
+        const b=this.make(val,0);
+        let best=-1,bx=154,by=187;
+        for(let k=0;k<10;k++){
+          const y=80+this.rand()*219;
+          const left=leftWall(y)+b.r+3,right=278-b.r;
+          const x=mix(left,right,this.rand());
+          const near=this.discs.reduce((d,p)=>Math.min(d,Math.hypot(x-p.x,(y-p.y)/FLOOR_Y)),70);
+          if(near>best){best=near;bx=x;by=y;}
+        }
+        b.x=bx;b.y=by;
+        const tilt=(this.rand()-.5)*.67;
+        b.q=product(axis(0,0,1,this.rand()*TAU),axis(1,.24,0,(this.rand()>.48?Math.PI:0)+tilt));
+        b.matrix=basis(b.q);b.height=extent(b);b.z=b.height;b.mode='rest';
+        if(i>4&&i%5===1){
+          const anchor=this.discs[(i*7+1)%i];
+          b.x=anchor.x+(this.rand()-.5)*11;b.y=anchor.y+(this.rand()-.5)*11;
+          b.base=anchor.z+anchor.height;b.support=anchor.id;b.z=b.base+b.height;
+        }
+        this.discs.push(b);
+      }
+    }
+    make(value,batch) {
+      const r=this.rand;
+      return {id:this.nextId++,value,batch,age:0,x:0,y:0,z:0,vx:0,vy:0,vz:0,wx:0,wy:0,wz:0,
+        r:13.2+r()*1.75,patina:(r()-.5)*.155,q:[0,0,0,1],matrix:basis([0,0,0,1]),
+        mode:'air',rollX:0,rollY:0,rebound:.14,firstHit:null,contacts:0,support:0,base:0,cache:'',spendDelay:0};
+    }
+    award(amount,kind='coin'){
+      const sum=Math.max(0,Math.floor(amount));if(!sum)return;
+      this.balance+=sum;
+      const count=Math.min(68,sum),id=++this.batchId;
+      this.latest={id,kind,count,value:sum,start:this.time,born:0,firstContacts:0,rested:0,
+        traceId:0,trace:[],events:[],births:[]};
+      const windowS=(count-1)/29.2;
+      for(let i=0;i<count;i++){
+        const frac=count===1?0:i/(count-1);
+        const value=Math.floor((i+1)*sum/count)-Math.floor(i*sum/count);
+        const gap=i>0&&i<count-1?(this.rand()-.5)*.009:0;
+        this.queue.push({at:this.time+windowS*phaseAt(frac)+gap,value,id,i,kind,count});
+      }
+      this.queue.sort((a,b)=>a.at-b.at);
+      this.releaseDue();
+    }
+    spend(amount){
+      let need=Math.min(this.balance,Math.max(0,Math.floor(amount)));
+      if(!need)return;
+      this.balance-=need;
+      this.purchase={start:this.time,amount:need,visible:0,complete:0,lastSink:0,well:[188,282]};
+      // Disks that are actually visible leave first, in a short counted stream.
+      const candidates=this.discs.filter(b=>b.value>0)
+        .sort((a,b)=>(b.base||0)-(a.base||0)||b.id-a.id);
+      let n=0;
+      for(const b of candidates){
+        if(!need)break;
+        const take=Math.min(need,b.value);b.value-=take;need-=take;
+        let spent=b;
+        if(b.value>0){
+          spent=Object.assign(this.make(0,0),{x:b.x,y:b.y,z:b.z,r:b.r,q:b.q.slice(),matrix:b.matrix.slice()});
+          this.discs.push(spent);
+        }
+        spent.mode='spend';spent.purchase=this.purchase;this.purchase.visible++;
+        const scatter=n++;
+        spent.spendAt=this.time;spent.gatherDelay=Math.min(.10,scatter*.008);
+        spent.gatherTime=.34+this.rand()*.12;
+        const a=this.rand()*TAU,rad=Math.sqrt(this.rand())*13;
+        spent.gx=192+Math.cos(a)*rad;spent.gy=226+Math.sin(a)*rad*.75;
+        spent.sx=spent.x;spent.sy=spent.y;spent.sz=spent.z;
+        spent.stackHeight=2+scatter%5*1.6;spent.drainAt=.55+this.rand()*.22;
+        spent.drainTime=.33+this.rand()*.13;
+      }
+      for(let k=this.queue.length-1;k>=0&&need;k--){
+        const p=this.queue[k],take=Math.min(need,p.value);need-=take;p.value-=take;
+        if(!p.value)this.queue.splice(k,1);
+      }
+    }
+    releaseDue(){
+      while(this.queue.length&&this.queue[0].at<=this.time+.00001){
+        const e=this.queue.shift(),r=this.rand,b=this.make(e.value,e.id);
+        // The reference single payout crosses roughly a hundred horizontal pixels
+        // in four 60-Hz frames. The chute is physically above the felt.
+        const longJet=e.kind==='long'||e.i===1||e.count>5&&e.i%8===5||
+          e.count<=3&&e.id%4===3&&e.i===0;
+        const specimen=!longJet&&e.i===0&&e.count<=3;
+        b.pattern=specimen?'return':longJet?'skip':'scatter';
+        b.z=specimen?85.03:longJet?26+r()*7:59+r()*44;
+        b.x=CHUTE.x+(specimen?-3:longJet?-4:(r()-.5)*4);
+        const startY=CHUTE.y+(specimen?2:longJet?11:(r()-.5)*12);
+        b.y=startY+b.z*LIFT_Y;
+        const fan=r();
+        b.vx=specimen?-1570:longJet?-1940:-(820+r()*1290);
+        b.vy=specimen?-765:longJet?-326:mix(-1000,160,fan);
+        b.vz=specimen?-150:longJet?-125:-(85+r()*220);
+        b.rollX=specimen?1074.25:longJet?-1940:mix(-280,540,r());
+        b.rollY=specimen?530:longJet?122.5:mix(-370,535,r());
+        b.q=product(axis(0,0,1,r()*TAU),axis(1,.33,0,.5+r()*2));
+        b.matrix=basis(b.q);b.height=extent(b);
+        b.wx=37+r()*50;b.wy=-58-r()*72;b.wz=(r()-.5)*48;
+        if(specimen){
+          // Chute attitude and angular velocity from the broad face visible
+          // through the first two distinct frames of the returning throw.
+          b.r=15.475;b.q=[.318024,-.878656,-.225906,-.275302];b.matrix=basis(b.q);
+          b.wx=-21.72;b.wy=2.84;b.wz=35.38;b.height=extent(b);
+        }
+        b.rebound=specimen?.1286:.08+r()*.18;
+        this.discs.push(b);this.flare(b.x,startY,.78,6);
+        if(specimen)this.chuteSpray(b.x,startY,b.id);
+        this.sound('chute',b,.45);
+        const info=this.latest;
+        if(info&&info.id===e.id){
+          info.born++;info.births.push(round(this.time-info.start));
+          if(!info.traceId){info.traceId=b.id;this.sample(b);}
+        }
+      }
+    }
+    sound(kind,b,power){
+      this.onClink({kind,power:clamp(power,.04,1),pan:clamp((b.x-480)/460,-1,1),
+        frequency:(kind==='wall'?1680:kind==='coin'?2030:kind==='chute'?1520:1210)*(14/b.r),id:b.id});
+    }
+    flare(x,y,p,n){
+      for(let k=0;k<n;k++){
+        const a=this.rand()*TAU,s=(10+this.rand()*80)*p;
+        this.flecks.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-23,age:0,life:.08+this.rand()*.13,hot:this.rand()>.66});
+      }
+    }
+    chuteSpray(x,y,id){
+      // Chips already inside the moving escapement are visible on the release
+      // frame. Thin flakes slow quickly in air; a few stay bright at the lip.
+      // Visual sampling has its own seed, independent of the wallet and solver.
+      const noise=random(this.seed^Math.imul(id,0x632be5ab));
+      for(let i=0;i<15;i++){
+        const jet=i<7,life=.21+noise()*.15;
+        this.flecks.push({x:x+3-noise()*(jet?20:14),y:y-11+noise()*29,
+          vx:jet?-410-noise()*970:(noise()-.70)*165,
+          vy:jet?(noise()-.40)*680:(noise()-.42)*290,
+          drag:jet?8.4+noise()*3:4.4+noise()*2.1,age:0,life,
+          chip:true,wide:noise()>.64,hot:true});
+      }
+    }
+    contact(b,floor,kind,other){
+      const speed=-b.vz,first=b.firstHit===null;
+      b.contacts++;b.base=floor;b.z=floor+b.height;b.support=other?other.id:0;
+      if(first){
+        b.firstHit=this.time;
+        // An edge entering with considerable underspin changes direction on
+        // first contact. Resolve the measured tangential slip, limited by the
+        // available normal impulse. Subsequent contacts use rolling friction.
+        const dx=b.rollX-b.vx,dy=(b.rollY-b.vy)/FLOOR_Y;
+        const scale=Math.min(1,Math.max(0,speed)*1.58/(Math.hypot(dx,dy)||1));
+        b.vx+=dx*scale;b.vy+=dy*scale*FLOOR_Y;
+        const returning=b.pattern==='return';
+        b.wx*=returning?.5:.24;b.wy*=returning?.5:.24;b.wz*=returning?.5:.55;
+      }else{
+        b.vx*=b.pattern==='return'?.4215:b.pattern==='skip'?1:.95;b.vy*=b.pattern==='return'?.5766:.95;
+        const spin=b.pattern==='return'?.983:.59;b.wx*=spin;b.wy*=spin;
+      }
+      if(b.pattern==='return'){
+        // An off-centre normal impulse acts at the lowest point of the rim.
+        // The lever arm is the horizontal component of that contact point.
+        const m=b.matrix,nz=m[8];
+        const impulse=.1301*speed*nz/(b.r*Math.max(.14,Math.sqrt(1-nz*nz)));
+        b.wx+=m[5]*impulse;b.wy-=m[2]*impulse;
+      }
+      b.vz=speed*(first?b.rebound:.18);
+      b.mode=b.vz>78?'air':'roll';if(b.mode==='roll')b.vz=0;
+      const info=this.latest;
+      if(info&&b.batch===info.id){
+        if(first)info.firstContacts++;
+        if(b.id===info.traceId&&info.events.length<32)info.events.push({kind:kind,t:round(this.time-info.start),
+          x:round(b.x),y:round(b.y-b.z*LIFT_Y),speed:round(speed)});
+      }
+      if(speed>130){
+        this.sound(kind,b,speed/1850);
+        if(first&&speed>550)this.flare(b.x,b.y-b.base*LIFT_Y,.45,4);
+      }
+    }
+    update(dt){
+      if(!Number.isFinite(dt)||dt<=0)return;
+      this.acc+=dt;
+      while(this.acc+1e-10>=STEP){this.acc-=STEP;this.step(STEP);}
+    }
+    step(dt){
+      this.time+=dt;this.releaseDue();
+      const bodies=this.discs;
+      const supports=new Map(bodies.filter(b=>b.value>0).map(b=>[b.id,b]));
+      for(const b of bodies){
+        if(b.mode==='gone')continue;
+        if(b.mode==='spend'){
+          const elapsed=this.time-b.spendAt,u=clamp((elapsed-b.gatherDelay)/b.gatherTime,0,1);
+          const gather=u*u*(3-2*u);
+          // Money vanishes from the numerical balance on the purchase frame.
+          // The paid pieces make a temporary mound, then drain into the till.
+          b.x=mix(b.sx,b.gx,gather);b.y=mix(b.sy,b.gy+b.stackHeight*LIFT_Y,gather);
+          b.z=mix(b.sz,b.stackHeight,gather)+Math.sin(u*Math.PI)*12;
+          b.wx=12*(1-gather);b.wy=-17*(1-gather);b.wz=4;rotate(b,dt);
+          if(elapsed>=b.drainAt){
+            const k=clamp((elapsed-b.drainAt)/b.drainTime,0,1);
+            b.x=mix(b.gx,188,k*k);b.y=mix(b.gy+b.stackHeight*LIFT_Y,305,k*k);
+            b.z=mix(b.stackHeight,2,k);b.wy=3+k*12;rotate(b,dt);
+            if(k>=1){
+              b.mode='gone';this.sound('spend',b,.32);
+              b.purchase.complete++;b.purchase.lastSink=this.time-b.purchase.start;
+            }
+          }
+          continue;
+        }
+        if(b.support){
+          const support=supports.get(b.support);
+          if(!support||Math.hypot(b.x-support.x,(b.y-support.y)/FLOOR_Y)>1.42*b.r){
+            b.base=0;b.support=0;b.vz=0;b.mode='air';if(b.firstHit===null)b.firstHit=this.time;
+          }
+        }
+        if(b.mode==='rest')continue;
+        b.age+=dt;
+        const pz=b.z,prevBottom=pz-b.height;
+        b.x+=b.vx*dt;b.y+=b.vy*dt;
+        if(b.mode==='roll'){
+          const normalZ=b.matrix[8],side=normalZ>=0?1:-1;
+          const grip=b.pattern==='return'?clamp(1-Math.hypot(b.vx,b.vy)/220,.361,1):1;
+          const seek=60*grip;
+          b.wx+=b.matrix[5]*side*dt*seek;b.wy-=b.matrix[2]*side*dt*seek;
+          const rotDrag=Math.exp(-8.9*grip*dt);b.wx*=rotDrag;b.wy*=rotDrag;b.wz*=Math.exp(-6.3*grip*dt);
+          // Settle the convex edge onto the nearest broad face instead of
+          // snapping between sprite orientations.
+          const tilt=normalized(b.matrix[5]*side,-b.matrix[2]*side,0);
+          const away=Math.acos(clamp(normalZ*side,-1,1));
+          if(away>.0001)b.q=product(axis(...tilt,away*(1-Math.exp(-7.8*grip*dt))),b.q);
+          const slipTime=this.time-b.firstHit;
+          const drag=Math.exp(-dt*(slipTime<.25?(b.pattern==='return'?1.303:b.pattern==='skip'?.25:2.04):8.1));b.vx*=drag;b.vy*=drag;
+        }
+        rotate(b,dt);b.matrix=basis(b.q);b.height=extent(b);
+        if(b.mode==='air'){
+          b.z+=b.vz*dt-.5*G*dt*dt;b.vz-=G*dt;
+          let floor=b.base,other;
+          if(b.vz<0){
+            for(const a of bodies){
+              if(a===b||a.mode!=='rest')continue;
+              const top=a.z+a.height;
+              if(top<floor||prevBottom<top-1.2)continue;
+              const rr=(a.r+b.r)*.63;
+              const dx=a.x-b.x,dy=(a.y-b.y)/FLOOR_Y;
+              if(dx*dx+dy*dy<rr*rr){floor=top;other=a;}
+            }
+            if(b.z-b.height<=floor+.1)this.contact(b,floor,other?'coin':'felt',other);
+          }
+        }else b.z=b.base+b.height;
+        this.bounds(b);
+        if(b.mode==='roll'&&this.time-b.firstHit>.36&&Math.hypot(b.vx,b.vy)<5&&Math.hypot(b.wx,b.wy,b.wz)<.32){
+          b.mode='rest';b.vx=b.vy=b.wx=b.wy=b.wz=0;
+          if(this.latest&&this.latest.id===b.batch&&!b.reportedSleep){this.latest.rested++;b.reportedSleep=true;}
+        }
+      }
+      this.pairs();
+      this.discs=bodies.filter(b=>b.mode!=='gone');
+      if(this.discs.length>MAX_DISCS)this.condense();
+      for(const f of this.flecks){
+        f.age+=dt;f.x+=f.vx*dt;f.y+=f.vy*dt;
+        if(f.chip){const air=Math.exp(-f.drag*dt);f.vx*=air;f.vy=f.vy*air+43*dt;}
+        else f.vy+=160*dt;
+      }
+      this.flecks=this.flecks.filter(f=>f.age<f.life);
+      const info=this.latest;
+      if(info&&this.time-info.start<2.25){
+        const b=this.discs.find(p=>p.id===info.traceId);
+        if(b&&(info.trace.length===0||this.time-info.start-info.trace.at(-1).t>=.015))this.sample(b);
+      }
+    }
+    bounds(b){
+      // The high chute and its first six centimetres clear the cut lip.
+      if(b.firstHit===null)return;
+      const rim=leftWall(b.y)+b.r*.78;
+      if(b.pattern==='skip'&&!b.apron&&b.x<rim+30.3&&b.vx< -980){
+        // A nearly horizontal rim strike can skip OVER the sloped lip; the
+        // wide launch-trailer shot follows one such disk out to the table edge.
+        b.apron=true;b.mode='air';b.support=0;b.base=0;b.vz=Math.max(b.vz,1097);b.vx*=.642;
+        b.vy-=124;b.wz+=13;this.sound('wall',b,.71);
+      }
+      const lowX=b.apron?15:rim,highX=283-b.r*.68;
+      const lowY=56+b.r*.7,highY=306-b.r*.72;
+      let mag=0;
+      if(b.x<lowX){mag=Math.abs(b.vx);b.x=lowX;b.vx=Math.abs(b.vx)*.34;b.vy*=.91;}
+      else if(b.x>highX){mag=Math.abs(b.vx);b.x=highX;b.vx=-Math.abs(b.vx)*(Math.abs(b.vx)<500?.11:.31);b.vy*=.89;}
+      if(b.y<lowY){mag=Math.max(mag,Math.abs(b.vy));b.y=lowY;b.vy=Math.abs(b.vy)*.29;}
+      else if(b.y>highY){mag=Math.max(mag,Math.abs(b.vy));b.y=highY;b.vy=-Math.abs(b.vy)*.31;}
+      if(mag>55){
+        b.wz+=Math.sign(b.vx+b.vy)*mag*.025;
+        this.sound('wall',b,mag/620);
+        if(this.latest&&b.id===this.latest.traceId)this.latest.events.push({kind:'wall',t:round(this.time-this.latest.start),
+          x:round(b.x),y:round(b.y-b.z*LIFT_Y),speed:round(mag)});
+      }
+    }
+    pairs(){
+      const a=this.discs;
+      for(let i=0;i<a.length;i++){
+        const b=a[i];if(!b.value||b.mode==='rest'||b.firstHit===null)continue;
+        for(let j=0;j<a.length;j++){
+          const d=a[j];if(!d.value||b===d||d.firstHit===null&&d.mode!=='rest')continue;
+          if(d.mode!=='rest'&&j<i)continue;
+          if(b.support===d.id||d.support===b.id)continue;
+          const limit=(b.r+d.r)*.79,dx=b.x-d.x,dy=(b.y-d.y)/FLOOR_Y,ds=dx*dx+dy*dy;
+          if(ds>limit*limit||Math.abs(b.z-d.z)>(b.height+d.height)*.91)continue;
+          const dist=Math.sqrt(ds)||.001,nx=dist>.002?dx/dist:1,ny=dist>.002?dy/dist:0;
+          const vrel=(b.vx-d.vx)*nx+(b.vy-d.vy)*ny/FLOOR_Y;
+          const wake=vrel< -82&&d.mode==='rest';
+          if(wake){d.mode='roll';d.firstHit=this.time-.22;}
+          const still=d.mode==='rest',fix=(limit-dist+.02)*(still?.82:.46);
+          b.x+=nx*fix;b.y+=ny*fix*FLOOR_Y;
+          if(!still){d.x-=nx*fix;d.y-=ny*fix*FLOOR_Y;}
+          if(vrel>=0)continue;
+          const push=-vrel*(still?1.18:.65);
+          b.vx+=push*nx;b.vy+=push*ny*FLOOR_Y;b.wz+=ny*push*.03;
+          if(!still){d.vx-=push*nx;d.vy-=push*ny*FLOOR_Y;d.wz+=nx*push*.023;}
+          if(-vrel>65){
+            const sig=Math.min(b.id,d.id)*100000+Math.max(b.id,d.id);
+            if(this.time-(this.collisionAt.get(sig)??-2)>.065){
+              this.collisionAt.set(sig,this.time);this.sound('coin',b,-vrel/720);
+            }
+          }
+        }
+      }
+      if(this.collisionAt.size>130){
+        for(const [key,t] of this.collisionAt)if(this.time-t>.09)this.collisionAt.delete(key);
+      }
+    }
+    condense(){
+      const low=this.discs.filter(b=>b.mode==='rest'&&b.value>0).sort((a,b)=>a.z-b.z);
+      for(let i=0;i+1<low.length&&this.discs.length>MAX_DISCS;i+=2){
+        const b=low[i],d=low[i+1];d.value+=b.value;b.value=0;
+        this.discs.splice(this.discs.indexOf(b),1);
+      }
+    }
+    sample(b){
+      this.latest.trace.push({t:round(this.time-this.latest.start),x:round(b.x),y:round(b.y-b.z*LIFT_Y),z:round(b.z),
+        face:round(b.matrix[5]*eye[1]+b.matrix[8]*eye[2]),mode:b.mode});
+    }
+    draw(c,opts={}){
+      const flash=clamp(opts.flash||0,0,1),t=opts.reduce?0:(opts.time??this.time);
+      const lampX=opts.light?.x??(206+4.3*Math.sin(t*.76)+flash*9);
+      const lampY=opts.light?.y??(54+3.3*Math.sin(t*.31)+flash*4);
+      const lampCell=(lampX/3|0)+','+(lampY/3|0);
+      const live=this.discs.slice().sort((a,b)=>(a.y*.62+a.z*.82)-(b.y*.62+b.z*.82));
+      c.save();
+      for(const b of live){
+        if(b.mode==='gone')continue;
+        const h=Math.max(0,b.z-b.height-b.base),contact=b.mode==='rest'||b.mode==='roll';
+        const sx=.18+(b.x-lampX)*.0006,sy=.12+(b.y-lampY)*.00036;
+        if(h>9){
+          c.fillStyle='rgba(15,16,11,.08)';shadowShape(c,b,sx,sy,Math.min(5,1+h*.035));
+        }
+        c.fillStyle=contact?'rgba(15,15,10,.59)':'rgba(17,17,11,'+Math.max(.13,.55-h*.005)+')';
+        shadowShape(c,b,sx,sy,.65);
+      }
+      c.imageSmoothingEnabled=false;
+      for(const b of live){
+        const light=Math.round((flash*.72+Math.max(0,(b.x-146)/180)*.19)*12)/12;
+        const key=b.q.map(t=>Math.round(t*64)).join(',')+'/'+(b.x/9|0)+'/'+(b.y/9|0)+'/'+light+'/'+lampCell;
+        if(b.cache!==key){raster(b,light,lampX,lampY);b.cache=key;}
+        const perspective=1+Math.min(.115,Math.max(0,b.z-10)*.00115);
+        const width=b.r*perspective*TILE/TILE_RADIUS,px=b.x,py=b.y-b.z*LIFT_Y;
+        if(b.mode==='spend'&&this.time-b.spendAt>=b.drainAt){
+          c.save();c.beginPath();c.rect(-64,-160,500,443);c.clip();
+          c.drawImage(b.sprite,Math.round(px-width*.5),Math.round(py-width*.5),width,width);c.restore();
+        }else{
+          c.drawImage(b.sprite,Math.round(px-width*.5),Math.round(py-width*.5),width,width);
+          drawBloom(c,b,px,py,width);
+        }
+      }
+      for(const f of this.flecks){
+        const k=1-f.age/f.life;if(opts.reduce&&k<.40)continue;
+        if(f.chip){
+          const x=Math.round(f.x),y=Math.round(f.y);
+          c.globalAlpha=Math.min(1,k*3);c.fillStyle='#d9c195';
+          c.fillRect(x-1,y,f.wide?4:3,1);
+          if(f.wide&&k>.55)c.fillRect(x,y-1,1,3);
+          c.fillStyle='#fff5d7';c.fillRect(x,y,k>.43?2:1,k>.71?2:1);
+          continue;
+        }
+        c.globalAlpha=Math.min(1,k*1.6);c.fillStyle=f.hot?'#f9d990':'#b58c47';
+        const size=f.hot&&k>.60?2:1;c.fillRect(Math.round(f.x),Math.round(f.y),size,size);
+      }
+      c.restore();
+    }
+    stats(){
+      const a=this.latest;
+      return {balance:this.balance,visible:this.discs.length,pending:this.queue.length,
+        liveValue:this.discs.reduce((s,b)=>s+b.value,0)+this.queue.reduce((s,b)=>s+b.value,0),
+        moving:this.discs.filter(p=>p.mode!=='rest').length,
+        resting:this.discs.filter(p=>p.mode==='rest').length,emitted:a?a.born:0,landed:a?a.firstContacts:0,
+        time:round(this.time),source:{...CHUTE},payment:this.purchase?{...this.purchase}:null,last:a?{...a,trace:a.trace.slice(),events:a.events.slice(),births:a.births.slice()}:null};
+    }
+  }
+  function leftWall(y){return 101-(y-56)*.20;}
+  /* Research-only instrumentation: reveal WORK's ACTUAL local mesh,
+     die-normal buffer, BRDF-like shader and quaternion math. */
+   window.WorkCardProbe={CoinTable,mesh,palette,dieHeight,metal,basis,axis,product,rotate,bloom:true,
+      get dies(){return dies;},get tileSize(){return TILE;},get dieSize(){return dieSize;},
+      get artworkReady(){return artworkReady;},
+      setItem(item,img){mark=item.index|0;prepareTexture(item,img);},
+      makeCard(seed=151){const table=new CoinTable(seed);table.reset(0);const b=table.make(1,0);
+        b.x=180;b.y=190;b.z=0;b.patina=-.008;b.r=15;b.q=[0,0,0,1];b.matrix=basis(b.q);
+        b.mode='rest';b.height=extent(b);return b;},
+      rasterCard(b,lampX=240,lampY=115,light=.42){raster(b,light,lampX,lampY);return b.sprite;},
+      drawBloom,
+      setSampleScale(factor){const k=clamp(Math.round(Number(factor)||1),1,4);TILE=190*k;CENTRE=TILE*.5;TILE_RADIUS=83.5*k;return TILE;}
+   };
+})();
+
+</script><script>
+/* WORK native coin shader derivative: items-3d.js */
+/* WORK object viewer: use a real 3D rounded-rect derivative of native coin raster.
+   All portraits are original, unchanged images in this user's GitHub repo. */
+(()=>{'use strict';
+const P=window.WorkCardProbe;
+const ITEMS=[
+ {id:'hunter',name:'猎人团长',short:'MONSTER HUNTERS / COMMANDER',tier:'SSR',atk:8,hp:11,accent:'#8c7850',symbol:'✦',src:'../../../assets/characters/monster-hunters/01-legendary-hunter.png'},
+ {id:'doctor',name:'猎人医生',short:'MONSTER HUNTERS / PHYSICIAN',tier:'SR',atk:4,hp:10,accent:'#58776b',symbol:'✚',src:'../../../assets/characters/monster-hunters/02-blood-physician.png'},
+ {id:'farmer',name:'农耕工程师',short:'FARMERS / ENGINEER',tier:'SR',atk:3,hp:9,accent:'#74874d',symbol:'⚙',src:'../../../assets/characters/farmer-faction/engineer/01-farmer.png'},
+ {id:'vampire',name:'吸血鬼公主',short:'CRIMSON VAMPIRES',tier:'SSR',atk:7,hp:9,accent:'#7b4368',symbol:'☾',src:'../../../assets/characters/crimson-vampires/vampire-princess.png'},
+ {id:'ringmaster',name:'马戏团团长',short:'WONDER CIRCUS',tier:'SR',atk:5,hp:7,accent:'#975b43',symbol:'✧',src:'../../../assets/characters/wonder-circus/ringmaster.png'},
+ {id:'warrior',name:'伐木少女',short:'FARMERS / WARRIOR',tier:'R',atk:6,hp:8,accent:'#8c6a45',symbol:'⚒',src:'../../../assets/characters/farmer-faction/warrior/01-loli-lumberjack.png'}
+].map((c,index)=>({...c,index}));
+const $=s=>document.querySelector(s), canvas=$('#stage'),c=canvas.getContext('2d'),wire=$('#mesh'),w=wire.getContext('2d');
+let selected=ITEMS[0],card=P.makeCard(1481),angles={yaw:-18,pitch:-18,roll:0},auto=true,wireVisible=true,ready=false,dirty=true,last=0,lastRender=0,frames=0,previous=null;
+const imgs=new Map();
+function axis(x,y,z,a){return P.axis(x,y,z,a*Math.PI/180)}
+function rotate(){card.q=P.product(axis(0,1,0,angles.yaw),P.product(axis(1,0,0,angles.pitch),axis(0,0,1,angles.roll)));card.matrix=P.basis(card.q);card.cache='';dirty=true;}
+function setView(){rotate();$('#yawVal').textContent=Math.round(angles.yaw)+'°';$('#pitchVal').textContent=Math.round(angles.pitch)+'°';}
+function pause(){auto=false;$('#auto').textContent='▶ 自动旋转';$('#auto').classList.remove('on')}
+function selectedFace(){const n=card.matrix[8];return n>=0?'FRONT · ORIGINAL CHARACTER ART':'BACK · EMBOSSED';}
+function thumb(item){const img=new Image();img.src=item.src;img.alt=item.name;img.loading='lazy';return img;}
+function buildList(){const root=$('#items');root.textContent='';for(const item of ITEMS){const b=document.createElement('button');b.type='button';b.className='pick';b.id='item-'+item.id;b.setAttribute('role','option');b.setAttribute('aria-selected',String(item===selected));const pic=document.createElement('span');pic.className='thumb';pic.appendChild(thumb(item));const labels=document.createElement('span');labels.innerHTML='<span class="name"></span><span class="brief"></span><span class="rank"></span>';labels.querySelector('.name').textContent=item.name;labels.querySelector('.brief').textContent=item.short;labels.querySelector('.rank').textContent=item.tier+' / WORK BRASS';b.appendChild(pic);b.appendChild(labels);b.addEventListener('click',()=>choose(item));root.appendChild(b);}}
+function loadArt(item){return new Promise(resolve=>{let img=imgs.get(item.id);if(img){if(img.complete){resolve(img);return;}img.addEventListener('load',()=>resolve(img),{once:true});img.addEventListener('error',()=>resolve(null),{once:true});return;}img=new Image();img.onload=()=>resolve(img);img.onerror=()=>resolve(null);img.src=item.src;imgs.set(item.id,img);});}
+let sequence=0;
+async function choose(item){selected=item;const ticket=++sequence;ready=false;
+ for(const el of document.querySelectorAll('.pick'))el.setAttribute('aria-selected',String(el.id==='item-'+item.id));
+ $('#name').textContent=item.name;$('#subtitle').textContent=item.short+'  ·  '+item.tier;
+ $('#rarity').textContent=item.tier+' / ORIGINAL ARTWORK';
+ $('#renderStatus').textContent='读取 GitHub 原始立绘…';
+ const img=await loadArt(item);if(ticket!==sequence)return;
+ P.setItem(item,img);ready=true;card.sprite=null;card.cache='';dirty=true;
+ $('#renderStatus').textContent=img&&img.naturalWidth?'原画已加载 · Work 金属光照':'原画暂不可用 · 显示压印卡芯';
+ updateProps();draw(true);
 }
-function drawStatDisc(ctx,x,y,r,label,value,accent){
-  const g=ctx.createRadialGradient(x-r*.25,y-r*.35,8,x,y,r);
-  g.addColorStop(0,'#f4dba4');g.addColorStop(.38,'#ba9a63');g.addColorStop(.78,'#5f4b2d');g.addColorStop(1,'#e6c27b');
-  ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
-  ctx.lineWidth=5;ctx.strokeStyle='rgba(255,236,193,.35)';ctx.stroke();
-  ctx.fillStyle='#231707';ctx.textAlign='center';ctx.font='700 40px Georgia';ctx.fillText(value,x,y+16);
-  ctx.font='700 18px monospace';ctx.fillText(label,x,y-24);
+function updateProps(){const mesh=P.mesh;$('#verts').textContent=mesh.points.length;$('#polys').textContent=mesh.faces.length;$('#engrave').textContent=P.dieSize+'² × 2';$('#resolution').textContent=P.tileSize+'²';$('#faceLabel').textContent=selectedFace();}
+function gradient(){let g=c.createRadialGradient(325,220,30,350,350,430);g.addColorStop(0,'#485442');g.addColorStop(.55,'#17241b');g.addColorStop(1,'#0b150e');c.fillStyle=g;c.fillRect(0,0,canvas.width,canvas.height);}
+function draw(force=false){if(!ready||(!force&&!dirty))return;dirty=false;gradient();const W=canvas.width,H=canvas.height;
+ c.save();c.strokeStyle='rgba(198,176,115,.1)';c.lineWidth=1;for(let r=80;r<500;r+=77){c.beginPath();c.ellipse(W*.5,H*.51,r,r*.57,0,0,Math.PI*2);c.stroke();}c.restore();
+ // Original coin's CPU raster, frontal + reverse real geometry and quaternion.
+ const t=performance.now()*.001,lightX=210+28*Math.sin(t*.5),lightY=72+20*Math.cos(t*.63);
+ P.rasterCard(card,lightX,lightY,.43);
+ const s=Math.min(W/540,H/510)*1.55, side=P.tileSize*s;
+ const cx=W*.50,cy=H*.52;
+ c.save();c.shadowColor='rgba(0,0,0,.8)';c.shadowBlur=32;c.shadowOffsetY=30;
+ c.imageSmoothingEnabled=true;c.drawImage(card.sprite,cx-side/2,cy-side/2,side,side);
+ c.restore();
+ // Native WORK bloom kernel and hot-pixel intensity; now at card scale.
+ P.drawBloom(c,card,cx,cy,side);
+ const face=selectedFace();$('#faceLabel').textContent=face;
+ c.fillStyle='rgba(225,210,158,.82)';c.font='11px monospace';c.fillText('3D  /  Q = '+card.q.map(n=>n.toFixed(2)).join('  '),18,H-19);
+ c.textAlign='right';c.fillText(P.tileSize+'² CPU PIXEL MESH',W-18,H-19);c.textAlign='left';
+ drawWire();lastRender=performance.now();}
+function drawWire(){const mesh=P.mesh,m=card.matrix,ww=wire.width,hh=wire.height;w.clearRect(0,0,ww,hh);w.fillStyle='#121e15';w.fillRect(0,0,ww,hh);
+ const k=79,verts=mesh.points.map(v=>{const x=m[0]*v[0]+m[1]*v[1]+m[2]*v[2],y=m[3]*v[0]+m[4]*v[1]+m[5]*v[2],z=m[6]*v[0]+m[7]*v[1]+m[8]*v[2];return [ww/2+x*k,hh/2+(y*.82-z*.67)*k,y*.67+z*.82];});
+ const fs=mesh.faces.map(f=>({...f,depth:f.ids.reduce((s,i)=>s+verts[i][2],0)/f.ids.length})).sort((a,b)=>a.depth-b.depth);
+ for(const f of fs){w.beginPath();for(let j=0;j<f.ids.length;j++){const v=verts[f.ids[j]];if(j===0)w.moveTo(v[0],v[1]);else w.lineTo(v[0],v[1]);}w.closePath();w.globalAlpha=.42;w.fillStyle=f.material===0?'#506a49':f.material===1?'#304634':f.material===3?'#af935e':'#827751';w.fill();w.globalAlpha=1;if(wireVisible){w.lineWidth=f.material===3?1.2:.7;w.strokeStyle=f.material<2?'#e4ca8d':'#b79a61';w.stroke();}}
+ w.fillStyle='#f3d9a1';w.font='10px monospace';w.fillText('192 REAL VERTICES / FACE NORMALS',8,16);}
+function next(time){const dt=Math.min(.04,Math.max(0,(time-last)/1000||0));last=time;
+ if(auto){angles.yaw+=dt*13;angles.roll=.9*Math.sin(time*.0004);rotate();}
+ frames++;
+ if(dirty&&time-lastRender>65)draw();requestAnimationFrame(next);}
+function bind(){const stage=canvas;let drag=null;
+ stage.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,yaw:angles.yaw,pitch:angles.pitch};stage.setPointerCapture(e.pointerId);pause()});
+ stage.addEventListener('pointermove',e=>{if(!drag)return;angles.yaw=Math.max(-180,Math.min(180,drag.yaw+(e.clientX-drag.x)*.78));angles.pitch=Math.max(-75,Math.min(75,drag.pitch+(e.clientY-drag.y)*.65));$('#yaw').value=angles.yaw;$('#pitch').value=angles.pitch;setView();});
+ stage.addEventListener('pointerup',()=>drag=null);stage.addEventListener('pointercancel',()=>drag=null);
+ stage.addEventListener('dblclick',()=>$('#reset').click());
+ stage.addEventListener('click',e=>{if(drag)return;});
+ $('#yaw').addEventListener('input',e=>{pause();angles.yaw=+e.target.value;setView()});
+ $('#pitch').addEventListener('input',e=>{pause();angles.pitch=+e.target.value;setView()});
+ $('#auto').addEventListener('click',()=>{auto=!auto;$('#auto').textContent=auto?'Ⅱ 暂停旋转':'▶ 自动旋转';$('#auto').classList.toggle('on',auto)});
+ $('#flip').addEventListener('click',()=>{pause();angles.yaw=((angles.yaw+180+180)%360)-180;$('#yaw').value=angles.yaw;setView()});
+ $('#reset').addEventListener('click',()=>{pause();angles={yaw:-18,pitch:-18,roll:0};$('#yaw').value=angles.yaw;$('#pitch').value=angles.pitch;setView()});
+ $('#wire').addEventListener('click',()=>{wireVisible=!wireVisible;$('#wire').textContent='线框 · '+(wireVisible?'ON':'OFF');drawWire()});
+ window.addEventListener('keydown',e=>{if(e.target.closest('button,input'))return;if(e.key.toLowerCase()==='r')$('#reset').click();if(e.key===' '){e.preventDefault();$('#flip').click();}});
 }
-function wrapText(ctx,text,x,y,maxW,lineH,center=false,maxLines=99){
-  const words=[...text];let line='',lines=[];
-  for(const ch of words){const test=line+ch;if(ctx.measureText(test).width>maxW && line){lines.push(line);line=ch;} else line=test;}
-  if(line)lines.push(line);lines=lines.slice(0,maxLines);
-  ctx.textAlign=center?'center':'left';
-  lines.forEach((ln,i)=>ctx.fillText(ln,x, y+i*lineH));
-}
-function shade(hex, amt){
-  const c=parseInt(hex.slice(1),16); let r=(c>>16)+amt,g=((c>>8)&255)+amt,b=(c&255)+amt;
-  r=Math.max(0,Math.min(255,r));g=Math.max(0,Math.min(255,g));b=Math.max(0,Math.min(255,b));
-  return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
-}
-function hexAlpha(hex,a){
-  const c=parseInt(hex.slice(1),16); const r=c>>16,g=(c>>8)&255,b=c&255; return `rgba(${r},${g},${b},${a})`;
-}
-function renderCard(){ drawFront(fctx,current); drawBack(bctx,current); updateTransform(); }
-function updateTransform(){
-  document.getElementById('yawOut').textContent = `${Math.round(yaw)}°`;
-  document.getElementById('pitchOut').textContent = `${Math.round(pitch)}°`;
-  cardShell.style.transform = `rotateX(${pitch}deg) rotateY(${yaw}deg) ${flipped?'rotateY(180deg)':''}`;
-}
-function populateList(){
-  itemList.innerHTML='';
-  characters.forEach((c,idx)=>{
-    const el=document.createElement('button');
-    el.className='item'+(idx===0?' active':'');
-    el.dataset.id=c.id;
-    el.innerHTML=`<div class="thumb"><canvas width="124" height="176"></canvas></div><div><div class="item-name">${c.name}</div><div class="item-sub">${c.org} · ${c.role}</div></div><span class="tag">${c.rarity}</span>`;
-    itemList.appendChild(el);
-    const cv=el.querySelector('canvas'),ctx=cv.getContext('2d');
-    const preview=document.createElement('canvas');preview.width=1024;preview.height=1536;drawFront(preview.getContext('2d'),c);ctx.drawImage(preview,0,0,cv.width,cv.height);
-    el.addEventListener('click',()=>selectItem(c.id));
-  });
-}
-function selectItem(id){
-  current = characters.find(c=>c.id===id) || characters[0];
-  [...itemList.children].forEach(it=>it.classList.toggle('active',it.dataset.id===id));
-  heroTitle.textContent = current.name;
-  heroSubtitle.textContent = `${current.org} · ${current.role}`;
-  heroDesc.textContent = current.desc;
-  costStat.textContent = current.cost;
-  rareStat.textContent = current.rarity;
-  atkStat.textContent = current.atk;
-  hpStat.textContent = current.hp;
-  noteRarity.textContent = `RARITY · ${current.rarity} / ${rarityMap[current.rarity]}`;
-  noteStats.textContent = `ATK ${current.atk} / HP ${current.hp}`;
-  noteFrame.textContent = `${current.skill} / EMBOSSED CHARACTER CARD`;
-  heroBadges.innerHTML=''; current.badges.forEach(b=>{const span=document.createElement('span'); span.className='badge'; span.textContent=b; heroBadges.appendChild(span);});
-  layerList.innerHTML=''; current.layers.forEach(([title,desc])=>{const d=document.createElement('div'); d.className='layer'; d.innerHTML=`<strong>${title}</strong><span>${desc}</span>`; layerList.appendChild(d);});
-  renderCard();
-}
-function setupControls(){
-  const yawRange=document.getElementById('yaw'); const pitchRange=document.getElementById('pitch');
-  yawRange.addEventListener('input',()=>{yaw=+yawRange.value;auto=false;document.getElementById('autoBtn').textContent='自动旋转 · OFF';updateTransform();});
-  pitchRange.addEventListener('input',()=>{pitch=+pitchRange.value;auto=false;document.getElementById('autoBtn').textContent='自动旋转 · OFF';updateTransform();});
-  document.getElementById('autoBtn').addEventListener('click',()=>{auto=!auto;document.getElementById('autoBtn').textContent=`自动旋转 · ${auto?'ON':'OFF'}`;});
-  document.getElementById('flipBtn').addEventListener('click',()=>{flipped=!flipped;updateTransform();});
-  document.getElementById('resetBtn').addEventListener('click',()=>{yaw=-10;pitch=8;spin=-10;flipped=false;document.getElementById('yaw').value=yaw;document.getElementById('pitch').value=pitch;updateTransform();});
-  const viewer=document.getElementById('viewer');
-  viewer.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,yaw,pitch};viewer.setPointerCapture(e.pointerId);});
-  viewer.addEventListener('pointermove',e=>{if(!drag)return; auto=false; document.getElementById('autoBtn').textContent='自动旋转 · OFF'; yaw = drag.yaw + (e.clientX-drag.x)*0.16; pitch = Math.max(-28, Math.min(28, drag.pitch - (e.clientY-drag.y)*0.13)); document.getElementById('yaw').value = Math.max(-38,Math.min(38,yaw)); document.getElementById('pitch').value = pitch; updateTransform();});
-  viewer.addEventListener('pointerup',()=>drag=null);viewer.addEventListener('pointerleave',()=>drag=null);
-}
-function animate(){
-  if(auto && !drag){spin += 0.12; yaw = Math.sin(spin*0.015)*18 - 8; document.getElementById('yaw').value = yaw; updateTransform();}
-  requestAnimationFrame(animate);
-}
-populateList(); setupControls(); selectItem('hunter'); animate();
-</script>
-</body>
-</html>
+buildList();bind();setView();choose(selected);requestAnimationFrame(next);
+window.WorkCard3DQA={state:()=>({selected:selected.id,ready,artwork:P.artworkReady,geometryVertices:P.mesh.points.length,geometryFaces:P.mesh.faces.length,sourceShader:'metal() copied byte-for-byte from original Work CoinTable',shaderScale:P.tileSize,quaternion:card.q.slice(),yaw:angles.yaw,pitch:angles.pitch,side:card.matrix[8]>=0?'front':'back',spriteOpaque:card.buf?[...card.buf.data].filter((v,i)=>i%4===3&&v>0).length:0,frameCount:frames}),select:(id)=>{const it=ITEMS.find(i=>i.id===id);if(it)choose(it);},setAngles:(yaw,pitch)=>{pause();angles.yaw=yaw;angles.pitch=pitch;setView();draw(true)},setQuality:(quality)=>{P.setSampleScale(quality);card.sprite=null;dirty=true;updateProps();draw(true)}};
+})();
+
+</script></body></html>
