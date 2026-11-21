@@ -34,6 +34,20 @@ function metal(nx,ny,nz,rough,ambient,lamp) {
     return ambient+.44*d+.10*b**5+.30*b**27+coated*d2**highlightExponent+.075*fresnel*fresnel+.17*soft**5+.65*soft**21+rough;
   }
 const screen=document.getElementById('scene'),g=screen.getContext('2d',{alpha:false});
+// Work source, NOT a flat CSS-painted material. The real CabinetArt
+// brass/green-cast material is sampled and mapped onto true 3D facets.
+let workSurfacePixels=null,workSurfaceUsed=false;
+function ensureWorkSurface(){
+ if(workSurfacePixels||!window.CabinetArt?.plaque)return;
+ try{
+  const atlas=document.createElement('canvas');atlas.width=192;atlas.height=144;
+  const context=atlas.getContext('2d',{willReadFrequently:true});
+  window.CabinetArt.plaque(context,0,0,192,144);
+  workSurfacePixels=context.getImageData(0,0,192,144).data;
+  workSurfaceUsed=true;
+ }catch(err){console.warn('Work CabinetArt material unavailable:',err);}
+}
+
 const buffer=document.createElement('canvas');buffer.width=496;buffer.height=324;
 const sg=buffer.getContext('2d',{alpha:false});
 const W=()=>window.innerWidth,H=()=>window.innerHeight;
@@ -87,33 +101,33 @@ function casing(){
  // Gold edge on outer display: actually separated front/back profiles, like
  // the original coin planchet's multiple bevel rings (NOT a drawn rectangle).
  const bezel=[
-  [4.56,3.01,.34,.742,'goldDark'],
-  [4.49,2.96,.33,.779,'gold'],
-  [4.32,2.80,.31,.811,'goldShine'],
-  [4.22,2.72,.29,.819,'shadowSteel'],
-  [4.11,2.62,.27,.833,'goldDark'],
+  [4.92,3.14,.32,.742,'goldDark'],
+  [4.87,3.09,.32,.779,'gold'],
+  [4.78,3.01,.31,.811,'goldShine'],
+  [4.67,2.94,.29,.819,'shadowSteel'],
+  [4.61,2.87,.29,.833,'goldDark'],
  ];
  prev=null;
  for(const [w,h,r,z,mat] of bezel){
-  const c=contour(-.42,.025,w,h,r,z);
+  const c=contour(-.14,.025,w,h,r,z);
   if(prev)bridge(prev,c,mat);
   prev=c;
  }
  // Actual beveled frame is now a metal 3D ring; inner CRT will sit behind glass.
  // The outermost bezel loop starts on the cast front (z=.724), so there are no
  // standalone UI-stroke lines acting as metal.
- const shellContour=contour(-.42,.025,4.65,3.09,.35,.724);
- bridge(shellContour,contour(-.42,.025,4.56,3.01,.34,.742),'goldDark');
+ const shellContour=contour(-.14,.025,5.03,3.19,.35,.724);
+ bridge(shellContour,contour(-.14,.025,4.92,3.14,.32,.742),'goldDark');
  // Side plate raised above the case with a 3D bevel and inset.
- const side1=contour(2.095,.025,.89,3.03,.12,.731);
- const side2=contour(2.095,.025,.83,2.96,.11,.77);
+ const side1=contour(2.51,.025,.40,2.83,.09,.731);
+ const side2=contour(2.51,.025,.36,2.76,.08,.77);
  bridge(side1,side2,'goldDark');
- plate(2.095,.025,.83,2.96,.11,.77,'olive',-.035);
+ plate(2.51,.025,.36,2.76,.08,.77,'olive',-.035);
  // Slit vents have physically recessed dark cutout bands and metal crest rims.
- for(let k=0;k<8;k++){
-  const y=-.65-k*.075;
-  const a=contour(2.08,y,.57,.033,.012,.779,2),b=contour(2.08,y,.55,.027,.011,.783,2);
-  bridge(a,b,'goldDark',-.05);plate(2.08,y,.53,.021,.01,.785,'vent',-.12);
+ for(let k=0;k<5;k++){
+  const y=-.38-k*.095;
+  const a=contour(2.51,y,.27,.025,.010,.779,2),b=contour(2.51,y,.25,.019,.010,.783,2);
+  bridge(a,b,'shadowSteel',-.05);plate(2.51,y,.23,.016,.01,.785,'vent',-.12);
  }
  // Housing mount feet, with rearward depth and weight, not floating decorations.
  for(const x of [-2.24,2.17]){
@@ -128,10 +142,10 @@ function casing(){
  }
  for(const v of [[-2.60,1.64],[2.60,1.64],[-2.60,-1.65],[2.60,-1.65]])screw(...v,.79);
  // The two 3D machined control knobs are actual discs with 28 metallic sides.
- knob(2.08,.93,.30,.785,.24,28);
- knob(2.08,.03,.205,.787,.18,26);
+ knob(2.51,.86,.117,.785,.108,24);
+ knob(2.51,.28,.082,.787,.088,20);
  // Lamp amber diffuser has a 3D retaining ring and emissive insert.
- knob(2.08,-1.35,.12,.792,.055,24,true);
+ knob(2.51,-1.08,.067,.792,.055,20,true);
 }
 function circle(cx,cy,r,z,N=24){return Array.from({length:N},(_,i)=>{const a=(i/N)*TAU;return [cx+r*Math.cos(a),cy+r*Math.sin(a),z];});}
 function knob(x,y,r,front,depth,N=24,light=false){
@@ -153,7 +167,7 @@ function norm(points){
  return normalized(u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]);
 }
 function lens(x,y){return .089*(1-Math.pow(x,2))*(1-Math.pow(y,2));}
-function surf(x,y){return [-.42+x*2.016,.025+y*1.287,.858+lens(x,y)];}
+function surf(x,y){return [-.14+x*2.255,.025+y*1.395,.858+lens(x,y)];}
 function makeCrt(){const cols=19,rows=14;
  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
   const a=x/cols*2-1,b=(x+1)/cols*2-1,c=y/rows*2-1,d=(y+1)/rows*2-1;
@@ -182,12 +196,12 @@ function colorFor(kind,n,base){
  if(kind==='lamp')return state.power?'#f5bb5c':'#514e39';
  const brightness=clamp(level,0,1.0);
  if(kind==='gold'||kind==='goldShine'||kind==='edgeGold'||kind==='goldDark'||kind==='dialFace'){
-  const scalar=kind==='goldDark'?.65:kind==='goldShine'?.88:kind==='edgeGold'?.85:kind==='dialFace'?.64:.88;
+  const scalar=kind==='goldDark'?.43:kind==='goldShine'?.68:kind==='edgeGold'?.65:kind==='dialFace'?.48:.69;
   const p=palette[clamp(Math.round(brightness*255),0,255)];
   return 'rgb('+p.map(x=>clamp(Math.round(x*scalar),0,255)).join(',')+')';
  }
  let intensity=clamp(.44+level*.66,.15,1.25),r=49,gc=60,b=45;
- if(kind==='frontCast'){r=56;gc=67;b=51;intensity*=1.10;}
+ if(kind==='frontCast'){r=53;gc=68;b=52;intensity*=1.06;}
  if(kind==='shadowSteel'){r=25;gc=33;b=27;intensity*=.65;}
  if(kind==='steel'){r=36;gc=46;b=37;intensity*=.76;}
  if(kind==='olive'){intensity*=1.05;}
@@ -247,7 +261,8 @@ function makeScreen(t){
 // motion; the phosphor layer animates independently at a bounded cost.
 const physical=document.createElement('canvas'),physicalContext=physical.getContext('2d',{alpha:false});
 let renderW=0,renderH=0,opaqueBuffer=null,depthBuffer=null,frameBuffer=null,
-    geometryDirty=true,bodyFaces=0,screenMaskPixels=0;
+    geometryDirty=true,bodyFaces=0,screenMaskPixels=0,screenSource=null,screenBlend=null,screenCoverage=null,screenVisited=null;
+let rasterPasses=0,frameRenderMs=0;
 function colorComponents(kind,n,base){
  const c=colorFor(kind,n,base);
  if(c.startsWith('#'))return [parseInt(c.slice(1,3),16),parseInt(c.slice(3,5),16),parseInt(c.slice(5,7),16)];
@@ -280,6 +295,18 @@ function drawTriangle(vertices,uv,kind,n,col,base,mode,pixels){
    if(z<depthBuffer[i]-.0003)continue;
    depthBuffer[i]=z;
    const o=i*4;
+   if(mode==='screenMap'){
+    const tu=uv[0][0]*u+uv[1][0]*v+uv[2][0]*q,tv=uv[0][1]*u+uv[1][1]*v+uv[2][1]*q;
+    const tx=clamp((tu*buffer.width)|0,0,buffer.width-1),ty=clamp((tv*buffer.height)|0,0,buffer.height-1);
+    const xx=tu*2-1,yy=tv*2-1;
+    const strip=Math.exp(-Math.pow((xx+yy*.25+.60)/.21,2))*.23;
+    const edge=Math.max(0,xx*xx+yy*yy-1.15)*.055;
+    const reflect=clamp((fres*.9+strip+edge),0,.24);
+    screenSource[i]=(ty*buffer.width+tx)*4;
+    screenBlend[i]=Math.round(reflect*255);
+    if(!screenVisited[i]){screenVisited[i]=1;screenCoverage.push(i);}
+    continue;
+   }
    if(mode==='screen'){
     const tu=uv[0][0]*u+uv[1][0]*v+uv[2][0]*q,tv=uv[0][1]*u+uv[1][1]*v+uv[2][1]*q;
     const tx=clamp((tu*buffer.width)|0,0,buffer.width-1),ty=clamp((tv*buffer.height)|0,0,buffer.height-1);
@@ -298,24 +325,32 @@ function drawTriangle(vertices,uv,kind,n,col,base,mode,pixels){
     screenMaskPixels++;
    }else{
     const depth=(((x+y*17)*13)&31)*.022;
+    let workPatina=1;
+    if(workSurfacePixels&&(kind==='olive'||kind==='frontCast')){
+      // Exact original CabinetArt.plaque() output, projected onto the 3D case.
+      const sx=20+((x*3+y)&151),sy=17+((y*2+x)&103);
+      const ti=(sy*192+sx)*4;
+      workPatina=.89+workSurfacePixels[ti+1]/255*.36;
+    }
     let soft=(kind==='olive'||kind==='frontCast')?(Math.sin(x*.11+y*.07)*.019+depth*.05):0;
     if(kind==='dialFace'){
-      const centers=[[2.08,.93,.785+.24],[2.08,.03,.787+.18]];
+      const centers=[[2.51,.86,.785+.108],[2.51,.28,.787+.088]];
       let picked=centers[0],best=1e8;
       for(const center of centers){const cp=proj(center);const d=(cp[0]-x)**2+(cp[1]-y)**2;if(d<best){best=d;picked=cp;}}
       const theta=Math.atan2(y-picked[1],x-picked[0]),rho=Math.sqrt(best);
       soft+=.16*Math.cos(theta*1.0+.9)+.022*Math.sin(rho*.42);
     }
-    frameBuffer[o]=clamp(R*(1+soft),0,255);
-    frameBuffer[o+1]=clamp(G*(1+soft*.95),0,255);
-    frameBuffer[o+2]=clamp(Bc*(1+soft*.7),0,255);
+    frameBuffer[o]=clamp(R*workPatina*(1+soft),0,255);
+    frameBuffer[o+1]=clamp(G*workPatina*(1+soft*.95),0,255);
+    frameBuffer[o+2]=clamp(Bc*workPatina*(1+soft*.7),0,255);
     frameBuffer[o+3]=255;
    }
   }
  }
 }
 function prepareGeometry(){
- renderW=Math.min(1050,Math.max(320,Math.round(viewW)));
+ ensureWorkSurface();
+ renderW=Math.min(780,Math.max(320,Math.round(viewW))); // adaptive Work-scale internal CPU resolution
  renderH=Math.max(200,Math.round(renderW*viewH/viewW));
  physical.width=renderW;physical.height=renderH;
  const oldW=viewW,oldH=viewH,oldScale=scale;
@@ -336,6 +371,14 @@ function prepareGeometry(){
  }
  opaqueBuffer=opaqueBuffer.slice();
  const geometryDepth=depthBuffer.slice();
+ screenSource=new Int32Array(renderW*renderH);
+ screenBlend=new Uint8Array(renderW*renderH);
+ screenVisited=new Uint8Array(renderW*renderH);
+ screenCoverage=[];
+ const n=normalized(0,0,1);
+ // The original 3D screen's UV/depth/Fresnel is precomputed ONCE per camera.
+ for(const face of crt)drawTriangle(face.tri.map(proj),face.uv,'screen',n,null,0,'screenMap',null);
+ screenMaskPixels=screenCoverage.length;
  state.opaqueFacesRendered=bodyFaces;
  state.cacheStamp++;
  viewW=oldW;viewH=oldH;scale=oldScale;
@@ -345,22 +388,17 @@ function prepareGeometry(){
 }
 function rasterScene(t){
  if(geometryDirty||!opaqueBuffer||Math.abs(renderW/Math.max(1,renderH)-viewW/Math.max(1,viewH))>.02)prepareGeometry();
- const savedW=viewW,savedH=viewH,savedS=scale;
- viewW=renderW;viewH=renderH;
- scale=Math.min(viewW/6.68,viewH/4.16);if(viewW<viewH)scale=Math.min(viewW/6.11,viewH/4.15);
  frameBuffer=new Uint8ClampedArray(opaqueBuffer);
- depthBuffer=new Float32Array(state.geometryDepth);
  const pixels=sg.getImageData(0,0,buffer.width,buffer.height).data;
- const n=normalized(0,0,1);
- screenMaskPixels=0;
- for(const f of crt){
-  const pts=f.tri.map(proj);
-  // A clipped per-pixel image-mapped glass surface, 532 curved real triangles.
-  drawTriangle(pts,f.uv,'screen',n,null,0,'screen',pixels);
+ for(let j=0;j<screenCoverage.length;j++){
+  const i=screenCoverage[j],o=i*4,p=screenSource[i];
+  const a=screenBlend[i]/255,k=1-a;
+  frameBuffer[o]=pixels[p]*k+217*a;
+  frameBuffer[o+1]=pixels[p+1]*k+198*a;
+  frameBuffer[o+2]=pixels[p+2]*k+139*a;
  }
- const im=new ImageData(frameBuffer,renderW,renderH);
- physicalContext.putImageData(im,0,0);
- viewW=savedW;viewH=savedH;scale=savedS;
+ physicalContext.putImageData(new ImageData(frameBuffer,renderW,renderH),0,0);
+ rasterPasses++;
 }
 function glowAt(x,y,r,gold){
  const grd=g.createRadialGradient(x,y,1,x,y,r);
@@ -369,7 +407,7 @@ function glowAt(x,y,r,gold){
  g.fillStyle=grd;g.fillRect(x-r,y-r,r*2,r*2);
 }
 function draw(t){
- const w=W(),h=H(),dpr=Math.min(1.5,devicePixelRatio||1);
+ const w=W(),h=H(),dpr=Math.min(1.15,devicePixelRatio||1);
  if(screen.width!==Math.round(w*dpr)||screen.height!==Math.round(h*dpr)){
   screen.width=Math.round(w*dpr);screen.height=Math.round(h*dpr);
   geometryDirty=true;
@@ -384,7 +422,7 @@ function draw(t){
  g.imageSmoothingEnabled=true;
  g.drawImage(physical,0,0,w,h);
  if(state.power){
-  const p=proj([2.08,-1.35,.89]);
+  const p=proj([2.51,-1.08,.85]);
   g.globalCompositeOperation='screen';glowAt(p[0],p[1],Math.max(16,scale*.24),true);
   g.globalCompositeOperation='source-over';
  }
@@ -392,14 +430,18 @@ function draw(t){
 }
 
 function hitKnob(x,y){
- const p=proj([2.08,.93,1.01]),p2=proj([2.08,.03,.92]);
- return Math.hypot(x-p[0],y-p[1])<scale*.42?'power':Math.hypot(x-p2[0],y-p2[1])<scale*.29?'channel':null;
+ const p=proj([2.51,.86,.91]),p2=proj([2.51,.28,.89]);
+ return Math.hypot(x-p[0],y-p[1])<scale*.24?'power':Math.hypot(x-p2[0],y-p2[1])<scale*.20?'channel':null;
 }
-let last=0,frames=0,elapsed=0;
+let last=0,frames=0,elapsed=0,lastPresented=-1000;
 function loop(t){const sec=t/1000;
  if(!last)last=t;const dt=Math.min(.04,(t-last)/1000);last=t;
  elapsed+=dt;frames++;if(elapsed>=.7){state.fps=Math.round(frames/elapsed);frames=0;elapsed=0;}
- draw(sec);requestAnimationFrame(loop);
+ // 24-28 Hz original CRT phosphor animation; UI input still 60 Hz.
+ if(geometryDirty||t-lastPresented>=1000/(state.dragging?24:28)){
+  const started=performance.now();draw(sec);frameRenderMs=performance.now()-started;lastPresented=t;
+ }
+ requestAnimationFrame(loop);
 }
 let start=null;
 screen.addEventListener('pointerdown',e=>{
@@ -417,18 +459,18 @@ screen.addEventListener('pointerup',e=>{
  const wasDrag=state.dragging;start=null;state.dragging=false;
  if(wasDrag)return;
  const what=hitKnob(e.clientX,e.clientY);
- if(what==='power'){state.power=!state.power;state.flash=1;state.pressCount++;document.getElementById('sr').textContent=state.power?'电视已开机':'电视已关闭';}
+ if(what==='power'){state.power=!state.power;geometryDirty=true;state.flash=1;state.pressCount++;document.getElementById('sr').textContent=state.power?'电视已开机':'电视已关闭';}
  if(what==='channel'){state.channel=(state.channel+1)%3;state.pressCount++;}
 });
 screen.addEventListener('pointercancel',()=>{start=null;state.dragging=false});
 screen.addEventListener('dblclick',()=>{state.yaw=-11;state.pitch=-5;geometryDirty=true;});
 window.addEventListener('keydown',e=>{
- if(e.code==='Space'){e.preventDefault();state.power=!state.power;state.pressCount++;}
+ if(e.code==='Space'){e.preventDefault();state.power=!state.power;geometryDirty=true;state.pressCount++;}
  if(e.code==='ArrowLeft'){state.yaw=clamp(state.yaw-3,-37,37);geometryDirty=true;}
  if(e.code==='ArrowRight'){state.yaw=clamp(state.yaw+3,-37,37);geometryDirty=true;}
  if(e.code==='KeyR'){state.yaw=-11;state.pitch=-5;state.power=true;geometryDirty=true;}
  if(e.code==='Escape')location.href='../../soul-table.html';
 });
 requestAnimationFrame(loop);
-window.WorkTVQA={state:()=>({isReal3D:true,meshFaces:state.meshCount,crtTriangles:state.screenTriCount,power:state.power,channel:state.channel,yaw:state.yaw,pitch:state.pitch,metalSource:'Work coin-art.js metal() copied unchanged',renderCache:state.cacheStamp,solidFaces:state.opaqueFacesRendered,crtPixelCoverage:screenMaskPixels,glassIOR:1.5,frames:state.frames,fps:state.fps,screenSize:[buffer.width,buffer.height],viewport:[viewW,viewH],pressCount:state.pressCount}),setAngles:(yaw,pitch)=>{state.yaw=clamp(yaw,-37,37);state.pitch=clamp(pitch,-19,18);geometryDirty=true;},setPower:(v)=>state.power=!!v};
+window.WorkTVQA={state:()=>({isReal3D:true,meshFaces:state.meshCount,crtTriangles:state.screenTriCount,power:state.power,channel:state.channel,yaw:state.yaw,pitch:state.pitch,metalSource:'Work coin-art.js metal() copied unchanged',renderCache:state.cacheStamp,solidFaces:state.opaqueFacesRendered,crtPixelCoverage:screenMaskPixels,glassIOR:1.5,frames:state.frames,fps:state.fps,screenSize:[buffer.width,buffer.height],viewport:[viewW,viewH],pressCount:state.pressCount,frameRenderMs:Math.round(frameRenderMs*10)/10,rasterPasses,screenMappingPixels:screenCoverage?.length||0,originalCabinetTexture:workSurfaceUsed}),setAngles:(yaw,pitch)=>{state.yaw=clamp(yaw,-37,37);state.pitch=clamp(pitch,-19,18);geometryDirty=true;},setPower:(v)=>{state.power=!!v;geometryDirty=true;}};
 })();
