@@ -34,6 +34,7 @@ for(const v of [{name:'desktop-1440x900',width:1440,height:900},{name:'phone-390
  const edge=await page.evaluate(()=>WorkCard3DQA.state());
  if(Math.abs(edge.yaw-87)>1||edge.spriteOpaque<1000)throw Error('SIDE ROTATION FAILED '+JSON.stringify(edge));
  await page.screenshot({path:path.join(out,v.name+'-03-actual-3d-card-side-edge.png'),fullPage:true});
+ await page.locator('#reset').click();
  await page.locator('#flip').click();await page.waitForTimeout(380);
  const reverse=await page.evaluate(()=>WorkCard3DQA.state());
  if(reverse.side!=='back')throw Error('REVERSE FACE GEOMETRY FAILED '+JSON.stringify(reverse));
