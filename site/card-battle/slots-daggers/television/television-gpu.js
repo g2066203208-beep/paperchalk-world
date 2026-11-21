@@ -383,8 +383,9 @@ function tick(ms){
  // 30 fps is sufficient for a stationary tabletop. Avoid busy 60fps polling
  // and never redraw the geometry pixel-by-pixel on the JavaScript main thread.
  // Desktop GPUs can display ~50 frames with no CPU software rasterization;
- // cap smaller mobile viewports conservatively to save heat and battery.
- const period=1000/(state.dragging?55:window.innerWidth>=1000?50:30);
+ // mobile also targets a smooth cadence: too-low 30Hz gates produce 16-20fps
+ // on browsers whose rAF callback runs at ~40Hz.
+ const period=1000/(state.dragging?55:window.innerWidth>=1000?50:45);
  if(!invalidated&&ms-lastPaint<period)return;
  const started=performance.now();
  if(invalidated||ms-state.lastProgramAt>1000/15){
