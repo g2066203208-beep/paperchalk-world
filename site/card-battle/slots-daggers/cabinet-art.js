@@ -925,5 +925,5 @@ function light(c,l,portrait=false,h=540){
   }
   c.restore();
 }
-window.CabinetArt={desk,chassis,portraitChassis,drawer,cap,recess,bolt,panel,plaque,light,leafShade};
+window.CabinetArt={desk,chassis,portraitChassis,drawer,cap,recess,bolt,panel,plaque,light,leafShade,wood,glass,nearIvy,texture};
 })();
