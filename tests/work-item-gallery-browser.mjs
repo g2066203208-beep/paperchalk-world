@@ -32,6 +32,9 @@ for(const v of cases){
   await page.waitForTimeout(220);
   const hunter=await page.evaluate(()=>WorkMuseumQA.state());
   if(hunter.coinVisible!==false||hunter.cardVisible!==true||hunter.vertices!==192||hunter.faces!==162||hunter.painted<6000)throw Error('actual card mesh or art missing '+JSON.stringify(hunter));
+  if(Math.abs(hunter.meshAspect-2/3)>.01)throw Error('card model distorts original 1024×1536 artwork '+JSON.stringify(hunter));
+  const isPortrait=v.width<780;
+  if(hunter.canvasSize[0] !== (isPortrait?540:820)||hunter.canvasSize[1] !== (isPortrait?650:620))throw Error('mobile frame does not adapt '+JSON.stringify(hunter));
   await page.screenshot({path:path.join(out,v.id+'-02-full-art-minimal-3d-character-card.png'),fullPage:true});
   await page.locator('#object-doctor').click();
   await page.waitForFunction(()=>WorkMuseumQA.state().selected==='doctor'&&WorkMuseumQA.state().cardReady&&WorkMuseumQA.state().artwork,{timeout:20000});
