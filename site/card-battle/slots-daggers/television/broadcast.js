@@ -146,7 +146,7 @@ function show(t){
  txt('ROUND '+String(Math.floor(t/6)%3+1),230,136,9,'#fbe0a8','right');
  network(3,t);ticker(t,'综艺舞台 · 主持人现场播报 · 每一轮都有新惊喜');
 }
-function document(t){
+function documentary(t){
  gradient('#111d27','#354750');
  for(let i=0;i<13;i++){const x=i*23-8;rect(x,78+(i%4)*6,18,67,'#1b2e39');rect(x+3,87,3,3,'#bda775');}
  for(let i=0;i<3;i++)line(-20,130+i*10,270,119+i*8,'rgba(229,197,135,.18)');
@@ -169,7 +169,7 @@ function weather(t){
  rect(0,125,248,21,'#132c38');txt('天气主持 · CHAR-001',9,139,10);
  network(5,t);ticker(t,'游戏世界气象 · 所有数值均为虚构示意');
 }
-const scenes=[news,advert,talk,show,document,weather];
+const scenes=[news,advert,talk,show,documentary,weather];
 function frame(ch,t){
  const index=((ch%scenes.length)+scenes.length)%scenes.length;
  ctx.clearRect(0,0,248,162);scenes[index](t);
