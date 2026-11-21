@@ -34,15 +34,16 @@ function metal(nx,ny,nz,rough,ambient,lamp) {
     return ambient+.44*d+.10*b**5+.30*b**27+coated*d2**highlightExponent+.075*fresnel*fresnel+.17*soft**5+.65*soft**21+rough;
   }
 const screen=document.getElementById('scene'),g=screen.getContext('2d',{alpha:false});
-// Work source, NOT a flat CSS-painted material. The real CabinetArt
-// brass/green-cast material is sampled and mapped onto true 3D facets.
+// Directly sample the existing Work CabinetArt shader's green cast-metal
+// surface. The original generator makes its wear, stipple and metal patina;
+// we map that prepared material over the TV's actual 3D shell faces.
 let workSurfacePixels=null,workSurfaceUsed=false;
 function ensureWorkSurface(){
  if(workSurfacePixels||!window.CabinetArt?.plaque)return;
  try{
   const atlas=document.createElement('canvas');atlas.width=192;atlas.height=144;
   const context=atlas.getContext('2d',{willReadFrequently:true});
-  window.CabinetArt.plaque(context,0,0,192,144);
+  window.CabinetArt.panel(context,0,0,192,144);
   workSurfacePixels=context.getImageData(0,0,192,144).data;
   workSurfaceUsed=true;
  }catch(err){console.warn('Work CabinetArt material unavailable:',err);}
@@ -51,7 +52,7 @@ function ensureWorkSurface(){
 const buffer=document.createElement('canvas');buffer.width=496;buffer.height=324;
 const sg=buffer.getContext('2d',{alpha:false});
 const W=()=>window.innerWidth,H=()=>window.innerHeight;
-const state={cacheStamp:0,opaqueFacesRendered:0,yaw:-11,pitch:-5,power:true,channel:0,illum:.8,glare:1,seconds:0,frames:0,fps:0,dragging:false,pointerX:0,pointerY:0,viewW:1,viewH:1,meshCount:0,screenTriCount:0,errors:[],timeStep:0,flash:1,pressCount:0,metalSample:0};
+const state={cacheStamp:0,opaqueFacesRendered:0,yaw:-6,pitch:-4,power:true,channel:0,powerDial:.36,channelDial:-.65,transition:'boot',transitionAt:performance.now()/1000,illum:.8,glare:1,seconds:0,frames:0,fps:0,dragging:false,pointerX:0,pointerY:0,viewW:1,viewH:1,meshCount:0,screenTriCount:0,errors:[],timeStep:0,flash:1,pressCount:0,metalSample:0};
 const model=[],transparent=[],crt=[];
 const add=(pts,kind='olive',factor=0,meta={})=>model.push({pts,kind,factor,...meta});
 function rounded(cx,cy,w,h,r,z,segments=5){
@@ -86,97 +87,116 @@ function contour(cx,cy,w,h,r,z,N=7){
 function bridge(a,b,kind,base=0){for(let i=0;i<a.length;i++){let j=(i+1)%a.length;add([a[i],a[j],b[j],b[i]],kind,base);}}
 function plate(cx,cy,w,h,r,z,kind,base=0){let loop=contour(cx,cy,w,h,r,z);const center=[cx,cy,z];for(let i=0;i<loop.length;i++)add([center,loop[i],loop[(i+1)%loop.length]],kind,base);}
 function casing(){
- const rings=[
-  [5.13,3.13,.22,-1.18,'steel'],
-  [5.48,3.35,.27,-.94,'olive'],
-  [5.65,3.57,.28,-.40,'olive'],
-  [5.65,3.57,.28,.48,'olive'],
-  [5.49,3.43,.26,.67,'edgeGold'],
-  [5.40,3.34,.25,.71,'olive'],
+ model.length=0; // machining rebuilt only on dial movement, never on every frame
+ // Ceramic CRT body, one continuous cast shell. The metal light response is
+ // the original Work coin() shader; its color is NOT the old brass palette.
+ const body=[
+  [6.14,3.82,.39,-1.13,'base'],
+  [6.36,3.96,.43,-1.00,'shadowSteel'],
+  [6.56,4.06,.49,-.63,'porcelain'],
+  [6.56,4.06,.49,.36,'porcelain'],
+  [6.47,4.00,.48,.53,'pearl'],
+  [6.33,3.90,.46,.65,'porcelain'],
+  [6.27,3.84,.45,.69,'pearl'],
  ];
- let prev=null;
- for(const [w,h,r,z,mat] of rings){const c=contour(0,0,w,h,r,z);if(prev)bridge(prev,c,mat);prev=c;}
- plate(0,0,5.4,3.34,.25,.71,'olive',.08);
- plate(0,0,4.98,3.04,.23,.724,'frontCast',.07);
- // Gold edge on outer display: actually separated front/back profiles, like
- // the original coin planchet's multiple bevel rings (NOT a drawn rectangle).
- const bezel=[
-  [4.92,3.14,.32,.742,'goldDark'],
-  [4.87,3.09,.32,.779,'gold'],
-  [4.78,3.01,.31,.811,'goldShine'],
-  [4.67,2.94,.29,.819,'shadowSteel'],
-  [4.61,2.87,.29,.833,'goldDark'],
+ let last=null;
+ for(const [w,h,r,z,mat] of body){let now=contour(0,0,w,h,r,z,9);if(last)bridge(last,now,mat);last=now;}
+ plate(0,0,6.27,3.84,.45,.69,'porcelain',.055);
+ // The screen is a rounded, curved glass body INSIDE the continuous bezel.
+ // The black 3-D elastomer gasket goes INTO the chassis. Its inner edge joins
+ // the actual CRT's outermost mesh ring; no rectangular screen quad remains.
+ const cx=-.35,cy=.025;
+ const screenRings=[
+  [5.65,3.76,.57,.697,'porcelain'],
+  [5.53,3.65,.56,.748,'brushed'],
+  [5.41,3.56,.55,.760,'shadowSteel'],
+  [5.35,3.51,.54,.748,'rubber'],
+  [5.25,3.44,.50,.772,'rubber'],
+  [5.18,3.39,.49,.780,'glassEdge'],
  ];
- prev=null;
- for(const [w,h,r,z,mat] of bezel){
-  const c=contour(-.14,.025,w,h,r,z);
-  if(prev)bridge(prev,c,mat);
-  prev=c;
+ last=null;
+ for(const [w,h,r,z,mat] of screenRings){const now=contour(cx,cy,w,h,r,z,12);if(last)bridge(last,now,mat);last=now;}
+ // Narrow, inset control cassette. It contains TWO real functions, not
+ // decoration: upper click rotates the power selector, lower tunes a channel.
+ const p0=contour(2.77,0,.70,2.86,.21,.700,9);
+ const p1=contour(2.77,0,.63,2.78,.19,.722,9);
+ bridge(p0,p1,'edgeSeam');
+ plate(2.77,0,.63,2.78,.19,.723,'frontCast',-.02);
+ knob(2.77,.53,.145,.738,.115,28,false,state.powerDial||0);
+ knob(2.77,-.45,.112,.738,.102,28,false,state.channelDial||0);
+ // A single genuine indicator lamp is useful: power + warmup feedback.
+ // Unlike the previous fake bolt pattern, nothing is present without purpose.
+ const lightHalo=contour(2.77,-1.045,.17,.08,.037,.738,5);
+ const lightInner=contour(2.77,-1.045,.135,.055,.025,.756,5);
+ bridge(lightHalo,lightInner,'brushed');
+ plate(2.77,-1.045,.135,.055,.025,.758,'lamp');
+ // Side cooling ports are functional rear shell perforations, never exposed
+ // as random stripes on the main face or across the glass.
+ for(let k=0;k<6;k++){
+   let y=.52-k*.18;let x=3.281;
+   add([[x,y,-.88],[x,y+.092,-.88],[x,y+.09,-.47],[x,y,-.47]],'vent');
  }
- // Actual beveled frame is now a metal 3D ring; inner CRT will sit behind glass.
- // The outermost bezel loop starts on the cast front (z=.724), so there are no
- // standalone UI-stroke lines acting as metal.
- const shellContour=contour(-.14,.025,5.03,3.19,.35,.724);
- bridge(shellContour,contour(-.14,.025,4.92,3.14,.32,.742),'goldDark');
- // Side plate raised above the case with a 3D bevel and inset.
- const side1=contour(2.51,.025,.40,2.83,.09,.731);
- const side2=contour(2.51,.025,.36,2.76,.08,.77);
- bridge(side1,side2,'goldDark');
- plate(2.51,.025,.36,2.76,.08,.77,'olive',-.035);
- // Slit vents have physically recessed dark cutout bands and metal crest rims.
- for(let k=0;k<5;k++){
-  const y=-.38-k*.095;
-  const a=contour(2.51,y,.27,.025,.010,.779,2),b=contour(2.51,y,.25,.019,.010,.783,2);
-  bridge(a,b,'shadowSteel',-.05);plate(2.51,y,.23,.016,.01,.785,'vent',-.12);
- }
- // Housing mount feet, with rearward depth and weight, not floating decorations.
- for(const x of [-2.24,2.17]){
-  const c1=contour(x,-1.79,.49,.18,.04,-.28,3),c2=contour(x,-1.91,.41,.23,.04,-.38,3);
-  bridge(c1,c2,'olive');plate(x,-1.91,.41,.23,.04,-.38,'goldDark',-.07);
- }
- // Top and right rear heat vents are modeled as cut/recessed polygon slats.
- for(let k=0;k<9;k++){
-  const yy=.71-k*.12;
-  const x=2.73,z=-.72;
-  add([[x,yy,z],[x,yy+.065,z],[x,yy+.06,z-.22],[x,yy,z-.22]],'vent',-.10);
- }
- for(const v of [[-2.60,1.64],[2.60,1.64],[-2.60,-1.65],[2.60,-1.65]])screw(...v,.79);
- // The two 3D machined control knobs are actual discs with 28 metallic sides.
- knob(2.51,.86,.117,.785,.108,24);
- knob(2.51,.28,.082,.787,.088,20);
- // Lamp amber diffuser has a 3D retaining ring and emissive insert.
- knob(2.51,-1.08,.067,.792,.055,20,true);
 }
+
 function circle(cx,cy,r,z,N=24){return Array.from({length:N},(_,i)=>{const a=(i/N)*TAU;return [cx+r*Math.cos(a),cy+r*Math.sin(a),z];});}
-function knob(x,y,r,front,depth,N=24,light=false){
- const steps=[[r*1.25,front,'goldDark'],[r*1.16,front+.015,'goldShine'],[r,front+.047,'shadowSteel'],[r*.84,front+depth*.82,'gold'],[r*.79,front+depth,'goldShine']];let prev=null;
- for(const [rad,z,mat] of steps){const c=circle(x,y,rad,z,N);if(prev)bridge(prev,c,mat);prev=c;}
- const cen=[x,y,front+depth];for(let i=0;i<prev.length;i++)add([cen,prev[i],prev[(i+1)%N]],light?'lamp':'dialFace',-.04);
- if(!light){
-  const notch=[x,y,front+depth+.002];const tip=[x,y+r*.59,front+depth+.007];
-  add([[x-.016,tip[1],tip[2]], [x+.016,tip[1],tip[2]], [x+.016,y+r*.30,tip[2]], [x-.016,y+r*.30,tip[2]]],'shadowSteel');
+function knob(x,y,r,front,depth,N=28,light=false,theta=0){
+ const steps=[[r*1.30,front,'rubber'],[r*1.21,front+.018,'brushed'],
+   [r*1.12,front+.055,'silver'],[r*.87,front+depth*.82,'brushed'],
+   [r*.82,front+depth,'dialFace']];
+ let prev=null;
+ for(const [rad,z,mat] of steps){const loop=circle(x,y,rad,z,N);if(prev)bridge(prev,loop,mat);prev=loop;}
+ const z=front+depth,center=[x,y,z];
+ for(let k=0;k<N;k++)add([center,prev[k],prev[(k+1)%N]],'dialFace',-.013);
+ // Engraved indicator is a real rotating rectangular inset in world space.
+ // It moves with the dial rather than remaining a screen-space painted slash.
+ const dx=Math.sin(theta),dy=Math.cos(theta);
+ const ux=-dy,uy=dx;
+ const min=r*.31,max=r*.70,w=r*.065;
+ const P=(v,s)=>[x+dx*v+ux*s,y+dy*v+uy*s,z+.006];
+ add([P(min,-w),P(max,-w),P(max,w),P(min,w)],'engraving');
+ // Radial grip milled into the rim, only 16 subtle chamfer lines.
+ for(let k=0;k<16;k++){
+  const a=k*TAU/16,co=Math.cos(a),si=Math.sin(a),wid=r*.025;
+  add([[x+co*r*.96-si*wid,y+si*r*.96+co*wid,z-.018],
+       [x+co*r*.96+si*wid,y+si*r*.96-co*wid,z-.018],
+       [x+co*r*1.15+si*wid,y+si*r*1.15-co*wid,z-.023],
+       [x+co*r*1.15-si*wid,y+si*r*1.15+co*wid,z-.023]],'engraving');
  }
 }
-function screw(x,y,z){
- const radius=.063,N=10,ring=circle(x,y,radius,z,N),center=[x,y,z+.023];
- for(let i=0;i<N;i++)add([center,ring[i],ring[(i+1)%N]],'goldShine');
- add([[x-.037,y-.005,z+.024],[x+.037,y+.005,z+.024],[x+.035,y+.013,z+.024],[x-.039,y+.003,z+.024]],'shadowSteel');
-}
+
+
 function norm(points){
  const a=points[0],b=points[1],d=points[2],u=[b[0]-a[0],b[1]-a[1],b[2]-a[2]],v=[d[0]-a[0],d[1]-a[1],d[2]-a[2]];
  return normalized(u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]);
 }
-function lens(x,y){return .089*(1-Math.pow(x,2))*(1-Math.pow(y,2));}
-function surf(x,y){return [-.14+x*2.255,.025+y*1.395,.858+lens(x,y)];}
-function makeCrt(){const cols=19,rows=14;
- for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
-  const a=x/cols*2-1,b=(x+1)/cols*2-1,c=y/rows*2-1,d=(y+1)/rows*2-1;
-  const p=[surf(a,c),surf(b,c),surf(a,d),surf(b,d)];
-  crt.push({tri:[p[0],p[1],p[2]],uv:[[x/cols,y/rows],[(x+1)/cols,y/rows],[x/cols,(y+1)/rows]]});
-  crt.push({tri:[p[1],p[3],p[2]],uv:[[(x+1)/cols,y/rows],[(x+1)/cols,(y+1)/rows],[x/cols,(y+1)/rows]]});
+function lens(x,y){return .131*Math.pow(Math.max(0,1-x*x),1.25)*Math.pow(Math.max(0,1-y*y),1.25);}
+function surf(x,y){return [-.35+x*2.59,.025+y*1.695,.780+lens(x,y)];}
+function makeCrt(){
+ crt.length=0;
+ const cx=-.35,cy=.025,W=5.18,H=3.39,R=.49;
+ const rings=[.18,.34,.50,.66,.82,.92,1];
+ const N=12,vertexCount=4*(N+1);
+ const center=surf(0,0);
+ let old=null;
+ for(const f of rings){
+   const contour3D=contour(cx,cy,W*f,H*f,R*f,0,N).map(v=>{
+     const x=(v[0]-cx)/(W/2),y=(v[1]-cy)/(H/2);
+     return surf(x,y);
+   });
+   const uvs=contour3D.map(v=>[(v[0]-cx)/W+.5,.5-(v[1]-cy)/H]);
+   if(old){for(let j=0;j<vertexCount;j++){
+     const jj=(j+1)%vertexCount;
+     crt.push({tri:[old.v[j],old.v[jj],contour3D[j]],uv:[old.uv[j],old.uv[jj],uvs[j]]});
+     crt.push({tri:[old.v[jj],contour3D[jj],contour3D[j]],uv:[old.uv[jj],uvs[jj],uvs[j]]});
+   }}else{for(let j=0;j<vertexCount;j++){
+      crt.push({tri:[center,contour3D[j],contour3D[(j+1)%vertexCount]],
+       uv:[[.5,.5],uvs[j],uvs[(j+1)%vertexCount]]});
+   }}
+   old={v:contour3D,uv:uvs};
  }
  state.screenTriCount=crt.length;
 }
+
 casing();makeCrt();state.meshCount=model.length;
 function rotation(v){
  const yaw=state.yaw*Math.PI/180,pitch=state.pitch*Math.PI/180;
@@ -190,70 +210,107 @@ function proj(v){const q=rotation(v),distance=10-q[2],f=10/Math.max(5,distance);
 }
 function colorFor(kind,n,base){
  const nn=rotation(n),l=normalized(-.24,-.18,1.07);
- const level=clamp(metal(...nn,base,kind==='gold'||kind==='goldShine'?.15:.105,l),.015,1.65);
- state.metalSample=level;
- if(kind==='vent')return '#0c1210';
- if(kind==='lamp')return state.power?'#f5bb5c':'#514e39';
- const brightness=clamp(level,0,1.0);
- if(kind==='gold'||kind==='goldShine'||kind==='edgeGold'||kind==='goldDark'||kind==='dialFace'){
-  const scalar=kind==='goldDark'?.43:kind==='goldShine'?.68:kind==='edgeGold'?.65:kind==='dialFace'?.48:.69;
-  const p=palette[clamp(Math.round(brightness*255),0,255)];
-  return 'rgb('+p.map(x=>clamp(Math.round(x*scalar),0,255)).join(',')+')';
+ const strength=clamp(metal(...nn,base,.125,l),.018,1.66);
+ state.metalSample=strength;
+ if(kind==='vent')return '#0c1015';
+ if(kind==='lamp')return state.power?'#ffb87f':'#272326';
+ // Keep the exact Work metal response, but decouple it from the Work coin's
+ // brass COLOR. Off-white porcelain body + satin nickel, high depth contrast.
+ const tones={
+  porcelain:[161,165,174,.50,.47],pearl:[189,191,194,.51,.50],
+  frontCast:[117,121,130,.46,.40],base:[46,52,66,.38,.26],
+  shadowSteel:[36,41,53,.28,.25],rubber:[14,19,26,.23,.13],
+  glassEdge:[33,42,57,.30,.21],brushed:[131,141,154,.59,.33],
+  silver:[181,189,202,.64,.34],edgeSeam:[42,48,59,.34,.23],
+  dialFace:[113,121,133,.50,.28],engraving:[21,25,33,.21,.16],
+ };
+ const [r,g,b,gain,ambi]=tones[kind]||tones.porcelain;
+ const c=clamp(ambi+strength*gain,.16,1.35);
+ return `rgb(${Math.round(clamp(r*c,0,255))},${Math.round(clamp(g*c,0,255))},${Math.round(clamp(b*c,0,255))})`;
+}
+
+const reelAds=[
+ {headline:'A LITTLE LUCK',sub:'THE WORK COLLECTION  /  SERIES 01',items:['coin','star','dagger'],accent:'#f4cf89',from:'#302235',to:'#101526'},
+ {headline:'GOLD IN MOTION',sub:'STRIKE  ·  SHINE  ·  SPIN',items:['coin','coin','star'],accent:'#e6d8aa',from:'#233347',to:'#151827'},
+ {headline:'THE MIDNIGHT SHOW',sub:'ONLY ON THE WORK NETWORK',items:['charm','star','shield'],accent:'#c9b6f0',from:'#322039',to:'#0d1724'},
+ ];
+const adCanvases=[];
+function poster(channel){
+ if(adCanvases[channel])return adCanvases[channel];
+ const w=buffer.width,h=buffer.height,cv=document.createElement('canvas');cv.width=w;cv.height=h;
+ const c=cv.getContext('2d'),A=reelAds[channel];
+ const bg=c.createLinearGradient(0,0,w,h);bg.addColorStop(0,A.from);bg.addColorStop(1,A.to);
+ c.fillStyle=bg;c.fillRect(0,0,w,h);
+ const halo=c.createRadialGradient(w*.52,h*.40,8,w*.48,h*.47,w*.70);
+ halo.addColorStop(0,'rgba(204,182,159,.23)');halo.addColorStop(1,'rgba(9,10,14,0)');
+ c.fillStyle=halo;c.fillRect(0,0,w,h);
+ // These are the user's ORIGINAL rendered reel icons (height-field AO,
+ // normals, paper/brass glints); no hand-drawn substitute casino glyphs.
+ for(let k=0;k<3;k++){
+  let x=118+k*97;
+  c.shadowColor=A.accent;c.shadowBlur=8;
+  if(window.ReelArt?.face)window.ReelArt.face(c,A.items[k],x-39,94,78,78,{iconOnly:true});
+  else{c.fillStyle=A.accent;c.font='57px Georgia';c.textAlign='center';c.fillText('✦',x,156);}
+  c.shadowBlur=0;
  }
- let intensity=clamp(.44+level*.66,.15,1.25),r=49,gc=60,b=45;
- if(kind==='frontCast'){r=53;gc=68;b=52;intensity*=1.06;}
- if(kind==='shadowSteel'){r=25;gc=33;b=27;intensity*=.65;}
- if(kind==='steel'){r=36;gc=46;b=37;intensity*=.76;}
- if(kind==='olive'){intensity*=1.05;}
- return `rgb(${clamp(Math.round(r*intensity),0,255)},${clamp(Math.round(gc*intensity),0,255)},${clamp(Math.round(b*intensity),0,255)})`;
+ c.textAlign='center';c.fillStyle=A.accent;
+ c.font='600 14px Georgia,serif';c.fillText('W  O  R  K    S T U D I O',w*.5,36);
+ c.font='700 31px Georgia,serif';c.fillText(A.headline,w*.5,225);
+ c.font='11px monospace';c.fillStyle='#c9c2cb';c.fillText(A.sub,w*.5,248);
+ c.strokeStyle='rgba(237,225,207,.36)';c.lineWidth=1;
+ c.beginPath();c.moveTo(108,264);c.lineTo(w-108,264);c.stroke();
+ c.fillStyle='#b2acb7';c.font='11px monospace';c.fillText('OBJECTS WITH A STORY · 2026',w*.5,286);
+ adCanvases[channel]=cv;return cv;
+}
+function powerCurve(t){
+ const age=t-state.transitionAt;
+ if(state.transition==='boot'){
+  if(age>=1.54){state.transition='on';return 1;}
+  if(age<.16)return 0;
+  if(age<.50)return .007;
+  if(age<.72)return .01;
+  const q=clamp((age-.72)/.82,0,1);return q*q*(3-2*q);
+ }
+ if(state.transition==='switch'){if(age>.44)state.transition='on';return state.power?1:0;}
+ if(state.transition==='shutdown'){
+  if(age>=.75){state.transition='off';return 0;}
+  if(age<.27)return 1;
+  if(age<.55)return 1-clamp((age-.27)/.28,0,1);
+  return .006*(1-clamp((age-.55)/.20,0,1));
+ }
+ return state.power?1:0;
 }
 function makeScreen(t){
  const w=buffer.width,h=buffer.height;
- // A quiet, near-black surveillance feed. No fictional room outside the TV.
- const bg=sg.createRadialGradient(w*.51,h*.40,4,w*.50,h*.47,w*.72);
- if(state.power){
-  bg.addColorStop(0,'#203928');bg.addColorStop(.57,'#101f14');bg.addColorStop(1,'#050b08');
- }else{bg.addColorStop(0,'#080d0b');bg.addColorStop(1,'#020403');}
- sg.fillStyle=bg;sg.fillRect(0,0,w,h);
- if(!state.power)return;
- // Three separated depths of the monitored dark passage, deliberately subdued.
- sg.save();sg.globalAlpha=.28+Math.sin(t*.55)*.015;
- const H=h,W=w;
- const corridor=sg.createLinearGradient(0,h*.14,w*.80,h);
- corridor.addColorStop(0,'#526c3f');corridor.addColorStop(.55,'#253d24');corridor.addColorStop(1,'#142b17');
- sg.strokeStyle=corridor;sg.lineWidth=state.channel===2?1.4:2.4;
- for(const [xx,yy] of (state.channel===1?[[.10,.33],[.36,.38],[.75,.39]]:state.channel===2?[[.20,.22],[.48,.38],[.85,.26]]:[[.06,.26],[.20,.38],[.33,.31],[.71,.26],[.89,.36]])){
-  const x=xx*W,y=yy*H;
-  sg.beginPath();sg.moveTo(x,0);sg.lineTo(x*0.76+W*.12,H);sg.stroke();
- }
- for(let j=1;j<7;j++){
-  const y=H*(.23+j*.108);sg.globalAlpha=.15*(1-j/9);
-  sg.beginPath();sg.moveTo(W*.09,y);sg.lineTo(W*.85,y+H*.048);sg.stroke();
- }
+ const height=powerCurve(t);
+ sg.fillStyle='#07090f';sg.fillRect(0,0,w,h);
+ if(height<=0)return;
+ sg.save();sg.beginPath();sg.rect(0,(1-height)*h*.5,w,h*height);sg.clip();
+ const p=poster(state.channel);
+ sg.drawImage(p,0,0);
+ const glitch=state.transition==='switch'?Math.max(0,1-(t-state.transitionAt)/.44):0;
+ if(glitch>.01){sg.fillStyle='rgba(237,221,198,'+(glitch*.15)+')';
+  for(let n=0;n<6;n++){const y=(Math.sin(t*80+n*17)*.5+.5)*h;sg.fillRect(0,y,w,glitch*1.5);}}
+ // Work's original CRT film idea: a subtle phosphor mask MULTIPLIED
+ // into the real reel relief artwork. No opaque scanline stickers.
+ sg.globalCompositeOperation='multiply';
+ sg.fillStyle='rgba(183,177,183,.19)';
+ for(let y=1;y<h;y+=3)sg.fillRect(0,y,w,1);
+ sg.globalCompositeOperation='source-over';
+ const vignette=sg.createRadialGradient(w/2,h*.49,w*.17,w/2,h*.49,w*.68);
+ vignette.addColorStop(0,'rgba(0,0,0,0)');vignette.addColorStop(1,'rgba(1,3,11,.43)');
+ sg.fillStyle=vignette;sg.fillRect(0,0,w,h);
+ // Faint analog rolling reflection only; the image itself stays readable.
+ const thin=(t*9)%h;sg.fillStyle='rgba(239,228,206,.035)';sg.fillRect(0,thin,w,2);
  sg.restore();
- sg.save();sg.globalCompositeOperation='screen';
- const g=sg.createRadialGradient(w*.34,h*.28,5,w*.34,h*.28,w*.35);
- g.addColorStop(0,'rgba(177,206,111,.062)');g.addColorStop(1,'rgba(20,50,25,0)');
- sg.fillStyle=g;sg.fillRect(0,0,w,h);sg.restore();
- // The phosphor mask is actually multiplied with the video, not drawn as a
- // decorative translucent overlay. Work glass IOR + CRT phosphor reference.
- const image=sg.getImageData(0,0,w,h),d=image.data;
- const flicker=.987+.013*Math.sin(t*21.3);
- for(let y=0;y<h;y++){
-  const scan=(y%3===0?.76:y%3===1?.95:.86)*flicker;
-  const wobble=Math.sin(y*.09+t*.17)*.002;
-  for(let x=0;x<w;x++){
-   const i=(y*w+x)*4,xx=(x-w*.5)/(w*.5),yy=(y-h*.5)/(h*.5);
-   const edge=Math.max(0,1-.38*(xx*xx+yy*yy));
-   const grain=(Math.sin(x*41.73+y*93.57+Math.floor(t*10)*11.9)*.5+.5)*1.75;
-   const moire=.965+.035*Math.sin((x+wobble*w)*Math.PI*2/3);
-   d[i]=clamp(d[i]*.68*scan*edge*moire+grain,0,255);
-   d[i+1]=clamp(d[i+1]*1.02*scan*edge*moire+grain*.56,0,255);
-   d[i+2]=clamp(d[i+2]*.64*scan*edge+grain*.32,0,255);
-  }
+ if(height<.013){
+   const shine=sg.createLinearGradient(0,0,w,0);
+   shine.addColorStop(0,'rgba(255,255,246,0)');shine.addColorStop(.5,'rgba(255,242,214,.86)');shine.addColorStop(1,'rgba(255,255,246,0)');
+   sg.fillStyle=shine;sg.fillRect(w*.23,h*.5-1,w*.54,2.1);
  }
- sg.putImageData(image,0,0);
+ // Boot's aperture opening is visible, not a plain fade-to-color.
 }
+
 // The glass/plastic/metal/screen share a real occlusion buffer. The previous
 // painter-order approach let the rear shell draw diagonal seams over the CRT.
 // This rasterizer fixes those overlaps with per-pixel depth, Work lighting,
@@ -262,7 +319,7 @@ function makeScreen(t){
 const physical=document.createElement('canvas'),physicalContext=physical.getContext('2d',{alpha:false});
 let renderW=0,renderH=0,opaqueBuffer=null,depthBuffer=null,frameBuffer=null,
     geometryDirty=true,bodyFaces=0,screenMaskPixels=0,screenSource=null,screenBlend=null,screenCoverage=null,screenVisited=null;
-let rasterPasses=0,frameRenderMs=0;
+let rasterPasses=0,frameRenderMs=0,frameStart=0;
 function colorComponents(kind,n,base){
  const c=colorFor(kind,n,base);
  if(c.startsWith('#'))return [parseInt(c.slice(1,3),16),parseInt(c.slice(3,5),16),parseInt(c.slice(5,7),16)];
@@ -280,8 +337,8 @@ function drawTriangle(vertices,uv,kind,n,col,base,mode,pixels){
  const inv=1/den;
  const tex=pixels;
  const [R,G,Bc]=col||[0,0,0];
- const baseFres=.04, nEye=mode==='screen'?Math.abs(rotation(n)[2]):1;
- const fres=baseFres+(1-baseFres)*(1-nEye)**5;
+ const baseFres=.04;
+ const fres=baseFres+(1-baseFres)*Math.pow(1-Math.abs(rotation(n)[2]),5);
  for(let y=ymin;y<=ymax;y++){
   const py=y+.5,at=y*renderW;
   for(let x=xmin;x<=xmax;x++){
@@ -299,9 +356,11 @@ function drawTriangle(vertices,uv,kind,n,col,base,mode,pixels){
     const tu=uv[0][0]*u+uv[1][0]*v+uv[2][0]*q,tv=uv[0][1]*u+uv[1][1]*v+uv[2][1]*q;
     const tx=clamp((tu*buffer.width)|0,0,buffer.width-1),ty=clamp((tv*buffer.height)|0,0,buffer.height-1);
     const xx=tu*2-1,yy=tv*2-1;
-    const strip=Math.exp(-Math.pow((xx+yy*.25+.60)/.21,2))*.23;
-    const edge=Math.max(0,xx*xx+yy*yy-1.15)*.055;
-    const reflect=clamp((fres*.9+strip+edge),0,.24);
+    const strip=Math.exp(-Math.pow((xx+yy*.30+.65)/.19,2))*.12;
+    const edge=Math.pow(clamp(Math.max(Math.abs(xx),Math.abs(yy))-.68,0,1),2)*.18;
+    const localAngle=Math.hypot(xx*.23,yy*.36);
+    const glassFres=.04+.96*Math.pow(1-clamp(.98-localAngle,0,1),5);
+    const reflect=clamp((glassFres*.7+strip+edge),0,.23);
     screenSource[i]=(ty*buffer.width+tx)*4;
     screenBlend[i]=Math.round(reflect*255);
     if(!screenVisited[i]){screenVisited[i]=1;screenCoverage.push(i);}
@@ -315,9 +374,9 @@ function drawTriangle(vertices,uv,kind,n,col,base,mode,pixels){
     const grain=(Math.sin(x*1.79+y*3.64)*.5+.5)*2.1;
     // Work glass cup: n_air=1, n_glass=1.5, Schlick reflection, colored
     // absorption, and a warm virtual window reflected over inner phosphors.
-    const strip=Math.exp(-Math.pow((xx+yy*.25+.60)/.21,2))*.23;
-    const edge=Math.max(0,xx*xx+yy*yy-1.15)*.055;
-    const a=clamp((fres*.9+strip+edge),0,.24);
+    const strip=Math.exp(-Math.pow((xx+yy*.30+.65)/.19,2))*.12;
+    const edge=Math.pow(clamp(Math.max(Math.abs(xx),Math.abs(yy))-.68,0,1),2)*.18;
+    const a=clamp((fres*.9+strip+edge),0,.23);
     frameBuffer[o]=clamp(tex[p]*(1-a)+217*a+grain,0,255);
     frameBuffer[o+1]=clamp(tex[p+1]*(1-a)+198*a+grain*.6,0,255);
     frameBuffer[o+2]=clamp(tex[p+2]*(1-a)+139*a+grain*.4,0,255);
@@ -326,15 +385,15 @@ function drawTriangle(vertices,uv,kind,n,col,base,mode,pixels){
    }else{
     const depth=(((x+y*17)*13)&31)*.022;
     let workPatina=1;
-    if(workSurfacePixels&&(kind==='olive'||kind==='frontCast')){
-      // Exact original CabinetArt.plaque() output, projected onto the 3D case.
+    if(workSurfacePixels&&['porcelain','pearl','frontCast'].includes(kind)){
+      // Texture supplied by CabinetArt.plaque(), not improvised solid CSS.
       const sx=20+((x*3+y)&151),sy=17+((y*2+x)&103);
       const ti=(sy*192+sx)*4;
-      workPatina=.89+workSurfacePixels[ti+1]/255*.36;
+      workPatina=.955+workSurfacePixels[ti]/255*.125;
     }
-    let soft=(kind==='olive'||kind==='frontCast')?(Math.sin(x*.11+y*.07)*.019+depth*.05):0;
+    let soft=['porcelain','pearl','frontCast'].includes(kind)?(Math.sin(x*.083+y*.044)*.011+depth*.022):0;
     if(kind==='dialFace'){
-      const centers=[[2.51,.86,.785+.108],[2.51,.28,.787+.088]];
+      const centers=[[2.77,.55,.92],[2.77,-.47,.92]];
       let picked=centers[0],best=1e8;
       for(const center of centers){const cp=proj(center);const d=(cp[0]-x)**2+(cp[1]-y)**2;if(d<best){best=d;picked=cp;}}
       const theta=Math.atan2(y-picked[1],x-picked[0]),rho=Math.sqrt(best);
@@ -355,8 +414,8 @@ function prepareGeometry(){
  physical.width=renderW;physical.height=renderH;
  const oldW=viewW,oldH=viewH,oldScale=scale;
  viewW=renderW;viewH=renderH;
- scale=Math.min(viewW/6.68,viewH/4.16);
- if(viewW<viewH)scale=Math.min(viewW/6.11,viewH/4.15);
+ scale=Math.min(viewW/7.25,viewH/4.65);
+ if(viewW<viewH)scale=Math.min(viewW/6.84,viewH/4.45);
  opaqueBuffer=new Uint8ClampedArray(renderW*renderH*4);
  depthBuffer=new Float32Array(renderW*renderH);depthBuffer.fill(-1e10);
  frameBuffer=opaqueBuffer;
@@ -376,7 +435,7 @@ function prepareGeometry(){
  screenVisited=new Uint8Array(renderW*renderH);
  screenCoverage=[];
  const n=normalized(0,0,1);
- // The original 3D screen's UV/depth/Fresnel is precomputed ONCE per camera.
+ // One-time UV/fresnel/depth map. Do NOT rasterize 532 CRT triangles per frame.
  for(const face of crt)drawTriangle(face.tri.map(proj),face.uv,'screen',n,null,0,'screenMap',null);
  screenMaskPixels=screenCoverage.length;
  state.opaqueFacesRendered=bodyFaces;
@@ -388,14 +447,15 @@ function prepareGeometry(){
 }
 function rasterScene(t){
  if(geometryDirty||!opaqueBuffer||Math.abs(renderW/Math.max(1,renderH)-viewW/Math.max(1,viewH))>.02)prepareGeometry();
- frameBuffer=new Uint8ClampedArray(opaqueBuffer);
+ if(!frameBuffer||frameBuffer.length!==opaqueBuffer.length)frameBuffer=new Uint8ClampedArray(opaqueBuffer.length);
+ frameBuffer.set(opaqueBuffer);
  const pixels=sg.getImageData(0,0,buffer.width,buffer.height).data;
  for(let j=0;j<screenCoverage.length;j++){
   const i=screenCoverage[j],o=i*4,p=screenSource[i];
   const a=screenBlend[i]/255,k=1-a;
-  frameBuffer[o]=pixels[p]*k+217*a;
-  frameBuffer[o+1]=pixels[p+1]*k+198*a;
-  frameBuffer[o+2]=pixels[p+2]*k+139*a;
+  frameBuffer[o]=pixels[p]*k+230*a;
+  frameBuffer[o+1]=pixels[p+1]*k+222*a;
+  frameBuffer[o+2]=pixels[p+2]*k+224*a;
  }
  physicalContext.putImageData(new ImageData(frameBuffer,renderW,renderH),0,0);
  rasterPasses++;
@@ -413,32 +473,43 @@ function draw(t){
   geometryDirty=true;
  }
  viewW=w;viewH=h;
- scale=Math.min(w/6.68,h/4.16);if(w<h)scale=Math.min(w/6.11,h/4.15);
+ scale=Math.min(w/7.25,h/4.65);if(w<h)scale=Math.min(w/6.84,h/4.45);
  g.setTransform(dpr,0,0,dpr,0,0);
  g.fillStyle='#000';g.fillRect(0,0,w,h);
- if(state.power){glowAt(w/2,h/2,Math.min(w,h)*.58,false);}
+ if(state.power){glowAt(w/2,h/2,Math.min(w,h)*.54,false);}
  makeScreen(t);
  rasterScene(t);
  g.imageSmoothingEnabled=true;
  g.drawImage(physical,0,0,w,h);
+ // Legible, small silk-screened function labels on the real control housing.
+ // No panel outside the television, no decorative screw/bolt art.
+ g.font=Math.round(clamp(scale*.07,8,12))+'px ui-monospace,monospace';
+ g.textAlign='center';g.fillStyle='rgba(214,213,212,.66)';
+ for(const [label,world] of [['PWR',[2.77,.205,.751]],['CH',[2.77,-.748,.751]]]){
+  const pt=proj(world);g.fillText(label,pt[0],pt[1]);
+ }
+ g.textAlign='left';
  if(state.power){
-  const p=proj([2.51,-1.08,.85]);
+  const p=proj([2.77,-1.045,.81]);
   g.globalCompositeOperation='screen';glowAt(p[0],p[1],Math.max(16,scale*.24),true);
   g.globalCompositeOperation='source-over';
  }
  state.seconds=t;state.frames++;
 }
 
+function switchPower(){state.power=!state.power;state.transition=state.power?'boot':'shutdown';state.transitionAt=performance.now()/1000;state.powerDial=state.power?.36:-.78;state.pressCount++;casing();geometryDirty=true;document.getElementById('sr').textContent=state.power?'电视正在开机':'电视正在关机';}
+function switchChannel(delta){state.channel=(state.channel+delta+3)%3;state.channelDial=state.channel*.85-.65;state.pressCount++;state.transition='switch';state.transitionAt=performance.now()/1000;casing();geometryDirty=true;document.getElementById('sr').textContent='频道 '+(state.channel+1)+'，正在播放 WORK 广告';}
 function hitKnob(x,y){
- const p=proj([2.51,.86,.91]),p2=proj([2.51,.28,.89]);
- return Math.hypot(x-p[0],y-p[1])<scale*.24?'power':Math.hypot(x-p2[0],y-p2[1])<scale*.20?'channel':null;
+ const p=proj([2.77,.53,.90]),p2=proj([2.77,-.45,.89]);
+ return Math.hypot(x-p[0],y-p[1])<Math.max(24,scale*.25)?'power':Math.hypot(x-p2[0],y-p2[1])<Math.max(24,scale*.23)?'channel':null;
 }
 let last=0,frames=0,elapsed=0,lastPresented=-1000;
 function loop(t){const sec=t/1000;
  if(!last)last=t;const dt=Math.min(.04,(t-last)/1000);last=t;
  elapsed+=dt;frames++;if(elapsed>=.7){state.fps=Math.round(frames/elapsed);frames=0;elapsed=0;}
- // 24-28 Hz original CRT phosphor animation; UI input still 60 Hz.
- if(geometryDirty||t-lastPresented>=1000/(state.dragging?24:28)){
+ // 19 Hz restrained phosphor shimmer (30 Hz while warming up); still
+ // accepts inputs at 60+ Hz; geometry only changes when orbiting or tuning.
+ if(geometryDirty||t-lastPresented>=1000/(state.dragging?20:state.transition==='boot'||state.transition==='shutdown'?30:19)){
   const started=performance.now();draw(sec);frameRenderMs=performance.now()-started;lastPresented=t;
  }
  requestAnimationFrame(loop);
@@ -446,31 +517,47 @@ function loop(t){const sec=t/1000;
 let start=null;
 screen.addEventListener('pointerdown',e=>{
  screen.setPointerCapture(e.pointerId);
- start={x:e.clientX,y:e.clientY,yaw:state.yaw,pitch:state.pitch};
+ const control=hitKnob(e.clientX,e.clientY);
+ start={x:e.clientX,y:e.clientY,yaw:state.yaw,pitch:state.pitch,control,moved:false,activated:false};
  state.dragging=false;
 });
 screen.addEventListener('pointermove',e=>{
- if(!start)return;
+ if(!start){screen.style.cursor=hitKnob(e.clientX,e.clientY)?'pointer':'grab';return;}
  const dx=e.clientX-start.x,dy=e.clientY-start.y;
- if(Math.hypot(dx,dy)>6){state.dragging=true;state.yaw=clamp(start.yaw+dx*.075,-37,37);state.pitch=clamp(start.pitch+dy*.07,-19,18);geometryDirty=true;}
+ if(Math.hypot(dx,dy)<7)return;
+ start.moved=true;
+ if(start.control==='power'){
+  // Physical selector requires a definite rotational gesture, not a fake UI.
+  if(!start.activated&&Math.abs(dy)>12){switchPower();start.activated=true;}
+  return;
+ }
+ if(start.control==='channel'){
+  const step=Math.trunc(-dy/36);
+  if(step){switchChannel(step);start.y=e.clientY;start.activated=true;}
+  return;
+ }
+ state.dragging=true;
+ state.yaw=clamp(start.yaw+dx*.075,-37,37);
+ state.pitch=clamp(start.pitch+dy*.07,-19,18);
+ geometryDirty=true;
 });
 screen.addEventListener('pointerup',e=>{
  if(!start)return;
- const wasDrag=state.dragging;start=null;state.dragging=false;
- if(wasDrag)return;
- const what=hitKnob(e.clientX,e.clientY);
- if(what==='power'){state.power=!state.power;geometryDirty=true;state.flash=1;state.pressCount++;document.getElementById('sr').textContent=state.power?'电视已开机':'电视已关闭';}
- if(what==='channel'){state.channel=(state.channel+1)%3;state.pressCount++;}
+ const previous=start;start=null;state.dragging=false;
+ if(previous.activated||previous.control===null&&previous.moved)return;
+ if(previous.control==='power')switchPower();
+ if(previous.control==='channel')switchChannel(1);
 });
 screen.addEventListener('pointercancel',()=>{start=null;state.dragging=false});
-screen.addEventListener('dblclick',()=>{state.yaw=-11;state.pitch=-5;geometryDirty=true;});
+screen.addEventListener('dblclick',()=>{state.yaw=-6;state.pitch=-4;geometryDirty=true;});
 window.addEventListener('keydown',e=>{
- if(e.code==='Space'){e.preventDefault();state.power=!state.power;geometryDirty=true;state.pressCount++;}
+ if(e.code==='Space'){e.preventDefault();if(!e.repeat)switchPower();}
  if(e.code==='ArrowLeft'){state.yaw=clamp(state.yaw-3,-37,37);geometryDirty=true;}
  if(e.code==='ArrowRight'){state.yaw=clamp(state.yaw+3,-37,37);geometryDirty=true;}
- if(e.code==='KeyR'){state.yaw=-11;state.pitch=-5;state.power=true;geometryDirty=true;}
+ if(e.code==='KeyC'){switchChannel(1);}
+ if(e.code==='KeyR'){state.yaw=-6;state.pitch=-4;if(!state.power)switchPower();geometryDirty=true;}
  if(e.code==='Escape')location.href='../../soul-table.html';
 });
 requestAnimationFrame(loop);
-window.WorkTVQA={state:()=>({isReal3D:true,meshFaces:state.meshCount,crtTriangles:state.screenTriCount,power:state.power,channel:state.channel,yaw:state.yaw,pitch:state.pitch,metalSource:'Work coin-art.js metal() copied unchanged',renderCache:state.cacheStamp,solidFaces:state.opaqueFacesRendered,crtPixelCoverage:screenMaskPixels,glassIOR:1.5,frames:state.frames,fps:state.fps,screenSize:[buffer.width,buffer.height],viewport:[viewW,viewH],pressCount:state.pressCount,frameRenderMs:Math.round(frameRenderMs*10)/10,rasterPasses,screenMappingPixels:screenCoverage?.length||0,originalCabinetTexture:workSurfaceUsed}),setAngles:(yaw,pitch)=>{state.yaw=clamp(yaw,-37,37);state.pitch=clamp(pitch,-19,18);geometryDirty=true;},setPower:(v)=>{state.power=!!v;geometryDirty=true;}};
+window.WorkTVQA={state:()=>({isReal3D:true,meshFaces:state.meshCount,crtTriangles:state.screenTriCount,power:state.power,channel:state.channel,yaw:state.yaw,pitch:state.pitch,metalSource:'Work coin-art.js metal() copied unchanged',renderCache:state.cacheStamp,solidFaces:state.opaqueFacesRendered,crtPixelCoverage:screenMaskPixels,glassIOR:1.5,frames:state.frames,fps:state.fps,screenSize:[buffer.width,buffer.height],viewport:[viewW,viewH],pressCount:state.pressCount,frameRenderMs:Math.round(frameRenderMs*10)/10,rasterPasses,screenMappingPixels:screenCoverage?.length||0,originalCabinetTexture:workSurfaceUsed,powerTransition:state.transition,transitionAge:Math.round((performance.now()/1000-state.transitionAt)*100)/100,frontScrews:0,screenShape:'rounded curved integrated mesh',screenPrograms:reelAds.length,actualReelArt:!!window.ReelArt,modelColor:'pearl ceramic + satin silver'}),setAngles:(yaw,pitch)=>{state.yaw=clamp(yaw,-37,37);state.pitch=clamp(pitch,-19,18);geometryDirty=true;},setPower:(v)=>{if(state.power!==!!v)switchPower();},nextChannel:()=>switchChannel(1)};
 })();
