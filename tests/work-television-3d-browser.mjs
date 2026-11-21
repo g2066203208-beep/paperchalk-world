@@ -29,8 +29,10 @@ for(const v of viewports){
   await page.waitForFunction(()=>window.WorkTVQA?.state().screenMappingPixels>5000&&window.WorkTVQA?.state().actualReelArt&&window.WorkTVQA?.state().originalCabinetTexture,{timeout:22000});
   await page.waitForTimeout(2250);
   const a=await page.evaluate(()=>WorkTVQA.state());
-  if(a.meshFaces<175||a.crtTriangles!==104||a.frontScrews!==0||a.screenPrograms!==6||a.powerTransition!=='on'||a.crtPixelCoverage<3000)throw Error('Low-poly TV model / Work CRT incomplete '+JSON.stringify(a));
-  if(!a.modelColor.includes('Work')||!a.screenShape.includes('faceted')||!a.deskRealMesh||!a.originalWoodTexture||!a.originalGlassSprite||!a.originalIvyAsset||a.realGlass3DFaces<80||a.physicalFurnitureFaces<20||a.physicalPlantFaces<100||a.frameRenderMs>160)throw Error('Work material reuse, real desk, plant or performance regression '+JSON.stringify(a));
+  if(a.meshFaces<175||a.crtTriangles<200||a.frontScrews!==0||a.screenPrograms!==6||a.powerTransition!=='on'||a.crtPixelCoverage<3000)throw Error('Low-poly TV model / Work CRT incomplete '+JSON.stringify(a));
+  if(a.meshResolution[0]<Math.min(v.width,1280))throw Error('Blurry low-resolution render regression '+JSON.stringify(a.meshResolution));
+   if(!broadcast.includes('canvas.width=496;canvas.height=324'))throw Error('Broadcast returned to blurred 248px rendering');
+   if(!a.modelColor.includes('Work')||!a.screenShape.includes('faceted')||!a.deskRealMesh||!a.originalWoodTexture||!a.originalGlassSprite||!a.originalIvyAsset||a.realGlass3DFaces<80||a.physicalFurnitureFaces<20||a.physicalPlantFaces<100||a.frameRenderMs>160)throw Error('Work material reuse, real desk, plant or performance regression '+JSON.stringify(a));
   // These counters are incremented only inside the REAL barycentric per-pixel
   // material raster, not by presence of functions or screenshot color matches.
   const cpu=a.workCpu;
