@@ -430,11 +430,11 @@ function makeScreen(t){
  // Work's original CRT film idea: a subtle phosphor mask MULTIPLIED
  // into the real reel relief artwork. No opaque scanline stickers.
  sg.globalCompositeOperation='multiply';
- sg.fillStyle='rgba(183,177,183,.19)';
+ sg.fillStyle='rgba(183,177,183,.11)';
  for(let y=1;y<h;y+=3)sg.fillRect(0,y,w,1);
  sg.globalCompositeOperation='source-over';
  const vignette=sg.createRadialGradient(w/2,h*.49,w*.17,w/2,h*.49,w*.68);
- vignette.addColorStop(0,'rgba(0,0,0,0)');vignette.addColorStop(1,'rgba(1,3,11,.43)');
+ vignette.addColorStop(0,'rgba(0,0,0,0)');vignette.addColorStop(1,'rgba(1,3,11,.24)');
  sg.fillStyle=vignette;sg.fillRect(0,0,w,h);
  // Faint analog rolling reflection only; the image itself stays readable.
  const thin=(t*9)%h;sg.fillStyle='rgba(239,228,206,.035)';sg.fillRect(0,thin,w,2);
@@ -535,11 +535,11 @@ function drawTriangle(vertices,uv,kind,n,col,base,mode,pixels,worldPts=null){
     const tu=uv[0][0]*u+uv[1][0]*v+uv[2][0]*q,tv=uv[0][1]*u+uv[1][1]*v+uv[2][1]*q;
     const tx=clamp((tu*buffer.width)|0,0,buffer.width-1),ty=clamp((tv*buffer.height)|0,0,buffer.height-1);
     const xx=tu*2-1,yy=tv*2-1;
-    const strip=Math.exp(-Math.pow((xx+yy*.24+.60)/.15,2))*Math.exp(-Math.pow((yy+.45)/.79,2))*.22;
-    const edge=Math.pow(clamp(Math.max(Math.abs(xx),Math.abs(yy))-.68,0,1),2)*.22;
+    const strip=Math.exp(-Math.pow((xx+yy*.24+.60)/.15,2))*Math.exp(-Math.pow((yy+.45)/.79,2))*.10;
+    const edge=Math.pow(clamp(Math.max(Math.abs(xx),Math.abs(yy))-.68,0,1),2)*.09;
     const localAngle=Math.hypot(xx*.23,yy*.36);
     const glassFres=.04+.96*Math.pow(1-clamp(.98-localAngle,0,1),5);
-    const reflect=clamp((glassFres*.78+strip+edge),0,.30);
+    const reflect=clamp((glassFres*.35+strip+edge),0,.16);
     screenSource[i]=(ty*buffer.width+tx)*4;
     screenBlend[i]=Math.round(reflect*255);
     if(!screenVisited[i]){screenVisited[i]=1;screenCoverage.push(i);}
