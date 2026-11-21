@@ -2281,7 +2281,7 @@ window.addEventListener('keydown',e=>{
 });
 build();requestAnimationFrame(animate);
 window.CoinPusherQA={
- state:()=>({credits,prize,inserted,coins:discs.length,tower:towerBroken,stacked:discs.filter(b=>b.support>0).length,airborne:discs.filter(b=>b.mode==='air').length,fallers:fallers.length,nativeFixedPhysics:!!coins.step&&!!coins.contact&&!!coins.pairs,front:Math.round(front),time:Math.round(clock*100)/100,fps,auto,paused,gameOver,visibleSprites:discs.filter(b=>b.sprite&&b.buf&&b.buf.data.some((v,i)=>i%4===3&&v>0)).length,badMatrices:discs.filter(b=>b.matrix.length!==9||!Number.isFinite(b.z)||!Number.isFinite(b.height)).length}),
+ state:()=>({credits,prize,inserted,coins:discs.length,tower:towerBroken,stacked:discs.filter(b=>b.support>0).length,airborne:discs.filter(b=>b.mode==='air').length,fallers:fallers.length,nativeFixedPhysics:!!coins.step&&!!coins.contact&&!!coins.pairs,nativeTime:Math.round(coins.time*100)/100,front:Math.round(front),time:Math.round(clock*100)/100,fps,auto,paused,gameOver,visibleSprites:discs.filter(b=>b.sprite&&b.buf&&b.buf.data.some((v,i)=>i%4===3&&v>0)).length,badMatrices:discs.filter(b=>b.matrix.length!==9||!Number.isFinite(b.z)||!Number.isFinite(b.height)).length}),
  drop:()=>dropped(),reset:()=>build(),setAim:x=>{dropX=clamp(x,G.left+20,G.right-20);},
  auto:on=>{auto=!!on;clickAt=clock;},pause:on=>{paused=!!on;}
 };
