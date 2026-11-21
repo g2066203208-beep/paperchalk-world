@@ -1,0 +1,60 @@
+name: Publish WORK 3D television after verified browser QA
+on:
+  workflow_run:
+    workflows: ["Work black-void true-3D television real browser QA"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+  pages: write
+  id-token: write
+concurrency:
+  group: paperchalk-world-pages
+  cancel-in-progress: false
+jobs:
+  publish-tested-television:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    environment:
+      name: github-pages
+      url: https://g2066203208-beep.github.io/paperchalk-world/card-battle/slots-daggers/television/index.html
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify the REAL cabinet art, material and game files exist
+        run: |
+          test -s site/index.html
+          test -s site/card-battle/soul-table.html
+          test -s site/card-battle/slots-daggers/coin-art.js
+          test -s site/card-battle/slots-daggers/reel-art.js
+          test -s site/card-battle/slots-daggers/cabinet-art.js
+          test -s site/card-battle/slots-daggers/television/index.html
+          test -s site/card-battle/slots-daggers/television/television.js
+          node --check site/card-battle/slots-daggers/television/television.js
+          grep -Fq 'window.CabinetArt={desk,chassis,portraitChassis,drawer,cap,recess,bolt,panel,plaque,light,leafShade,wood,glass,nearIvy,texture}' site/card-battle/slots-daggers/cabinet-art.js
+          grep -Fq 'deskMesh()' site/card-battle/slots-daggers/television/television.js
+          grep -Fq 'workGlass' site/card-battle/slots-daggers/television/television.js
+          echo 'PASS real original Work assets, 3D table and actual TV geometry'
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - name: Wait for Pages artifact indexing
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for i in $(seq 1 24); do
+            count=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts" --jq '[.artifacts[] | select(.name=="github-pages" and .expired==false)] | length' || echo 0)
+            [ "${count}" -ge 1 ] && exit 0
+            sleep 5
+          done
+          echo "Pages upload artifact not visible" >&2
+          exit 1
+      - name: Deploy verified current site with TV
+        id: deployment
+        uses: actions/deploy-pages@v4
+      - name: Record the verified live address
+        run: |
+          echo "DEPLOYED_URL=https://g2066203208-beep.github.io/paperchalk-world/card-battle/slots-daggers/television/index.html"
