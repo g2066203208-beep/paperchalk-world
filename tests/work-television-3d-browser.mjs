@@ -9,7 +9,7 @@ const tv=fs.readFileSync('site/card-battle/slots-daggers/television/television.j
 const html=fs.readFileSync('site/card-battle/slots-daggers/television/index.html','utf8');
 const tvCpu=fs.readFileSync('site/card-battle/slots-daggers/television/work-tv-cpu.js','utf8');
 const broadcast=fs.readFileSync('site/card-battle/slots-daggers/television/broadcast.js','utf8');
-if(!html.includes('src="broadcast.js"')||!broadcast.includes('protagonist-front.webp'))throw Error('Canonical protagonist presenter was not connected to real broadcast channels');
+if(!html.includes('src="broadcast.js"')||!html.includes('src="../../../l2d/rig.js"')||!broadcast.includes('protagonist-front.webp'))throw Error('Canonical protagonist presenter was not connected to real broadcast channels');
 if(!tv.includes('function glassMesh()')||!tv.includes("mode==='glass3D'"))throw Error('Glass is still a 2D sprite; missing real depth-rasterized 3D cup mesh');
 if(!metal(tvCpu)||metal(coin)!==metal(tvCpu))throw Error('WORK CPU TV module must use byte-identical original CoinTable metal()');
 for(const token of ['const dieSize=48;', 'function dieHeight(x,y,k)', 'function makeDies()', 'const dies=makeDies();'])if(!tvCpu.includes(token))throw Error('Original Work 48x48 emboss normal-map pipeline was not ported: '+token);
@@ -71,7 +71,7 @@ for(const v of viewports){
   }
   await page.waitForTimeout(200);
   const broadcastStatus=await page.evaluate(()=>WorkTVQA.state().broadcast);
-  if(broadcastStatus.loadedPortraits<2||!broadcastStatus.hostIsCanonical)
+  if(broadcastStatus.loadedPortraits<2||!broadcastStatus.hostIsCanonical||!broadcastStatus.hostL2D||!broadcastStatus.originalGameBreathRig)
    throw Error('Canonical characters not loaded as live broadcast hosts '+JSON.stringify(broadcastStatus));
   await page.evaluate(()=>WorkTVQA.nextChannel()); // wraps the physical tuner to NEWS
   if((await page.evaluate(()=>WorkTVQA.state().channel))!==0)throw Error('Channel dial did not wrap to NEWS');
