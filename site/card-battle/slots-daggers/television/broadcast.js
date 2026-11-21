@@ -149,7 +149,7 @@ function news(t){
  const cx=187,cy=66;
  for(let k=0;k<7;k++){const a=k*Math.PI/3.5+t*.08;
  line(cx+Math.cos(a)*17,cy+Math.sin(a)*17,cx+Math.cos(a)*34,cy+Math.sin(a)*31,'#658f9b');}
- txt('NIGHT REPORT',186,50,12,'#f7ddad','center');
+ txt('NIGHT REPORT',186,50,10,'#f7ddad','center');
  txt('深夜新闻 · 城市特别报道',186,65,8,'#e8e0cf','center');
  txt(['今夜的城市仍在运转','街区故事正在发生','请关注下一期调查'][Math.floor(t/7)%3],186,85,8,'#e1d8c5','center');
  person('host',8,22,120,115,t);rect(0,124,248,23,'#192c3c');
@@ -206,19 +206,20 @@ function show(t){
 }
 function documentary(t){
  gradient('#111d27','#354750');
- // Draw a real frame from the existing Slots & Daggers pixel WorldArt.
+ // Original player's own pixel renderer fills the whole programme backdrop;
+ // no fake film-style filter and no hand-copied actor.
  if(window.WorldArt?.draw){
-  if(t-worldAt>1/12){window.WorldArt.draw(worldContext,'warden',t,{wind:.11});worldAt=t;}
-  ctx.save();ctx.imageSmoothingEnabled=false;ctx.drawImage(worldFrame,0,18,140,105);ctx.restore();
+  if(t-worldAt>1/12){window.WorldArt.draw(worldContext,'warden',t,{wind:.14});worldAt=t;}
+  ctx.save();ctx.imageSmoothingEnabled=false;ctx.drawImage(worldFrame,0,16,248,130);ctx.restore();
  }
- for(let i=0;i<13;i++){const x=i*23-8;rect(x,78+(i%4)*6,18,67,'#1b2e39');rect(x+3,87,3,3,'#bda775');}
- for(let i=0;i<3;i++)line(-20,130+i*10,270,119+i*8,'rgba(229,197,135,.18)');
- person('host',145,35,103,108,t);
- rect(0,23,144,67,'rgba(10,18,26,.68)');
- txt('游戏世界档案',12,43,13,'#eed6aa');
- txt('CITY / FIELD NOTES',12,60,8,'#afc5c7');
- txt(['走进暗处的街角','从一个故事看一座城','寻找被时间隐藏的线索'][Math.floor(t/6)%3],12,79,8,'#f0e6d7');
- network(4,t);ticker(t,'原创纪录片 · 虚构都市的街道与记忆');
+ rect(0,16,248,19,'rgba(10,17,26,.76)');
+ txt('WORK WORLD / ARCHIVES',7,29,9,'#f4d9a4');
+ rect(176,39,67,86,'rgba(9,16,24,.78)');
+ person('host',179,38,61,88,t);
+ rect(0,116,248,30,'rgba(10,16,25,.84)');
+ txt('游戏世界档案',8,131,13,'#eed6aa');
+ txt('来自原始游戏的动态像素场景',8,143,7,'#d3d8cd');
+ network(4,t);ticker(t,'WORK 原始 WorldArt 像素画面 · 记录游戏世界的故事');
 }
 function weather(t){
  gradient('#162b3a','#254759');
