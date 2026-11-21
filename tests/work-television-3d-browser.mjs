@@ -7,6 +7,10 @@ const metal=s=>s.match(/function metal\(nx,ny,nz,rough,ambient,lamp\) \{[\s\S]*?
 const coin=fs.readFileSync('site/card-battle/slots-daggers/coin-art.js','utf8');
 const tv=fs.readFileSync('site/card-battle/slots-daggers/television/television.js','utf8');
 const html=fs.readFileSync('site/card-battle/slots-daggers/television/index.html','utf8');
+const tvCpu=fs.readFileSync('site/card-battle/slots-daggers/television/work-tv-cpu.js','utf8');
+if(!metal(tvCpu)||metal(coin)!==metal(tvCpu))throw Error('WORK CPU TV module must use byte-identical original CoinTable metal()');
+for(const token of ['const dieSize=48;', 'function dieHeight(x,y,k)', 'function makeDies()', 'const dies=makeDies();'])if(!tvCpu.includes(token))throw Error('Original Work 48x48 emboss normal-map pipeline was not ported: '+token);
+if(!html.includes('src="work-tv-cpu.js"')||!tv.includes('WorkTVCPU.shade('))throw Error('3D TV pixels are still shaded flat instead of Work CPU alloy/normal-mapped shading');
 if(!metal(coin)||metal(coin)!==metal(tv))throw Error('Original Work coin metallic shading function was modified');
 if(!html.includes('src="../reel-art.js"')||!html.includes('src="../cabinet-art.js"'))throw Error('Slot ReelArt/CabinetArt originals were not wired to the television');
 if(!tv.includes('frontScrews:0')||!tv.includes('deskMesh()')||!tv.includes('plantMesh()')||!tv.includes('woodQuad('))throw Error('Real table and faceted TV mesh missing');
@@ -24,6 +28,12 @@ for(const v of viewports){
   const a=await page.evaluate(()=>WorkTVQA.state());
   if(a.meshFaces<175||a.crtTriangles!==104||a.frontScrews!==0||a.screenPrograms!==3||a.powerTransition!=='on'||a.crtPixelCoverage<3000)throw Error('Low-poly TV model / Work CRT incomplete '+JSON.stringify(a));
   if(!a.modelColor.includes('Work')||!a.screenShape.includes('faceted')||!a.deskRealMesh||!a.originalWoodTexture||!a.originalGlassSprite||!a.originalIvyAsset||a.physicalFurnitureFaces<20||a.physicalPlantFaces<25||a.frameRenderMs>160)throw Error('Work material reuse, real desk, plant or performance regression '+JSON.stringify(a));
+  // These counters are incremented only inside the REAL barycentric per-pixel
+  // material raster, not by presence of functions or screenshot color matches.
+  const cpu=a.workCpu;
+  if(a.originalPaletteCount!==256||a.workCpuNormalMap!==48||!cpu||cpu.pixelShaders<15000||cpu.normalMapHits<40||cpu.goldPixels<200||cpu.materialTexels<1000)
+    throw Error('FAIL: original Work pixel shader / stamped die normals / alloy palette or real CabinetArt texels were not sampled during TV rendering: '+JSON.stringify(a));
+  if(a.geometryBuildMs>16000)throw Error('Work CPU material build exceeds hard startup budget: '+JSON.stringify(a));
   await page.screenshot({path:path.join(out,v.name+'-01-table-original-wood-glass-ivy.png')});
   const offPos=a.controlPositions.power;
   await page.mouse.click(offPos[0],offPos[1]);
@@ -54,7 +64,7 @@ for(const v of viewports){
   await page.screenshot({path:path.join(out,v.name+'-06-depth-of-real-television.png')});
   if(errors.length)throw Error('Javascript errors '+errors.join(' | '));
   results.push({viewport:v.name,on:a,off,ignition,recovered,tuned,turned,errors});
-  console.log('PASS',v.name,JSON.stringify({on:{model:a.meshFaces,screen:a.crtTriangles,originalReel:a.actualReelArt,cabinet:a.originalCabinetTexture,fps:a.fps,frameMs:a.frameRenderMs},off:{power:off.power,transition:off.powerTransition},ignition:ignition.powerTransition,tuned:tuned.channel,turn:turned.yaw}));
+  console.log('PASS',v.name,JSON.stringify({on:{model:a.meshFaces,screen:a.crtTriangles,originalReel:a.actualReelArt,cabinet:a.originalCabinetTexture,cpuPixels:a.workCpu.pixelShaders,dieNormals:a.workCpu.normalMapHits,patinaPixels:a.workCpu.materialTexels,cpuBuildMs:a.geometryBuildMs,fps:a.fps,frameMs:a.frameRenderMs},off:{power:off.power,transition:off.powerTransition},ignition:ignition.powerTransition,tuned:tuned.channel,turn:turned.yaw}));
  }catch(e){
   await page.screenshot({path:path.join(out,v.name+'-FAIL-debug.png')}).catch(()=>{});
   console.error('FAIL',v.name,String(e),errors);
