@@ -1,0 +1,44 @@
+name: Work black-void true-3D television real browser QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/card-battle/slots-daggers/television/**'
+      - 'site/card-battle/slots-daggers/coin-pusher/index.html'
+      - 'site/card-battle/slots-daggers/coin-lab/index.html'
+      - 'site/card-battle/soul-table.html'
+      - 'tests/work-television-3d-browser.mjs'
+      - '.github/workflows/work-television-3d-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  desktop-and-mobile-browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check the actual scene
+        run: |
+          node --check site/card-battle/slots-daggers/television/television.js
+          node --check tests/work-television-3d-browser.mjs
+      - name: Install real Chromium
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Serve actual Pages directory
+        run: |
+          nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/work-3d-tv-http.log 2>&1 &
+          sleep 2
+      - name: Verify TV render, gold shader, glass, mobile and historical route cleanup
+        run: node tests/work-television-3d-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: work-3d-tv-real-browser-screenshots-videos
+          path: artifacts/work-tv-3d/
+          retention-days: 14
+          if-no-files-found: warn
