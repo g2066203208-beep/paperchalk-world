@@ -31,8 +31,10 @@ for(const tc of cases){
  await page.waitForTimeout(7200);
  await page.screenshot({path:path.join(out,tc.name+'-03-tower-pusher-and-payout.png')});
  const after=await page.evaluate(()=>CoinPusherQA.state());
- if(initial.credits!==72||initial.coins<36)throw Error(tc.name+' wrong initial stack '+JSON.stringify(initial));
+ if(initial.credits!==72||initial.coins<36||initial.tower!==0)throw Error(tc.name+' initial balance or untouched tower is broken '+JSON.stringify(initial));
+ if(initial.visibleSprites<30 || initial.badMatrices!==0)throw Error(tc.name+' GOLD INVISIBLE OR INVALID ROTATION '+JSON.stringify(initial));
  if(after.inserted!==8||after.credits!==64)throw Error(tc.name+' drop/game economy broken '+JSON.stringify(after));
+ if(after.visibleSprites<20||after.badMatrices!==0)throw Error(tc.name+' original gold rendering invalid after motion '+JSON.stringify(after));
  if(!Number.isFinite(after.front)||!Number.isFinite(after.prize)||after.prize<0||!Number.isFinite(after.fps))throw Error(tc.name+' broken physics state '+JSON.stringify(after));
  if(after.time<=initial.time+3)throw Error(tc.name+' motor did not run '+JSON.stringify(after));
  const pixels=await page.evaluate(()=>{
