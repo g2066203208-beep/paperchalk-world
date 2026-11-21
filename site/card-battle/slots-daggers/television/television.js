@@ -131,6 +131,76 @@ function casing(){
 
 }
 
+
+// The SAME procedural walnut grain, ray-traced drinking glass and ivy
+// authored in Work cabinet-art.js. They are never substituted by a screenshot.
+let workWood=null,woodWidth=512,woodHeight=320,workGlass=null,workIvy=null;
+function makeWorkProps(){
+ if(!window.CabinetArt)return;
+ if(!workWood&&window.CabinetArt.wood){
+  const tex=document.createElement('canvas');tex.width=woodWidth;tex.height=woodHeight;
+  const tc=tex.getContext('2d',{willReadFrequently:true});
+  window.CabinetArt.wood(tc,woodWidth,woodHeight);
+  workWood=tc.getImageData(0,0,woodWidth,woodHeight).data;
+ }
+ if(!workGlass&&window.CabinetArt.glass){
+  workGlass=document.createElement('canvas');workGlass.width=154;workGlass.height=143;
+  window.CabinetArt.glass(workGlass.getContext('2d'),77,69,1.07);
+ }
+ if(!workIvy&&window.CabinetArt.nearIvy)workIvy=window.CabinetArt.nearIvy(8);
+}
+function woodQuad(p,uv){model.push({pts:p,uv,kind:'woodTop',factor:0});}
+function box(x1,x2,y1,y2,z1,z2,kind){
+ const A=[x1,y1,z1],B=[x2,y1,z1],C=[x2,y2,z1],D=[x1,y2,z1];
+ const a=[x1,y1,z2],b=[x2,y1,z2],c=[x2,y2,z2],d=[x1,y2,z2];
+ for(const f of [[A,B,C,D],[a,b,c,d],[D,C,c,d],[A,B,b,a],[A,D,d,a],[B,C,c,b]])add(f,kind);
+}
+function deskMesh(){
+ // Thick timber slab with top grain mapped from the actual Work wood renderer,
+ // visible fascia and four supporting legs. Feet actually touch the tabletop.
+ const y=-2.28,x=4.55;
+ woodQuad([[-x,y,-1.85],[x,y,-1.85],[x,y,1.94],[-x,y,1.94]],[[0,0],[1,0],[1,1],[0,1]]);
+ box(-4.58,4.58,-2.44,-2.29,-1.87,1.98,'tableEdge');
+ box(-4.45,4.45,-2.56,-2.45,1.49,1.90,'tableEdge');
+ for(const xx of [-3.79,3.79])for(const zz of [-1.44,1.48])
+  box(xx-.28,xx+.28,-3.65,-2.53,zz-.29,zz+.29,'tableLeg');
+ for(const xx of [-2.25,2.13]){
+  box(xx-.42,xx+.42,-2.25,-2.05,-.39,.55,'recessDark');
+  box(xx-.40,xx+.40,-2.08,-2.025,-.36,.51,'tableEdge');
+ }
+}
+function plantMesh(){
+ // Octagonal planter, geometric stem and leaves, plus sparse amber blossoms.
+ const cx=-3.72,cz=1.20,yy=-2.28;
+ const lower=[],upper=[];
+ for(let i=0;i<8;i++){
+  const a=i*TAU/8,dx=Math.cos(a),dz=Math.sin(a);
+  lower.push([cx+dx*.26,yy,cz+dz*.26]);
+  upper.push([cx+dx*.39,yy+.52,cz+dz*.39]);
+ }
+ for(let i=0;i<8;i++){
+  const j=(i+1)%8;add([lower[i],lower[j],upper[j],upper[i]],i%2?'tableEdge':'pot');
+ }
+ add(upper,'rimMetal');
+ add(upper.map(v=>[cx+(v[0]-cx)*.77,yy+.53,cz+(v[2]-cz)*.77]),'soil');
+ const seeds=[[-.12,-.12,1.09],[.17,.03,.90],[-.34,.13,1.00],[.35,.1,.83],[.06,-.29,1.18],[-.04,.30,.75]];
+ for(let i=0;i<seeds.length;i++){
+  const [dx,dz,len]=seeds[i],base=[cx,yy+.52,cz],tip=[cx+dx,yy+.52+len,cz+dz];
+  add([[base[0]-.018,base[1],base[2]],[base[0]+.018,base[1],base[2]],tip],'stem');
+  for(let h=0;h<3;h++){
+   const k=.36+h*.22,sy=yy+.52+len*k,sx=cx+dx*k,sz=cz+dz*k;
+   const side=h%2?1:-1,wh=.22+(h===0?.04:0);
+   add([[sx,sy,sz],[sx+side*wh*.52,sy+.07,sz+.04],
+       [sx+side*wh,sy+.26,sz+.11],[sx+side*wh*.65,sy+.24,sz-.08]],h%2?'leafA':'leafB');
+  }
+  if(i<3)for(let k=0;k<5;k++){
+   const a=k*TAU/5;
+   add([tip,[tip[0]+Math.cos(a-.3)*.12,tip[1]+Math.sin(a-.3)*.15,tip[2]+.03],
+       [tip[0]+Math.cos(a+.3)*.12,tip[1]+Math.sin(a+.3)*.15,tip[2]+.03]],'petal');
+  }
+ }
+}
+
 function circle(cx,cy,r,z,N=24){return Array.from({length:N},(_,i)=>{const a=(i/N)*TAU;return [cx+r*Math.cos(a),cy+r*Math.sin(a),z];});}
 function knob(x,y,r,front,depth,N=28,light=false,theta=0){
  const steps=[[r*1.30,front,'rubber'],[r*1.21,front+.018,'brushed'],
@@ -190,7 +260,7 @@ function makeCrt(){
  state.screenTriCount=crt.length;
 }
 
-casing();makeCrt();state.meshCount=model.length;
+casing();deskMesh();plantMesh();makeCrt();state.meshCount=model.length;
 function rotation(v){
  const yaw=state.yaw*Math.PI/180,pitch=state.pitch*Math.PI/180;
  const ca=Math.cos(yaw),sa=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);
@@ -500,8 +570,8 @@ function draw(t){
  state.seconds=t;state.frames++;
 }
 
-function switchPower(){state.power=!state.power;state.transition=state.power?'boot':'shutdown';state.transitionAt=performance.now()/1000;state.powerDial=state.power?.36:-.78;state.pressCount++;casing();geometryDirty=true;document.getElementById('sr').textContent=state.power?'电视正在开机':'电视正在关机';}
-function switchChannel(delta){state.channel=(state.channel+delta+3)%3;state.channelDial=state.channel*.85-.65;state.pressCount++;state.transition='switch';state.transitionAt=performance.now()/1000;casing();geometryDirty=true;document.getElementById('sr').textContent='频道 '+(state.channel+1)+'，正在播放 WORK 广告';}
+function switchPower(){state.power=!state.power;state.transition=state.power?'boot':'shutdown';state.transitionAt=performance.now()/1000;state.powerDial=state.power?.36:-.78;state.pressCount++;casing();deskMesh();plantMesh();state.meshCount=model.length;geometryDirty=true;document.getElementById('sr').textContent=state.power?'电视正在开机':'电视正在关机';}
+function switchChannel(delta){state.channel=(state.channel+delta+3)%3;state.channelDial=state.channel*.85-.65;state.pressCount++;state.transition='switch';state.transitionAt=performance.now()/1000;casing();deskMesh();plantMesh();state.meshCount=model.length;geometryDirty=true;document.getElementById('sr').textContent='频道 '+(state.channel+1)+'，正在播放 WORK 广告';}
 function hitKnob(x,y){
  const p=proj([2.76,.53,.90]),p2=proj([2.76,-.45,.89]);
  return Math.hypot(x-p[0],y-p[1])<Math.max(24,scale*.25)?'power':Math.hypot(x-p2[0],y-p2[1])<Math.max(24,scale*.23)?'channel':null;
