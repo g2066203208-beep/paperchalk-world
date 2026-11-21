@@ -101,13 +101,13 @@
   const mat={
     // Work cabinet procedural casting is the base texel pigment;
     // Work CoinTable metal() supplies each visible pixel's environment reflection.
-    bodyEnamel:[48,59,49,.16,.067],frontCast:[51,61,47,.15,.072],porcelain:[48,59,50,.16,.066],pearl:[56,66,53,.18,.071],
-    controlInset:[38,47,39,.13,.067],shadowSteel:[28,35,29,.09,.056],edgeSeam:[19,26,23,.06,.054],
-    edgeMetal:[80,83,67,.23,.094],rimMetal:[98,99,80,.26,.101],silver:[92,93,79,.25,.093],brushed:[75,79,64,.23,.087],dialFace:[95,91,72,.30,.110],
-    rubber:[14,19,17,.03,.047],recessDark:[12,16,14,.04,.036],glassEdge:[29,39,35,.08,.057],
-    engraving:[22,25,22,.07,.059],base:[25,34,29,.11,.064],tableEdge:[62,51,35,.13,.077],tableLeg:[47,40,30,.09,.072],
-    pot:[62,57,43,.13,.071],soil:[20,25,19,.05,.052],stem:[43,70,46,.08,.070],
-    leafA:[51,89,55,.08,.080],leafB:[65,104,59,.08,.087],leafC:[81,110,62,.08,.085],petal:[163,129,84,.13,.105],
+    bodyEnamel:[137,132,118,.16,.080],frontCast:[134,130,117,.15,.080],porcelain:[137,133,122,.16,.079],pearl:[156,151,136,.18,.082],
+    controlInset:[46,50,52,.13,.075],shadowSteel:[35,40,43,.09,.060],edgeSeam:[26,30,32,.06,.060],
+    edgeMetal:[94,91,82,.23,.097],rimMetal:[121,115,103,.26,.102],silver:[149,146,135,.25,.100],brushed:[126,122,110,.23,.094],dialFace:[155,148,128,.30,.108],
+    rubber:[16,20,23,.03,.052],recessDark:[15,19,22,.04,.039],glassEdge:[35,43,48,.08,.061],
+    engraving:[34,33,30,.07,.062],base:[40,43,42,.11,.066],tableEdge:[125,86,53,.13,.080],tableLeg:[99,68,45,.09,.078],
+    pot:[145,126,97,.13,.080],soil:[34,29,22,.05,.052],stem:[48,98,59,.08,.081],
+    leafA:[71,124,73,.08,.083],leafB:[89,141,80,.08,.090],leafC:[111,151,84,.08,.089],petal:[216,209,165,.13,.108],
     woodTop:[47,37,28,.08,.07],lamp:[210,151,88,.24,.11]
   };
   const goldTypes=new Set(['edgeMetal','rimMetal','silver','brushed','dialFace']);
@@ -159,13 +159,14 @@
       const sy=17+((Math.floor((wy+2.7)*30+wz*9.0)%102+102)%102);
       const i=(sy*192+sx)*4;
       const f=patina[i]*.299+patina[i+1]*.587+patina[i+2]*.114;
-      const p=clamp(.57+f/110,.58,1.18);
+      const p=clamp(.80+f/410,.86,1.10);
       r*=p;g*=p;bcol*=p;stats.materialTexels++;
     }
     if(goldTypes.has(kind)){
       stats.goldPixels++;
       const col=palette[clamp(Math.round(light*255),0,255)];
-      const metalMix=kind==='rimMetal'?.64:kind==='dialFace'?.52:.42;
+      // A restrained satin accent rather than gold-plating every TV edge.
+      const metalMix=kind==='rimMetal'?.16:kind==='dialFace'?.24:.14;
       r=r*(1-metalMix)+col[0]*metalMix;
       g=g*(1-metalMix)+col[1]*metalMix;
       bcol=bcol*(1-metalMix)+col[2]*metalMix;
