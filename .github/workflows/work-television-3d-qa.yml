@@ -24,6 +24,7 @@ jobs:
       - name: Syntax check the actual scene
         run: |
           node --check site/card-battle/slots-daggers/television/television.js
+          node --check site/card-battle/slots-daggers/television/work-tv-cpu.js
           node --check tests/work-television-3d-browser.mjs
       - name: Install real Chromium
         run: |
