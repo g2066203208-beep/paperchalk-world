@@ -277,7 +277,8 @@ function view(){
  camera.updateMatrixWorld();
  const pxW=Math.max(320,Math.min(w,Math.round(w/2)));
  const pxH=Math.max(230,Math.round(pxW/aspect));
- renderer.setSize(pxW,pxH,false);
+ // Do not reallocate the GPU drawing buffer for every pointer-move orbit.
+ if(pxW!==state.pixelSize[0]||pxH!==state.pixelSize[1])renderer.setSize(pxW,pxH,false);
  state.pixelSize=[pxW,pxH];state.viewport=[w,h];
 }
 view();
@@ -348,13 +349,14 @@ window.addEventListener('keydown',e=>{
  if(e.code==='KeyR'){state.yaw=-22;state.pitch=11;view();invalidated=true;}
  if(e.code==='Escape')location.href='../../soul-table.html';
 });
-let last=0,frames=0,elapsed=0,lastPaint=0,realFrames=0;
+let last=0,elapsed=0,lastPaint=0,realFrames=0;
 function tick(ms){
  requestAnimationFrame(tick);
  if(document.hidden)return;
  const sec=ms*.001,dt=last?Math.min(.15,(ms-last)*.001):0;last=ms;
- elapsed+=dt;frames++;
- if(elapsed>.8){state.fps=Math.round(frames/elapsed);frames=0;elapsed=0;}
+ elapsed+=dt;
+ // Count PRESENTED GPU frames, not idle requestAnimationFrame callbacks.
+ if(elapsed>.8){state.fps=Math.round(realFrames/elapsed);realFrames=0;elapsed=0;}
  // 30 fps is sufficient for a stationary tabletop. Avoid busy 60fps polling
  // and never redraw the geometry pixel-by-pixel on the JavaScript main thread.
  const period=1000/(state.dragging?45:30);
@@ -370,7 +372,8 @@ function tick(ms){
  const age=sec-state.transitionAt;
  if(state.transition==='boot'&&age>.65)state.transition='on';
  if(state.transition==='shutdown'&&age>.47)state.transition='off';
- const brightness=state.power?Math.min(1,Math.max(.015,age/.65))*.99:
+ const brightness=state.power?
+  (state.transition==='boot'?Math.min(1,Math.max(.015,age/.65)):.99):
   Math.max(.002,1-Math.max(0,age)/.47);
  displayMat.color.setRGB(brightness,brightness,brightness);
  screenLight.intensity=brightness*.68;
