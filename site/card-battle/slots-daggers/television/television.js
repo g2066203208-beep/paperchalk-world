@@ -416,6 +416,7 @@ function prepareGeometry(){
  viewW=renderW;viewH=renderH;
  scale=Math.min(viewW/7.25,viewH/4.65);
  if(viewW<viewH)scale=Math.min(viewW/6.84,viewH/4.45);
+ scale*=1-.10*Math.abs(state.yaw)/37;
  opaqueBuffer=new Uint8ClampedArray(renderW*renderH*4);
  depthBuffer=new Float32Array(renderW*renderH);depthBuffer.fill(-1e10);
  frameBuffer=opaqueBuffer;
@@ -474,6 +475,7 @@ function draw(t){
  }
  viewW=w;viewH=h;
  scale=Math.min(w/7.25,h/4.65);if(w<h)scale=Math.min(w/6.84,h/4.45);
+ scale*=1-.10*Math.abs(state.yaw)/37;
  g.setTransform(dpr,0,0,dpr,0,0);
  g.fillStyle='#000';g.fillRect(0,0,w,h);
  if(state.power){glowAt(w/2,h/2,Math.min(w,h)*.54,false);}
@@ -509,7 +511,7 @@ function loop(t){const sec=t/1000;
  elapsed+=dt;frames++;if(elapsed>=.7){state.fps=Math.round(frames/elapsed);frames=0;elapsed=0;}
  // 19 Hz restrained phosphor shimmer (30 Hz while warming up); still
  // accepts inputs at 60+ Hz; geometry only changes when orbiting or tuning.
- if(geometryDirty||t-lastPresented>=1000/(state.dragging?20:state.transition==='boot'||state.transition==='shutdown'?30:19)){
+ if(geometryDirty||t-lastPresented>=1000/(state.dragging?32:state.transition==='boot'||state.transition==='shutdown'?32:24)){
   const started=performance.now();draw(sec);frameRenderMs=performance.now()-started;lastPresented=t;
  }
  requestAnimationFrame(loop);
