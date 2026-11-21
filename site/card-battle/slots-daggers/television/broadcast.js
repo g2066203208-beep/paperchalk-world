@@ -5,7 +5,7 @@
 const labels=['午夜新闻','WORK 广告','人物访谈','夜间综艺','城市纪录','天气播报'];
 const ids=['NEWS','AD','TALK','SHOW','DOC','WEATHER'];
 const sources={host:'../../../assets/characters/protagonist-front.webp',guest:'../../../assets/characters/char-002/front.png'};
-const actors={},bounds={};let loaded=0,errors=[];
+const actors={},renderActors={},bounds={};let loaded=0,errors=[];
 const canvas=document.createElement('canvas');canvas.width=248;canvas.height=162;
 const ctx=canvas.getContext('2d',{alpha:false});
 const output=document.createElement('canvas');output.width=496;output.height=324;
@@ -13,13 +13,37 @@ const out=output.getContext('2d',{alpha:false});
 out.imageSmoothingEnabled=false;
 for(const [key,url] of Object.entries(sources)){
  const im=new Image();actors[key]=im;
- im.onload=()=>{loaded++;bounds[key]=alphaBounds(im);};
+ im.onload=()=>{loaded++;renderActors[key]=key==='guest'?whiteKeyBackground(im):im;bounds[key]=alphaBounds(renderActors[key]);};
  im.onerror=()=>errors.push('missing portrait: '+url);
  im.src=url;
 }
+function whiteKeyBackground(im){
+ // Preserve approved portrait source. Remove only background white connected
+ // to the image BORDER, so white clothing/eye pixels inside are not erased.
+ const w=Math.min(512,im.naturalWidth),h=Math.max(1,Math.round(w*im.naturalHeight/im.naturalWidth));
+ const c=document.createElement('canvas');c.width=w;c.height=h;
+ const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0,w,h);
+ const imd=x.getImageData(0,0,w,h),d=imd.data,seen=new Uint8Array(w*h),queue=new Int32Array(w*h);
+ let head=0,tail=0;
+ const white=i=>{const j=i*4;return d[j]>229&&d[j+1]>229&&d[j+2]>225&&
+  Math.max(d[j],d[j+1],d[j+2])-Math.min(d[j],d[j+1],d[j+2])<35;};
+ const push=i=>{if(i<0||i>=w*h||seen[i]||!white(i))return;seen[i]=1;queue[tail++]=i;};
+ for(let x0=0;x0<w;x0++){push(x0);push((h-1)*w+x0);}
+ for(let y0=0;y0<h;y0++){push(y0*w);push(y0*w+w-1);}
+ while(head<tail){
+  const i=queue[head++],xx=i%w,yy=(i/w)|0;
+  if(xx>0)push(i-1);if(xx<w-1)push(i+1);
+  if(yy>0)push(i-w);if(yy<h-1)push(i+w);
+ }
+ for(let i=0;i<seen.length;i++)if(seen[i])d[i*4+3]=0;
+ x.putImageData(imd,0,0);
+ return c;
+}
+
 function alphaBounds(im){
  // Only inspect a small canvas once; preserve the original source pixels.
- const c=document.createElement('canvas'),w=128,h=Math.max(1,Math.round(im.naturalHeight*128/im.naturalWidth));
+ const iw=im.naturalWidth||im.width,ih=im.naturalHeight||im.height;
+ const c=document.createElement('canvas'),w=128,h=Math.max(1,Math.round(ih*128/iw));
  c.width=w;c.height=h;const x=c.getContext('2d',{willReadFrequently:true});
  x.drawImage(im,0,0,w,h);const p=x.getImageData(0,0,w,h).data;
  let l=w,t=h,r=0,b=0,found=0;
@@ -27,8 +51,8 @@ function alphaBounds(im){
    const i=(y*w+xx)*4;
    if(p[i+3]>55){l=Math.min(l,xx);r=Math.max(r,xx);t=Math.min(t,y);b=Math.max(b,y);found++;}
  }
- if(!found)return {x:0,y:0,w:im.naturalWidth,h:im.naturalHeight};
- const k=im.naturalWidth/w;
+ if(!found)return {x:0,y:0,w:iw,h:ih};
+ const k=iw/w;
  return {x:l*k,y:t*k,w:Math.max(1,(r-l+1)*k),h:Math.max(1,(b-t+1)*k)};
 }
 function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(x,y,w,h);}
@@ -50,8 +74,8 @@ function dots(t){
  }
 }
 function portrait(key,x,y,w,h,t=0,zoom=1){
- const im=actors[key];if(!im?.complete||!im.naturalWidth)return false;
- const b=bounds[key]||{x:0,y:0,w:im.naturalWidth,h:im.naturalHeight};
+ const im=renderActors[key];if(!im)return false;
+ const b=bounds[key]||{x:0,y:0,w:im.naturalWidth||im.width,h:im.naturalHeight||im.height};
  // Broadcast head-and-shoulders crop; no copied face, no AI-redrawn actor.
  const sy=b.y,sh=b.h*.65,sw=b.w,sx=b.x;
  const s=Math.min(w/sw,h/sh)*zoom;
@@ -97,7 +121,7 @@ function news(t){
  txt(['今夜的城市仍在运转','街区故事正在发生','请关注下一期调查'][Math.floor(t/7)%3],186,85,8,'#e1d8c5','center');
  person('host',8,22,120,115,t);rect(0,124,248,23,'#192c3c');
  rect(0,123,64,23,'#b45739');txt('直播新闻',32,138,10,'#fff1db','center');
- txt('主播 · CHAR-001',73,137,9);
+ txt('主播 · 夜间观察员',73,137,9);
  network(0,t);ticker(t,'虚构世界新闻 · 本节目内容属于原创游戏世界观');
 }
 function advert(t){
@@ -125,8 +149,8 @@ function talk(t){
  person('host',9,25,96,94,t);person('guest',140,25,100,94,t+.37);
  mic(115,97);txt('午夜访谈',124,28,12,'#e8c38a','center');
  rect(6,124,112,17,'#151d2b');rect(130,124,112,17,'#151d2b');
- txt('主持 · CHAR-001',10,136,8,'#f0d7b6');
- txt('特邀嘉宾 · CHAR-002',135,136,8,'#f0d7b6');
+ txt('主持人',10,136,8,'#f0d7b6');
+ txt('特邀嘉宾',135,136,8,'#f0d7b6');
  network(2,t);ticker(t,'对谈 · 城市里不为人知的故事');
 }
 function show(t){
@@ -138,9 +162,10 @@ function show(t){
   ctx.fillStyle=k%2?'rgba(224,154,79,.08)':'rgba(100,155,205,.11)';ctx.fill();
  }
  for(let k=0;k<23;k++){const x=(k*47+t*7)%248,y=(k*59+t*(k%3+2))%125+17;rect(x,y,2,3,k%2?'#e5c27f':'#74a9bd');}
- person('host',83,20,84,118,t);
- txt('THE WORK SHOW',124,36,13,'#ffe0a2','center');
- txt('今晚一起开场！',124,52,10,'#e6dee1','center');
+ person('host',15,25,91,111,t);
+ txt('THE WORK SHOW',177,43,12,'#ffe0a2','center');
+ txt('今晚一起开场！',177,65,11,'#e6dee1','center');
+ txt('全新舞台 · 嘉宾登场',177,83,8,'#e4bbc1','center');
  rect(0,120,248,27,'#332333');
  txt('现场互动',14,136,11,'#fbe0a8');
  txt('ROUND '+String(Math.floor(t/6)%3+1),230,136,9,'#fbe0a8','right');
@@ -166,7 +191,7 @@ function weather(t){
  txt('虚构城市 · 天气观察',171,43,9,'#f1d8ad','center');
  const icons=['☀','☁','☂'];const vals=['22°','19°','17°'];
  for(let i=0;i<3;i++){const x=122+i*42;txt(icons[i],x,79,21,'#ffe1a0','center');txt(vals[i],x,99,10,'#e8e4d8','center');txt(['今日','明日','后日'][i],x,113,8,'#bdd0d4','center');}
- rect(0,125,248,21,'#132c38');txt('天气主持 · CHAR-001',9,139,10);
+ rect(0,125,248,21,'#132c38');txt('天气主播 · 城市观察',9,139,10);
  network(5,t);ticker(t,'游戏世界气象 · 所有数值均为虚构示意');
 }
 const scenes=[news,advert,talk,show,documentary,weather];
