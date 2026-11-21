@@ -166,6 +166,10 @@ function deskMesh(){
  box(-4.45,4.45,-2.56,-2.45,1.49,1.90,'tableEdge');
  for(const xx of [-3.79,3.79])for(const zz of [-1.44,1.48])
   box(xx-.28,xx+.28,-3.65,-2.53,zz-.29,zz+.29,'tableLeg');
+ // Real timber apron and stretchers instead of a plain floating plank.
+ box(-4.05,4.05,-2.74,-2.46,1.34,1.53,'tableEdge');
+ box(-4.05,4.05,-2.74,-2.46,-1.51,-1.34,'tableLeg');
+ for(const xx of [-3.86,3.86])box(xx-.13,xx+.13,-2.78,-2.52,-1.44,1.42,'tableLeg');
  for(const xx of [-2.25,2.13]){
   box(xx-.42,xx+.42,-2.29,-1.98,-.39,.55,'shadowSteel');
   box(xx-.40,xx+.40,-2.19,-1.96,-.36,.51,'edgeMetal');
@@ -485,13 +489,13 @@ function drawTriangle(vertices,uv,kind,n,col,base,mode,pixels,worldPts=null){
     const radius=Math.hypot(wx-3.65,worldPts[0][2]*u+worldPts[1][2]*v+worldPts[2][2]*q-1.23);
     const edge=clamp(1-Math.abs(projectedNormal[2]),0,1);
     const schlick=.04+.96*edge**5;
-    const m=kind==='glassRim'?.46:kind==='glassBase'?.30:kind==='glassLiquid'?.35:.095+schlick*.26;
+    const m=kind==='glassRim'?.76:kind==='glassBase'?.65:kind==='glassLiquid'?.55:.22+schlick*.35;
     const shift=Math.round(projectedNormal[0]*2.2),shiftY=Math.round(projectedNormal[1]*2.0);
     const sx=clamp(x+shift,0,renderW-1),sy=clamp(y+shiftY,0,renderH-1),si=(sy*renderW+sx)*4;
-    const amber=kind==='glassLiquid'?[128,163,164]:kind==='glassRim'?[189,208,206]:[135,165,173];
-    const spec=Math.pow(clamp(.29+projectedNormal[0]*-.29+projectedNormal[2]*.59,0,1),22)*32;
+    const amber=kind==='glassLiquid'?[145,185,195]:kind==='glassRim'?[228,239,242]:[168,207,219];
+    const spec=Math.pow(clamp(.41+projectedNormal[0]*-.29+projectedNormal[2]*.59,0,1),22)*54;
     const grain=(Math.sin(wx*89+wy*33)*.5+.5)*3;
-    const ca=kind==='glassLiquid'?.43:kind==='glassRim'?.34:kind==='glassBase'?.26:.135;
+    const ca=kind==='glassLiquid'?.72:kind==='glassRim'?.68:kind==='glassBase'?.59:.38;
     frameBuffer[o]=clamp(frameBuffer[si]*(1-ca*m)+amber[0]*ca*m+spec+grain,0,255);
     frameBuffer[o+1]=clamp(frameBuffer[si+1]*(1-ca*m)+amber[1]*ca*m+spec*.94+grain,0,255);
     frameBuffer[o+2]=clamp(frameBuffer[si+2]*(1-ca*m)+amber[2]*ca*m+spec*.87+grain,0,255);
@@ -503,9 +507,9 @@ function drawTriangle(vertices,uv,kind,n,col,base,mode,pixels,worldPts=null){
     const tu=uv[0][0]*u+uv[1][0]*v+uv[2][0]*q,tv=uv[0][1]*u+uv[1][1]*v+uv[2][1]*q;
     const sx=clamp((tu*woodWidth)|0,0,woodWidth-1),sy=clamp((tv*woodHeight)|0,0,woodHeight-1);
     const src=(sy*woodWidth+sx)*4,k=.97+.15*(1-tv);
-    frameBuffer[o]=clamp(workWood[src]*1.18*k+12,0,255);
-    frameBuffer[o+1]=clamp(workWood[src+1]*1.14*k+11,0,255);
-    frameBuffer[o+2]=clamp(workWood[src+2]*1.13*k+10,0,255);
+    frameBuffer[o]=clamp(workWood[src]*1.29*k+18,0,255);
+    frameBuffer[o+1]=clamp(workWood[src+1]*1.21*k+15,0,255);
+    frameBuffer[o+2]=clamp(workWood[src+2]*1.14*k+12,0,255);
     frameBuffer[o+3]=255;
     continue;
    }
@@ -584,8 +588,10 @@ function prepareGeometry(){
  // CoinTable also lowers pixel work while bodies move and rerenders once
  // settled. Keep original Work sampling on EVERY interactive pixel, but use
  // a smaller temporary render target during drag; restore crisp detail on release.
- renderW=Math.min(state.dragging?370:740,Math.max(260,Math.round(viewW))); // adaptive Work-scale internal CPU resolution
- renderH=Math.max(200,Math.round(renderW*viewH/viewW));
+ // Render large enough for clean diagonal edges and readable CRT text.
+ // While orbiting, lower only the temporary preview, then restore on release.
+ renderW=Math.min(state.dragging?850:1280,Math.max(390,Math.round(viewW*Math.min(devicePixelRatio||1,1.20))));
+ renderH=Math.max(220,Math.round(renderW*viewH/viewW));
  physical.width=renderW;physical.height=renderH;
  const oldW=viewW,oldH=viewH,oldScale=scale;
  viewW=renderW;viewH=renderH;
@@ -595,7 +601,15 @@ function prepareGeometry(){
  opaqueBuffer=new Uint8ClampedArray(renderW*renderH*4);
  depthBuffer=new Float32Array(renderW*renderH);depthBuffer.fill(-1e10);
  frameBuffer=opaqueBuffer;
- for(let i=3;i<opaqueBuffer.length;i+=4)opaqueBuffer[i]=255;
+ // Soft neutral studio backdrop, precomposed only when geometry changes.
+ for(let py=0;py<renderH;py++)for(let px=0;px<renderW;px++){
+  const q=(py*renderW+px)*4,xx=(px/renderW-.49)*1.9,yy=(py/renderH-.48)*1.4;
+  const ambient=Math.exp(-xx*xx*2.8-yy*yy*2.3),floor=Math.max(0,py/renderH-.73)*12;
+  opaqueBuffer[q]=Math.round(10+ambient*19+floor);
+  opaqueBuffer[q+1]=Math.round(12+ambient*19+floor*.72);
+  opaqueBuffer[q+2]=Math.round(17+ambient*21+floor*.54);
+  opaqueBuffer[q+3]=255;
+ }
  bodyFaces=0;
  for(const face of model){
   const n=norm(face.pts),col=colorComponents(face.kind,n,face.factor||0);
@@ -671,7 +685,7 @@ function draw(t){
  if(state.power){glowAt(w/2,h/2,Math.min(w,h)*.54,false);}
  makeScreen(t);
  rasterScene(t);
- g.imageSmoothingEnabled=true;
+ g.imageSmoothingEnabled=false;
  g.drawImage(physical,0,0,w,h);
  // The tumbler, water, ceramic and folded leaves are now real rasterized
  // 3D meshes with shared depth; never paint a flat glass/ivy image on top.
