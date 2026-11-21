@@ -19,8 +19,19 @@ text-shadow:0 1px 3px #050b08;pointer-events:none}
 #root{align-items:center}
 #help{padding:0 14px;font-size:10px}
 }
+
+
+/* WORK's compact, brass-edged page selector, separate from the original game canvas. */
+.work-arcade-pages{position:fixed;z-index:110;top:max(7px,env(safe-area-inset-top));right:max(7px,env(safe-area-inset-right));display:flex;align-items:center;gap:3px;padding:3px;background:linear-gradient(180deg,#394336ef,#171e17f5);border:1px solid #9a8357;border-radius:5px;box-shadow:inset 0 1px 0 #e3cf9a52,inset 0 -2px 0 #0b140f,0 3px 13px #080f0ad4;font:600 11px/1.1 monospace;letter-spacing:.025em;pointer-events:auto;isolation:isolate}
+.work-arcade-pages a{display:grid;place-items:center;min-height:32px;padding:5px 10px;border-radius:3px;text-decoration:none;color:#bdb69d;border:1px solid transparent;-webkit-tap-highlight-color:transparent;white-space:nowrap;touch-action:manipulation}
+.work-arcade-pages a[aria-current="page"]{background:linear-gradient(180deg,#786441,#51462f);border-color:#c6aa6c;color:#ffe3a3;text-shadow:0 1px 2px #150e05}
+.work-arcade-pages a:not([aria-current]):hover,.work-arcade-pages a:focus-visible{color:#ffe7ad;border-color:#aa9469;background:#283a2b;outline:2px solid #e0c68e;outline-offset:1px}
+@media(max-width:430px){.work-arcade-pages{top:max(5px,env(safe-area-inset-top));right:max(5px,env(safe-area-inset-right));padding:2px}.work-arcade-pages a{min-height:36px;padding:5px 7px;font-size:10px}}
+
 </style></head>
-<body><main id="root">
+<body>
+<nav class="work-arcade-pages" aria-label="Work 游戏机页面"><a href="../../soul-table.html" >① 原老虎机</a><a href="./index.html" aria-current="page">② 推币塔</a></nav>
+<main id="root">
 <canvas id="screen" width="960" height="540" aria-label="WORK 原版铸币物理材质打造的独立推币塔游戏；点击右侧 DROP 投币"></canvas>
 </main>
 <div id="help">点击右侧 DROP 投币 · 点击台面选择投币落点 · A/D 微调 · F 自动投币 · P 暂停 · R 重开</div>
