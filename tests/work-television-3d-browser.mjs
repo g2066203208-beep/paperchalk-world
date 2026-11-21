@@ -23,7 +23,7 @@ for(const v of viewports){
   await page.waitForTimeout(1750);
   const a=await page.evaluate(()=>WorkTVQA.state());
   if(a.meshFaces<900||a.crtTriangles!==676||a.frontScrews!==0||a.screenPrograms!==3||a.powerTransition!=='on'||a.crtPixelCoverage<5000)throw Error('TV 3D design/genuine symbols incomplete '+JSON.stringify(a));
-  if(!a.modelColor.includes('porcelain')||!a.screenShape.includes('rounded curved')||a.frameRenderMs>80)throw Error('Model style or performance regression '+JSON.stringify(a));
+  if(!a.modelColor.includes('ceramic')||!a.screenShape.includes('rounded curved')||a.frameRenderMs>80)throw Error('Model style or performance regression '+JSON.stringify(a));
   await page.screenshot({path:path.join(out,v.name+'-01-original-slot-reel-tv-on.png')});
   const offPos=a.controlPositions.power;
   await page.mouse.click(offPos[0],offPos[1]);
