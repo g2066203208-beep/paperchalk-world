@@ -1,0 +1,35 @@
+{
+  "options": {
+    "upper": 1.12,
+    "lower": 0.785,
+    "pivotZ": -0.065,
+    "slide": -0.02,
+    "rear": 0,
+    "ease": 0,
+    "width": 0.065
+  },
+  "meshVertices": 9698,
+  "meshQuads": 9696,
+  "isolatedLegFaces": [
+    1302,
+    1302
+  ],
+  "groups": {
+    "thigh_R": 169,
+    "transition_R": 572,
+    "patella_R": 11,
+    "shin_R": 577,
+    "thigh_L": 169,
+    "transition_L": 572,
+    "patella_L": 11,
+    "shin_L": 577
+  },
+  "samples": 292,
+  "failures": [],
+  "edgeRatio": {
+    "min": 0.5500836889864543,
+    "max": 3.739873119117586
+  },
+  "maxRigidEdgeRelativeError": 5.795364188543317e-14,
+  "status": "High-density direct weight test, not full-body. Rigid edge check, not full pairwise audit. Anterior stretch remains; not production approved."
+}
