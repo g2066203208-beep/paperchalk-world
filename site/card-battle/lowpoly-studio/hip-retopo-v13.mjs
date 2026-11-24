@@ -9,11 +9,11 @@ export function rebuild(M,T,opt={}){
  // Keep pelvis volume as a rotated shape; compress anterior lower abdomen separately.
  for(let i=135;i<=158;i++){let rest=M.positions[i],q=rot(rest);if(rest[2]>.02){q[2]-=(opt.front??.13)*Math.min(1,rest[2]/.18);q[1]+=(opt.up??.035)*Math.min(1,rest[2]/.18)}P[i]=mix(P[i],q,a)}
  P[163]=mix(P[163],[0,cy*.40,cz+.035],a);
- for(let {i,a,b,t,type} of M.hipParents)if(type===0)P[i]=mix(P[a],P[b],t);
+ for(let {i,a,b,t,type} of M.hipParents)if(type===0)P[i]=mix(T.positions[i],mix(P[a],P[b],t),opt.a??.85);
  let omit=new Set([...R.U,...R.L,...R.B,...L.U,...L.L,...L.B]);
  for(let [i,f] of M.polygons.entries())if(!f.some(v=>omit.has(v))){N.polygons.push(f.slice());N.origFace.push(M.origFace[i])}
  let tags=[];
- for(let [side,S] of [[1,R],[-1,L]]){let tvals=[.16,.32,.5,.68,.84],rings=[S.A,S.U,[],S.B,[],S.L,S.C];
+ for(let [side,S] of [[1,R],[-1,L]]){let tvals=[.25,.375,.5,.625,.75],rings=[S.A,S.U,[],S.B,[],S.L,S.C];
  for(let r of [2,4])for(let j=0;j<8;j++){rings[r].push(N.positions.length);N.positions.push([0,0,0]);N.uv.push([0,0]);N.zones.push(side===1?3:4);P.push([0,0,0])}
  for(let j=0;j<8;j++){
   let A=S.A[j],B=S.B[j],C=S.C[j],ra=M.positions[A],rb=M.positions[B],rc=M.positions[C],pa=P[A],pc=P[C];
@@ -21,7 +21,7 @@ export function rebuild(M,T,opt={}){
   // Retain gluteal curvature in the seated patch; front crease folds locally.
   let offset=[side*(j===5||j===6||j===7?bulge*.32:0),back?-bulge:front?bulge*.18:0,back?-bulge*.35:front?-(opt.crease??.025):0];
   let pb=add(mid,offset);if(j===2)pb[0]=side*Math.max(.012,Math.abs(pb[0]));
-  for(let [k,t] of tvals.entries()){let i=rings[k+1][j],w=4*t*(1-t);N.positions[i]=add(mix(ra,rc,t),mul(sub(rb,mix(ra,rc,.5)),w));P[i]=add(mix(pa,pc,t),mul(sub(pb,mid),w));N.uv[i]=mix(M.uv[A],M.uv[C],t);N.zones[i]=side===1?3:4;tags.push({id:i,side:side===1?'R':'L',sector:j,ring:k+1,pelvisWeight:1-t,thighWeight:t})}
+  for(let [k,t] of tvals.entries()){let i=rings[k+1][j],w=4*t*(1-t);N.positions[i]=k===0?M.positions[S.U[j]].slice():k===1?mix(M.positions[S.U[j]],rb,.5):k===2?rb.slice():k===3?mix(rb,M.positions[S.L[j]],.5):M.positions[S.L[j]].slice();let old=k===0?T.positions[S.U[j]]:k===1?mix(T.positions[S.U[j]],T.positions[B],.5):k===2?T.positions[B]:k===3?mix(T.positions[B],T.positions[S.L[j]],.5):T.positions[S.L[j]];P[i]=mix(old,add(mix(pa,pc,t),mul(sub(pb,mid),w)),opt.patch??.2);N.uv[i]=mix(M.uv[A],M.uv[C],t);N.zones[i]=side===1?3:4;tags.push({id:i,side:side===1?'R':'L',sector:j,ring:k+1,pelvisWeight:1-t,thighWeight:t})}
  }
  for(let k=0;k<rings.length-1;k++)for(let j=0;j<8;j++){let n=(j+1)%8,quad=[rings[k][j],rings[k][n],rings[k+1][n],rings[k+1][j]];if(side===-1)quad.reverse(); // orientation corrected against original boundary below
  N.polygons.push(quad);N.origFace.push(10000+tags.length+k*8+j)}
