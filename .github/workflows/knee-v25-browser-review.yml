@@ -1,0 +1,86 @@
+name: V25 exact knee model browser review
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/card-battle/lowpoly-studio/knee-v25.html'
+      - '.github/workflows/knee-v25-browser-review.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: knee-v25-browser-review
+  cancel-in-progress: true
+jobs:
+  review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: site/card-battle/lowpoly-studio/knee-v25.html
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install chromium
+      - name: Open actual committed model in Chromium and capture knee positions
+        run: |
+          mkdir -p review
+          node <<'JS'
+          const {chromium}=require('playwright');
+          const fs=require('node:fs');
+          const path=require('node:path');
+          const assert=require('node:assert/strict');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            const page=await browser.newPage({viewport:{width:1000,height:1000},deviceScaleFactor:1});
+            let errors=[],results=[];
+            page.on('pageerror',e=>errors.push(String(e)));
+            const url='https://g2066203208-beep.github.io/paperchalk-world/card-battle/lowpoly-studio/knee-v25.html';
+            let online={url};
+            try{const r=await page.goto(url+'?review='+process.env.GITHUB_SHA,{timeout:30000});online.status=r.status();online.title=await page.title()}catch(e){online.error=String(e)}
+            errors=[];
+            await page.goto('file://'+path.resolve('site/card-battle/lowpoly-studio/knee-v25.html'));
+            await page.waitForFunction(()=>document.querySelector('#status').textContent.startsWith('V25 ·'),null,{timeout:30000});
+            for(const [view,angle,wire,weight] of [['side',0,false,'-1'],['side',45,false,'-1'],['side',90,false,'-1'],['side',120,false,'-1'],['side',145,false,'-1'],['front',90,false,'-1'],['three',90,false,'-1'],['side',90,true,'-1'],['side',90,false,'2']]){
+              await page.locator('#'+view).click();
+              await page.locator('#wire').setChecked(wire);
+              await page.locator('#weight').selectOption(weight);
+              await page.locator('#angle').evaluate((e,a)=>{e.value=a;e.dispatchEvent(new Event('input',{bubbles:true}))},angle);
+              assert.equal(await page.locator('#angleValue').textContent(),angle+'°');
+              const status=await page.locator('#status').textContent();
+              const pixels=await page.locator('#view').evaluate(c=>{let d=c.getContext('2d').getImageData(0,0,c.width,c.height).data,n=0;for(let i=0;i<d.length;i+=4)if(d[i]!==247||d[i+1]!==246||d[i+2]!==246)n++;return n});
+              assert.ok(pixels>1000,'blank canvas');
+              const name=view+'-'+angle+(wire?'-wire':weight==='2'?'-shin-weight':'')+'.png';
+              await page.screenshot({path:'review/'+name});
+              results.push({name,status,pixels});
+            }
+            fs.writeFileSync('review/report.json',JSON.stringify({sourceCommit:process.env.GITHUB_SHA,online,errors,results},null,2));
+            await browser.close();
+            assert.deepEqual(errors,[]);
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: actual-v25-chromium-screenshots
+          path: review
+      - name: Archive exact screenshot evidence on dedicated review branch
+        if: success()
+        run: |
+          cp -r review /tmp/v25-review
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          mkdir /tmp/v25-evidence
+          cd /tmp/v25-evidence
+          git init -b knee-v25-browser-review
+          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          cp -r /tmp/v25-review/* .
+          git add .
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m "Actual Chromium V25 screenshot evidence ${GITHUB_SHA}"
+          git push --force origin HEAD:knee-v25-browser-review
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
