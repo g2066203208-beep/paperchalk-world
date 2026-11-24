@@ -1,6 +1,6 @@
 {
   "quads": 518,
-  "method": "Pose-driven lower abdomen soft-tissue corrective, not a physical contact solver. Hip root ring and pelvic junction allowed deform; major thigh ring rigid. No change to rest geometry from V7.",
+  "method": "Pose-driven side-specific abdomen corrective, not physical contact solver; protected primary thigh ring; no change to rest geometry from V7.",
   "thighRingV7": [
     0.5064579376885748,
     1.2699010403996045
@@ -217,97 +217,12 @@
     },
     "run": {
       "samples": 61,
-      "failed": 14,
+      "failed": 0,
       "thighRingRatio": [
         0.999999999999998,
         1.0000000000000016
       ],
-      "bad": [
-        [
-          0,
-          4,
-          0,
-          0
-        ],
-        [
-          24,
-          1,
-          0,
-          0
-        ],
-        [
-          25,
-          1,
-          0,
-          0
-        ],
-        [
-          26,
-          3,
-          0,
-          0
-        ],
-        [
-          27,
-          3,
-          0,
-          0
-        ],
-        [
-          28,
-          3,
-          0,
-          0
-        ],
-        [
-          29,
-          3,
-          0,
-          0
-        ],
-        [
-          30,
-          3,
-          0,
-          0
-        ],
-        [
-          31,
-          3,
-          0,
-          0
-        ],
-        [
-          32,
-          3,
-          0,
-          0
-        ],
-        [
-          33,
-          3,
-          0,
-          0
-        ],
-        [
-          34,
-          1,
-          0,
-          0
-        ],
-        [
-          35,
-          1,
-          0,
-          0
-        ],
-        [
-          60,
-          4,
-          0,
-          0
-        ]
-      ]
+      "bad": []
     },
     "slash": {
       "samples": 61,
