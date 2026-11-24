@@ -25,7 +25,7 @@
       "reference": "../../assets/characters/monster-hunters/04-bounty-markswoman.png",
       "referenceBlob": "1d4da98fd12589d478768900b7e55c3c188f036d",
       "character": "04-markswoman",
-      "mesh": "hair_hunter02-v5.json",
+      "mesh": "hair_hunter02-v6.json",
       "textures": {
         "back": "hair_hunter02-pixel-back.png",
         "sideL": "hair_hunter02-pixel-sideL.png",
@@ -37,11 +37,11 @@
         "frontL5": "hair_hunter02-pixel-frontL5.png",
         "foldInner5": "hair_hunter02-pixel-foldInner5.png"
       },
-      "preview": "hair_hunter02-v5-preview.png",
+      "preview": "hair_hunter02-v6-preview.png",
       "viewer": "v46.html?hair=hunter02",
-      "vertices": 200,
-      "quads": 124,
-      "notes": "V5 narrowed hard-fold front; native 32x64 pixel textures, seven-color palette and nearest sampling; body, back and ponytail geometry retained. Draft pending approval."
+      "vertices": 416,
+      "quads": 268,
+      "notes": "V6 actual staircase edge geometry on front, temples and ponytail, connected ledges, 0.025-unit horizontal step grid; back/scalp retained; static strict body crossing count zero, hair-card overlaps remain. Draft not approved."
     }
   ]
 }
