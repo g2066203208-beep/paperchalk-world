@@ -27,21 +27,21 @@
       "character": "04-markswoman",
       "mesh": "hair_hunter02-v6.json",
       "textures": {
-        "back": "hair_hunter02-pixel-back.png",
-        "sideL": "hair_hunter02-pixel-sideL.png",
-        "sideR": "hair_hunter02-pixel-sideR.png",
-        "extra": "hair_hunter02-pixel-extra.png",
-        "tailProfile": "hair_hunter02-pixel-tailProfile.png",
-        "scalp": "hair_hunter02-pixel-scalp.png",
-        "frontR5": "hair_hunter02-pixel-frontR5.png",
-        "frontL5": "hair_hunter02-pixel-frontL5.png",
-        "foldInner5": "hair_hunter02-pixel-foldInner5.png"
+        "back": "hair_hunter02-block-back.png",
+        "sideL": "hair_hunter02-block-sideL.png",
+        "sideR": "hair_hunter02-block-sideR.png",
+        "extra": "hair_hunter02-block-extra.png",
+        "tailProfile": "hair_hunter02-block-tailProfile.png",
+        "scalp": "hair_hunter02-block-scalp.png",
+        "frontR5": "hair_hunter02-block-frontR5.png",
+        "frontL5": "hair_hunter02-block-frontL5.png",
+        "foldInner5": "hair_hunter02-block-foldInner5.png"
       },
-      "preview": "hair_hunter02-v6-preview.png",
+      "preview": "hair_hunter02-v7-preview.png",
       "viewer": "v46.html?hair=hunter02",
       "vertices": 416,
       "quads": 268,
-      "notes": "V6 actual staircase edge geometry on front, temples and ponytail, connected ledges, 0.025-unit horizontal step grid; back/scalp retained; static strict body crossing count zero, hair-card overlaps remain. Draft not approved."
+      "notes": "V7 deliberately painted pixel clusters: broad main color, grouped underside shadow, localized highlights, no repeated stripe bands. V6 stepped geometry unchanged. Pending aesthetic approval."
     }
   ]
 }
