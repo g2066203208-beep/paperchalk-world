@@ -1,0 +1,57 @@
+{
+  "options": {
+    "pivotZ": -0.055,
+    "patellaFollow": 0.5,
+    "slide": 0,
+    "calfContact": true,
+    "gap": 0.025,
+    "squeeze": 0.45,
+    "patella": 0
+  },
+  "right": {
+    "samples": 146,
+    "failures": [],
+    "patellaVertices": [
+      244,
+      245,
+      249,
+      476,
+      477,
+      478,
+      484,
+      485,
+      486
+    ],
+    "maximumRigidDistanceError": 2.4424906541753444e-15
+  },
+  "left": {
+    "samples": 146,
+    "failures": [
+      [
+        144,
+        0,
+        1,
+        0
+      ],
+      [
+        145,
+        0,
+        1,
+        0
+      ]
+    ],
+    "patellaVertices": [
+      360,
+      361,
+      365,
+      492,
+      493,
+      494,
+      500,
+      501,
+      502
+    ],
+    "maximumRigidDistanceError": 2.4424906541753444e-15
+  },
+  "status": "Isolated leg only; patella is a rigid skin proxy, not anatomical simulation; visual review and full pose pending."
+}
