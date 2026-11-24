@@ -1,5 +1,5 @@
-import {refine} from './motion-v2-core.mjs';
-import {pose as kneePose} from './knee-v5-core.mjs';
+import {refine} from './limb-v6-topology.mjs';
+import {pose as kneePose} from './knee-v6-core.mjs';
 // Symmetric additional forearm-to-wrist rings, no triangulation.
 export function build(D){let S={...D,positions:D.positions.map(p=>p.slice())};for(let o of [0,116]){for(let k of [0,1,5])S.positions[244+o+k][2]+=.008*(k===0?1:.45);for(let k of [2,3,4])S.positions[244+o+k][2]*=.90}return refine(S,["arm0","arm2","arm3","arm4","leg2","leg3"])}
 export function arm(M,deg,wrist=0,side=0,opts={}){
