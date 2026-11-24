@@ -14,13 +14,13 @@ export function seated(M,opt={}){
  for(let [s,o] of [[1,0],[-1,116]]){
   // Preserve shin, rotate shoe/foot around ankle and blend only ankle ring.
   let ankle=mean(P,ring(o,6,226)),restAnkle=mean(M.positions,ring(o,6,226));
-  for(let j=6;j<=8;j++)for(let i of ring(o,j,226)){let goal=add(ankle,sub(M.positions[i],restAnkle));P[i]=mix(P[i],goal,j===6?.6:1)}
+  for(let j=6;j<=8;j++)for(let i of [...ring(o,j,226),396+4*(j-1)+(s===1?0:1),398+4*(j-1)+(s===1?0:1)]){let goal=add(ankle,sub(M.positions[i],restAnkle));P[i]=mix(P[i],goal,j===6?.4:1)}
   let knee=mean(P,ring(o,3,226)),shin=mean(P,ring(o,4,226)),S=mean(P,ring(o,0)),restS=[s*.205,1.965,0],restE=[s*.272,1.695,0],restW=[s*.365,1.465,.019];
   // actual shoulder center anchored at the chest-side shoulder mesh, not global coordinates
-  S=add(S,[s*.015,.025,0]);let target=add(mix(knee,shin,.38),[s*(opt.wx??.15),opt.wy??.035,opt.wz??.10]);
-  let {E,W}=ik(S,target,len(sub(restE,restS)),len(sub(restW,restE)),[s*.8,-.8,.3]);let u=aim(sub(restE,restS),sub(E,S)),v=aim(sub(restW,restE),sub(W,E)),handDir=unit([-s, -.25, -.15]),hr=aim([s*.05,-.23,.01],handDir);
+  S=add(S,[s*.045,.040,0]);let target=add(mix(knee,shin,.12),[s*(opt.wx??.15),opt.wy??.035,opt.wz??.10]);
+  let {E,W}=ik(S,target,len(sub(restE,restS)),len(sub(restW,restE)),[s*1.8,-.9,.15]);let u=aim(sub(restE,restS),sub(E,S)),v=aim(sub(restW,restE),sub(W,E)),handDir=unit([-s, -.20, .12]),hr=aim([s*.05,-.23,.01],handDir);
   let upper=p=>add(S,u(sub(p,restS))),fore=p=>add(E,v(sub(p,restE))),hand=p=>add(W,hr(sub(p,restW)));
-  for(let i=164+o;i<226+o;i++){let j=Math.floor((i-164-o)/6),p=M.positions[i],a=upper(p),b=fore(p),c=hand(p);if(j===0){P[i]=mix(P[i],a,.35)}else if(j<=2){P[i]=a}else if(j===3){P[i]=mix(a,b,.5)}else if(j===4){P[i]=b}else if(j===5){P[i]=mix(b,c,.5)}else P[i]=c}
+  for(let i=164+o;i<226+o;i++){let j=Math.floor((i-164-o)/6),p=M.positions[i],a=upper(p),b=fore(p),c=hand(p);if(j===0){P[i]=mix(P[i],a,.10)}else if(j===1){P[i]=mix(P[i],a,.80)}else if(j===2){P[i]=a}else if(j===3){P[i]=mix(a,b,.5)}else if(j===4){P[i]=b}else if(j===5){P[i]=mix(b,c,.5)}else P[i]=c}
   targets.push({side:s===1?'R':'L',shoulder:S,elbow:E,wrist:W,requestedWrist:target,knee,ankle,handTip:mean(P,ring(o,8)),upperLength:len(sub(E,S)),foreLength:len(sub(W,E))});
  }
  for(let {i,a,b,t} of M.armParents)P[i]=mix(P[a],P[b],t);
