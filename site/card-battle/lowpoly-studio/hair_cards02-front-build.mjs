@@ -1,6 +1,6 @@
 export function build(D,A,sha,extra=0){
 let rows=[
-[[-.167,2.878,.015],[-.09,2.901,.012],[0,2.902,.015],[.09,2.901,.012],[.167,2.878,.015]],
+[[-.167,2.879,.035],[-.09,2.904,.038],[0,2.905,.04],[.09,2.904,.038],[.167,2.879,.035]],
 [[-.254,2.805,.155],[-.145,2.811,.265],[0,2.809,.289],[.145,2.811,.265],[.254,2.805,.155]],
 [[-.335,2.668,.20],[-.167,2.669,.333],[0,2.667,.365],[.167,2.669,.333],[.335,2.668,.20]],
 [[-.335,2.49,.20],[-.17,2.49,.329],[0,2.49,.36],[.17,2.49,.329],[.335,2.49,.20]],
@@ -16,6 +16,20 @@ let tris=(p,q)=>q.flatMap(f=>[[f[0],f[1],f[2]],[f[0],f[2],f[3]]].map(t=>t.map(i=
 let bt=[D,...Object.values(D.modules)].flatMap(x=>tris(x.positions,x.polygons)),ht=tris(m.positions,m.polygons.slice(0,16)),at=tris(A.positions,A.polygons);
 function ray(o,v,t){let e1=sub(t[1],t[0]),e2=sub(t[2],t[0]),h=cross(v,e2),a=dot(e1,h);if(Math.abs(a)<1e-10)return null;let f=1/a,s=sub(o,t[0]),u=f*dot(s,h);if(u<0||u>1)return null;let q=cross(s,e1),w=f*dot(v,q);if(w<0||u+w>1)return null;return f*dot(e2,q)}
 function count(a,b){let n=0;for(let t of a)for(let i=0;i<3;i++){let p=t[i],v=sub(t[(i+1)%3],p);if(b.some(q=>{let u=ray(p,v,q);return u!==null&&u>1e-7&&u<1-1e-7}))n++}return n}
+
+// Fit the open front card against the actual frozen head mesh, using projected surface samples.
+// The source remains one independent quad sheet; scalp is never modified.
+const head=bt.filter(t=>Math.max(...t.map(p=>p[1]))>2.30);
+function envelope(x,y){return Math.max(-1,...head.map(t=>ray([x,y,-1],[0,0,1],t)).filter(u=>u!==null&&u>=0).map(u=>u-1))}
+for(let pass=0;pass<7;pass++){
+let dz=Array(25).fill(0);
+for(let f of m.polygons.slice(0,16))for(let tri of [[f[0],f[1],f[2]],[f[0],f[2],f[3]]]){
+for(let i=0;i<=12;i++)for(let j=0;j<=12-i;j++){let s=i/12,t=j/12,u=1-s-t,p=[0,1,2].map(k=>s*m.positions[tri[0]][k]+t*m.positions[tri[1]][k]+u*m.positions[tri[2]][k]),e=envelope(p[0],p[1]);let deficit=e+.009-p[2];if(deficit>0)for(let k of tri)dz[k]=Math.max(dz[k],deficit)}
+}
+for(let i=0;i<25;i++)m.positions[i][2]+=dz[i];
+}
+ht=tris(m.positions,m.polygons.slice(0,16));
+
 m.audit={frontQuads:16,extra,bodyCrossings:count(ht,bt)+count(bt,ht),ahogeCrossings:count(ht,at)+count(at,ht),unchangedAhoge:true};return m
 }
 export function paintFront(){
