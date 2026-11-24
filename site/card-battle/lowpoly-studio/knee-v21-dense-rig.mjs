@@ -4,8 +4,8 @@ export function bindDense(M,base,opt={}){
  let upper=opt.upper??1.10,lower=opt.lower??.78,center=.918;
  return M.positions.map((p,i)=>{let b=base[i],side=M.zones[i]===3?'R':M.zones[i]===4?'L':null;
  if(!side||p[1]>1.23)return {...b,active:false};
- let y=p[1],z=p[2],front=smooth((z+.025)/.09),t=y>=center?.5*smooth((upper-y)/(upper-center)):.5+.5*smooth((center-y)/(center-lower));
- let hard=smooth((z-.022)/.042)*(1-smooth((Math.abs(y-center)-.018)/.065));
+ let y=p[1],z=p[2],front=smooth((z+.025)/.09),t=y>=center?.5*mix(cl((upper-y)/(upper-center)),smooth((upper-y)/(upper-center)),opt.ease??.3):.5+.5*mix(cl((center-y)/(center-lower)),smooth((center-y)/(center-lower)),opt.ease??.3);
+ let hard=smooth((z-.025)/.045)*(1-smooth((Math.abs(y-center)-.012)/(opt.width??.095)));
  if(y>=upper){t=0;hard=0}if(y<=lower){t=1;hard=0}
  let w={[ 'thigh_'+side ]:(1-hard)*(1-t),['patella_'+side]:hard,['shin_'+side]:(1-hard)*t};
  return {...b,active:true,side,front,hard,t,weights:Object.fromEntries(Object.entries(w).filter(([k,v])=>v>1e-12)),locked:t===0||t===1||hard===1,owner:t===0?'thigh_'+side:t===1?'shin_'+side:hard===1?'patella_'+side:'transition_'+side,rest:p.slice()};
