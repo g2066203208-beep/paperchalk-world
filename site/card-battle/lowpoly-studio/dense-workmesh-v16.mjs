@@ -7,7 +7,7 @@ export function subdivide(M,B,P){
  function edge(a,b){let k=a<b?a+':'+b:b+':'+a;if(!edges.has(k))edges.set(k,point([a,b]));return edges.get(k)}
  for(let [fi,f] of M.polygons.entries()){let c=point(f),e=f.map((a,j)=>edge(a,f[(j+1)%4]));for(let j=0;j<4;j++){N.polygons.push([f[j],e[j],c,e[(j+3)%4]]);N.origFace.push(N.origFace.length);incident[f[j]].push(c);adj[f[j]].add(e[j]);adj[f[j]].add(e[(j+3)%4])}}
  // Neutral geometry is smoothed only at mobile joint vertices, never at rigid core points.
- let R=N.positions.map(p=>p.slice());for(let i=0;i<M.positions.length;i++)if(!V[i].locked&&incident[i].length){let n=incident[i].length,f=avg(incident[i].map(j=>R[j])),e=avg([...adj[i]].map(j=>R[j])),p=R[i];N.positions[i]=mix(p,mul(add(add(f,mul(e,2)),mul(p,n-3)),1/n),.65)}
+ let R=N.positions.map(p=>p.slice());for(let i=0;i<M.positions.length;i++)if(!V[i].locked&&incident[i].length){let n=incident[i].length,f=avg(incident[i].map(j=>R[j])),e=avg([...adj[i]].map(j=>R[j])),p=R[i];N.positions[i]=mix(p,mul(add(add(f,mul(e,2)),mul(p,n-3)),1/n),.2)}
  V.forEach((v,i)=>v.rest=N.positions[i].slice());let nb=V.map(()=>new Set());for(let f of N.polygons)for(let j=0;j<4;j++){let a=f[j],b=f[(j+1)%4];nb[a].add(b);nb[b].add(a)}V.forEach((v,i)=>v.neighbors=[...nb[i]]);N.triangles=N.polygons.flatMap(f=>[[f[0],f[1],f[2]],[f[0],f[2],f[3]]]);return{mesh:N,bindings:V,positions:Q}
 }
 export function relax(M,B,P,steps=80,anchor=.045){let Q=P.map(p=>p.slice()),E=new Map();for(let f of M.polygons)for(let [i,j] of [[0,1],[1,2],[2,3],[3,0],[0,2],[1,3]]){let a=f[i],b=f[j];if(B[a].locked&&B[b].locked)continue;E.set([a,b].sort((a,b)=>a-b).join(':'),{a,b,L:len(sub(M.positions[a],M.positions[b])),s:j-i===2?.3:1})}
