@@ -8,23 +8,23 @@ export function buildBody(){
  const loop=(y,rx,rz,zc,weights)=>Array.from({length:N},(_,i)=>{let t=i*2*Math.PI/N;return add(rx*Math.sin(t),y,zc+rz*Math.cos(t),weights)});
  const join=(a,b,skip=[])=>{for(let i=0;i<a.length;i++){if(skip.includes(i))continue;let j=(i+1)%a.length;faces.push([a[i],a[j],b[j],b[i]])}};
  const cap=(a,center)=>{for(let i=0;i<a.length;i++)faces.push([a[i],a[(i+1)%a.length],center])};
- const spec=[[1.02,.38,.23,0,[[0,1]]],[1.22,.34,.22,0,blend(0,1,.25)],[1.48,.40,.24,0,blend(0,1,.8)],[1.64,.43,.24,0,[[1,1]]],[1.79,.39,.21,0,[[1,1]]],[1.87,.20,.16,0,blend(1,2,.15)],[1.98,.16,.14,0,blend(1,2,.8)],[2.07,.31,.25,.025,[[2,1]]],[2.18,.51,.36,.035,[[2,1]]],[2.40,.61,.45,.025,[[2,1]]],[2.65,.60,.46,0,[[2,1]]],[2.88,.49,.40,-.015,[[2,1]]],[3.03,.27,.25,-.025,[[2,1]]]];
+ const spec=[[1.02,.39,.245,0,[[0,1]]],[1.22,.355,.235,0,blend(0,1,.25)],[1.48,.37,.235,0,blend(0,1,.8)],[1.64,.385,.235,0,[[1,1]]],[1.79,.33,.20,0,[[1,1]]],[1.87,.17,.15,0,blend(1,2,.15)],[1.98,.16,.15,0,blend(1,2,.8)],[2.035,.34,.28,.065,[[2,1]]],[2.15,.53,.395,.055,[[2,1]]],[2.36,.66,.47,.025,[[2,1]]],[2.65,.65,.49,-.035,[[2,1]]],[2.91,.53,.43,-.06,[[2,1]]],[3.10,.30,.27,-.06,[[2,1]]]];
  const r=spec.map(s=>loop(...s));for(let j=0;j<r.length-1;j++)join(r[j],r[j+1],j===2||j===3?[3,4,11,12]:[]);
- cap(r.at(-1),add(0,3.09,-.025,[[2,1]]));
+ cap(r.at(-1),add(0,3.16,-.06,[[2,1]]));
  for(const side of [1,-1]){
   const i=side===1?3:11,b=side===1?3:6;
   let a=[r[2][i],r[2][i+1],r[2][i+2],r[3][i+2],r[4][i+2],r[4][i+1],r[4][i],r[3][i]];
-  for(const k of a)w[k]=blend(1,b,.36);
-  for(const [x,y,ry,rz,weights] of [[.49,1.64,.15,.17,blend(1,b,.78)],[.60,1.49,.125,.13,[[b,1]]],[.68,1.40,.12,.12,blend(b,b+1,.5)],[.74,1.33,.12,.115,[[b+1,1]]],[.85,1.20,.085,.085,blend(b+1,b+2,.35)],[.91,1.13,.11,.095,[[b+2,1]]],[.99,1.05,.095,.085,[[b+2,1]]]]){
+  for(const k of a)w[k]=blend(1,b,.22);let perm;
+  for(const [x,y,ry,rz,weights] of [[.535,1.59,.145,.155,blend(1,b,.65)],[.60,1.49,.125,.13,blend(b,b+1,.15)],[.68,1.40,.12,.12,blend(b,b+1,.5)],[.74,1.33,.12,.115,blend(b,b+1,.83)],[.85,1.20,.085,.085,blend(b+1,b+2,.35)],[.91,1.13,.11,.095,[[b+2,1]]],[.99,1.05,.095,.085,[[b+2,1]]]]){
    const q=Array.from({length:8},(_,j)=>{const t=(j+1)*Math.PI/4;return add(side*(x+.6*(-Math.sin(t)*ry)),y+.8*(-Math.sin(t)*ry),Math.cos(t)*rz*side,weights)});
-   join(a,q);a=q;
+   if(x===.535){let best=Infinity;for(const arr of [q,q.slice().reverse()])for(let k=0;k<8;k++){const order=arr.slice(k).concat(arr.slice(0,k));const score=order.reduce((sum,j,i)=>sum+v[j].reduce((n,z,l)=>n+(z-v[a[i]][l])**2,0),0);if(score<best){best=score;perm=order.map(j=>q.indexOf(j))}}}join(a,perm.map(k=>q[k]));a=perm.map(k=>q[k]);
   }cap(a,add(side*1.035,1.00,0,[[b+2,1]]));
  }
  const c=add(0,.98,0,[[0,1]]);
  for(const side of [1,-1]){
   const b=side===1?9:12;let a=Array.from({length:9},(_,j)=>r[0][(j+(side===1?0:8))%16]);a.push(c);
   const angles=a.map(k=>Math.atan2(v[k][2]/.23,(v[k][0]-side*.19)/.19));
-  for(const [y,x,rx,rz,zc,weights] of [[.88,.23,.175,.205,0,blend(0,b,.65)],[.68,.24,.15,.16,0,[[b,1]]],[.53,.24,.135,.145,.015,blend(b,b+1,.5)],[.43,.24,.14,.145,0,[[b+1,1]]],[.22,.24,.105,.12,0,blend(b+1,b+2,.25)],[.13,.24,.14,.225,.085,[[b+2,1]]],[.035,.24,.15,.24,.09,[[b+2,1]]]]){
+  for(const [y,x,rx,rz,zc,weights] of [[.88,.23,.175,.205,0,blend(0,b,.55)],[.68,.24,.15,.16,0,blend(b,b+1,.15)],[.53,.24,.135,.145,.015,blend(b,b+1,.5)],[.43,.24,.14,.145,0,blend(b,b+1,.83)],[.22,.24,.105,.12,0,blend(b+1,b+2,.25)],[.13,.24,.14,.225,.085,[[b+2,1]]],[.035,.24,.15,.24,.09,[[b+2,1]]]]){
    const q=angles.map(t=>add(side*x+rx*Math.cos(t),y,zc+rz*Math.sin(t),weights));join(a,q);a=q;
   }cap(a,add(side*.24,.025,.09,[[b+2,1]]));
  }
