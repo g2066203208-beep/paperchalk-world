@@ -1,0 +1,9 @@
+// Surface strain QA: compare actual skin, not proxy muscle volume.
+const sub=(a,b)=>a.map((v,i)=>v-b[i]),dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],len=a=>Math.hypot(...a);
+export function strainAudit(M,P){
+ const edges=new Map(),regions={};
+ const region=f=>{let y=f.reduce((s,i)=>s+M.positions[i][1],0)/f.length,z=f.map(i=>M.zones[i]);return y>1.2&&y<1.58&&(z.some(v=>v>=3)||z.every(v=>v===0))?'hip-abdomen':y>.96&&y<=1.2&&z.every(v=>v>=3)?'thigh':y>.80&&y<=.96&&z.every(v=>v>=3)?'knee':y>1.78&&y<2.08&&z.some(v=>v===1||v===2)?'shoulder':y>1.60&&y<=1.78&&z.every(v=>v===1||v===2)?'elbow':'other'};
+ function tri(ids){let [a,b,c]=ids.map(i=>M.positions[i]),[A,B,C]=ids.map(i=>P[i]),u=sub(b,a),v=sub(c,a),U=sub(B,A),V=sub(C,A),l=len(u),x=dot(u,v)/l,y=Math.sqrt(Math.max(0,dot(v,v)-x*x));if(l<1e-9||y<1e-9)return null;let f=U.map(t=>t/l),g=V.map((t,k)=>(t-x*f[k])/y),a0=dot(f,f),b0=dot(f,g),c0=dot(g,g),disc=Math.sqrt((a0-c0)**2+4*b0*b0);return {min:Math.sqrt(Math.max(0,(a0+c0-disc)/2)),max:Math.sqrt(Math.max(0,(a0+c0+disc)/2)),area:len(cross(f,g))}}
+ for(let [fi,f] of M.polygons.entries()){let key=region(f),r=regions[key]??={triangles:0,minStretch:Infinity,maxStretch:0,minArea:Infinity,maxArea:0,severe:0,worst:[]};for(let ids of [[f[0],f[1],f[2]],[f[0],f[2],f[3]]]){let q=tri(ids);if(!q)continue;r.triangles++;r.minStretch=Math.min(r.minStretch,q.min);r.maxStretch=Math.max(r.maxStretch,q.max);r.minArea=Math.min(r.minArea,q.area);r.maxArea=Math.max(r.maxArea,q.area);let severity=Math.max(q.max,1/Math.max(q.min,1e-9));if(q.min<.5||q.max>2||q.area<.35||q.area>2.5)r.severe++;r.worst.push({face:fi,ids,...q,severity})}}
+ for(let r of Object.values(regions))r.worst=r.worst.sort((a,b)=>b.severity-a.severity).slice(0,5);return regions
+}
