@@ -1,0 +1,433 @@
+{
+  "vertices": 576,
+  "quads": 574,
+  "muscleProxies": 12,
+  "method": "Approximate attachment polylines with constant-volume radius; skin coupling and bounded collision projection, not validated anatomical FEM. Collision and visual acceptance remain separate.",
+  "sweeps": {
+    "tuck": {
+      "samples": 31,
+      "failed": 7,
+      "initialPairsSum": 52,
+      "finalPairsSum": 50,
+      "peakPairs": 9,
+      "peakFolds": 2,
+      "maxContactOffset": 0.0007868046565634788,
+      "proxyVolumeError": 5.551115123125783e-16,
+      "bad": [
+        [
+          12,
+          3,
+          1,
+          0
+        ],
+        [
+          13,
+          9,
+          1,
+          0
+        ],
+        [
+          14,
+          9,
+          1,
+          0
+        ],
+        [
+          15,
+          8,
+          2,
+          0
+        ],
+        [
+          16,
+          9,
+          1,
+          0
+        ],
+        [
+          17,
+          9,
+          1,
+          0
+        ],
+        [
+          18,
+          3,
+          1,
+          0
+        ]
+      ]
+    },
+    "squat": {
+      "samples": 31,
+      "failed": 0,
+      "initialPairsSum": 0,
+      "finalPairsSum": 0,
+      "peakPairs": 0,
+      "peakFolds": 0,
+      "maxContactOffset": 0,
+      "proxyVolumeError": 4.440892098500626e-16,
+      "bad": []
+    },
+    "jump": {
+      "samples": 31,
+      "failed": 15,
+      "initialPairsSum": 44,
+      "finalPairsSum": 44,
+      "peakPairs": 4,
+      "peakFolds": 0,
+      "maxContactOffset": 0,
+      "proxyVolumeError": 5.551115123125783e-16,
+      "bad": [
+        [
+          1,
+          4,
+          0,
+          0
+        ],
+        [
+          2,
+          4,
+          0,
+          0
+        ],
+        [
+          3,
+          4,
+          0,
+          0
+        ],
+        [
+          4,
+          4,
+          0,
+          0
+        ],
+        [
+          5,
+          4,
+          0,
+          0
+        ],
+        [
+          6,
+          4,
+          0,
+          0
+        ],
+        [
+          7,
+          4,
+          0,
+          0
+        ],
+        [
+          8,
+          4,
+          0,
+          0
+        ],
+        [
+          13,
+          1,
+          0,
+          0
+        ],
+        [
+          16,
+          1,
+          0,
+          0
+        ],
+        [
+          22,
+          2,
+          0,
+          0
+        ],
+        [
+          23,
+          2,
+          0,
+          0
+        ],
+        [
+          24,
+          2,
+          0,
+          0
+        ],
+        [
+          25,
+          2,
+          0,
+          0
+        ],
+        [
+          26,
+          2,
+          0,
+          0
+        ]
+      ]
+    },
+    "run": {
+      "samples": 31,
+      "failed": 0,
+      "initialPairsSum": 0,
+      "finalPairsSum": 0,
+      "peakPairs": 0,
+      "peakFolds": 0,
+      "maxContactOffset": 0,
+      "proxyVolumeError": 4.440892098500626e-16,
+      "bad": []
+    },
+    "slash": {
+      "samples": 31,
+      "failed": 0,
+      "initialPairsSum": 0,
+      "finalPairsSum": 0,
+      "peakPairs": 0,
+      "peakFolds": 0,
+      "maxContactOffset": 0,
+      "proxyVolumeError": 5.551115123125783e-16,
+      "bad": []
+    },
+    "climb": {
+      "samples": 31,
+      "failed": 11,
+      "initialPairsSum": 11,
+      "finalPairsSum": 11,
+      "peakPairs": 1,
+      "peakFolds": 0,
+      "maxContactOffset": 0,
+      "proxyVolumeError": 4.440892098500626e-16,
+      "bad": [
+        [
+          10,
+          1,
+          0,
+          0
+        ],
+        [
+          11,
+          1,
+          0,
+          0
+        ],
+        [
+          12,
+          1,
+          0,
+          0
+        ],
+        [
+          13,
+          1,
+          0,
+          0
+        ],
+        [
+          14,
+          1,
+          0,
+          0
+        ],
+        [
+          15,
+          1,
+          0,
+          0
+        ],
+        [
+          16,
+          1,
+          0,
+          0
+        ],
+        [
+          17,
+          1,
+          0,
+          0
+        ],
+        [
+          18,
+          1,
+          0,
+          0
+        ],
+        [
+          19,
+          1,
+          0,
+          0
+        ],
+        [
+          20,
+          1,
+          0,
+          0
+        ]
+      ]
+    },
+    "vault": {
+      "samples": 31,
+      "failed": 10,
+      "initialPairsSum": 30,
+      "finalPairsSum": 22,
+      "peakPairs": 4,
+      "peakFolds": 1,
+      "maxContactOffset": 0.00398469487044324,
+      "proxyVolumeError": 4.440892098500626e-16,
+      "bad": [
+        [
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          1,
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0,
+          0
+        ],
+        [
+          16,
+          0,
+          1,
+          0
+        ],
+        [
+          17,
+          4,
+          0,
+          0
+        ],
+        [
+          18,
+          4,
+          0,
+          0
+        ],
+        [
+          19,
+          4,
+          0,
+          0
+        ],
+        [
+          28,
+          1,
+          0,
+          0
+        ],
+        [
+          29,
+          2,
+          0,
+          0
+        ],
+        [
+          30,
+          2,
+          0,
+          0
+        ]
+      ]
+    }
+  },
+  "tuckMuscles": [
+    {
+      "name": "gluteus_maximus",
+      "side": "r",
+      "lengthRatio": 1.3848757707058852,
+      "radiusRatio": 0.8497566881692417,
+      "volumeRatio": 1.0000000000000002
+    },
+    {
+      "name": "rectus_femoris",
+      "side": "r",
+      "lengthRatio": 0.8411507265428516,
+      "radiusRatio": 1.0903428695893478,
+      "volumeRatio": 1.0000000000000002
+    },
+    {
+      "name": "vasti_group",
+      "side": "r",
+      "lengthRatio": 1.2601423325388814,
+      "radiusRatio": 0.8908204932152287,
+      "volumeRatio": 0.9999999999999998
+    },
+    {
+      "name": "adductor_group",
+      "side": "r",
+      "lengthRatio": 1.0811987482320726,
+      "radiusRatio": 0.9617168668588749,
+      "volumeRatio": 1.0000000000000002
+    },
+    {
+      "name": "hamstrings_group",
+      "side": "r",
+      "lengthRatio": 1.343271776864578,
+      "radiusRatio": 0.8628157317344614,
+      "volumeRatio": 1.0000000000000002
+    },
+    {
+      "name": "iliopsoas",
+      "side": "r",
+      "lengthRatio": 0.8261877593618462,
+      "radiusRatio": 1.1001720865186833,
+      "volumeRatio": 1.0000000000000002
+    },
+    {
+      "name": "gluteus_maximus",
+      "side": "l",
+      "lengthRatio": 1.3848757707058852,
+      "radiusRatio": 0.8497566881692417,
+      "volumeRatio": 1.0000000000000002
+    },
+    {
+      "name": "rectus_femoris",
+      "side": "l",
+      "lengthRatio": 0.8411507265428516,
+      "radiusRatio": 1.0903428695893478,
+      "volumeRatio": 1.0000000000000002
+    },
+    {
+      "name": "vasti_group",
+      "side": "l",
+      "lengthRatio": 1.2601423325388814,
+      "radiusRatio": 0.8908204932152287,
+      "volumeRatio": 0.9999999999999998
+    },
+    {
+      "name": "adductor_group",
+      "side": "l",
+      "lengthRatio": 1.0811987482320726,
+      "radiusRatio": 0.9617168668588749,
+      "volumeRatio": 1.0000000000000002
+    },
+    {
+      "name": "hamstrings_group",
+      "side": "l",
+      "lengthRatio": 1.343271776864578,
+      "radiusRatio": 0.8628157317344614,
+      "volumeRatio": 1.0000000000000002
+    },
+    {
+      "name": "iliopsoas",
+      "side": "l",
+      "lengthRatio": 0.8261877593618462,
+      "radiusRatio": 1.1001720865186833,
+      "volumeRatio": 1.0000000000000002
+    }
+  ]
+}
