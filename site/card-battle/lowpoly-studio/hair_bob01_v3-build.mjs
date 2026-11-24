@@ -20,6 +20,10 @@ strand("side outer "+flip,3,[[33,65,2.865,2.88,2.865,.004],[34,74,2.77,2.79,2.77
 strand("temple fringe "+flip,4,[[20,45,2.87,2.884,2.87,.003],[22,49,2.78,2.79,2.78,.012],[28,52,2.66,2.64,2.66,.018],[39,44,2.52,2.485,2.55,.003]],.104,[119,79,60],flip);
 strand("main fringe "+flip,5,[[6,27,2.87,2.884,2.87,.003],[6,32,2.78,2.8,2.78,.012],[8,34,2.68,2.665,2.68,.016],[17,21,2.55,2.51,2.57,.001]],.119,[125,83,62],flip);}
 strand("center fringe",6,[[-12,12,2.875,2.89,2.875,.003],[-15,15,2.79,2.81,2.79,.015],[-15,15,2.69,2.67,2.69,.018],[-1.8,1.8,2.55,2.505,2.55,.001]],.139,[131,88,65]);
+
+// Crown cover is a separate shallow open sheet with a quad-only central cap.
+addGroup("crown cover",7,[111,73,55],()=>{const N=32,off=P.length,old=Q.flatMap(f=>[[f[0],f[1],f[2]],[f[0],f[2],f[3]]].map(t=>t.map(i=>P[i]))),rimY=2.85,margin=0.05;for(let j=0;j<3;j++)for(let i=0;i<N;i++){let a=Math.PI*2*i/N,dir=[Math.sin(a),0,Math.cos(a)],y=j===0?2.948:j===1?2.918:rimY,outer=Math.max(R(rimY,a)+.034,...old.map(t=>ray([0,rimY,0],dir,t)).filter(t=>t!==null&&t>0)),rr=j===0?.075:j===1?outer*.64:outer+margin;P.push([rr*dir[0],y,rr*dir[2]])}for(let j=0;j<2;j++)for(let i=0;i<N;i++){let ni=(i+1)%N;Q.push([off+j*N+i,off+(j+1)*N+i,off+(j+1)*N+ni,off+j*N+ni])}let c=P.length;P.push([0,2.952,0]);for(let i=0;i<N;i+=2)Q.push([c,off+i,off+(i+1)%N,off+(i+2)%N])});
+
 for(let g of groups.slice(1))for(let j=g.faceStart;j<g.faceStart+g.faceCount;j++){let f=Q[j],a=P[f[0]],b=P[f[1]],c=P[f[2]],n=cross(sub(b,a),sub(c,a)),center=f.reduce((s,i)=>s.map((v,k)=>v+P[i][k]/4),[0,0,0]);if(dot(n,[center[0],(center[1]-2.54)*.5,center[2]])<0)f.reverse()}
 const tris=Q.flatMap((f,i)=>[[f[0],f[1],f[2]],[f[0],f[2],f[3]]].map(t=>({i,p:t.map(k=>P[k])})));
 function crossCount(a,b){let n=0;for(let t of a)for(let i=0;i<3;i++){let p=t[i],v=sub(t[(i+1)%3],p);if(b.some(q=>{let u=ray(p,v,q);return u!==null&&u>1e-7&&u<1-1e-7}))n++}return n}
