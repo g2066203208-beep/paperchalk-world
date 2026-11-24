@@ -1,0 +1,373 @@
+{
+  "sampleCount": 61,
+  "failed": 42,
+  "frames": [
+    {
+      "frame": 0,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "frame": 1,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "frame": 2,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "frame": 3,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "frame": 4,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "frame": 5,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "frame": 6,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "frame": 7,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "frame": 8,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "frame": 9,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "frame": 10,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "frame": 11,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "frame": 12,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "frame": 13,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "frame": 14,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "frame": 15,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "frame": 16,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "frame": 17,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "frame": 18,
+      "pairs": 0,
+      "folds": 2,
+      "degenerate": 0
+    },
+    {
+      "frame": 19,
+      "pairs": 0,
+      "folds": 2,
+      "degenerate": 0
+    },
+    {
+      "frame": 20,
+      "pairs": 0,
+      "folds": 2,
+      "degenerate": 0
+    },
+    {
+      "frame": 21,
+      "pairs": 0,
+      "folds": 2,
+      "degenerate": 0
+    },
+    {
+      "frame": 22,
+      "pairs": 0,
+      "folds": 2,
+      "degenerate": 0
+    },
+    {
+      "frame": 23,
+      "pairs": 0,
+      "folds": 2,
+      "degenerate": 0
+    },
+    {
+      "frame": 24,
+      "pairs": 0,
+      "folds": 2,
+      "degenerate": 0
+    },
+    {
+      "frame": 25,
+      "pairs": 0,
+      "folds": 2,
+      "degenerate": 0
+    },
+    {
+      "frame": 26,
+      "pairs": 0,
+      "folds": 2,
+      "degenerate": 0
+    },
+    {
+      "frame": 27,
+      "pairs": 0,
+      "folds": 2,
+      "degenerate": 0
+    },
+    {
+      "frame": 28,
+      "pairs": 0,
+      "folds": 2,
+      "degenerate": 0
+    },
+    {
+      "frame": 29,
+      "pairs": 6,
+      "folds": 2,
+      "degenerate": 0
+    },
+    {
+      "frame": 30,
+      "pairs": 6,
+      "folds": 2,
+      "degenerate": 0
+    },
+    {
+      "frame": 31,
+      "pairs": 10,
+      "folds": 2,
+      "degenerate": 0
+    },
+    {
+      "frame": 32,
+      "pairs": 16,
+      "folds": 2,
+      "degenerate": 0
+    },
+    {
+      "frame": 33,
+      "pairs": 22,
+      "folds": 2,
+      "degenerate": 0
+    },
+    {
+      "frame": 34,
+      "pairs": 30,
+      "folds": 2,
+      "degenerate": 0
+    },
+    {
+      "frame": 35,
+      "pairs": 24,
+      "folds": 2,
+      "degenerate": 0
+    },
+    {
+      "frame": 36,
+      "pairs": 24,
+      "folds": 2,
+      "degenerate": 0
+    },
+    {
+      "frame": 37,
+      "pairs": 24,
+      "folds": 3,
+      "degenerate": 0
+    },
+    {
+      "frame": 38,
+      "pairs": 18,
+      "folds": 3,
+      "degenerate": 0
+    },
+    {
+      "frame": 39,
+      "pairs": 22,
+      "folds": 1,
+      "degenerate": 0
+    },
+    {
+      "frame": 40,
+      "pairs": 27,
+      "folds": 1,
+      "degenerate": 0
+    },
+    {
+      "frame": 41,
+      "pairs": 27,
+      "folds": 2,
+      "degenerate": 0
+    },
+    {
+      "frame": 42,
+      "pairs": 36,
+      "folds": 3,
+      "degenerate": 0
+    },
+    {
+      "frame": 43,
+      "pairs": 42,
+      "folds": 4,
+      "degenerate": 0
+    },
+    {
+      "frame": 44,
+      "pairs": 56,
+      "folds": 5,
+      "degenerate": 0
+    },
+    {
+      "frame": 45,
+      "pairs": 56,
+      "folds": 5,
+      "degenerate": 0
+    },
+    {
+      "frame": 46,
+      "pairs": 48,
+      "folds": 5,
+      "degenerate": 0
+    },
+    {
+      "frame": 47,
+      "pairs": 52,
+      "folds": 5,
+      "degenerate": 0
+    },
+    {
+      "frame": 48,
+      "pairs": 42,
+      "folds": 7,
+      "degenerate": 0
+    },
+    {
+      "frame": 49,
+      "pairs": 39,
+      "folds": 7,
+      "degenerate": 0
+    },
+    {
+      "frame": 50,
+      "pairs": 37,
+      "folds": 7,
+      "degenerate": 0
+    },
+    {
+      "frame": 51,
+      "pairs": 36,
+      "folds": 7,
+      "degenerate": 0
+    },
+    {
+      "frame": 52,
+      "pairs": 20,
+      "folds": 6,
+      "degenerate": 0
+    },
+    {
+      "frame": 53,
+      "pairs": 21,
+      "folds": 7,
+      "degenerate": 0
+    },
+    {
+      "frame": 54,
+      "pairs": 6,
+      "folds": 6,
+      "degenerate": 0
+    },
+    {
+      "frame": 55,
+      "pairs": 6,
+      "folds": 6,
+      "degenerate": 0
+    },
+    {
+      "frame": 56,
+      "pairs": 8,
+      "folds": 6,
+      "degenerate": 0
+    },
+    {
+      "frame": 57,
+      "pairs": 6,
+      "folds": 6,
+      "degenerate": 0
+    },
+    {
+      "frame": 58,
+      "pairs": 6,
+      "folds": 4,
+      "degenerate": 0
+    },
+    {
+      "frame": 59,
+      "pairs": 5,
+      "folds": 3,
+      "degenerate": 0
+    },
+    {
+      "frame": 60,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    }
+  ],
+  "note": "Experimental standing-to-seated transition. Final target is separate; intermediate frames are not approved. No foot-lock or actual hand contact solver."
+}
