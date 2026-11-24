@@ -1,0 +1,15 @@
+{
+  "options": {
+    "pivotZ": -0.07,
+    "calfContact": true,
+    "gap": 0.015,
+    "squeeze": 0.45,
+    "patella": 0
+  },
+  "isolatedScope": "Right lower leg mesh, proximal boundary below y=1.25, no hip, torso or arms",
+  "samples": 146,
+  "failed": 0,
+  "failures": [],
+  "maximumProximalCalfPosteriorCorrection": 0.03462176621793136,
+  "warning": "Pivot is an experimental geometric choice, not validated anatomical axis; full seated pose not integrated. Ring 4 posterior vertices are not rigid when contact is enabled."
+}
