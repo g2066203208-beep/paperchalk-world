@@ -1,5 +1,7 @@
 # Paperchalk World — agent working rules
 
+**2026-11-24 V8 用户更正：人体一体化≠全部装饰焊死。** 基础人体含完整头骨、脸、下颌、颈、躯干和四肢，保持单一连续蒙皮网格；发型、左右耳独立模块，以统一头骨坐标与 head bone 绑定，不得依赖头发补足缺失的脸或颅骨。详见 [V8模块化记录](site/card-battle/lowpoly-studio/QA_V8_MODULES.md)。优先改善裸头脸型并保持身体冻结，所有发型与耳朵必须可独立拆换。
+
 **2026-11-24 极限低模造型方向（用户否决 V1/V2）**：必读 [Extreme Low Poly / 256FES 研究与强制规则](site/card-battle/lowpoly-studio/EXTREME_LOW_POLY_CANON.md)。重建 128/160/192 tris 候选的单一闭合连续网格，逐点决定剪影、折面与关节，不得沿用924面均匀圆环、自动减面或平滑法线掩饰。Esukevi 面数未知；256FES 是独立技术参照。没有参考图实际并排、动作及视觉验收不得宣布完成。
 
 ## 2026-11-24 用户确认：所有游戏开发任务的交付验收规则
