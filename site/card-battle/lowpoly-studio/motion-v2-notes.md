@@ -1,0 +1,5 @@
+# V46 Motion V2
+
+Preserve frozen base, head and hand/foot geometry. Original 438 quads; V1 578 quads; V2 506 quads (72 fewer than V1). Keep symmetric bands arm0/2/3 and leg2/3; remove added arm1/4, leg0/5/6 bands after strain and collision checks. Root weights revised bilaterally, hip bend span 0.32, shoulder forward/back coupled with modest abduction where required; small pose-dependent corrections at source vertices 115/119, 165/281, 230/346. Rest pose original vertices unchanged. All quads, 0 boundary or nonmanifold edges.
+
+512 static samples: walk and bend each 81 samples, 14 unilateral joint controls each 25 samples. 0 strict nonadjacent triangle crossings, 0 quad fold warnings (constituent triangle normals >90 degrees), 0 degenerate triangles. Minimum area ratio 0.209. These checks exclude shared-vertex triangle pairs and coplanar contacts, do not establish continuous-time collision freedom or test every combination. Body only, not clothing or hair. Original silhouette not aggressively decimated; only unnecessary added rings removed. No actual FEM material solve or production bone export.
