@@ -1,0 +1,33 @@
+name: Connected chibi whitebox QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/card-battle/lowpoly-studio/**'
+      - 'tests/lowpoly-studio-browser.mjs'
+      - '.github/workflows/lowpoly-studio-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  topology-and-browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          node --check site/card-battle/lowpoly-studio/body.mjs
+          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - run: |
+          nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/lowpoly-http.log 2>&1 &
+          sleep 2
+          node tests/lowpoly-studio-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: connected-chibi-whitebox-desktop-mobile
+          path: artifacts/lowpoly-studio/
