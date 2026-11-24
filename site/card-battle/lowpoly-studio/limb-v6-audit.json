@@ -2,6 +2,8 @@
   "vertices": 520,
   "quads": 518,
   "allQuads": true,
+  "nonmanifoldOrBoundary": 0,
+  "euler": 2,
   "sweeps": {
     "knees": {
       "samples": 146,
@@ -59,6 +61,29 @@
       "failed": 0,
       "bad": [],
       "maxHand": 9.325873406851315e-15
+    },
+    "combined": {
+      "samples": 141,
+      "failed": 2,
+      "bad": [
+        [
+          139,
+          8,
+          0,
+          0
+        ],
+        [
+          140,
+          13,
+          0,
+          0
+        ]
+      ],
+      "maxHand": 1.099120794378905e-14
     }
+  },
+  "rejectedDenseKneeVariant": {
+    "quads": 550,
+    "failedOf146": 86
   }
 }
