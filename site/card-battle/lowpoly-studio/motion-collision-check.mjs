@@ -1,0 +1,8 @@
+export function check(M,P){
+const sub=(a,b)=>a.map((x,i)=>x-b[i]),dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],n=(a,b,c)=>cross(sub(b,a),sub(c,a));
+let tris=M.polygons.flatMap((f,i)=>[[f[0],f[1],f[2]],[f[0],f[2],f[3]]].map(ids=>({ids,face:i,p:ids.map(k=>P[k])})));
+let deg=0,folds=[];for(let i=0;i<tris.length;i++){let t=tris[i];t.normal=n(...t.p);if(Math.hypot(...t.normal)<1e-9)deg++;t.lo=[0,1,2].map(k=>Math.min(...t.p.map(p=>p[k])));t.hi=[0,1,2].map(k=>Math.max(...t.p.map(p=>p[k])));if(i%2){let a=tris[i-1].normal,b=t.normal,cos=dot(a,b)/(Math.hypot(...a)*Math.hypot(...b));if(cos<0)folds.push({f:t.face,orig:M.origFace[t.face],cos});}}
+function ray(o,v,t){let e1=sub(t[1],t[0]),e2=sub(t[2],t[0]),h=cross(v,e2),a=dot(e1,h);if(Math.abs(a)<1e-10)return false;let f=1/a,s=sub(o,t[0]),u=f*dot(s,h);if(u<1e-6||u>1-1e-6)return false;let q=cross(s,e1),w=f*dot(v,q);if(w<1e-6||u+w>1-1e-6)return false;let k=f*dot(e2,q);return k>1e-6&&k<1-1e-6}
+function hit(a,b){return a.some((p,i)=>ray(p,sub(a[(i+1)%3],p),b))}
+let pairs=new Map();tris.sort((a,b)=>a.lo[0]-b.lo[0]);for(let i=0;i<tris.length;i++){let a=tris[i];for(let j=i+1;j<tris.length&&tris[j].lo[0]<=a.hi[0];j++){let b=tris[j];if(a.face===b.face||a.lo[1]>b.hi[1]||b.lo[1]>a.hi[1]||a.lo[2]>b.hi[2]||b.lo[2]>a.hi[2]||a.ids.some(k=>b.ids.includes(k)))continue;if(hit(a.p,b.p)||hit(b.p,a.p)){let f=[M.origFace[a.face],M.origFace[b.face]].sort((a,b)=>a-b),key=f.join(":");pairs.set(key,{f,actual:[a.face,b.face],at:a.p[0].map((x,k)=>(x+b.p[0][k])/2)})}}}
+return {deg,folds,pairs:[...pairs.values()]}}
