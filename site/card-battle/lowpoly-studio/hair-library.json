@@ -25,23 +25,23 @@
       "reference": "../../assets/characters/monster-hunters/04-bounty-markswoman.png",
       "referenceBlob": "1d4da98fd12589d478768900b7e55c3c188f036d",
       "character": "04-markswoman",
-      "mesh": "hair_hunter02-v6.json",
+      "mesh": "hair_hunter02-v8.json",
       "textures": {
-        "back": "hair_hunter02-block-back.png",
+        "back": "hair_hunter02-v8-back.png",
         "sideL": "hair_hunter02-block-sideL.png",
         "sideR": "hair_hunter02-block-sideR.png",
         "extra": "hair_hunter02-block-extra.png",
         "tailProfile": "hair_hunter02-block-tailProfile.png",
-        "scalp": "hair_hunter02-block-scalp.png",
+        "scalp": "hair_hunter02-v8-scalp.png",
         "frontR5": "hair_hunter02-block-frontR5.png",
         "frontL5": "hair_hunter02-block-frontL5.png",
         "foldInner5": "hair_hunter02-block-foldInner5.png"
       },
-      "preview": "hair_hunter02-v7-preview.png",
+      "preview": "hair_hunter02-v8-preview.png",
       "viewer": "v46.html?hair=hunter02",
-      "vertices": 416,
-      "quads": 268,
-      "notes": "V7 deliberately painted pixel clusters: broad main color, grouped underside shadow, localized highlights, no repeated stripe bands. V6 stepped geometry unchanged. Pending aesthetic approval."
+      "vertices": 441,
+      "quads": 288,
+      "notes": "V8 extends original scalp cap through actual rear skull rings to nape, behind ears. Tapers outer rear edge toward tie, slightly lowers crest, preserves pixel cluster design. Strict static body/ear triangle crossing test zero; hair layers overlap, low-angle side/nape skin remains visible; aesthetic review pending."
     }
   ]
 }
