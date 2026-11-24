@@ -130,6 +130,10 @@ jobs:
           # Run the short focused editor check first; failure is actionable sooner.
           node tests/test_l2d_focused_workspace_browser.js
           node tests/ui-edge-fog-browser.mjs
+      - name: Verify the V25 knee viewer is included in the release
+        run: |
+          test -s site/card-battle/lowpoly-studio/knee-v25.html
+          grep -Fq 'V25 高精度渐变蒙皮测试' site/card-battle/lowpoly-studio/knee-v25.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -157,3 +161,20 @@ jobs:
           exit 1
       - id: deployment
         uses: actions/deploy-pages@v4
+      - name: Verify the live V25 knee viewer returns the exact deployed HTML
+        run: |
+          set -euo pipefail
+          url="https://g2066203208-beep.github.io/paperchalk-world/card-battle/lowpoly-studio/knee-v25.html"
+          expected=$(sha256sum site/card-battle/lowpoly-studio/knee-v25.html | cut -d ' ' -f1)
+          for attempt in $(seq 1 18); do
+            if curl --fail --silent --show-error --location --max-time 15 "$url?rev=$GITHUB_SHA" -o /tmp/knee-v25-live.html; then
+              actual=$(sha256sum /tmp/knee-v25-live.html | cut -d ' ' -f1)
+              if [ "$expected" = "$actual" ]; then
+                echo "HTTP 200 and matching SHA-256: $url"
+                exit 0
+              fi
+            fi
+            sleep 10
+          done
+          echo "::error::V25 public endpoint is unavailable or stale: $url"
+          exit 1
