@@ -1,0 +1,93 @@
+name: V28 bilateral elbow and approved knee real browser review
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/card-battle/lowpoly-studio/joint-v28.html'
+      - '.github/workflows/joint-v28-review.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: joint-v28-review
+  cancel-in-progress: true
+jobs:
+  review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: site/card-battle/lowpoly-studio/joint-v28.html
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install chromium
+          sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-cjk
+      - name: Real Chromium arm and full figure review
+        run: |
+          mkdir -p review
+          node <<'JS'
+          const {chromium}=require('playwright'),fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+          (async()=>{
+            const browser=await chromium.launch({headless:true}),page=await browser.newPage({viewport:{width:1200,height:1100}});
+            const errors=[],results=[];page.on('pageerror',e=>errors.push(String(e)));
+            const url='https://g2066203208-beep.github.io/paperchalk-world/card-battle/lowpoly-studio/joint-v28.html';
+            let online={url};try{const r=await page.goto(url+'?review='+process.env.GITHUB_SHA,{timeout:20000});online.status=r.status();online.title=await page.title()}catch(e){online.error=String(e)}
+            errors.length=0;
+            await page.goto('file://'+path.resolve('site/card-battle/lowpoly-studio/joint-v28.html'));
+            await page.waitForFunction(()=>window.__jointGeometry);
+            const set=async(id,v)=>page.locator('#'+id).evaluate((e,a)=>{e.value=a;e.dispatchEvent(new Event('input',{bubbles:true}))},v);
+            const capture=async(name,scope,angle,knee,view,wire=false)=>{
+              await page.locator('#scope').selectOption(scope);await set('angle',angle);await set('knee',knee);await page.locator('#'+view).click();await page.locator('#wire').setChecked(wire);
+              const data=await page.evaluate(()=>({joint:window.__jointAudit,arms:window.__armAudit}));
+              assert.equal(data.joint.deg,angle);assert.equal(data.joint.kdeg,knee);
+              for(let a of data.arms){assert.ok(a.handPairError<1e-8,'hand rigid distance changed');assert.ok(a.rigid<1e-8,'arm core changed length')}
+              const nonblank=await page.locator('#view').evaluate(c=>{let d=c.getContext('2d').getImageData(0,0,c.width,c.height).data,n=0;for(let i=0;i<d.length;i+=4)if(d[i]!==247||d[i+1]!==246||d[i+2]!==246)n++;return n});assert.ok(nonblank>1000);
+              results.push({name,...data,nonblank});await page.screenshot({path:'review/'+name+'.png'});
+            };
+            for(let a of [0,45,90,120,145])await capture('arm-side-'+a,'arm',a,0,'side');
+            await capture('arm-wire-90','arm',90,0,'side',true);
+            await capture('arm-wire-145','arm',145,0,'side',true);
+            await capture('arm-three-90','arm',90,0,'three');
+            await capture('body-neutral','body',0,0,'front');
+            await capture('body-arms-90','body',90,0,'three');
+            await capture('body-arms-145','body',145,0,'three');
+            await capture('body-arms-knees-90','body',90,90,'three');
+            await capture('body-arms-knees-145','body',145,145,'side');
+            await capture('knee-approved-90','knee',0,90,'side');
+            const sweep=await page.evaluate(()=>{
+              // Audit both isolated arms at every integer angle, without rasterization.
+              function intersections(P,quads){
+                const sub=(a,b)=>a.map((x,i)=>x-b[i]),dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+                function hit(a,b,u,v,w){const d=sub(b,a),e=sub(v,u),f=sub(w,u),h=cross(d,f),det=dot(e,h);if(Math.abs(det)<1e-10)return false;const s=sub(a,u),q=cross(s,e),x=dot(s,h)/det,y=dot(d,q)/det,t=dot(f,q)/det;return x>1e-7&&y>1e-7&&x+y<1-1e-7&&t>1e-7&&t<1-1e-7}
+                const triangles=quads.flatMap((q,i)=>[[q[0],q[1],q[2]],[q[0],q[2],q[3]]].map(ids=>{const p=ids.map(j=>P[j]);return {ids,i,p,lo:[0,1,2].map(k=>Math.min(...p.map(v=>v[k]))),hi:[0,1,2].map(k=>Math.max(...p.map(v=>v[k])))}})).sort((a,b)=>a.lo[1]-b.lo[1]);
+                let n=0;for(let i=0;i<triangles.length;i++){const a=triangles[i];for(let j=i+1;j<triangles.length;j++){const b=triangles[j];if(b.lo[1]>a.hi[1])break;if(a.i===b.i||a.ids.some(k=>b.ids.includes(k))||[0,2].some(k=>a.hi[k]<b.lo[k]||b.hi[k]<a.lo[k]))continue;const test=(a,b)=>a.p.some((p,k)=>hit(p,a.p[(k+1)%3],...b.p));if(test(a,b)||test(b,a))n++}}return n
+              }
+              return window.__v28Sweep(intersections);
+            });
+            assert.equal(sweep.filter(x=>x.arms.some(a=>a.intersections)).length,0,'isolated arm intersections');
+            fs.writeFileSync('review/report.json',JSON.stringify({commit:process.env.GITHUB_SHA,online,errors,results,sweep,limitations:'Isolated arm triangle interior crossing excludes adjacent/coplanar pairs; full-body images are pose demonstrations, not a validated locomotion IK test. Hand/wrist rigid only, no independent finger curl.'},null,2));
+            await browser.close();assert.deepEqual(errors,[]);
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: actual-v28-browser-screenshots
+          path: review
+      - name: Archive screenshots and exact geometry report
+        if: success()
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          mkdir /tmp/v28-review
+          cp review/* /tmp/v28-review/
+          cd /tmp/v28-review
+          git init -b joint-v28-browser-review
+          git add .
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m "V28 actual Chromium review ${GITHUB_SHA}"
+          git push --force "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:joint-v28-browser-review
