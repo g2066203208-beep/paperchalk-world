@@ -1,0 +1,86 @@
+{
+  "options": {
+    "tilt": -10,
+    "h": 130,
+    "k": 91
+  },
+  "rigidity": {
+    "torso": {
+      "vertices": 252,
+      "pairs": 31626,
+      "maxRelativeError": 8.215650382226158e-15
+    },
+    "thigh_L": {
+      "vertices": 56,
+      "pairs": 1540,
+      "maxRelativeError": 1.0658141036401503e-14
+    },
+    "thigh_R": {
+      "vertices": 56,
+      "pairs": 1540,
+      "maxRelativeError": 1.0658141036401503e-14
+    },
+    "upperArm_R": {
+      "vertices": 24,
+      "pairs": 276,
+      "maxRelativeError": 3.6637359812630166e-15
+    },
+    "forearm_R": {
+      "vertices": 24,
+      "pairs": 276,
+      "maxRelativeError": 1.7763568394002505e-15
+    },
+    "hand_R": {
+      "vertices": 26,
+      "pairs": 325,
+      "maxRelativeError": 3.774758283725532e-15
+    },
+    "shin_R": {
+      "vertices": 32,
+      "pairs": 496,
+      "maxRelativeError": 3.774758283725532e-15
+    },
+    "foot_R": {
+      "vertices": 16,
+      "pairs": 120,
+      "maxRelativeError": 6.439293542825908e-15
+    },
+    "upperArm_L": {
+      "vertices": 24,
+      "pairs": 276,
+      "maxRelativeError": 3.6637359812630166e-15
+    },
+    "forearm_L": {
+      "vertices": 24,
+      "pairs": 276,
+      "maxRelativeError": 1.7763568394002505e-15
+    },
+    "hand_L": {
+      "vertices": 26,
+      "pairs": 325,
+      "maxRelativeError": 3.774758283725532e-15
+    },
+    "shin_L": {
+      "vertices": 32,
+      "pairs": 496,
+      "maxRelativeError": 3.774758283725532e-15
+    },
+    "foot_L": {
+      "vertices": 16,
+      "pairs": 120,
+      "maxRelativeError": 6.439293542825908e-15
+    }
+  },
+  "wholeMesh": {
+    "pairs": 180,
+    "folds": 16,
+    "deg": 0
+  },
+  "rigidFaces": 518,
+  "jointFaces": 88,
+  "ground": {
+    "torso": 0.000749297688577677,
+    "feet": 0
+  },
+  "warning": "Rigid baseline only; cross-joint faces stretch or intersect by design, not approved skin."
+}
