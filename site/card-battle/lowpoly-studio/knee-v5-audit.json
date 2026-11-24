@@ -1,0 +1,165 @@
+{
+  "faces": 506,
+  "vertices": 508,
+  "allQuads": true,
+  "modes": {
+    "right": {
+      "samples": 146,
+      "failed": 0,
+      "bad": [],
+      "maxRelativeRigidError": {
+        "patella": 1.1102230246251565e-15,
+        "thighAnterior": 0,
+        "distalShinFoot": 1.0658141036401503e-14
+      }
+    },
+    "left": {
+      "samples": 146,
+      "failed": 0,
+      "bad": [],
+      "maxRelativeRigidError": {
+        "patella": 1.1102230246251565e-15,
+        "thighAnterior": 0,
+        "distalShinFoot": 1.0658141036401503e-14
+      }
+    },
+    "both": {
+      "samples": 146,
+      "failed": 0,
+      "bad": [],
+      "maxRelativeRigidError": {
+        "patella": 1.1102230246251565e-15,
+        "thighAnterior": 0,
+        "distalShinFoot": 1.0658141036401503e-14
+      }
+    }
+  },
+  "keyframes": [
+    {
+      "mode": "right",
+      "angle": 0,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "mode": "right",
+      "angle": 30,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "mode": "right",
+      "angle": 60,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "mode": "right",
+      "angle": 90,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "mode": "right",
+      "angle": 120,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "mode": "right",
+      "angle": 145,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "mode": "left",
+      "angle": 0,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "mode": "left",
+      "angle": 30,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "mode": "left",
+      "angle": 60,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "mode": "left",
+      "angle": 90,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "mode": "left",
+      "angle": 120,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "mode": "left",
+      "angle": 145,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "mode": "both",
+      "angle": 0,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "mode": "both",
+      "angle": 30,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "mode": "both",
+      "angle": 60,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "mode": "both",
+      "angle": 90,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "mode": "both",
+      "angle": 120,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    {
+      "mode": "both",
+      "angle": 145,
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    }
+  ]
+}
