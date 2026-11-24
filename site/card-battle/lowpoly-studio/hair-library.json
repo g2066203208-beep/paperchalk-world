@@ -25,7 +25,7 @@
       "reference": "../../assets/characters/monster-hunters/04-bounty-markswoman.png",
       "referenceBlob": "1d4da98fd12589d478768900b7e55c3c188f036d",
       "character": "04-markswoman",
-      "mesh": "hair_hunter02-v3.json",
+      "mesh": "hair_hunter02-v4.json",
       "textures": {
         "back": "hair_hunter02-back.png",
         "sideL": "hair_hunter02-sideL.png",
@@ -33,14 +33,15 @@
         "extra": "hair_hunter02-extra.png",
         "tailProfile": "hair_hunter02-tailProfile.png",
         "scalp": "hair_hunter02-scalp.png",
-        "frontL3": "hair_hunter02-frontL3.png",
-        "frontR3": "hair_hunter02-frontR3.png"
+        "frontR4": "hair_hunter02-frontR4.png",
+        "frontL4": "hair_hunter02-frontL4.png",
+        "foldInner4": "hair_hunter02-foldInner4.png"
       },
-      "preview": "hair_hunter02-v3-preview.png",
+      "preview": "hair_hunter02-v4-preview.png",
       "viewer": "v46.html?hair=hunter02",
-      "vertices": 194,
+      "vertices": 200,
       "quads": 124,
-      "notes": "V3 scalp underlay extracted from frozen V46, narrow rooted center-part raised angular front cards; previous back and ponytail unchanged; static visual review pending."
+      "notes": "V4 hard forward crest fold; lower fold return cards; V46 body, back, temples, ponytail and scalp underlay unchanged. Static draft, intentional hair-layer intersections."
     }
   ]
 }
