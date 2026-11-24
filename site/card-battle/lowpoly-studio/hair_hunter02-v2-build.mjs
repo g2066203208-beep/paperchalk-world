@@ -1,0 +1,14 @@
+export function revise(old,raise=0){
+let m={...old,name:"Hunter 02 / Center-part lifted low ponytail",positions:[],polygons:[],uv:[],faceColors:[],materials:[],groups:[],slots:[]};
+for(let s of old.slots.slice(1)){let vs=m.positions.length,fs=m.polygons.length;for(let i=s.vertexStart;i<s.vertexStart+s.vertexCount;i++){m.positions.push(old.positions[i]);m.uv.push(old.uv[i])}for(let i=s.faceStart;i<s.faceStart+s.faceCount;i++){m.polygons.push(old.polygons[i].map(x=>x-s.vertexStart+vs));m.faceColors.push(old.faceColors[i]);m.materials.push(old.materials[i])}m.slots.push({...s,vertexStart:vs,faceStart:fs});m.groups.push({...old.groups.find(g=>g.name===s.id),faceStart:fs})}
+let rows=[
+[[.007,2.856,.205],[.025,2.955,.135],[.025,2.916,.012]],
+[[.050,2.930,.265],[.104,3.035,.193],[.145,2.961,.036]],
+[[.143,2.843,.315],[.220,2.988,.257],[.264,2.866,.114]],
+[[.210,2.674,.353],[.304,2.790,.277],[.350,2.728,.189]],
+[[.246,2.481,.328],[.316,2.612,.285],[.360,2.536,.214]],
+[[.266,2.325,.295],[.300,2.330,.310],[.327,2.385,.257]],
+[[.280,2.245,.281],[.290,2.251,.289],[.304,2.277,.263]]
+];
+for(let s of [-1,1]){let vs=m.positions.length,fs=m.polygons.length;for(let j=0;j<rows.length;j++)for(let i=0;i<3;i++){let [x,y,z]=rows[j][i];let f=s===-1?.93:1;let length=s===-1&&j>=4?.035*(j-3):0;m.positions.push([s*x*f,y+length+(s===-1&&j<3?-.018:0),z+raise]);m.uv.push([i/2,1-j/(rows.length-1)])}for(let j=0;j<rows.length-1;j++)for(let i=0;i<2;i++){let k=vs+j*3+i,f=[k,k+3,k+4,k+1];m.polygons.push(s===-1?f.reverse():f);m.materials.push(s===1?"frontR":"frontL");m.faceColors.push([196,181,151])}let id=s===1?"lifted-front-right":"lifted-front-left";m.groups.push({name:id,layer:3,faceStart:fs,faceCount:12});m.slots.push({id,material:s===1?"frontR":"frontL",vertexStart:vs,vertexCount:21,faceStart:fs,faceCount:12})}return m}
+export function paintLifted(kind){let width=256,height=256,data=new Uint8Array(width*height*4),cl=x=>Math.max(0,Math.min(1,x)),mix=(a,b,t)=>a.map((x,i)=>x+(b[i]-x)*cl(t));for(let y=0;y<height;y++)for(let x=0;x<width;x++){let u=(x+.5)/width,v=(y+.5)/height;let edge=1-.17*Math.pow(Math.abs(u-.48)*2,1.3);if(v>edge)continue;let dark=.10+.30*Math.pow(Math.abs(u-.4)*1.6,1.8)+.11*v;dark+=.17*Math.exp(-Math.pow((v-.035)/.12,2));let highlight=.32*Math.exp(-Math.pow((v-.28-.07*u)/.10,2))*(.7+.3*Math.sin(u*Math.PI));let col=mix(kind==="frontR"?[218,205,174]:[205,191,161],[111,95,76],dark-highlight);for(let a of [.22,.62,.81]){let line=a+.028*Math.sin(v*6+a*3);if(Math.abs(u-line)<.004&&v>.08&&v<.90)col=mix(col,[105,91,74],.26);if(Math.abs(u-line-.015)<.005&&v>.18&&v<.44)col=mix(col,[246,234,208],.60)}data.set([...col.map(Math.round),255],(y*width+x)*4)}return {width,height,data}}
