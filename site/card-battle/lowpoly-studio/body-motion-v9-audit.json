@@ -2,19 +2,18 @@
   "quads": 574,
   "vertices": 576,
   "addedVertices": 56,
-  "allQuads": true,
   "rest": {
     "deg": 0,
     "folds": [],
     "pairs": []
   },
-  "note": "Local hip/abdomen strip subdivision with pose-driven connecting rings; deep tuck is a failed stress test, not a verified contact pose.",
+  "allQuads": true,
   "sweeps": {
     "tuck": {
       "samples": 61,
       "failed": 15,
       "thighRingRatio": [
-        0.9210829429460311,
+        0.9999999999999967,
         1.0000000000000027
       ],
       "peakPairs": 12,
@@ -625,5 +624,6 @@
         ]
       ]
     }
-  }
+  },
+  "note": "Pose-driven local hip strip subdivision; deep tuck contact not accepted. Knee posterior calf correction now preserves the primary thigh ring at high flexion."
 }
