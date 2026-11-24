@@ -15,5 +15,12 @@ try{for(const [name,width,height] of [['desktop',1365,900],['phone',390,844]]){
  const moved=await page.evaluate(()=>Math.abs(window.__lowpoly.bones[3].rotation.z)>0.5);assert(moved);await page.locator('#view').screenshot({path:dir+'/'+name+'-arms.png'});
  await pose.selectOption('bend');await page.waitForTimeout(150);await page.locator('#view').screenshot({path:dir+'/'+name+'-bend.png'});
  await page.locator('#media').setInputFiles({name:'fixture.gif',mimeType:'image/gif',buffer:Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7','base64')});await page.waitForFunction(()=>document.getElementById('frameInfo').textContent.includes('1 / 1'));
+ // Native reference coordinate/overlay test with known synthetic fixture; not artist's media.
+ await page.locator('#compareLoad').setInputFiles({name:'coordinate-fixture.svg',mimeType:'image/svg+xml',buffer:Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="240" height="320"><rect width="240" height="320" fill="#30363b"/><rect x="60" y="40" width="120" height="240" fill="#eee"/></svg>')});
+ await page.waitForFunction(()=>window.__comparisonQA?.state.ready&&window.__comparisonQA.state.W===240&&window.__comparisonQA.state.H===320);
+ const sizes=await page.evaluate(()=>['compareRef','compareModel'].map(id=>[document.getElementById(id).width,document.getElementById(id).height]));assert.deepEqual(sizes,[[240,320],[240,320]]);
+ for(const id of ['compareRef','compareModel']){const el=page.locator('#'+id);const box=await el.boundingBox();await el.click({position:{x:box.width*.5,y:box.height*.5}})}
+ const marked=await page.evaluate(()=>window.__comparisonQA.state.points);assert.equal(marked[0].length,1);assert.equal(marked[1].length,1);assert(Math.hypot(marked[0][0][0]-marked[1][0][0],marked[0][0][1]-marked[1][0][1])<3);
+ await page.locator('#compareOverlay').check();await page.locator('#compareGrid').check();await page.locator('#compareLab').screenshot({path:dir+'/'+name+'-comparison-fixture.png'});
  assert.deepEqual(errors,[]);await page.close();
 }}finally{await browser.close()}
