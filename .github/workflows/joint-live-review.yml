@@ -1,0 +1,77 @@
+name: Joint viewer public browser verification
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/joint-live-review.yml'
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Publish game + all-character L2D DEV (quality-gated)"]
+    types: [completed]
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: joint-public-browser
+  cancel-in-progress: true
+jobs:
+  public:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: site/card-battle/lowpoly-studio/joint-v28.html
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install chromium
+          sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-cjk
+      - name: Archive self-contained offline model
+        uses: actions/upload-artifact@v4
+        with:
+          name: joint-viewer-offline-html
+          path: site/card-battle/lowpoly-studio/joint-v28.html
+      - name: Verify live current bytes and actually operate the online 3D model
+        run: |
+          mkdir -p public-review
+          node <<'JS'
+          const {chromium}=require('playwright'),fs=require('node:fs'),crypto=require('node:crypto'),assert=require('node:assert/strict');
+          (async()=>{
+            const url='https://g2066203208-beep.github.io/paperchalk-world/card-battle/lowpoly-studio/joint-v28.html';
+            const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
+            const expected=hash(fs.readFileSync('site/card-battle/lowpoly-studio/joint-v28.html'));
+            const browser=await chromium.launch(),page=await browser.newPage({viewport:{width:1200,height:1100}});
+            const attempts=[],errors=[];
+            page.on('pageerror',e=>errors.push(String(e)));
+            let ok=false;
+            try{
+              for(let i=0;i<18;i++){
+                try{let r=await page.goto(url+'?verify='+process.env.GITHUB_SHA+'-'+i,{timeout:15000,waitUntil:'load'});let actual=hash(await r.body());attempts.push({status:r.status(),actual});console.log('HTTP',r.status(),'hash match',actual===expected);if(r.status()===200&&actual===expected){ok=true;break}}
+                catch(e){attempts.push({error:String(e)})}
+                await new Promise(r=>setTimeout(r,10000));
+              }
+              assert.ok(ok,'Current public viewer not available');
+              await page.waitForFunction(()=>window.__jointGeometry);
+              for(const a of [90,145]){
+                await page.locator('#angle').evaluate((e,v)=>{e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}))},a);
+                assert.equal(await page.locator('#angleValue').textContent(),a+'°');
+                const n=await page.locator('#view').evaluate(c=>{const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let n=0;for(let i=0;i<d.length;i+=4)if(d[i]!==247||d[i+1]!==246||d[i+2]!==246)n++;return n});
+                assert.ok(n>1000);await page.screenshot({path:'public-review/online-arm-'+a+'.png'});
+              }
+              await page.locator('#scope').selectOption('body');
+              await page.locator('#knee').evaluate(e=>{e.value=90;e.dispatchEvent(new Event('input',{bubbles:true}))});
+              await page.screenshot({path:'public-review/online-body.png'});
+              assert.deepEqual(errors,[]);
+            }finally{fs.writeFileSync('public-review/report.json',JSON.stringify({url,expected,attempts,errors,exactLiveBytes:ok},null,2));await browser.close()}
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: joint-public-browser-evidence
+          path: public-review
