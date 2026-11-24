@@ -26,20 +26,7 @@
   },
   "left": {
     "samples": 146,
-    "failures": [
-      [
-        144,
-        0,
-        1,
-        0
-      ],
-      [
-        145,
-        0,
-        1,
-        0
-      ]
-    ],
+    "failures": [],
     "patellaVertices": [
       360,
       361,
