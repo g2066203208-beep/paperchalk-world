@@ -1,0 +1,47 @@
+{
+  "options": {
+    "pivotZ": -0.055,
+    "slide": -0.025,
+    "bulge": 0.026,
+    "taper": 0.008,
+    "patellaFollow": 0.5,
+    "calfContact": true,
+    "gap": 0.025,
+    "squeeze": 0.45,
+    "patella": 0
+  },
+  "right": {
+    "samples": 146,
+    "failures": [],
+    "patellaVertices": [
+      244,
+      245,
+      249,
+      476,
+      477,
+      478,
+      484,
+      485,
+      486
+    ],
+    "maximumRigidDistanceError": 2.6645352591003757e-15
+  },
+  "left": {
+    "samples": 146,
+    "failures": [],
+    "patellaVertices": [
+      360,
+      361,
+      365,
+      492,
+      493,
+      494,
+      500,
+      501,
+      502
+    ],
+    "maximumRigidDistanceError": 2.6645352591003757e-15
+  },
+  "restBodyVerticesChanged": 18,
+  "status": "Isolated knee geometry only. Patella skin proxy rigid; proximal calf posterior contact changes shape; no whole-body validation."
+}
