@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "base": "V46",
+  "styles": [
+    {
+      "id": "hair-001",
+      "name": "银白披肩长发",
+      "status": "saved",
+      "mesh": "hair_long01.json",
+      "meshBlob": "9a7bb235e5f05042b387f8538f92f63a0b6c68bf",
+      "textures": {
+        "front": "hair_long01-fringe02.png",
+        "side": "hair_long01-side.png",
+        "back": "hair_long01-back.png",
+        "extra": "hair_cards02-extra.png"
+      },
+      "preview": "hair_long01-fringe02-preview.png",
+      "viewer": "v46.html?hair=long01",
+      "snapshot": "b76937afed38684c913662db65cb892f96448cf6"
+    },
+    {
+      "id": "hair-002",
+      "name": "赏金枪手·灰金低马尾",
+      "status": "reference-only",
+      "reference": "../../assets/characters/monster-hunters/04-bounty-markswoman.png",
+      "referenceBlob": "1d4da98fd12589d478768900b7e55c3c188f036d",
+      "character": "04-markswoman"
+    }
+  ]
+}
