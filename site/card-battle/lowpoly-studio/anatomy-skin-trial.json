@@ -1,0 +1,3737 @@
+{
+ "scope": "Same IK trajectories and mesh; 61 samples each. Removal of arbitrary joint squeeze and uniform weights within selected shaft rings; not a full anatomical solution. No promotion.",
+ "out": [
+  {
+   "name": "V3",
+   "id": "climb",
+   "shaftMin": 0.6034285894199045,
+   "shaftMax": 1.1893221492029526,
+   "shaftBad": 61,
+   "shapeBad": 61,
+   "geomBad": 0,
+   "pairs": 0,
+   "records": [
+    {
+     "t": 0,
+     "shaftMin": 0.7321424905505076,
+     "shaftMax": 1.1514805991235308,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.016666666666666666,
+     "shaftMin": 0.734691094866189,
+     "shaftMax": 1.1509909043580906,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.03333333333333333,
+     "shaftMin": 0.7372198693249487,
+     "shaftMax": 1.150248318933379,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.05,
+     "shaftMin": 0.7368392795470556,
+     "shaftMax": 1.1493818653265133,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.06666666666666667,
+     "shaftMin": 0.7311493797393187,
+     "shaftMax": 1.1486964872010654,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.08333333333333333,
+     "shaftMin": 0.7254014832541754,
+     "shaftMax": 1.148644020004365,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.1,
+     "shaftMin": 0.7193618070513214,
+     "shaftMax": 1.1497319905425054,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.11666666666666667,
+     "shaftMin": 0.7122387011771383,
+     "shaftMax": 1.15241121607858,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.13333333333333333,
+     "shaftMin": 0.7033318337937862,
+     "shaftMax": 1.1568505488065672,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.15,
+     "shaftMin": 0.6928064335774659,
+     "shaftMax": 1.1626239133801322,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.16666666666666666,
+     "shaftMin": 0.6819889706602548,
+     "shaftMax": 1.1686323074099232,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.18333333333333332,
+     "shaftMin": 0.6728105599324551,
+     "shaftMax": 1.1735615952077325,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.2,
+     "shaftMin": 0.6666623714427129,
+     "shaftMax": 1.1762971979955945,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.21666666666666667,
+     "shaftMin": 0.6636395987287421,
+     "shaftMax": 1.1848171999240291,
+     "shaftFailures": 8,
+     "shapeFailures": 10,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.23333333333333334,
+     "shaftMin": 0.6629094004644006,
+     "shaftMax": 1.1893221492029526,
+     "shaftFailures": 8,
+     "shapeFailures": 10,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.25,
+     "shaftMin": 0.6636815566872822,
+     "shaftMax": 1.1891856919635648,
+     "shaftFailures": 8,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.26666666666666666,
+     "shaftMin": 0.6651367118667791,
+     "shaftMax": 1.1866088383725315,
+     "shaftFailures": 8,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.2833333333333333,
+     "shaftMin": 0.6666419367179783,
+     "shaftMax": 1.1840410792350822,
+     "shaftFailures": 8,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.3,
+     "shaftMin": 0.666887010565027,
+     "shaftMax": 1.1814947658698673,
+     "shaftFailures": 7,
+     "shapeFailures": 8,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.31666666666666665,
+     "shaftMin": 0.641856940686617,
+     "shaftMax": 1.1789804636209016,
+     "shaftFailures": 7,
+     "shapeFailures": 8,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.3333333333333333,
+     "shaftMin": 0.6194267492298764,
+     "shaftMax": 1.1765070999479936,
+     "shaftFailures": 7,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.35,
+     "shaftMin": 0.6050167383281557,
+     "shaftMax": 1.1740821280251994,
+     "shaftFailures": 7,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.36666666666666664,
+     "shaftMin": 0.6034285894199045,
+     "shaftMax": 1.1734575728358552,
+     "shaftFailures": 7,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.38333333333333336,
+     "shaftMin": 0.6177575018933994,
+     "shaftMax": 1.1728916297911176,
+     "shaftFailures": 7,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.4,
+     "shaftMin": 0.6484789926917264,
+     "shaftMax": 1.1723391174900373,
+     "shaftFailures": 7,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.4166666666666667,
+     "shaftMin": 0.6806302750267158,
+     "shaftMax": 1.1717997181839919,
+     "shaftFailures": 7,
+     "shapeFailures": 10,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.43333333333333335,
+     "shaftMin": 0.6826330449865552,
+     "shaftMax": 1.1712730021325326,
+     "shaftFailures": 7,
+     "shapeFailures": 10,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.45,
+     "shaftMin": 0.6846914572515975,
+     "shaftMax": 1.1707584290487705,
+     "shaftFailures": 7,
+     "shapeFailures": 10,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.4666666666666667,
+     "shaftMin": 0.6868037450342932,
+     "shaftMax": 1.1702553461693839,
+     "shaftFailures": 7,
+     "shapeFailures": 10,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.48333333333333334,
+     "shaftMin": 0.6889674349055426,
+     "shaftMax": 1.1697629838210044,
+     "shaftFailures": 7,
+     "shapeFailures": 10,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.5,
+     "shaftMin": 0.6911793115266208,
+     "shaftMax": 1.1692804499343512,
+     "shaftFailures": 7,
+     "shapeFailures": 10,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.5166666666666667,
+     "shaftMin": 0.6934354009870317,
+     "shaftMax": 1.1688067254012757,
+     "shaftFailures": 7,
+     "shapeFailures": 10,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.5333333333333333,
+     "shaftMin": 0.695730973288955,
+     "shaftMax": 1.1683406624084731,
+     "shaftFailures": 7,
+     "shapeFailures": 10,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.55,
+     "shaftMin": 0.6980605635796432,
+     "shaftMax": 1.1678809878734513,
+     "shaftFailures": 7,
+     "shapeFailures": 10,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.5666666666666667,
+     "shaftMin": 0.7004180109099977,
+     "shaftMax": 1.167426313843418,
+     "shaftFailures": 7,
+     "shapeFailures": 10,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.5833333333333334,
+     "shaftMin": 0.7027965126209527,
+     "shaftMax": 1.166975156216933,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.6,
+     "shaftMin": 0.7051886919394399,
+     "shaftMax": 1.1665259624646809,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.6166666666666667,
+     "shaftMin": 0.7075866760001958,
+     "shaftMax": 1.1660771482334824,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.6333333333333333,
+     "shaftMin": 0.7099821812837547,
+     "shaftMax": 1.1656271419044941,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.65,
+     "shaftMin": 0.7123666033596199,
+     "shaftMax": 1.1651744354316622,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.6666666666666666,
+     "shaftMin": 0.7147311078290559,
+     "shaftMax": 1.1647176391881904,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.6833333333333333,
+     "shaftMin": 0.7170667194613486,
+     "shaftMax": 1.1642555381584525,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.7,
+     "shaftMin": 0.7193644067000652,
+     "shaftMax": 1.1637871466627048,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.7166666666666667,
+     "shaftMin": 0.7216151589762743,
+     "shaftMax": 1.1633117588990287,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.7333333333333333,
+     "shaftMin": 0.723810054598704,
+     "shaftMax": 1.1628289929074298,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.75,
+     "shaftMin": 0.7259403173920884,
+     "shaftMax": 1.16233882606075,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.7666666666666667,
+     "shaftMin": 0.7279973607194089,
+     "shaftMax": 1.1618416208044717,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.7833333333333333,
+     "shaftMin": 0.729972818041373,
+     "shaftMax": 1.1613381400337572,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.8,
+     "shaftMin": 0.7308868996700686,
+     "shaftMax": 1.1608295521467644,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.8166666666666667,
+     "shaftMin": 0.7102523489125254,
+     "shaftMax": 1.1603174263894154,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.8333333333333334,
+     "shaftMin": 0.6948885730565103,
+     "shaftMax": 1.1598037195693853,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.85,
+     "shaftMin": 0.6864112811369252,
+     "shaftMax": 1.1592907555417318,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.8666666666666667,
+     "shaftMin": 0.6822150780889563,
+     "shaftMax": 1.1587811990532704,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.8833333333333333,
+     "shaftMin": 0.6786128818101137,
+     "shaftMax": 1.1582780255893073,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.9,
+     "shaftMin": 0.6756713962987733,
+     "shaftMax": 1.1577844888212288,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.9166666666666666,
+     "shaftMin": 0.6777423165912693,
+     "shaftMax": 1.157304087140863,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.9333333333333333,
+     "shaftMin": 0.6885755644252006,
+     "shaftMax": 1.1568405306214198,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.95,
+     "shaftMin": 0.7072037550527677,
+     "shaftMax": 1.1563977095995144,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.9666666666666667,
+     "shaftMin": 0.7283556073292424,
+     "shaftMax": 1.155979665952417,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.9833333333333333,
+     "shaftMin": 0.744551733586747,
+     "shaftMax": 1.155590568064945,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 1,
+     "shaftMin": 0.7447896817840484,
+     "shaftMax": 1.15523469044565,
+     "shaftFailures": 8,
+     "shapeFailures": 11,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    }
+   ]
+  },
+  {
+   "name": "V3",
+   "id": "vault",
+   "shaftMin": 0.560010884958982,
+   "shaftMax": 1.1936184655046287,
+   "shaftBad": 61,
+   "shapeBad": 61,
+   "geomBad": 37,
+   "pairs": 565,
+   "records": [
+    {
+     "t": 0,
+     "shaftMin": 0.5917454800081079,
+     "shaftMax": 1.0872539194892452,
+     "shaftFailures": 5,
+     "shapeFailures": 7,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.016666666666666666,
+     "shaftMin": 0.5876920369788331,
+     "shaftMax": 1.085796674202126,
+     "shaftFailures": 6,
+     "shapeFailures": 8,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.03333333333333333,
+     "shaftMin": 0.5773164741239587,
+     "shaftMax": 1.0815366853980413,
+     "shaftFailures": 6,
+     "shapeFailures": 8,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.05,
+     "shaftMin": 0.565094596869797,
+     "shaftMax": 1.0742771598354897,
+     "shaftFailures": 6,
+     "shapeFailures": 8,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.06666666666666667,
+     "shaftMin": 0.560010884958982,
+     "shaftMax": 1.0736231707554582,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.08333333333333333,
+     "shaftMin": 0.5750977654281316,
+     "shaftMax": 1.0763881758138356,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.1,
+     "shaftMin": 0.6129607372717742,
+     "shaftMax": 1.0790901525903005,
+     "shaftFailures": 5,
+     "shapeFailures": 9,
+     "collisions": 1,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.11666666666666667,
+     "shaftMin": 0.6464446714907855,
+     "shaftMax": 1.081554691756238,
+     "shaftFailures": 5,
+     "shapeFailures": 9,
+     "collisions": 7,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.13333333333333333,
+     "shaftMin": 0.6624321171388518,
+     "shaftMax": 1.0836396783560966,
+     "shaftFailures": 5,
+     "shapeFailures": 8,
+     "collisions": 7,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.15,
+     "shaftMin": 0.6734776347445018,
+     "shaftMax": 1.0852245560705405,
+     "shaftFailures": 5,
+     "shapeFailures": 7,
+     "collisions": 8,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.16666666666666666,
+     "shaftMin": 0.6755246535640133,
+     "shaftMax": 1.086196956003706,
+     "shaftFailures": 5,
+     "shapeFailures": 6,
+     "collisions": 8,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.18333333333333332,
+     "shaftMin": 0.674216646196431,
+     "shaftMax": 1.0865332849535914,
+     "shaftFailures": 5,
+     "shapeFailures": 6,
+     "collisions": 8,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.2,
+     "shaftMin": 0.6670031239478557,
+     "shaftMax": 1.089124617570048,
+     "shaftFailures": 5,
+     "shapeFailures": 7,
+     "collisions": 11,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.21666666666666667,
+     "shaftMin": 0.6253023031684154,
+     "shaftMax": 1.0948328888314718,
+     "shaftFailures": 5,
+     "shapeFailures": 7,
+     "collisions": 7,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.23333333333333334,
+     "shaftMin": 0.5930763795526051,
+     "shaftMax": 1.1029166246798219,
+     "shaftFailures": 6,
+     "shapeFailures": 10,
+     "collisions": 6,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.25,
+     "shaftMin": 0.6035707752570728,
+     "shaftMax": 1.1125878391732773,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.26666666666666666,
+     "shaftMin": 0.6115116270953718,
+     "shaftMax": 1.1229977181525472,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.2833333333333333,
+     "shaftMin": 0.6507374201460177,
+     "shaftMax": 1.1332663814302284,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.3,
+     "shaftMin": 0.689714185514655,
+     "shaftMax": 1.1425374605769885,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.31666666666666665,
+     "shaftMin": 0.7189978521207792,
+     "shaftMax": 1.1500234890247778,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.3333333333333333,
+     "shaftMin": 0.7369329795031767,
+     "shaftMax": 1.155013028430467,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.35,
+     "shaftMin": 0.743177251289941,
+     "shaftMax": 1.1568302569447668,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.36666666666666664,
+     "shaftMin": 0.7452901959826586,
+     "shaftMax": 1.1573041564593234,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.38333333333333336,
+     "shaftMin": 0.7515534209204161,
+     "shaftMax": 1.15868491112989,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.4,
+     "shaftMin": 0.7592510985589761,
+     "shaftMax": 1.1610018110452216,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 1,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.4166666666666667,
+     "shaftMin": 0.7729096884559633,
+     "shaftMax": 1.166838745829542,
+     "shaftFailures": 7,
+     "shapeFailures": 11,
+     "collisions": 1,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.43333333333333335,
+     "shaftMin": 0.7932426979798429,
+     "shaftMax": 1.1750994304403208,
+     "shaftFailures": 8,
+     "shapeFailures": 12,
+     "collisions": 1,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.45,
+     "shaftMin": 0.8193043934999076,
+     "shaftMax": 1.1840676449943992,
+     "shaftFailures": 8,
+     "shapeFailures": 13,
+     "collisions": 4,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.4666666666666667,
+     "shaftMin": 0.8141478343461366,
+     "shaftMax": 1.1911428154370367,
+     "shaftFailures": 8,
+     "shapeFailures": 14,
+     "collisions": 4,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.48333333333333334,
+     "shaftMin": 0.7740028204880605,
+     "shaftMax": 1.1920474553957536,
+     "shaftFailures": 8,
+     "shapeFailures": 13,
+     "collisions": 6,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.5,
+     "shaftMin": 0.7401556640220905,
+     "shaftMax": 1.1936184655046287,
+     "shaftFailures": 8,
+     "shapeFailures": 14,
+     "collisions": 12,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.5166666666666667,
+     "shaftMin": 0.720339623819586,
+     "shaftMax": 1.1901863842729692,
+     "shaftFailures": 8,
+     "shapeFailures": 14,
+     "collisions": 22,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.5333333333333333,
+     "shaftMin": 0.7155993867810546,
+     "shaftMax": 1.1878720253993722,
+     "shaftFailures": 8,
+     "shapeFailures": 14,
+     "collisions": 22,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.55,
+     "shaftMin": 0.7134411467595005,
+     "shaftMax": 1.1717235116440303,
+     "shaftFailures": 8,
+     "shapeFailures": 14,
+     "collisions": 24,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.5666666666666667,
+     "shaftMin": 0.7102846580196227,
+     "shaftMax": 1.1626280056617713,
+     "shaftFailures": 6,
+     "shapeFailures": 10,
+     "collisions": 21,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.5833333333333334,
+     "shaftMin": 0.7062632029116075,
+     "shaftMax": 1.1625458926174932,
+     "shaftFailures": 6,
+     "shapeFailures": 10,
+     "collisions": 60,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.6,
+     "shaftMin": 0.7091737826117233,
+     "shaftMax": 1.1563265448173201,
+     "shaftFailures": 4,
+     "shapeFailures": 7,
+     "collisions": 98,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.6166666666666667,
+     "shaftMin": 0.72932840891699,
+     "shaftMax": 1.146068372855525,
+     "shaftFailures": 4,
+     "shapeFailures": 5,
+     "collisions": 80,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.6333333333333333,
+     "shaftMin": 0.765361381100953,
+     "shaftMax": 1.1412098183204271,
+     "shaftFailures": 4,
+     "shapeFailures": 4,
+     "collisions": 38,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.65,
+     "shaftMin": 0.8116914243574918,
+     "shaftMax": 1.136364491171725,
+     "shaftFailures": 2,
+     "shapeFailures": 2,
+     "collisions": 32,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.6666666666666666,
+     "shaftMin": 0.8554581044015338,
+     "shaftMax": 1.1152930426805514,
+     "shaftFailures": 2,
+     "shapeFailures": 2,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.6833333333333333,
+     "shaftMin": 0.8923824239260411,
+     "shaftMax": 1.0763302133002848,
+     "shaftFailures": 2,
+     "shapeFailures": 2,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.7,
+     "shaftMin": 0.8975880720495606,
+     "shaftMax": 1.0726962511306262,
+     "shaftFailures": 2,
+     "shapeFailures": 2,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.7166666666666667,
+     "shaftMin": 0.8870235389205766,
+     "shaftMax": 1.0842550310221855,
+     "shaftFailures": 4,
+     "shapeFailures": 4,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.7333333333333333,
+     "shaftMin": 0.8126119238405849,
+     "shaftMax": 1.0964386364103336,
+     "shaftFailures": 6,
+     "shapeFailures": 6,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.75,
+     "shaftMin": 0.7215800919863995,
+     "shaftMax": 1.1047993320454204,
+     "shaftFailures": 6,
+     "shapeFailures": 7,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.7666666666666667,
+     "shaftMin": 0.6702040909845499,
+     "shaftMax": 1.109303677635491,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.7833333333333333,
+     "shaftMin": 0.7566185772398147,
+     "shaftMax": 1.110756765851203,
+     "shaftFailures": 5,
+     "shapeFailures": 6,
+     "collisions": 9,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.8,
+     "shaftMin": 0.825529365934968,
+     "shaftMax": 1.1102596119193038,
+     "shaftFailures": 4,
+     "shapeFailures": 6,
+     "collisions": 11,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.8166666666666667,
+     "shaftMin": 0.8178593992394119,
+     "shaftMax": 1.1088963438125488,
+     "shaftFailures": 4,
+     "shapeFailures": 6,
+     "collisions": 1,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.8333333333333334,
+     "shaftMin": 0.8074001014921265,
+     "shaftMax": 1.1075886723327504,
+     "shaftFailures": 6,
+     "shapeFailures": 8,
+     "collisions": 4,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.85,
+     "shaftMin": 0.8047853531818878,
+     "shaftMax": 1.1070397424508804,
+     "shaftFailures": 6,
+     "shapeFailures": 7,
+     "collisions": 4,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.8666666666666667,
+     "shaftMin": 0.8021919982254625,
+     "shaftMax": 1.105656872163562,
+     "shaftFailures": 6,
+     "shapeFailures": 8,
+     "collisions": 4,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.8833333333333333,
+     "shaftMin": 0.7953988911278154,
+     "shaftMax": 1.1017961192535386,
+     "shaftFailures": 5,
+     "shapeFailures": 7,
+     "collisions": 4,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.9,
+     "shaftMin": 0.7838155836637207,
+     "shaftMax": 1.0957810209696717,
+     "shaftFailures": 4,
+     "shapeFailures": 5,
+     "collisions": 1,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.9166666666666666,
+     "shaftMin": 0.7635170394780026,
+     "shaftMax": 1.087849036750864,
+     "shaftFailures": 5,
+     "shapeFailures": 6,
+     "collisions": 13,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.9333333333333333,
+     "shaftMin": 0.7258100324564026,
+     "shaftMax": 1.079537711172788,
+     "shaftFailures": 6,
+     "shapeFailures": 7,
+     "collisions": 16,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.95,
+     "shaftMin": 0.6553949206994242,
+     "shaftMax": 1.0788407314953061,
+     "shaftFailures": 6,
+     "shapeFailures": 8,
+     "collisions": 8,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.9666666666666667,
+     "shaftMin": 0.6407725592799414,
+     "shaftMax": 1.0777606104416952,
+     "shaftFailures": 6,
+     "shapeFailures": 8,
+     "collisions": 1,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.9833333333333333,
+     "shaftMin": 0.6463673885116904,
+     "shaftMax": 1.0766999641850024,
+     "shaftFailures": 6,
+     "shapeFailures": 7,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 1,
+     "shaftMin": 0.6505117193865987,
+     "shaftMax": 1.076229382247039,
+     "shaftFailures": 6,
+     "shapeFailures": 7,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    }
+   ]
+  },
+  {
+   "name": "no-squeeze",
+   "id": "climb",
+   "shaftMin": 0.6785078508420284,
+   "shaftMax": 1.2635500808535467,
+   "shaftBad": 61,
+   "shapeBad": 61,
+   "geomBad": 0,
+   "pairs": 0,
+   "records": [
+    {
+     "t": 0,
+     "shaftMin": 0.7584572523053416,
+     "shaftMax": 1.2063399007313154,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.016666666666666666,
+     "shaftMin": 0.7575049415478013,
+     "shaftMax": 1.207339584725105,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.03333333333333333,
+     "shaftMin": 0.7545409728262037,
+     "shaftMax": 1.2103992782844797,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.05,
+     "shaftMin": 0.750367820736379,
+     "shaftMax": 1.2147978026838988,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.06666666666666667,
+     "shaftMin": 0.7457157986470293,
+     "shaftMax": 1.219819308546312,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.08333333333333333,
+     "shaftMin": 0.7409011909900953,
+     "shaftMax": 1.2249949418953943,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.1,
+     "shaftMin": 0.7356082164993899,
+     "shaftMax": 1.2302832011693565,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.11666666666666667,
+     "shaftMin": 0.729041290341336,
+     "shaftMax": 1.2360013461231014,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.13333333333333333,
+     "shaftMin": 0.7205201628175186,
+     "shaftMax": 1.2424338037547649,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.15,
+     "shaftMin": 0.7101945018946236,
+     "shaftMax": 1.2493503875852625,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.16666666666666666,
+     "shaftMin": 0.6993318775983628,
+     "shaftMax": 1.255852740641567,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.18333333333333332,
+     "shaftMin": 0.6898313056549977,
+     "shaftMax": 1.260797853192002,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.2,
+     "shaftMin": 0.6831644720700831,
+     "shaftMax": 1.2635500808535467,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.21666666666666667,
+     "shaftMin": 0.6796074474007107,
+     "shaftMax": 1.2634065986188288,
+     "shaftFailures": 6,
+     "shapeFailures": 8,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.23333333333333334,
+     "shaftMin": 0.6785078508420284,
+     "shaftMax": 1.2629773615009396,
+     "shaftFailures": 6,
+     "shapeFailures": 8,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.25,
+     "shaftMin": 0.6791869914537074,
+     "shaftMax": 1.262211573127095,
+     "shaftFailures": 6,
+     "shapeFailures": 7,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.26666666666666666,
+     "shaftMin": 0.6807021389081679,
+     "shaftMax": 1.2622269849652374,
+     "shaftFailures": 6,
+     "shapeFailures": 7,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.2833333333333333,
+     "shaftMin": 0.6822597768233263,
+     "shaftMax": 1.2612284654853396,
+     "shaftFailures": 6,
+     "shapeFailures": 7,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.3,
+     "shaftMin": 0.6838598926934604,
+     "shaftMax": 1.2602056796432102,
+     "shaftFailures": 6,
+     "shapeFailures": 7,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.31666666666666665,
+     "shaftMin": 0.6855025974896746,
+     "shaftMax": 1.2591572288119761,
+     "shaftFailures": 6,
+     "shapeFailures": 7,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.3333333333333333,
+     "shaftMin": 0.6871880763599049,
+     "shaftMax": 1.258081571359713,
+     "shaftFailures": 6,
+     "shapeFailures": 8,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.35,
+     "shaftMin": 0.6889165296696385,
+     "shaftMax": 1.256977084437717,
+     "shaftFailures": 6,
+     "shapeFailures": 8,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.36666666666666664,
+     "shaftMin": 0.6906881048761662,
+     "shaftMax": 1.2558421327327338,
+     "shaftFailures": 6,
+     "shapeFailures": 8,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.38333333333333336,
+     "shaftMin": 0.6925028213353283,
+     "shaftMax": 1.2546751428569929,
+     "shaftFailures": 6,
+     "shapeFailures": 8,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.4,
+     "shaftMin": 0.6943604912814106,
+     "shaftMax": 1.2534746812759572,
+     "shaftFailures": 6,
+     "shapeFailures": 8,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.4166666666666667,
+     "shaftMin": 0.696260640863858,
+     "shaftMax": 1.252239533146501,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.43333333333333335,
+     "shaftMin": 0.6982024352864723,
+     "shaftMax": 1.2509687791727335,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.45,
+     "shaftMin": 0.7001846118373436,
+     "shaftMax": 1.2496618675719269,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.4666666666666667,
+     "shaftMin": 0.7022054240103922,
+     "shaftMax": 1.2483186784517588,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.48333333333333334,
+     "shaftMin": 0.7042625991099978,
+     "shaftMax": 1.246939578287772,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.5,
+     "shaftMin": 0.7063533108088985,
+     "shaftMax": 1.2455254627048078,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.5166666666666667,
+     "shaftMin": 0.7084741671997623,
+     "shaftMax": 1.2440777863539378,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.5333333333333333,
+     "shaftMin": 0.7106212140267508,
+     "shaftMax": 1.2425985792840535,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.55,
+     "shaftMin": 0.7127899520655535,
+     "shaftMax": 1.2410904497910096,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.5666666666666667,
+     "shaftMin": 0.7149753670719262,
+     "shaftMax": 1.239556574253914,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.5833333333333334,
+     "shaftMin": 0.7171719703471637,
+     "shaftMax": 1.2380006749154877,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.6,
+     "shaftMin": 0.7193738477599391,
+     "shaftMax": 1.2364269869227578,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.6166666666666667,
+     "shaftMin": 0.7215747149908706,
+     "shaftMax": 1.2348402162150627,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.6333333333333333,
+     "shaftMin": 0.7237679767927666,
+     "shaftMax": 1.233245490035472,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.65,
+     "shaftMin": 0.7259467881530063,
+     "shaftMax": 1.2316483019593234,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.6666666666666666,
+     "shaftMin": 0.7281041153753013,
+     "shaftMax": 1.2300544533895568,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.6833333333333333,
+     "shaftMin": 0.7302327952473513,
+     "shaftMax": 1.2284699934722578,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.7,
+     "shaftMin": 0.732325590618246,
+     "shaftMax": 1.2269011593413461,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.7166666666666667,
+     "shaftMin": 0.7343752408755472,
+     "shaftMax": 1.2253543185114408,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.7333333333333333,
+     "shaftMin": 0.7363745059924166,
+     "shaftMax": 1.2238359151002307,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.75,
+     "shaftMin": 0.7383162030199764,
+     "shaftMax": 1.2223524213746109,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.7666666666666667,
+     "shaftMin": 0.7401932341405135,
+     "shaftMax": 1.220910295875593,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.7833333333333333,
+     "shaftMin": 0.7419986056796878,
+     "shaftMax": 1.2195159490847038,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.8,
+     "shaftMin": 0.7437254378035673,
+     "shaftMax": 1.2181757172544683,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.8166666666666667,
+     "shaftMin": 0.7453669649953703,
+     "shaftMax": 1.2168958446436884,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.8333333333333334,
+     "shaftMin": 0.7469165278043215,
+     "shaftMax": 1.2156824739901562,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.85,
+     "shaftMin": 0.7483675567689255,
+     "shaftMax": 1.2145416446358888,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.8666666666666667,
+     "shaftMin": 0.7497135498142466,
+     "shaftMax": 1.213479297316733,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.8833333333333333,
+     "shaftMin": 0.7509480447821896,
+     "shaftMax": 1.212501284262262,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.9,
+     "shaftMin": 0.7520645890472429,
+     "shaftMax": 1.2116133829484756,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.9166666666666666,
+     "shaftMin": 0.7530567083737225,
+     "shaftMax": 1.2108213116275146,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.9333333333333333,
+     "shaftMin": 0.7539178772626752,
+     "shaftMax": 1.210130744642073,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.95,
+     "shaftMin": 0.7546414930045308,
+     "shaftMax": 1.209547325530435,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.9666666666666667,
+     "shaftMin": 0.7552208554912132,
+     "shaftMax": 1.2090766760444667,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.9833333333333333,
+     "shaftMin": 0.7556491545524893,
+     "shaftMax": 1.2087243994334516,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 1,
+     "shaftMin": 0.7559194661789922,
+     "shaftMax": 1.2084960766800477,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    }
+   ]
+  },
+  {
+   "name": "no-squeeze",
+   "id": "vault",
+   "shaftMin": 0.7233522793818232,
+   "shaftMax": 1.2555417282155727,
+   "shaftBad": 61,
+   "shapeBad": 61,
+   "geomBad": 37,
+   "pairs": 661,
+   "records": [
+    {
+     "t": 0,
+     "shaftMin": 0.7475888462892666,
+     "shaftMax": 1.0899305820169112,
+     "shaftFailures": 5,
+     "shapeFailures": 6,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.016666666666666666,
+     "shaftMin": 0.7444457603383389,
+     "shaftMax": 1.0882548183641894,
+     "shaftFailures": 6,
+     "shapeFailures": 7,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.03333333333333333,
+     "shaftMin": 0.7363066820857346,
+     "shaftMax": 1.083429243817274,
+     "shaftFailures": 6,
+     "shapeFailures": 7,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.05,
+     "shaftMin": 0.7266798478150207,
+     "shaftMax": 1.075430937744595,
+     "shaftFailures": 6,
+     "shapeFailures": 7,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.06666666666666667,
+     "shaftMin": 0.7233522793818232,
+     "shaftMax": 1.0736231755031815,
+     "shaftFailures": 6,
+     "shapeFailures": 8,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.08333333333333333,
+     "shaftMin": 0.7382575665783918,
+     "shaftMax": 1.076388180558441,
+     "shaftFailures": 6,
+     "shapeFailures": 8,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.1,
+     "shaftMin": 0.7744172753234925,
+     "shaftMax": 1.0790901573318437,
+     "shaftFailures": 5,
+     "shapeFailures": 8,
+     "collisions": 5,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.11666666666666667,
+     "shaftMin": 0.809125467752825,
+     "shaftMax": 1.081554696494975,
+     "shaftFailures": 5,
+     "shapeFailures": 7,
+     "collisions": 14,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.13333333333333333,
+     "shaftMin": 0.824611361281616,
+     "shaftMax": 1.0836396830924497,
+     "shaftFailures": 5,
+     "shapeFailures": 6,
+     "collisions": 14,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.15,
+     "shaftMin": 0.8354126630672993,
+     "shaftMax": 1.0852245608050761,
+     "shaftFailures": 5,
+     "shapeFailures": 5,
+     "collisions": 16,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.16666666666666666,
+     "shaftMin": 0.8366284566453382,
+     "shaftMax": 1.0861969607371238,
+     "shaftFailures": 5,
+     "shapeFailures": 5,
+     "collisions": 14,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.18333333333333332,
+     "shaftMin": 0.835316822195157,
+     "shaftMax": 1.0865332896866562,
+     "shaftFailures": 5,
+     "shapeFailures": 5,
+     "collisions": 14,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.2,
+     "shaftMin": 0.8292304780748211,
+     "shaftMax": 1.0891246223012454,
+     "shaftFailures": 5,
+     "shapeFailures": 5,
+     "collisions": 14,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.21666666666666667,
+     "shaftMin": 0.7875051653645201,
+     "shaftMax": 1.0948328935585,
+     "shaftFailures": 5,
+     "shapeFailures": 6,
+     "collisions": 11,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.23333333333333334,
+     "shaftMin": 0.7547479489415333,
+     "shaftMax": 1.1029166294008166,
+     "shaftFailures": 6,
+     "shapeFailures": 8,
+     "collisions": 6,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.25,
+     "shaftMin": 0.7674605309466128,
+     "shaftMax": 1.1125878438868504,
+     "shaftFailures": 6,
+     "shapeFailures": 8,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.26666666666666666,
+     "shaftMin": 0.7692986473462262,
+     "shaftMax": 1.1229977228578807,
+     "shaftFailures": 6,
+     "shapeFailures": 8,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.2833333333333333,
+     "shaftMin": 0.7948126677559091,
+     "shaftMax": 1.133266386127176,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.3,
+     "shaftMin": 0.8186672891957688,
+     "shaftMax": 1.1425374652661426,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.31666666666666665,
+     "shaftMin": 0.8358826031508388,
+     "shaftMax": 1.1500234937074847,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.3333333333333333,
+     "shaftMin": 0.8463029957742599,
+     "shaftMax": 1.1550130331087998,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.35,
+     "shaftMin": 0.8499275736253615,
+     "shaftMax": 1.1568302616214914,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.36666666666666664,
+     "shaftMin": 0.8504132051461369,
+     "shaftMax": 1.1573041611326094,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.38333333333333336,
+     "shaftMin": 0.850648266240403,
+     "shaftMax": 1.158684915793103,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.4,
+     "shaftMin": 0.85249297889208,
+     "shaftMax": 1.1691868203703084,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 1,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.4166666666666667,
+     "shaftMin": 0.8572084921375677,
+     "shaftMax": 1.1866797111459593,
+     "shaftFailures": 6,
+     "shapeFailures": 10,
+     "collisions": 1,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.43333333333333335,
+     "shaftMin": 0.8654410786336311,
+     "shaftMax": 1.204257187509537,
+     "shaftFailures": 6,
+     "shapeFailures": 10,
+     "collisions": 1,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.45,
+     "shaftMin": 0.865487212549188,
+     "shaftMax": 1.2203923885921013,
+     "shaftFailures": 6,
+     "shapeFailures": 11,
+     "collisions": 4,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.4666666666666667,
+     "shaftMin": 0.826231776585025,
+     "shaftMax": 1.2320572954555122,
+     "shaftFailures": 6,
+     "shapeFailures": 11,
+     "collisions": 4,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.48333333333333334,
+     "shaftMin": 0.7871923848856294,
+     "shaftMax": 1.2348349152224711,
+     "shaftFailures": 6,
+     "shapeFailures": 10,
+     "collisions": 8,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.5,
+     "shaftMin": 0.754974060918998,
+     "shaftMax": 1.241687317501861,
+     "shaftFailures": 6,
+     "shapeFailures": 10,
+     "collisions": 12,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.5166666666666667,
+     "shaftMin": 0.736799380618292,
+     "shaftMax": 1.2530159336347093,
+     "shaftFailures": 6,
+     "shapeFailures": 10,
+     "collisions": 22,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.5333333333333333,
+     "shaftMin": 0.7326313940258136,
+     "shaftMax": 1.2555417282155727,
+     "shaftFailures": 6,
+     "shapeFailures": 10,
+     "collisions": 26,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.55,
+     "shaftMin": 0.7318266754901471,
+     "shaftMax": 1.2543068416122227,
+     "shaftFailures": 6,
+     "shapeFailures": 10,
+     "collisions": 30,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.5666666666666667,
+     "shaftMin": 0.7312391892213261,
+     "shaftMax": 1.2524527214331518,
+     "shaftFailures": 4,
+     "shapeFailures": 6,
+     "collisions": 33,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.5833333333333334,
+     "shaftMin": 0.7289363584671195,
+     "shaftMax": 1.2517849816625908,
+     "shaftFailures": 4,
+     "shapeFailures": 6,
+     "collisions": 68,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.6,
+     "shaftMin": 0.7316142611634006,
+     "shaftMax": 1.2449086175981006,
+     "shaftFailures": 2,
+     "shapeFailures": 4,
+     "collisions": 108,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.6166666666666667,
+     "shaftMin": 0.7491156278987002,
+     "shaftMax": 1.2259379079264794,
+     "shaftFailures": 2,
+     "shapeFailures": 3,
+     "collisions": 82,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.6333333333333333,
+     "shaftMin": 0.7791668575010855,
+     "shaftMax": 1.1973242019485328,
+     "shaftFailures": 2,
+     "shapeFailures": 2,
+     "collisions": 44,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.65,
+     "shaftMin": 0.8178848191526572,
+     "shaftMax": 1.1615781758004222,
+     "shaftFailures": 2,
+     "shapeFailures": 2,
+     "collisions": 33,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.6666666666666666,
+     "shaftMin": 0.8567385862286077,
+     "shaftMax": 1.1201758749494366,
+     "shaftFailures": 2,
+     "shapeFailures": 2,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.6833333333333333,
+     "shaftMin": 0.8924112361934822,
+     "shaftMax": 1.0764352441526548,
+     "shaftFailures": 2,
+     "shapeFailures": 2,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.7,
+     "shaftMin": 0.8975994173683092,
+     "shaftMax": 1.0739365598188806,
+     "shaftFailures": 2,
+     "shapeFailures": 2,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.7166666666666667,
+     "shaftMin": 0.8871259005874813,
+     "shaftMax": 1.0846313456135266,
+     "shaftFailures": 4,
+     "shapeFailures": 4,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.7333333333333333,
+     "shaftMin": 0.8590885863482579,
+     "shaftMax": 1.0980134652632347,
+     "shaftFailures": 6,
+     "shapeFailures": 6,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.75,
+     "shaftMin": 0.8193189503239144,
+     "shaftMax": 1.1087396313128306,
+     "shaftFailures": 6,
+     "shapeFailures": 7,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.7666666666666667,
+     "shaftMin": 0.8065152028490229,
+     "shaftMax": 1.1165331786227948,
+     "shaftFailures": 6,
+     "shapeFailures": 9,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.7833333333333333,
+     "shaftMin": 0.8656206568053869,
+     "shaftMax": 1.1497089210787008,
+     "shaftFailures": 5,
+     "shapeFailures": 6,
+     "collisions": 9,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.8,
+     "shaftMin": 0.8638909381273973,
+     "shaftMax": 1.1401164321884543,
+     "shaftFailures": 4,
+     "shapeFailures": 4,
+     "collisions": 11,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.8166666666666667,
+     "shaftMin": 0.8637487638955493,
+     "shaftMax": 1.1286369057520764,
+     "shaftFailures": 4,
+     "shapeFailures": 4,
+     "collisions": 1,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.8333333333333334,
+     "shaftMin": 0.864248227174255,
+     "shaftMax": 1.1257860657632253,
+     "shaftFailures": 6,
+     "shapeFailures": 6,
+     "collisions": 4,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.85,
+     "shaftMin": 0.8645476407815881,
+     "shaftMax": 1.1257798723727428,
+     "shaftFailures": 6,
+     "shapeFailures": 6,
+     "collisions": 4,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.8666666666666667,
+     "shaftMin": 0.8665410332746686,
+     "shaftMax": 1.1243043941518367,
+     "shaftFailures": 6,
+     "shapeFailures": 6,
+     "collisions": 4,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.8833333333333333,
+     "shaftMin": 0.8723072336048482,
+     "shaftMax": 1.1225720258321052,
+     "shaftFailures": 5,
+     "shapeFailures": 5,
+     "collisions": 4,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.9,
+     "shaftMin": 0.8817476355575372,
+     "shaftMax": 1.1424532221131498,
+     "shaftFailures": 4,
+     "shapeFailures": 4,
+     "collisions": 1,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.9166666666666666,
+     "shaftMin": 0.8946623811253303,
+     "shaftMax": 1.1523440993612926,
+     "shaftFailures": 5,
+     "shapeFailures": 5,
+     "collisions": 13,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.9333333333333333,
+     "shaftMin": 0.88628186646127,
+     "shaftMax": 1.0907755966636004,
+     "shaftFailures": 6,
+     "shapeFailures": 6,
+     "collisions": 16,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.95,
+     "shaftMin": 0.8128363569820234,
+     "shaftMax": 1.0881301686652747,
+     "shaftFailures": 6,
+     "shapeFailures": 7,
+     "collisions": 8,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.9666666666666667,
+     "shaftMin": 0.7928325700963837,
+     "shaftMax": 1.08543543216302,
+     "shaftFailures": 6,
+     "shapeFailures": 8,
+     "collisions": 1,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.9833333333333333,
+     "shaftMin": 0.7929308294580062,
+     "shaftMax": 1.08329052513749,
+     "shaftFailures": 6,
+     "shapeFailures": 7,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 1,
+     "shaftMin": 0.7944925202161022,
+     "shaftMax": 1.0824242921813378,
+     "shaftFailures": 6,
+     "shapeFailures": 7,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    }
+   ]
+  },
+  {
+   "name": "shaft-uniform",
+   "id": "climb",
+   "shaftMin": 0.9999999999999879,
+   "shaftMax": 1.0000000000000115,
+   "shaftBad": 0,
+   "shapeBad": 61,
+   "geomBad": 61,
+   "pairs": 122,
+   "records": [
+    {
+     "t": 0,
+     "shaftMin": 0.9999999999999934,
+     "shaftMax": 1.0000000000000087,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.016666666666666666,
+     "shaftMin": 0.9999999999999923,
+     "shaftMax": 1.0000000000000062,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.03333333333333333,
+     "shaftMin": 0.9999999999999921,
+     "shaftMax": 1.0000000000000073,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.05,
+     "shaftMin": 0.9999999999999959,
+     "shaftMax": 1.0000000000000056,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.06666666666666667,
+     "shaftMin": 0.9999999999999919,
+     "shaftMax": 1.0000000000000095,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.08333333333333333,
+     "shaftMin": 0.999999999999993,
+     "shaftMax": 1.0000000000000087,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.1,
+     "shaftMin": 0.9999999999999891,
+     "shaftMax": 1.0000000000000093,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.11666666666666667,
+     "shaftMin": 0.9999999999999895,
+     "shaftMax": 1.0000000000000067,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.13333333333333333,
+     "shaftMin": 0.9999999999999952,
+     "shaftMax": 1.000000000000006,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.15,
+     "shaftMin": 0.9999999999999949,
+     "shaftMax": 1.0000000000000049,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.16666666666666666,
+     "shaftMin": 0.9999999999999942,
+     "shaftMax": 1.0000000000000082,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.18333333333333332,
+     "shaftMin": 0.9999999999999909,
+     "shaftMax": 1.000000000000008,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.2,
+     "shaftMin": 0.9999999999999938,
+     "shaftMax": 1.0000000000000069,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.21666666666666667,
+     "shaftMin": 0.9999999999999939,
+     "shaftMax": 1.0000000000000069,
+     "shaftFailures": 0,
+     "shapeFailures": 2,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.23333333333333334,
+     "shaftMin": 0.9999999999999941,
+     "shaftMax": 1.0000000000000073,
+     "shaftFailures": 0,
+     "shapeFailures": 2,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.25,
+     "shaftMin": 0.999999999999994,
+     "shaftMax": 1.000000000000007,
+     "shaftFailures": 0,
+     "shapeFailures": 1,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.26666666666666666,
+     "shaftMin": 0.9999999999999959,
+     "shaftMax": 1.0000000000000064,
+     "shaftFailures": 0,
+     "shapeFailures": 1,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.2833333333333333,
+     "shaftMin": 0.9999999999999939,
+     "shaftMax": 1.000000000000007,
+     "shaftFailures": 0,
+     "shapeFailures": 1,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.3,
+     "shaftMin": 0.999999999999993,
+     "shaftMax": 1.0000000000000069,
+     "shaftFailures": 0,
+     "shapeFailures": 1,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.31666666666666665,
+     "shaftMin": 0.9999999999999939,
+     "shaftMax": 1.0000000000000056,
+     "shaftFailures": 0,
+     "shapeFailures": 1,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.3333333333333333,
+     "shaftMin": 0.9999999999999921,
+     "shaftMax": 1.000000000000009,
+     "shaftFailures": 0,
+     "shapeFailures": 2,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.35,
+     "shaftMin": 0.9999999999999941,
+     "shaftMax": 1.0000000000000058,
+     "shaftFailures": 0,
+     "shapeFailures": 2,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.36666666666666664,
+     "shaftMin": 0.999999999999991,
+     "shaftMax": 1.000000000000006,
+     "shaftFailures": 0,
+     "shapeFailures": 2,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.38333333333333336,
+     "shaftMin": 0.9999999999999946,
+     "shaftMax": 1.0000000000000078,
+     "shaftFailures": 0,
+     "shapeFailures": 2,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.4,
+     "shaftMin": 0.9999999999999946,
+     "shaftMax": 1.0000000000000047,
+     "shaftFailures": 0,
+     "shapeFailures": 2,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.4166666666666667,
+     "shaftMin": 0.9999999999999929,
+     "shaftMax": 1.0000000000000073,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.43333333333333335,
+     "shaftMin": 0.9999999999999963,
+     "shaftMax": 1.0000000000000053,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.45,
+     "shaftMin": 0.999999999999993,
+     "shaftMax": 1.0000000000000044,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.4666666666666667,
+     "shaftMin": 0.9999999999999939,
+     "shaftMax": 1.0000000000000073,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.48333333333333334,
+     "shaftMin": 0.9999999999999911,
+     "shaftMax": 1.0000000000000084,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.5,
+     "shaftMin": 0.999999999999996,
+     "shaftMax": 1.000000000000006,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.5166666666666667,
+     "shaftMin": 0.9999999999999934,
+     "shaftMax": 1.0000000000000049,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.5333333333333333,
+     "shaftMin": 0.9999999999999938,
+     "shaftMax": 1.0000000000000062,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.55,
+     "shaftMin": 0.9999999999999912,
+     "shaftMax": 1.0000000000000073,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.5666666666666667,
+     "shaftMin": 0.9999999999999948,
+     "shaftMax": 1.000000000000008,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.5833333333333334,
+     "shaftMin": 0.9999999999999883,
+     "shaftMax": 1.0000000000000084,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.6,
+     "shaftMin": 0.9999999999999928,
+     "shaftMax": 1.000000000000009,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.6166666666666667,
+     "shaftMin": 0.9999999999999951,
+     "shaftMax": 1.0000000000000115,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.6333333333333333,
+     "shaftMin": 0.9999999999999941,
+     "shaftMax": 1.0000000000000098,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.65,
+     "shaftMin": 0.9999999999999944,
+     "shaftMax": 1.0000000000000056,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.6666666666666666,
+     "shaftMin": 0.9999999999999959,
+     "shaftMax": 1.0000000000000044,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.6833333333333333,
+     "shaftMin": 0.9999999999999949,
+     "shaftMax": 1.0000000000000058,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.7,
+     "shaftMin": 0.9999999999999897,
+     "shaftMax": 1.0000000000000069,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.7166666666666667,
+     "shaftMin": 0.9999999999999942,
+     "shaftMax": 1.000000000000005,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.7333333333333333,
+     "shaftMin": 0.9999999999999923,
+     "shaftMax": 1.0000000000000064,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.75,
+     "shaftMin": 0.9999999999999963,
+     "shaftMax": 1.0000000000000073,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.7666666666666667,
+     "shaftMin": 0.9999999999999911,
+     "shaftMax": 1.0000000000000049,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.7833333333333333,
+     "shaftMin": 0.9999999999999927,
+     "shaftMax": 1.0000000000000069,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.8,
+     "shaftMin": 0.9999999999999916,
+     "shaftMax": 1.0000000000000047,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.8166666666666667,
+     "shaftMin": 0.9999999999999948,
+     "shaftMax": 1.0000000000000067,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.8333333333333334,
+     "shaftMin": 0.9999999999999917,
+     "shaftMax": 1.0000000000000033,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.85,
+     "shaftMin": 0.9999999999999879,
+     "shaftMax": 1.0000000000000087,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.8666666666666667,
+     "shaftMin": 0.9999999999999956,
+     "shaftMax": 1.0000000000000064,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.8833333333333333,
+     "shaftMin": 0.9999999999999937,
+     "shaftMax": 1.0000000000000058,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.9,
+     "shaftMin": 0.9999999999999939,
+     "shaftMax": 1.000000000000007,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.9166666666666666,
+     "shaftMin": 0.9999999999999908,
+     "shaftMax": 1.0000000000000082,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.9333333333333333,
+     "shaftMin": 0.999999999999996,
+     "shaftMax": 1.0000000000000069,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.95,
+     "shaftMin": 0.9999999999999947,
+     "shaftMax": 1.0000000000000058,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.9666666666666667,
+     "shaftMin": 0.9999999999999951,
+     "shaftMax": 1.0000000000000067,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.9833333333333333,
+     "shaftMin": 0.9999999999999922,
+     "shaftMax": 1.000000000000006,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 1,
+     "shaftMin": 0.9999999999999912,
+     "shaftMax": 1.0000000000000067,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    }
+   ]
+  },
+  {
+   "name": "shaft-uniform",
+   "id": "vault",
+   "shaftMin": 0.9999999999999901,
+   "shaftMax": 1.0000000000000102,
+   "shaftBad": 0,
+   "shapeBad": 41,
+   "geomBad": 47,
+   "pairs": 727,
+   "records": [
+    {
+     "t": 0,
+     "shaftMin": 0.9999999999999944,
+     "shaftMax": 1.0000000000000038,
+     "shaftFailures": 0,
+     "shapeFailures": 1,
+     "collisions": 1,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.016666666666666666,
+     "shaftMin": 0.9999999999999936,
+     "shaftMax": 1.0000000000000064,
+     "shaftFailures": 0,
+     "shapeFailures": 1,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.03333333333333333,
+     "shaftMin": 0.9999999999999921,
+     "shaftMax": 1.0000000000000047,
+     "shaftFailures": 0,
+     "shapeFailures": 1,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.05,
+     "shaftMin": 0.9999999999999946,
+     "shaftMax": 1.0000000000000082,
+     "shaftFailures": 0,
+     "shapeFailures": 1,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.06666666666666667,
+     "shaftMin": 0.9999999999999959,
+     "shaftMax": 1.0000000000000053,
+     "shaftFailures": 0,
+     "shapeFailures": 2,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.08333333333333333,
+     "shaftMin": 0.9999999999999946,
+     "shaftMax": 1.000000000000004,
+     "shaftFailures": 0,
+     "shapeFailures": 2,
+     "collisions": 6,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.1,
+     "shaftMin": 0.9999999999999952,
+     "shaftMax": 1.0000000000000062,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 9,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.11666666666666667,
+     "shaftMin": 0.9999999999999936,
+     "shaftMax": 1.0000000000000069,
+     "shaftFailures": 0,
+     "shapeFailures": 2,
+     "collisions": 9,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.13333333333333333,
+     "shaftMin": 0.9999999999999901,
+     "shaftMax": 1.0000000000000029,
+     "shaftFailures": 0,
+     "shapeFailures": 1,
+     "collisions": 13,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.15,
+     "shaftMin": 0.9999999999999908,
+     "shaftMax": 1.0000000000000049,
+     "shaftFailures": 0,
+     "shapeFailures": 0,
+     "collisions": 10,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.16666666666666666,
+     "shaftMin": 0.9999999999999953,
+     "shaftMax": 1.0000000000000029,
+     "shaftFailures": 0,
+     "shapeFailures": 0,
+     "collisions": 10,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.18333333333333332,
+     "shaftMin": 0.9999999999999912,
+     "shaftMax": 1.000000000000008,
+     "shaftFailures": 0,
+     "shapeFailures": 0,
+     "collisions": 10,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.2,
+     "shaftMin": 0.9999999999999967,
+     "shaftMax": 1.0000000000000075,
+     "shaftFailures": 0,
+     "shapeFailures": 0,
+     "collisions": 15,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.21666666666666667,
+     "shaftMin": 0.9999999999999973,
+     "shaftMax": 1.000000000000005,
+     "shaftFailures": 0,
+     "shapeFailures": 1,
+     "collisions": 15,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.23333333333333334,
+     "shaftMin": 0.9999999999999908,
+     "shaftMax": 1.0000000000000047,
+     "shaftFailures": 0,
+     "shapeFailures": 2,
+     "collisions": 10,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.25,
+     "shaftMin": 0.999999999999992,
+     "shaftMax": 1.0000000000000042,
+     "shaftFailures": 0,
+     "shapeFailures": 2,
+     "collisions": 4,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.26666666666666666,
+     "shaftMin": 0.9999999999999933,
+     "shaftMax": 1.0000000000000042,
+     "shaftFailures": 0,
+     "shapeFailures": 2,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.2833333333333333,
+     "shaftMin": 0.9999999999999952,
+     "shaftMax": 1.0000000000000038,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.3,
+     "shaftMin": 0.9999999999999941,
+     "shaftMax": 1.0000000000000089,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.31666666666666665,
+     "shaftMin": 0.9999999999999938,
+     "shaftMax": 1.0000000000000044,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.3333333333333333,
+     "shaftMin": 0.9999999999999929,
+     "shaftMax": 1.000000000000003,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.35,
+     "shaftMin": 0.9999999999999979,
+     "shaftMax": 1.0000000000000029,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.36666666666666664,
+     "shaftMin": 0.9999999999999961,
+     "shaftMax": 1.000000000000007,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.38333333333333336,
+     "shaftMin": 0.9999999999999956,
+     "shaftMax": 1.000000000000004,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.4,
+     "shaftMin": 0.9999999999999964,
+     "shaftMax": 1.000000000000006,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 1,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.4166666666666667,
+     "shaftMin": 0.9999999999999986,
+     "shaftMax": 1.0000000000000036,
+     "shaftFailures": 0,
+     "shapeFailures": 4,
+     "collisions": 1,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.43333333333333335,
+     "shaftMin": 0.9999999999999951,
+     "shaftMax": 1.0000000000000033,
+     "shaftFailures": 0,
+     "shapeFailures": 4,
+     "collisions": 1,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.45,
+     "shaftMin": 0.9999999999999946,
+     "shaftMax": 1.0000000000000047,
+     "shaftFailures": 0,
+     "shapeFailures": 5,
+     "collisions": 4,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.4666666666666667,
+     "shaftMin": 0.999999999999997,
+     "shaftMax": 1.0000000000000024,
+     "shaftFailures": 0,
+     "shapeFailures": 5,
+     "collisions": 4,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.48333333333333334,
+     "shaftMin": 0.9999999999999959,
+     "shaftMax": 1.0000000000000053,
+     "shaftFailures": 0,
+     "shapeFailures": 4,
+     "collisions": 10,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.5,
+     "shaftMin": 0.9999999999999961,
+     "shaftMax": 1.0000000000000038,
+     "shaftFailures": 0,
+     "shapeFailures": 4,
+     "collisions": 12,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.5166666666666667,
+     "shaftMin": 0.9999999999999963,
+     "shaftMax": 1.0000000000000044,
+     "shaftFailures": 0,
+     "shapeFailures": 4,
+     "collisions": 23,
+     "folds": 2,
+     "deg": 0
+    },
+    {
+     "t": 0.5333333333333333,
+     "shaftMin": 0.9999999999999949,
+     "shaftMax": 1.000000000000004,
+     "shaftFailures": 0,
+     "shapeFailures": 4,
+     "collisions": 29,
+     "folds": 2,
+     "deg": 0
+    },
+    {
+     "t": 0.55,
+     "shaftMin": 0.9999999999999961,
+     "shaftMax": 1.0000000000000047,
+     "shaftFailures": 0,
+     "shapeFailures": 4,
+     "collisions": 32,
+     "folds": 2,
+     "deg": 0
+    },
+    {
+     "t": 0.5666666666666667,
+     "shaftMin": 0.9999999999999934,
+     "shaftMax": 1.0000000000000056,
+     "shaftFailures": 0,
+     "shapeFailures": 2,
+     "collisions": 37,
+     "folds": 2,
+     "deg": 0
+    },
+    {
+     "t": 0.5833333333333334,
+     "shaftMin": 0.9999999999999948,
+     "shaftMax": 1.0000000000000049,
+     "shaftFailures": 0,
+     "shapeFailures": 2,
+     "collisions": 74,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.6,
+     "shaftMin": 0.999999999999995,
+     "shaftMax": 1.0000000000000053,
+     "shaftFailures": 0,
+     "shapeFailures": 2,
+     "collisions": 113,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.6166666666666667,
+     "shaftMin": 0.9999999999999941,
+     "shaftMax": 1.0000000000000047,
+     "shaftFailures": 0,
+     "shapeFailures": 1,
+     "collisions": 88,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.6333333333333333,
+     "shaftMin": 0.9999999999999969,
+     "shaftMax": 1.0000000000000049,
+     "shaftFailures": 0,
+     "shapeFailures": 0,
+     "collisions": 54,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.65,
+     "shaftMin": 0.9999999999999954,
+     "shaftMax": 1.0000000000000053,
+     "shaftFailures": 0,
+     "shapeFailures": 0,
+     "collisions": 35,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.6666666666666666,
+     "shaftMin": 0.9999999999999953,
+     "shaftMax": 1.0000000000000084,
+     "shaftFailures": 0,
+     "shapeFailures": 0,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.6833333333333333,
+     "shaftMin": 0.9999999999999944,
+     "shaftMax": 1.0000000000000049,
+     "shaftFailures": 0,
+     "shapeFailures": 0,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.7,
+     "shaftMin": 0.9999999999999963,
+     "shaftMax": 1.0000000000000036,
+     "shaftFailures": 0,
+     "shapeFailures": 0,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.7166666666666667,
+     "shaftMin": 0.999999999999994,
+     "shaftMax": 1.0000000000000056,
+     "shaftFailures": 0,
+     "shapeFailures": 0,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.7333333333333333,
+     "shaftMin": 0.9999999999999943,
+     "shaftMax": 1.0000000000000044,
+     "shaftFailures": 0,
+     "shapeFailures": 0,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.75,
+     "shaftMin": 0.999999999999994,
+     "shaftMax": 1.0000000000000064,
+     "shaftFailures": 0,
+     "shapeFailures": 1,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.7666666666666667,
+     "shaftMin": 0.9999999999999947,
+     "shaftMax": 1.0000000000000064,
+     "shaftFailures": 0,
+     "shapeFailures": 3,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.7833333333333333,
+     "shaftMin": 0.9999999999999964,
+     "shaftMax": 1.0000000000000053,
+     "shaftFailures": 0,
+     "shapeFailures": 1,
+     "collisions": 11,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.8,
+     "shaftMin": 0.9999999999999946,
+     "shaftMax": 1.0000000000000058,
+     "shaftFailures": 0,
+     "shapeFailures": 0,
+     "collisions": 13,
+     "folds": 2,
+     "deg": 0
+    },
+    {
+     "t": 0.8166666666666667,
+     "shaftMin": 0.9999999999999954,
+     "shaftMax": 1.0000000000000102,
+     "shaftFailures": 0,
+     "shapeFailures": 0,
+     "collisions": 2,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.8333333333333334,
+     "shaftMin": 0.9999999999999919,
+     "shaftMax": 1.000000000000007,
+     "shaftFailures": 0,
+     "shapeFailures": 0,
+     "collisions": 5,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.85,
+     "shaftMin": 0.9999999999999937,
+     "shaftMax": 1.0000000000000084,
+     "shaftFailures": 0,
+     "shapeFailures": 0,
+     "collisions": 5,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.8666666666666667,
+     "shaftMin": 0.9999999999999944,
+     "shaftMax": 1.000000000000005,
+     "shaftFailures": 0,
+     "shapeFailures": 0,
+     "collisions": 5,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.8833333333333333,
+     "shaftMin": 0.9999999999999927,
+     "shaftMax": 1.0000000000000073,
+     "shaftFailures": 0,
+     "shapeFailures": 0,
+     "collisions": 5,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.9,
+     "shaftMin": 0.9999999999999942,
+     "shaftMax": 1.0000000000000082,
+     "shaftFailures": 0,
+     "shapeFailures": 0,
+     "collisions": 1,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.9166666666666666,
+     "shaftMin": 0.9999999999999963,
+     "shaftMax": 1.0000000000000069,
+     "shaftFailures": 0,
+     "shapeFailures": 0,
+     "collisions": 13,
+     "folds": 1,
+     "deg": 0
+    },
+    {
+     "t": 0.9333333333333333,
+     "shaftMin": 0.9999999999999946,
+     "shaftMax": 1.0000000000000056,
+     "shaftFailures": 0,
+     "shapeFailures": 0,
+     "collisions": 16,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.95,
+     "shaftMin": 0.9999999999999938,
+     "shaftMax": 1.0000000000000069,
+     "shaftFailures": 0,
+     "shapeFailures": 1,
+     "collisions": 6,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.9666666666666667,
+     "shaftMin": 0.9999999999999946,
+     "shaftMax": 1.000000000000005,
+     "shaftFailures": 0,
+     "shapeFailures": 2,
+     "collisions": 1,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 0.9833333333333333,
+     "shaftMin": 0.999999999999995,
+     "shaftMax": 1.0000000000000058,
+     "shaftFailures": 0,
+     "shapeFailures": 1,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    },
+    {
+     "t": 1,
+     "shaftMin": 0.9999999999999925,
+     "shaftMax": 1.000000000000006,
+     "shaftFailures": 0,
+     "shapeFailures": 1,
+     "collisions": 0,
+     "folds": 0,
+     "deg": 0
+    }
+   ]
+  }
+ ]
+}
