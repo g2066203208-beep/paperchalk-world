@@ -1,0 +1,10 @@
+// V10 bald-only visual study. The first 80 global vertices and all triangles remain unchanged.
+export const facePNG='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEABAMAAACuXLVVAAAAMFBMVEX/9O3/3MrfpJfMaFq2WEyGQT11NTVCKisAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACeWhH1AAACXElEQVR42u3csU4jMRCA4fEKLa15OIrrUqW4ikdxfVV6Gh4lT8ArxO1ytzIFQocwtseTNUe4PxWCHc+3E3s9DlLcjfzb1yQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAcDEA1zOsV1951TtminWmH1WB1wLU80vqLYG6AumkeyMaFTp7EqbWBZFlCODSAMVluC/8/ldjwN64UgXmUoJdPX93XAEw77ozNHylESfTfVpecw9gb7nHVn32esBszVHX7bSAeTdmxX047vQ5E6BcvMJzYAkicpv9+l7k+mctxeFHKMTJ9Z2tH3hpcXp3eX3gl9wLDqOSPW1SgUNviv4KxFEVSN+iH1jqfw5bAJZRdxuUAD8K4PRvQdg++3JJTWkYk2uhLVcDlmxJGB6OKZv4QQtwo+7WMwfUgPBpq7CvAr91lz2cX4Eh21HQAwbtRq63Kz6JiNz8/VH+KJ8AL1e/jeQTkvMAR+vg6zaAdbUCjsctAOvRWoJV1nbkVWu9PJ5E1kdL/izSmypwMh9VkmYVNgHp/ZHGqXfcqOokWoBoPq2l8nGsDfDvT3NJ+5h22Qkz1munfRBFYwGMy9BleZO2XfOlyELtpuowyVyCPNJZJmHMRmzu1K4U2bcKXB4azTMg1uidu6GiY+/sZqZthrHTp77rvTmT/6oNiSt9TeiHH3Gq/jPcF+n4nlIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP57wDMi628dcsTTKAAAAABJRU5ErkJggg==';
+const rings=[[[0,1.8,0.465],[0.195,1.828,0.465],[0.365,1.885,0.428],[0.438,1.985,0.095],[0.28,1.985,-0.31],[0,1.985,-0.39]],[[0,2.02,0.487],[0.26,2.02,0.487],[0.377,2.02,0.452],[0.468,2.06,0.075],[0.35,2.06,-0.365],[0,2.06,-0.45]],[[0,2.43,0.487],[0.26,2.43,0.487],[0.397,2.43,0.452],[0.477,2.43,0.075],[0.36,2.43,-0.365],[0,2.43,-0.45]],[[0,2.655,0.35],[0.23,2.635,0.35],[0.335,2.6,0.28],[0.375,2.6,0.055],[0.28,2.62,-0.29],[0,2.645,-0.35]]];
+export function applyBaldV10(raw){
+const p=rings.flatMap(r=>r.concat(r.slice(1,-1).reverse().map(([x,y,z])=>[-x,y,z]))).concat([[0,2.68,-.035]]).map(([x,y,z])=>[x*.94,y,z*.95]);
+raw.body.positions.splice(4,41,...p);raw.modules={};
+const P=raw.body.positions;
+raw.body.groups=raw.body.triangles.map((f,i)=>{if(i<22)return 'skin';const a=f.map(k=>P[k-76]);if(a.some(x=>!x))return 'skin';const u=a[1].map((x,j)=>x-a[0][j]),v=a[2].map((x,j)=>x-a[0][j]);const n=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];return n[2]/Math.hypot(...n)>.36?'face':'skin'});
+return raw;
+}
