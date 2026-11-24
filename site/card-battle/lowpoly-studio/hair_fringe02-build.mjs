@@ -1,0 +1,11 @@
+export function build(D,A,F,sha,offset=0,shift=0){
+ const rows=[[[-0.242,2.835,0.055],[-0.187,2.883,0.107],[-0.128,2.901,0.127]],[[-0.316,2.743,0.156],[-0.254,2.785,0.251],[-0.173,2.807,0.264]],[[-0.355,2.601,0.162],[-0.289,2.653,0.306],[-0.194,2.684,0.321]],[[-0.326,2.48,0.194],[-0.246,2.526,0.323],[-0.157,2.574,0.338]],[[-0.269,2.397,0.229],[-0.232,2.414,0.29],[-0.19,2.466,0.302]],[[-0.215,2.36,0.269],[-0.21,2.358,0.274],[-0.205,2.365,0.272]]];
+ const positions=rows.flatMap((row,j)=>row.map(([x,y,z])=>[x-shift,y+(j===0?offset*.4:0),z+offset*(j===0?.25:1)])),polygons=[],faceColors=[];
+ for(let j=0;j<rows.length-1;j++)for(let k=0;k<2;k++){let i=j*3+k;polygons.push([i,i+3,i+4,i+1]);faceColors.push(k===0?[230,218,237]:[197,180,212])}
+ const sub=(a,b)=>a.map((x,i)=>x-b[i]),dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+ const tris=m=>m.polygons.flatMap(f=>[[f[0],f[1],f[2]],[f[0],f[2],f[3]]].map(t=>t.map(i=>m.positions[i]))),bt=[D,...Object.values(D.modules)].flatMap(tris),ht=tris({positions,polygons}),at=tris(A),ft=tris(F);
+ function ray(o,v,t){let e1=sub(t[1],t[0]),e2=sub(t[2],t[0]),h=cross(v,e2),a=dot(e1,h);if(Math.abs(a)<1e-10)return null;let f=1/a,s=sub(o,t[0]),u=f*dot(s,h);if(u<0||u>1)return null;let q=cross(s,e1),w=f*dot(v,q);if(w<0||u+w>1)return null;return f*dot(e2,q)}
+ function count(a,b){let n=0;for(let t of a)for(let i=0;i<3;i++){let p=t[i],v=sub(t[(i+1)%3],p);if(b.some(q=>{let u=ray(p,v,q);return u!==null&&u>1e-7&&u<1-1e-7}))n++}return n}
+ let inside=positions.filter(p=>bt.filter(t=>{let u=ray(p,[1,.013,.021],t);return u!==null&&u>1e-8}).length%2).length;
+ return {name:"Fringe 02 V46 independent left swept card",base:"V46",positions,polygons,faceColors,groups:[{name:"left fringe",layer:3,faceStart:0,faceCount:polygons.length}],audit:{vertices:positions.length,quads:polygons.length,sourceTriangles:0,groups:1,bodySourceSha:sha,minRenderTriangleArea:Math.min(...ht.map(t=>Math.hypot(...cross(sub(t[1],t[0]),sub(t[2],t[0])))/2)),hairEdgesCrossBody:count(ht,bt),bodyEdgesCrossHair:count(bt,ht),verticesInsideBody:inside,crossingsWithAhoge:count(ht,at)+count(at,ht),crossingsWithFringe01:count(ht,ft)+count(ft,ht),offset,shift,openSheet:true}};
+}
