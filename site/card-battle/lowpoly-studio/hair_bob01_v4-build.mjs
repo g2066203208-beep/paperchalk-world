@@ -14,16 +14,16 @@ group("continuous crown and hair roots",0,[109,72,58],()=>{for(let [j,y] of [[0,
 const idx=a=>((a/15)%N+N)%N;
 function patch(name,layer,angles,rows,col,mirror=false){group(name+(mirror?" L":""),layer,col,()=>{let prev=angles.map(a=>rings[2][idx(mirror?-a:a)]);for(let row of rows){let next=row.map(([a,y,o])=>v(point(mirror?-a:a,y,o)));for(let j=0;j<prev.length-1;j++)quad(prev[j],next[j],next[j+1],prev[j+1]);prev=next}})}
 // Three distinct fringe sheets share their crown seam, their free lower edges form broad tapered locks.
-patch("central fringe",3,[-30,-15,0,15,30],[[[-29,2.66,0],[-15,2.61,.012],[0,2.595,.025],[15,2.61,.012],[29,2.66,0]],[[-28,2.618,.002],[-13,2.49,.014],[0,2.405,.017],[13,2.49,.014],[28,2.618,.002]]],[116,76,60]);
+patch("central fringe",3,[-30,-15,0,15,30],[[[-30,2.66,.012],[-15,2.61,.012],[0,2.595,.025],[15,2.61,.012],[30,2.66,.012]],[[-30,2.618,.002],[-13,2.49,.014],[0,2.405,.017],[13,2.49,.014],[30,2.618,.002]]],[116,76,60]);
 for(let flip of [false,true]){
-patch("diagonal fringe",3,[30,45,60],[[[29,2.66,.012],[42,2.59,.023],[60,2.62,.009]],[[30,2.635,.006],[43,2.435,.024],[55,2.535,.011]]],[112,73,58],flip);
-patch("side main",2,[60,75,90],[[[61,2.62,.013],[73,2.55,.015],[90,2.56,.011]],[[61,2.37,.011],[72,2.34,.016],[90,2.34,.006]],[[52,2.175,.008],[57,2.107,.01],[84,2.165,.002]]],[105,67,53],flip);
+patch("diagonal fringe",3,[30,45,60],[[[30,2.66,.012],[42,2.59,.023],[60,2.62,.009]],[[30,2.618,.002],[43,2.435,.024],[57,2.535,.011]]],[112,73,58],flip);
+patch("side main",2,[60,75,90],[[[60,2.62,.009],[73,2.55,.015],[90,2.56,.011]],[[50,2.37,.011],[72,2.34,.016],[90,2.34,.006]],[[52,2.175,.008],[57,2.107,.01],[84,2.165,.002]]],[105,67,53],flip);
 patch("temple back",1,[90,105,120],[[[90,2.56,.011],[105,2.56,.01],[120,2.56,.005]],[[90,2.34,.006],[105,2.31,.01],[120,2.33,.003]],[[84,2.165,.002],[97,2.125,.006],[116,2.145,0]]],[103,65,51],flip);
 patch("back wing",1,[120,135,150],[[[120,2.56,.005],[135,2.58,.01],[150,2.56,0]],[[120,2.33,.003],[135,2.31,.011],[150,2.33,.003]],[[116,2.145,0],[133,2.115,.006],[150,2.15,0]]],[108,70,55],flip);
 }
 patch("rear center",1,[150,165,180,195,210],[[[150,2.56,0],[165,2.57,.004],[180,2.57,.012],[195,2.57,.004],[210,2.56,0]],[[150,2.33,.003],[165,2.32,.005],[180,2.31,.009],[195,2.32,.005],[210,2.33,.003]],[[150,2.15,0],[165,2.13,0],[180,2.115,.005],[195,2.13,0],[210,2.15,0]]],[104,68,54]);
 // Two narrow curved face-framing sheets, only local overlap, no additional global cap.
-for(let flip of [false,true])group("inner side lining "+(flip?"L":"R"),2,[81,51,42],()=>{let rows=[[[57,2.66,-.003],[69,2.66,-.006]],[[54,2.48,-.008],[66,2.47,-.009]],[[48,2.29,-.004],[59,2.29,-.005]],[[43,2.16,-.002],[49,2.12,-.001]]].map(row=>row.map(([a,y,o])=>v(point(flip?-a:a,y,o+-0.018))));for(let j=0;j<rows.length-1;j++)quad(rows[j][0],rows[j+1][0],rows[j+1][1],rows[j][1])});
+for(let flip of [false,true])group("inner side lining "+(flip?"L":"R"),2,[81,51,42],()=>{let rows=[[[57,2.66,-.003],[69,2.66,-.006]],[[46,2.48,-.004],[72,2.47,-.005]],[[44,2.29,-.004],[70,2.29,-.005]],[[43,2.16,-.002],[49,2.12,-.001]]].map(row=>row.map(([a,y,o])=>v(point(flip?-a:a,y,o+-0.018))));for(let j=0;j<rows.length-1;j++)quad(rows[j][0],rows[j+1][0],rows[j+1][1],rows[j][1])});
 const ht=tris({positions:P,polygons:Q});function count(a,b){let n=0;for(let t of a)for(let i=0;i<3;i++){let p=t[i],v=sub(t[(i+1)%3],p);if(b.some(q=>{let u=ray(p,v,q);return u!==null&&u>1e-7&&u<1-1e-7}))n++}return n}
 let inter=[];for(let i=0;i<groups.length;i++)for(let j=i+1;j<groups.length;j++){let a=groups[i],b=groups[j],u=ht.slice(a.faceStart*2,(a.faceStart+a.faceCount)*2),v=ht.slice(b.faceStart*2,(b.faceStart+b.faceCount)*2),n=count(u,v)+count(v,u);if(n)inter.push([a.name,b.name,n])}
 let points=new Set(P.map(p=>p.map(v=>Math.round(v*1e6)).join(','))),mirror=P.filter(p=>!points.has([-p[0],p[1],p[2]].map(v=>Math.round(v*1e6)).join(','))).length;
