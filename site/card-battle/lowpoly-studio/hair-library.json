@@ -25,20 +25,21 @@
       "reference": "../../assets/characters/monster-hunters/04-bounty-markswoman.png",
       "referenceBlob": "1d4da98fd12589d478768900b7e55c3c188f036d",
       "character": "04-markswoman",
-      "mesh": "hair_hunter02.json",
+      "mesh": "hair_hunter02-v2.json",
       "textures": {
-        "front": "hair_hunter02-front.png",
         "back": "hair_hunter02-back.png",
         "sideL": "hair_hunter02-sideL.png",
         "sideR": "hair_hunter02-sideR.png",
         "extra": "hair_hunter02-extra.png",
-        "tailProfile": "hair_hunter02-tailProfile.png"
+        "tailProfile": "hair_hunter02-tailProfile.png",
+        "frontL": "hair_hunter02-frontL.png",
+        "frontR": "hair_hunter02-frontR.png"
       },
-      "preview": "hair_hunter02-preview.png",
+      "preview": "hair_hunter02-v2-preview.png",
       "viewer": "v46.html?hair=hunter02",
-      "vertices": 143,
-      "quads": 88,
-      "notes": "Asymmetric swept bangs, nape ponytail, no ahoge; static strict body crossing test clear; root and crossed tail overlap intentionally; pending aesthetic approval."
+      "vertices": 155,
+      "quads": 92,
+      "notes": "Raised center-part separate left/right front cards; original back and low ponytail preserved; pending aesthetic review."
     }
   ]
 }
