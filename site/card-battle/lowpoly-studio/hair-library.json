@@ -25,21 +25,22 @@
       "reference": "../../assets/characters/monster-hunters/04-bounty-markswoman.png",
       "referenceBlob": "1d4da98fd12589d478768900b7e55c3c188f036d",
       "character": "04-markswoman",
-      "mesh": "hair_hunter02-v2.json",
+      "mesh": "hair_hunter02-v3.json",
       "textures": {
         "back": "hair_hunter02-back.png",
         "sideL": "hair_hunter02-sideL.png",
         "sideR": "hair_hunter02-sideR.png",
         "extra": "hair_hunter02-extra.png",
         "tailProfile": "hair_hunter02-tailProfile.png",
-        "frontL": "hair_hunter02-frontL.png",
-        "frontR": "hair_hunter02-frontR.png"
+        "scalp": "hair_hunter02-scalp.png",
+        "frontL3": "hair_hunter02-frontL3.png",
+        "frontR3": "hair_hunter02-frontR3.png"
       },
-      "preview": "hair_hunter02-v2-preview.png",
+      "preview": "hair_hunter02-v3-preview.png",
       "viewer": "v46.html?hair=hunter02",
-      "vertices": 155,
-      "quads": 92,
-      "notes": "Raised center-part separate left/right front cards; original back and low ponytail preserved; pending aesthetic review."
+      "vertices": 194,
+      "quads": 124,
+      "notes": "V3 scalp underlay extracted from frozen V46, narrow rooted center-part raised angular front cards; previous back and ponytail unchanged; static visual review pending."
     }
   ]
 }
