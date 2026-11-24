@@ -1,0 +1,56 @@
+name: Verify V27 public endpoint and preserve offline viewer
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/joint-v27-live-check.yml'
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Publish game + all-character L2D DEV (quality-gated)"]
+    types: [completed]
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: joint-v27-live-verification
+  cancel-in-progress: false
+jobs:
+  verify:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: site/card-battle/lowpoly-studio/joint-v27.html
+          sparse-checkout-cone-mode: false
+      - name: Package standalone exact model
+        run: |
+          mkdir -p offline
+          cp site/card-battle/lowpoly-studio/joint-v27.html offline/index.html
+          sha256sum offline/index.html
+      - uses: actions/upload-artifact@v4
+        with:
+          name: V27-offline-interactive-model
+          path: offline/index.html
+      - name: Require real public HTTP 200 and exact latest bytes
+        run: |
+          set -euo pipefail
+          url='https://g2066203208-beep.github.io/paperchalk-world/card-battle/lowpoly-studio/joint-v27.html'
+          expected=$(sha256sum offline/index.html | cut -d ' ' -f1)
+          for i in $(seq 1 20); do
+            code=$(curl -LsS --max-time 12 -o /tmp/joint-v27-live.html -w '%{http_code}' "$url?rev=$GITHUB_SHA" || true)
+            if [ "$code" = '200' ]; then
+              actual=$(sha256sum /tmp/joint-v27-live.html | cut -d ' ' -f1)
+              if [ "$actual" = "$expected" ]; then
+                echo "HTTP 200 + exact SHA-256 verified: $url"
+                exit 0
+              fi
+              echo "HTTP 200 but revision not current"
+            else
+              echo "Public HTTP $code (attempt $i)"
+            fi
+            sleep 10
+          done
+          echo "::error::Public V27 endpoint not current or not available"
+          exit 1
