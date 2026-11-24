@@ -255,10 +255,13 @@ function armRig(side){
  // Hand is fully distal. It must follow the forearm transform without deformation.
  const hand=g.ids.filter(i=>N.positions[i][1]<1.45);
  function poseArm(deg){let L=ElbowCorrective.elastic(ElbowCorrective.pose(M,deg,false),EC),a=ElbowCorrective.audit(M,L,g.ids,fs);return {L,a,P:g.ids.map(i=>deg===0?N.positions[i].slice():world(L[i]))}}
- return {side,g,M,EC,core,hand,poseArm,world};
+ return {side,g,M,EC,core,hand,poseArm,world,local};
 }
 const arms=[armRig(1),armRig(2)],cache=new Map();
-function getArm(arm,deg){let k='a'+arm.side+':'+deg;if(!cache.has(k))cache.set(k,arm.poseArm(deg));return cache.get(k)}
+const mirror=p=>[-p[0],p[1],p[2]],key=p=>p.map(v=>Math.round(v*1e8)).join(',');
+const rightIndex=new Map(arms[0].g.ids.map((i,j)=>[key(N.positions[i]),j])),mirrorIndices=arms[1].g.ids.map(i=>rightIndex.get(key(mirror(N.positions[i]))));
+if(mirrorIndices.some(i=>i===undefined)||new Set(mirrorIndices).size!==arms[0].g.ids.length)throw Error('arm mirror map incomplete');
+function getArm(arm,deg){let k='a'+arm.side+':'+deg;if(!cache.has(k)){if(arm.side===1)cache.set(k,arm.poseArm(deg));else{let A=getArm(arms[0],deg),P=mirrorIndices.map((j,i)=>deg===0?N.positions[arm.g.ids[i]].slice():mirror(A.P[j])),L=arm.M.positions.map(p=>p.slice());arm.g.ids.forEach((id,j)=>L[id]=arm.local(P[j]));cache.set(k,{P,L,a:ElbowCorrective.audit(arm.M,L,arm.g.ids,arm.g.fs)})}}return cache.get(k)}
 function getLeg(deg){let k='k:'+deg;if(!cache.has(k)){let P=V26B.elastic(V26B.pose(N,deg,true),KC);cache.set(k,{P,a:V26B.audit(N,P,leg.ids,leg.fs)})}return cache.get(k)}
 let camera=Math.PI/2,pitch=0,playing=false,raf=0,last=0,pointer=null,zoom=1,direction=1;
 function draw(){
