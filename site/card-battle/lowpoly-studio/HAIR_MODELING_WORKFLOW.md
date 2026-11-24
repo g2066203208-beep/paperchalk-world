@@ -21,3 +21,14 @@
 7. 每阶段输出同视角、同光源的原始头部对照/参考图/真实网格渲染，另有单束和全发型线框、顶视/四分之三视角。截图不通过不宣称完成。先审单束与发型轮廓再全头组合。
 
 Bob 01 不以顶点数或碰撞计数替代视觉验收。V1/V2 保留为失败对照，不覆盖原始 V46。
+
+## 2026-11-24 用户纠正：Esukevi / えすけび 是核心美术参考
+作者身份来自现有 lowpoly-studio/index.html 的既定参考登记，不是新选的普通动漫作者。作者主页 https://x.com/esukevi/media ；原作者介绍的转载索引 https://twiman.net/user/3976248253/illust 。
+重点参考（Tenor 第三方转载，非作者发布原文件）：
+- 爱丽速子 10.2 秒 https://tenor.com/view/agnes-tachyon-umamusume-esukevi-agnes-tachyon-gif-10846683350037499610
+- 曼城茶座双人近景 2.2 秒 https://tenor.com/view/esukevi-umamusume-manhattan-cafe-agnes-tachyon-umamusume-pretty-derby-esukevi-gif-14152756986251812271
+- 舞蹈 11.2 秒 https://tenor.com/view/esukevi-umamusume-uma-musume-agnes-tachyon-gif-2139452339290722119
+- 双人演出 9.6 秒 https://tenor.com/en-GB/view/esukevi-uma-musume-uma-musume-umamusume-gif-12940021271253575468
+目前已核对参考页面和时长，但本次未成功下载/解码 GIF，也未找到作者公开的头发网格、线框或制作教程。不得声称已测量作者发束拓扑、面数或逐帧学习完成。
+技术佐证：C&R 的低模制作原则 https://3d.crdg.jp/tech/archives/844 ：先在轮廓峰值设顶点，然后按需求增加边；くろさわ https://note.com/thesaurus/n/nf3af49670ce8 ：非平面四边形的渲染对角线会改变凸凹，低模特别明显。二者不是 Esukevi 作者自身教程。
+项目实施优先级：原作实际帧轮廓 > 用户批准 V46 头骨与波波头设计 > 通用教程。取消以大量独立扫掠发束为必然正确方法的假设；采用极少数主发块、关键轮廓顶点和局部折面，先构建低面数实体，再根据参考逐点增删。四边形、镜像、头部冻结继续执行，不将作者真实拓扑与我们的推断混淆。对比图应统一角度、尺度、五官与光照；不得使用 AI 替代原始参考帧。
