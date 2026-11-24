@@ -1,0 +1,64 @@
+{
+  "vertices": 520,
+  "quads": 518,
+  "allQuads": true,
+  "sweeps": {
+    "knees": {
+      "samples": 146,
+      "failed": 0,
+      "bad": [],
+      "maxHand": 0
+    },
+    "elbows": {
+      "samples": 146,
+      "failed": 1,
+      "bad": [
+        [
+          145,
+          9,
+          0,
+          0
+        ]
+      ],
+      "maxHand": 1.0103029524088925e-14
+    },
+    "right elbow": {
+      "samples": 146,
+      "failed": 1,
+      "bad": [
+        [
+          145,
+          4,
+          0,
+          0
+        ]
+      ],
+      "maxHand": 1.0103029524088925e-14
+    },
+    "left elbow": {
+      "samples": 146,
+      "failed": 1,
+      "bad": [
+        [
+          145,
+          5,
+          0,
+          0
+        ]
+      ],
+      "maxHand": 1.0103029524088925e-14
+    },
+    "wrists": {
+      "samples": 141,
+      "failed": 0,
+      "bad": [],
+      "maxHand": 7.771561172376096e-15
+    },
+    "bent elbow wrists": {
+      "samples": 141,
+      "failed": 0,
+      "bad": [],
+      "maxHand": 9.325873406851315e-15
+    }
+  }
+}
