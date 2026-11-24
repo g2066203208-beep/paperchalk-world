@@ -1,0 +1,29 @@
+{
+  "level1": {
+    "quads": 2424,
+    "vertices": 2426,
+    "locked": 1290,
+    "neutral": {
+      "deg": 0,
+      "folds": [],
+      "pairs": []
+    },
+    "posedPairs": 256
+  },
+  "level2": {
+    "quads": 9696,
+    "vertices": 9698,
+    "locked": 4802,
+    "neutral": {
+      "pairs": 0,
+      "folds": 0,
+      "degenerate": 0
+    },
+    "posed": {
+      "pairs": 548,
+      "folds": 0,
+      "degenerate": 0
+    },
+    "status": "High resolution work mesh only; inherited seated pose still intersects. Do not simplify until corrected."
+  }
+}
