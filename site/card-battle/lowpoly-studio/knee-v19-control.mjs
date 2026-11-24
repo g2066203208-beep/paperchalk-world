@@ -1,0 +1,2 @@
+// V19: distribute extension through the anterior support rings, never through the distal cores.
+export function controlled(M,B,deg,opt,bend,hardKnee){let P=hardKnee(M,B,deg,opt,bend),a=deg*Math.PI/180,pz=opt.pivotZ;for(let v of B){if(v.sector!=='front'||v.ring<2||v.ring>4||v.patella)continue;let w=v.ring===2?opt.upper:v.ring===2.5?opt.upperMid:v.ring===3.5?opt.lowerMid:v.ring===4?opt.lower:v.w;if(w===undefined)continue;let p=M.positions[v.id],y=p[1]-.918,z=p[2]-pz,t=a*w;P[v.id]=[p[0],.918+y*Math.cos(t)-z*Math.sin(t),pz+y*Math.sin(t)+z*Math.cos(t)]}return P}
