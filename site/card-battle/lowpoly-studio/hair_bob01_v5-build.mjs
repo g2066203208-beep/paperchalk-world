@@ -1,0 +1,17 @@
+export function build(D,sha,expand=0){
+const P=[],Q=[],groups=[],faceColors=[],sub=(a,b)=>a.map((x,i)=>x-b[i]),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0);
+const add=p=>{let [x,y,z]=p,rr=1+expand;P.push([x*rr,2.52+(y-2.52)*(1+expand*.45),z*rr]);return P.length-1};
+function quad(a,b,c,d){let f=[a,b,c,d],n=cross(sub(P[b],P[a]),sub(P[c],P[a])),center=f.reduce((s,i)=>s.map((x,j)=>x+P[i][j]/4),[0,0,0]);if(dot(n,[center[0],center[1]-2.52,center[2]])<0)f.reverse();Q.push(f)}
+function group(name,layer,col,fn){let first=Q.length;fn();groups.push({name,layer,faceStart:first,faceCount:Q.length-first});for(let i=first;i<Q.length;i++)faceColors.push(col)}
+function mirrorRow(row){return row.slice(1).reverse().map(([x,y,z])=>[-x,y,z]).concat(row)}
+const ridge=mirrorRow([[0,2.934,0],[.145,2.903,0],[.292,2.815,0]]).map(add);
+function panel(rows,col,name,layer){let r=[ridge,...rows.map(row=>mirrorRow(row).map(add))];group(name,layer,col,()=>{for(let j=0;j<r.length-1;j++)for(let i=0;i<4;i++)quad(r[j][i],r[j+1][i],r[j+1][i+1],r[j][i+1])});return r}
+const front=panel([[[0,2.822,.292],[.174,2.797,.274],[.329,2.700,.219]],[[0,2.665,.376],[.196,2.641,.325],[.363,2.555,.219]],[[0,2.424,.365],[.164,2.568,.335],[.307,2.411,.226]]],[111,71,55],"front",3);
+const back=panel([[[0,2.816,-.294],[.181,2.783,-.286],[.333,2.69,-.235]],[[0,2.505,-.396],[.205,2.504,-.365],[.351,2.441,-.254]],[[0,2.145,-.314],[.155,2.115,-.296],[.27,2.151,-.235]]],[103,65,51],"back",1);
+for(let side of [-1,1]){let i=side===1?4:0;let f1=front[1][i],b1=back[1][i],f2=front[2][i],b2=back[2][i],b3=back[3][i],mid1=add([side*.403,2.66,-.005]),mid2=add([side*.407,2.415,-.015]),mid3=add([side*.323,2.135,-.03]),frontHem=add([side*.294,2.105,.218]);group(side===1?"right side":"left side",2,[112,72,55],()=>{quad(ridge[i],f1,mid1,b1);quad(f1,f2,mid2,mid1);quad(mid1,mid2,b2,b1);quad(f2,frontHem,mid3,mid2);quad(mid2,mid3,b3,b2)})}
+const tris=m=>m.polygons.flatMap(f=>[[f[0],f[1],f[2]],[f[0],f[2],f[3]]].map(t=>t.map(i=>m.positions[i]))),bt=[D,...Object.values(D.modules)].flatMap(tris).filter(t=>Math.max(...t.map(p=>p[1]))>2.07),ht=tris({positions:P,polygons:Q});
+function ray(o,v,t){let e1=sub(t[1],t[0]),e2=sub(t[2],t[0]),h=cross(v,e2),a=dot(e1,h);if(Math.abs(a)<1e-10)return null;let f=1/a,s=sub(o,t[0]),u=f*dot(s,h);if(u<0||u>1)return null;let q=cross(s,e1),w=f*dot(v,q);if(w<0||u+w>1)return null;return f*dot(e2,q)}
+function count(a,b){let n=0;for(let t of a)for(let i=0;i<3;i++){let p=t[i],v=sub(t[(i+1)%3],p);if(b.some(q=>{let u=ray(p,v,q);return u!==null&&u>1e-7&&u<1-1e-7}))n++}return n}
+let inter=[];for(let i=0;i<groups.length;i++)for(let j=i+1;j<groups.length;j++){let a=groups[i],b=groups[j],u=ht.slice(a.faceStart*2,(a.faceStart+a.faceCount)*2),v=ht.slice(b.faceStart*2,(b.faceStart+b.faceCount)*2),n=count(u,v)+count(v,u);if(n)inter.push([a.name,b.name,n])}
+return {name:"Bob 01 V5 four hand-shaped sheets",base:"V46",positions:P,polygons:Q,groups,faceColors,audit:{vertices:P.length,quads:Q.length,sourceTriangles:0,groups:groups.length,bodySourceSha:sha,hairEdgesCrossBody:count(ht,bt),bodyEdgesCrossHair:count(bt,ht),interGroupCrossings:inter,expand,openSheets:true}}
+}
