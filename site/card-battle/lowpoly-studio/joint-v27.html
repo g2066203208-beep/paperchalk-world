@@ -279,5 +279,6 @@ $('scope').onchange=()=>{camera=$('scope').value==='body'?Math.PI/4:Math.PI/2;dr
 $('play').onclick=()=>{playing=!playing;$('play').textContent=playing?'暂停':'播放';if(playing){last=0;raf=requestAnimationFrame(tick)}else cancelAnimationFrame(raf)};
 function tick(t){if(!playing)return;if(t-last>70){let slider=$('scope').value==='knee'?$('knee'):$('angle'),a=+slider.value+direction*2;if(a>=145){a=145;direction=-1}if(a<=0){a=0;direction=1}slider.value=a;draw();last=t}raf=requestAnimationFrame(tick)}
 $('view').onpointerdown=e=>{pointer=[e.clientX,e.clientY];$('view').setPointerCapture(e.pointerId)};$('view').onpointermove=e=>{if(!pointer)return;camera+=(e.clientX-pointer[0])*.01;pitch=Math.max(-1.1,Math.min(1.1,pitch+(e.clientY-pointer[1])*.01));pointer=[e.clientX,e.clientY];draw()};$('view').onpointerup=$('view').onpointercancel=()=>pointer=null;
+window.__v27Sweep=intersections=>{let rows=[];for(let deg=0;deg<=145;deg++){let pair=arms.map(arm=>{let A=getArm(arm,deg);return {side:arm.side,intersections:intersections(A.P,arm.g.mesh.polygons),...A.a}});rows.push({deg,arms:pair})}return rows};
 draw();
 }catch(e){document.getElementById('status').textContent='初始化失败：'+e.message;throw e}</script></html>
