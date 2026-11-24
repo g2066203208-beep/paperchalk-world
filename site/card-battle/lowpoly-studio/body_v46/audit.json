@@ -1,0 +1,26 @@
+{
+  "before": {
+    "localWarp": 5.76915506310018,
+    "bodyWarp": 6.749185940618857,
+    "longitudinalNormalJumpMax": 35.66599423682909,
+    "longitudinalNormalJumpMedian": 16.114247376461332,
+    "upperThighFrontDepth": 0.19426088324792518
+  },
+  "after": {
+    "localWarp": 2.602154240452228,
+    "bodyWarp": 6.749185940618857,
+    "longitudinalNormalJumpMax": 27.553216646438226,
+    "longitudinalNormalJumpMedian": 13.38439857378263,
+    "upperThighFrontDepth": 0.17001243231499866
+  },
+  "vertices": 440,
+  "quads": 438,
+  "sourceTriangles": 0,
+  "strictCrossings": 0,
+  "changedVertices": 65,
+  "mirrorError": 0.0,
+  "mirrorFaceErrors": 0,
+  "nonmanifoldEdges": 0,
+  "euler": 2,
+  "sameTopology": true
+}
