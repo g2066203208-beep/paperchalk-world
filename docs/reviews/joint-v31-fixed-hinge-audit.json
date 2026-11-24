@@ -1,0 +1,3678 @@
+{
+  "commit": "8bbd4efec1c3173c63ca7b45dfd6243b63004b0f",
+  "limitations": "Fixed estimated hinge, surface separating-plane proxy and edge constraints. No FEM, anatomy certification, retopology or full-body collision certification. Exact integer-degree isolated tests.",
+  "rows": [
+    {
+      "deg": 0,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 1,
+          "hi": 1,
+          "rigid": 0,
+          "core": 2606
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 1,
+          "hi": 1,
+          "rigid": 0,
+          "core": 2606
+        }
+      ]
+    },
+    {
+      "deg": 1,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9955120405029528,
+          "hi": 1.0265046182608217,
+          "rigid": 9.992007221626409e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9955120405029335,
+          "hi": 1.0265046182608166,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 2,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9910431259338185,
+          "hi": 1.0529800005219503,
+          "rigid": 9.547918011776346e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9910431259338318,
+          "hi": 1.052980000521935,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 3,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9865935222297659,
+          "hi": 1.0794170520228805,
+          "rigid": 9.103828801926284e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9865935222297595,
+          "hi": 1.0794170520228754,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 4,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9821634989555085,
+          "hi": 1.105806846043527,
+          "rigid": 7.438494264988549e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9821634989555152,
+          "hi": 1.1058068460435218,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 5,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9777533293322113,
+          "hi": 1.1321406089863608,
+          "rigid": 9.325873406851315e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9777533293321982,
+          "hi": 1.1321406089863661,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 6,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9733632902653334,
+          "hi": 1.1584097078496165,
+          "rigid": 9.992007221626409e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9733632902653401,
+          "hi": 1.1584097078496165,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 7,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9689936623712981,
+          "hi": 1.1846056397398577,
+          "rigid": 9.547918011776346e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9689936623712786,
+          "hi": 1.1846056397398526,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 8,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9646447300030042,
+          "hi": 1.2107200231298352,
+          "rigid": 9.547918011776346e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9646447300029978,
+          "hi": 1.21072002312984,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 9,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9603167812738974,
+          "hi": 1.2367445906141317,
+          "rigid": 8.326672684688674e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9603167812739042,
+          "hi": 1.2367445906141317,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 10,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9560101080807367,
+          "hi": 1.2626711829542971,
+          "rigid": 7.105427357601002e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9560101080807436,
+          "hi": 1.2626711829542971,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 11,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9517250061247454,
+          "hi": 1.2884917442369148,
+          "rigid": 9.103828801926284e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9517250061247456,
+          "hi": 1.2884917442369097,
+          "rigid": 4.96269692007445e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 12,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9474617749312395,
+          "hi": 1.314198317995053,
+          "rigid": 8.104628079763643e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9474617749312397,
+          "hi": 1.314198317995053,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 13,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9432207178674862,
+          "hi": 1.3397830441653271,
+          "rigid": 9.992007221626409e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9432207178674799,
+          "hi": 1.3397830441653222,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 14,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.93900214215874,
+          "hi": 1.3652381567718244,
+          "rigid": 7.105427357601002e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9390021421587402,
+          "hi": 1.3652381567718193,
+          "rigid": 4.6629367034256575e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 15,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9348063589023807,
+          "hi": 1.3905559822432696,
+          "rigid": 1.099120794378905e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9348063589023874,
+          "hi": 1.3905559822432643,
+          "rigid": 6.183942247162122e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 16,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9306336830799674,
+          "hi": 1.4157289382833613,
+          "rigid": 1.0658141036401503e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9306336830799872,
+          "hi": 1.415728938283356,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 17,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9264844335671728,
+          "hi": 1.4407495332248306,
+          "rigid": 8.992806499463768e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9264844335671667,
+          "hi": 1.4407495332248306,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 18,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9223589331413866,
+          "hi": 1.465610365807313,
+          "rigid": 1.0436096431476471e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9223589331413868,
+          "hi": 1.465610365807308,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 19,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9182575084869332,
+          "hi": 1.4903041253272507,
+          "rigid": 9.325873406851315e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9182575084869203,
+          "hi": 1.4903041253272507,
+          "rigid": 5.417888360170764e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 20,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9141804901978099,
+          "hi": 1.5148240318898876,
+          "rigid": 7.105427357601002e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9141804901978032,
+          "hi": 1.5148240318899011,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 21,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9101282127776371,
+          "hi": 1.5396111606576917,
+          "rigid": 8.43769498715119e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9101282127776242,
+          "hi": 1.539611160657698,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 22,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9061010146369267,
+          "hi": 1.56427677745231,
+          "rigid": 1.021405182655144e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.906101014636927,
+          "hi": 1.5642767774523032,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 23,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9020992380873603,
+          "hi": 1.5888171214658566,
+          "rigid": 9.103828801926284e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.9020992380873735,
+          "hi": 1.5888171214658635,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 24,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8981232293329948,
+          "hi": 1.6132284924552065,
+          "rigid": 1.1879386363489175e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8981232293329818,
+          "hi": 1.61322849245522,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 25,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8941733384582063,
+          "hi": 1.6375072497904426,
+          "rigid": 7.438494264988549e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8941733384582065,
+          "hi": 1.6375072497904564,
+          "rigid": 4.773959005888173e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 26,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.890249919412408,
+          "hi": 1.6616498117317562,
+          "rigid": 1.1879386363489175e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8902499194124016,
+          "hi": 1.6616498117317628,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 27,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.88635332999102,
+          "hi": 1.6866551285630924,
+          "rigid": 8.215650382226158e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.88635332999102,
+          "hi": 1.6866551285630995,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 28,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.882483931812998,
+          "hi": 1.714190389357822,
+          "rigid": 9.769962616701378e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.882483931812998,
+          "hi": 1.7141903893578365,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 29,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8786420902943635,
+          "hi": 1.7419073997800378,
+          "rigid": 9.992007221626409e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.878642090294344,
+          "hi": 1.741907399780059,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 30,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.874828174617853,
+          "hi": 1.7698088387958917,
+          "rigid": 8.881784197001252e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8748281746178468,
+          "hi": 1.7698088387959199,
+          "rigid": 4.651834473179406e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 31,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8710425576983968,
+          "hi": 1.7978972640710869,
+          "rigid": 1.1657341758564144e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8710425576984032,
+          "hi": 1.7978972640710655,
+          "rigid": 5.306866057708248e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 32,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8672856161442501,
+          "hi": 1.8001379858595077,
+          "rigid": 9.880984919163893e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.867285616144244,
+          "hi": 1.8001379858595077,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 33,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8635577302137181,
+          "hi": 1.8005686554813274,
+          "rigid": 8.43769498715119e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8635577302137183,
+          "hi": 1.8005686554813212,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 34,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8598592837672178,
+          "hi": 1.8010934538072398,
+          "rigid": 1.2101430968414206e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8598592837672244,
+          "hi": 1.8010934538072465,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 35,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8561906642145634,
+          "hi": 1.802026565546022,
+          "rigid": 7.993605777301127e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8561906642145569,
+          "hi": 1.8020265655460153,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 36,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8525522624572636,
+          "hi": 1.8030521742676997,
+          "rigid": 1.0769163338864018e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8525522624572445,
+          "hi": 1.8030521742676997,
+          "rigid": 4.729550084903167e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 37,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8489444728257279,
+          "hi": 1.8040734462873036,
+          "rigid": 9.325873406851315e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8489444728257282,
+          "hi": 1.8040734462873165,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 38,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8453676930111353,
+          "hi": 1.8050899611659492,
+          "rigid": 8.104628079763643e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.845367693011155,
+          "hi": 1.8050899611659499,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 39,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8418223239919161,
+          "hi": 1.8061322331917868,
+          "rigid": 1.1879386363489175e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8418223239919096,
+          "hi": 1.8061322331917808,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 40,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8383087699545486,
+          "hi": 1.8074061742352507,
+          "rigid": 9.103828801926284e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8383087699545617,
+          "hi": 1.8074061742352443,
+          "rigid": 5.540012892879531e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 41,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8348274382086011,
+          "hi": 1.808673960634366,
+          "rigid": 1.0880185641326534e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8348274382086076,
+          "hi": 1.808673960634366,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 42,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8310467253827889,
+          "hi": 1.8101330317528284,
+          "rigid": 9.325873406851315e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8310467253827835,
+          "hi": 1.8101330317528284,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 43,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8272567379088097,
+          "hi": 1.8117476599878717,
+          "rigid": 1.0658141036401503e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8272567379088165,
+          "hi": 1.8117476599878841,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 44,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8234799503815139,
+          "hi": 1.8133534448131952,
+          "rigid": 1.1546319456101628e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8234799503815199,
+          "hi": 1.8133534448132083,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 45,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8197165528029603,
+          "hi": 1.8149507661887576,
+          "rigid": 9.103828801926284e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8197165528029732,
+          "hi": 1.8149507661887774,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 46,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8159667379661544,
+          "hi": 1.8165396986443392,
+          "rigid": 7.993605777301127e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8159667379661669,
+          "hi": 1.8165396986443327,
+          "rigid": 4.785061236134425e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 47,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8122307014876138,
+          "hi": 1.8181202231690758,
+          "rigid": 9.769962616701378e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8122307014876142,
+          "hi": 1.8181202231690758,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 48,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8085086418397718,
+          "hi": 1.8196922958702435,
+          "rigid": 9.769962616701378e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8085086418397788,
+          "hi": 1.8196922958702564,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 49,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8048007603830041,
+          "hi": 1.8212558607065477,
+          "rigid": 9.992007221626409e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8048007603830164,
+          "hi": 1.8212558607065477,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 50,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8011072613973168,
+          "hi": 1.823048478783024,
+          "rigid": 1.0436096431476471e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.8011072613973356,
+          "hi": 1.8230484787830175,
+          "rigid": 4.773959005888173e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 51,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.79742835211363,
+          "hi": 1.8248637881665275,
+          "rigid": 8.43769498715119e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7974283521136426,
+          "hi": 1.8248637881665337,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 52,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.793764242744582,
+          "hi": 1.8266590966737817,
+          "rigid": 9.2148511043888e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.793764242744589,
+          "hi": 1.8266590966737817,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 53,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7901151465148577,
+          "hi": 1.8284387391961512,
+          "rigid": 9.103828801926284e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7901151465148578,
+          "hi": 1.8284387391961447,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 54,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.786481279690868,
+          "hi": 1.8302042708537243,
+          "rigid": 9.769962616701378e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7864812796908685,
+          "hi": 1.8302042708537312,
+          "rigid": 5.1736392947532295e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 55,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7828628616099358,
+          "hi": 1.8324327493174788,
+          "rigid": 9.43689570931383e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7828628616099483,
+          "hi": 1.8324327493174848,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 56,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7792601147086025,
+          "hi": 1.8346201864849734,
+          "rigid": 9.325873406851315e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7792601147086088,
+          "hi": 1.8346201864849734,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 57,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7756732645503712,
+          "hi": 1.8367695982818577,
+          "rigid": 9.658940314238862e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7756732645503716,
+          "hi": 1.836769598281864,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 58,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7721025398524358,
+          "hi": 1.8388900065190743,
+          "rigid": 8.215650382226158e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7721025398524421,
+          "hi": 1.8388900065190739,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 59,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7685481725117039,
+          "hi": 1.8409859000956195,
+          "rigid": 8.548717289613705e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7685481725116986,
+          "hi": 1.840985900095613,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 60,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7650103976296703,
+          "hi": 1.8430591889796872,
+          "rigid": 7.438494264988549e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.765010397629658,
+          "hi": 1.8430591889796935,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 61,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7614894535363723,
+          "hi": 1.845111650860951,
+          "rigid": 9.103828801926284e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7614894535363602,
+          "hi": 1.8451116508609575,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 62,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7579855818131449,
+          "hi": 1.8471439113824362,
+          "rigid": 8.992806499463768e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7579855818131448,
+          "hi": 1.8471439113824362,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 63,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.754499027314194,
+          "hi": 1.8499818666427632,
+          "rigid": 8.659739592076221e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7544990273141943,
+          "hi": 1.8499818666427756,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 64,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7510300381868779,
+          "hi": 1.8526119315334972,
+          "rigid": 9.43689570931383e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7510300381868663,
+          "hi": 1.8526119315334972,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 65,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7475788658905608,
+          "hi": 1.8551081981157087,
+          "rigid": 9.769962616701378e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7475788658905556,
+          "hi": 1.8551081981156958,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 66,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7441457652140353,
+          "hi": 1.8575284968587606,
+          "rigid": 1.0658141036401503e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7441457652140293,
+          "hi": 1.8575284968587784,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 67,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7407309942913243,
+          "hi": 1.8598938865741859,
+          "rigid": 9.103828801926284e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7407309942913308,
+          "hi": 1.8598938865741859,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 68,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7373348146158095,
+          "hi": 1.8622140091411328,
+          "rigid": 8.881784197001252e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.73733481461581,
+          "hi": 1.8622140091411328,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 69,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7339574910526531,
+          "hi": 1.8644945216209572,
+          "rigid": 1.0436096431476471e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7339574910526534,
+          "hi": 1.8644945216209576,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 70,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7305992918491766,
+          "hi": 1.8667399478054034,
+          "rigid": 1.1213252548714081e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.730599291849171,
+          "hi": 1.8667399478053917,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 71,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7272604886433848,
+          "hi": 1.8689513159475841,
+          "rigid": 9.103828801926284e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7272604886433854,
+          "hi": 1.8689513159475726,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 72,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7239413564703189,
+          "hi": 1.8714426432164248,
+          "rigid": 9.2148511043888e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7239413564703193,
+          "hi": 1.8714426432164193,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 73,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7194457245067362,
+          "hi": 1.875441109535574,
+          "rigid": 8.992806499463768e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7194457245067358,
+          "hi": 1.875441109535574,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 74,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7135287763971324,
+          "hi": 1.8787806108920508,
+          "rigid": 9.103828801926284e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7135287763971364,
+          "hi": 1.878780610892044,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 75,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7083965125021577,
+          "hi": 1.8818664276929173,
+          "rigid": 8.881784197001252e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7083965125021588,
+          "hi": 1.8818664276929282,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 76,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.70332361071693,
+          "hi": 1.8848014881804067,
+          "rigid": 7.438494264988549e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.7033236107169322,
+          "hi": 1.8848014881804123,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 77,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.693556608076405,
+          "hi": 1.887627807178891,
+          "rigid": 8.43769498715119e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.6935566080764105,
+          "hi": 1.887627807178891,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 78,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.676839290498144,
+          "hi": 1.8903665605020885,
+          "rigid": 8.881784197001252e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.6768392904981437,
+          "hi": 1.8903665605020707,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 79,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.6602550562727292,
+          "hi": 1.8930308809304277,
+          "rigid": 7.327471962526033e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.6602550562727251,
+          "hi": 1.8930308809304282,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 80,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.6438117931411018,
+          "hi": 1.895628088183797,
+          "rigid": 8.43769498715119e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.6438117931411028,
+          "hi": 1.8956280881837975,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 81,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.6275172453890655,
+          "hi": 1.8983626420097606,
+          "rigid": 7.771561172376096e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.6275172453890677,
+          "hi": 1.8983626420097717,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 82,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.6113715592464133,
+          "hi": 1.9020538827813314,
+          "rigid": 8.104628079763643e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.611371559246414,
+          "hi": 1.9020538827813311,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 83,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.6053376118387748,
+          "hi": 1.9055162410881814,
+          "rigid": 9.103828801926284e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.6053376118387691,
+          "hi": 1.905516241088181,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 84,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.602605412062651,
+          "hi": 1.9088062102477006,
+          "rigid": 1.0436096431476471e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.6026054120626559,
+          "hi": 1.9088062102477064,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 85,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.6015339380319341,
+          "hi": 1.9119565157832161,
+          "rigid": 1.432187701766452e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.6015339380319289,
+          "hi": 1.9119565157832006,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 86,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.6014917700285958,
+          "hi": 1.9149864532956575,
+          "rigid": 1.0658141036401503e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.6014917700285956,
+          "hi": 1.9149864532956418,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 87,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.6014501452417393,
+          "hi": 1.9179117165636936,
+          "rigid": 9.547918011776346e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 0,
+          "contactTargetMax": 0,
+          "lo": 0.6014501452417341,
+          "hi": 1.9179117165637043,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 88,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 1,
+          "contactTargetMax": 1.0453093125249425e-7,
+          "lo": 0.6014089260251051,
+          "hi": 1.9207400224157596,
+          "rigid": 1.1546319456101628e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 1,
+          "contactTargetMax": 1.0453093125249425e-7,
+          "lo": 0.601408926025101,
+          "hi": 1.9207400224157543,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 89,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 1,
+          "contactTargetMax": 1.1176984341909854e-7,
+          "lo": 0.6013872467206697,
+          "hi": 1.92348005807151,
+          "rigid": 1.0436096431476471e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 1,
+          "contactTargetMax": 1.1176984341909854e-7,
+          "lo": 0.6013872467206717,
+          "hi": 1.9234800580715,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 90,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 1,
+          "contactTargetMax": 1.1910048172969822e-7,
+          "lo": 0.6013773875778754,
+          "hi": 1.926136436508571,
+          "rigid": 7.438494264988549e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 1,
+          "contactTargetMax": 1.1910048172969822e-7,
+          "lo": 0.6013773875778762,
+          "hi": 1.9261364365085605,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 91,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 1,
+          "contactTargetMax": 1.264862089941333e-7,
+          "lo": 0.6011558558226566,
+          "hi": 1.928715798219232,
+          "rigid": 1.687538997430238e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 1,
+          "contactTargetMax": 1.264862089941333e-7,
+          "lo": 0.6011558558226556,
+          "hi": 1.928715798219232,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 92,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 1,
+          "contactTargetMax": 1.33887059279592e-7,
+          "lo": 0.5999933580357654,
+          "hi": 1.9313791999287617,
+          "rigid": 1.5654144647214707e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 1,
+          "contactTargetMax": 1.33887059279592e-7,
+          "lo": 0.5999933580357614,
+          "hi": 1.9313791999287517,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 93,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 1,
+          "contactTargetMax": 1.4125966793672722e-7,
+          "lo": 0.5998740158249716,
+          "hi": 1.9340592288668492,
+          "rigid": 9.547918011776346e-15,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 1,
+          "contactTargetMax": 1.4125966793672722e-7,
+          "lo": 0.599874015824976,
+          "hi": 1.9340592288668494,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 94,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 1,
+          "contactTargetMax": 1.485572058605945e-7,
+          "lo": 0.5997498703716467,
+          "hi": 1.9366507526952146,
+          "rigid": 1.1213252548714081e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 1,
+          "contactTargetMax": 1.485572058605945e-7,
+          "lo": 0.5997498703716444,
+          "hi": 1.936650752695225,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 95,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 1,
+          "contactTargetMax": 1.5572931816485616e-7,
+          "lo": 0.5996304274695451,
+          "hi": 1.9391614729435516,
+          "rigid": 1.2434497875801753e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 1,
+          "contactTargetMax": 1.5572931816485616e-7,
+          "lo": 0.599630427469544,
+          "hi": 1.939161472943551,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 96,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 1,
+          "contactTargetMax": 1.627220674432341e-7,
+          "lo": 0.5990595186805363,
+          "hi": 1.9415952379483616,
+          "rigid": 1.4988010832439613e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 1,
+          "contactTargetMax": 1.627220674432341e-7,
+          "lo": 0.5990595186805459,
+          "hi": 1.9415952379483767,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 97,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 1,
+          "contactTargetMax": 1.69477881787494e-7,
+          "lo": 0.5989347417053373,
+          "hi": 1.9439564291545506,
+          "rigid": 1.0880185641326534e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 1,
+          "contactTargetMax": 1.69477881787494e-7,
+          "lo": 0.598934741705332,
+          "hi": 1.9439564291545457,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 98,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 1,
+          "contactTargetMax": 1.759355077263464e-7,
+          "lo": 0.5988099085186716,
+          "hi": 1.9462498315074601,
+          "rigid": 1.1102230246251565e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 1,
+          "contactTargetMax": 1.759355077263464e-7,
+          "lo": 0.5988099085186693,
+          "hi": 1.9462498315074406,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 99,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 1,
+          "contactTargetMax": 1.8202996824453427e-7,
+          "lo": 0.5986839715831318,
+          "hi": 1.9484766062207666,
+          "rigid": 1.2434497875801753e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 1,
+          "contactTargetMax": 1.8202996824453427e-7,
+          "lo": 0.5986839715831377,
+          "hi": 1.9484766062207575,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 100,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 1,
+          "contactTargetMax": 1.8769252603606787e-7,
+          "lo": 0.5985282351363918,
+          "hi": 1.9506375810972358,
+          "rigid": 1.4210854715202004e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 1,
+          "contactTargetMax": 1.8769252603606787e-7,
+          "lo": 0.5985282351363851,
+          "hi": 1.9506375810972305,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 101,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 1,
+          "contactTargetMax": 1.9314102602828308e-7,
+          "lo": 0.5983951558671264,
+          "hi": 1.9527354279266729,
+          "rigid": 1.4210854715202004e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 1,
+          "contactTargetMax": 1.9314102602828308e-7,
+          "lo": 0.5983951558671268,
+          "hi": 1.9527354279266633,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 102,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 1,
+          "contactTargetMax": 1.986400038564482e-7,
+          "lo": 0.5982584280858763,
+          "hi": 1.9547722212307233,
+          "rigid": 1.199040866595169e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 1,
+          "contactTargetMax": 1.986400038564482e-7,
+          "lo": 0.5982584280858704,
+          "hi": 1.9547722212307328,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 103,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 1,
+          "contactTargetMax": 2.0418789124454784e-7,
+          "lo": 0.5981166070626261,
+          "hi": 1.9567479183756131,
+          "rigid": 1.2878587085651816e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 1,
+          "contactTargetMax": 2.0418789124454784e-7,
+          "lo": 0.5981166070626206,
+          "hi": 1.9567479183756178,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 104,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 2,
+          "contactTargetMax": 2.0978308383435607e-7,
+          "lo": 0.5979358299756335,
+          "hi": 1.9586640935896544,
+          "rigid": 1.5987211554602254e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 2,
+          "contactTargetMax": 2.0978308383435607e-7,
+          "lo": 0.5979358299756364,
+          "hi": 1.9586640935896544,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 105,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 2,
+          "contactTargetMax": 2.154239418426821e-7,
+          "lo": 0.5971895358891732,
+          "hi": 1.9605227094237188,
+          "rigid": 1.3322676295501878e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 2,
+          "contactTargetMax": 2.154239418426821e-7,
+          "lo": 0.5971895358891723,
+          "hi": 1.9605227094237188,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 106,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 2,
+          "contactTargetMax": 2.2110879073677338e-7,
+          "lo": 0.5967464752351356,
+          "hi": 1.9625935597669601,
+          "rigid": 1.2545520178264269e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 2,
+          "contactTargetMax": 2.2110879073677338e-7,
+          "lo": 0.5967464752351355,
+          "hi": 1.9625935597669644,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 107,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 2,
+          "contactTargetMax": 2.2683592192759418e-7,
+          "lo": 0.5966142066424555,
+          "hi": 1.965136230109211,
+          "rigid": 1.6653345369377348e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 2,
+          "contactTargetMax": 2.2683592192759418e-7,
+          "lo": 0.5966142066424565,
+          "hi": 1.9651362301092155,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 108,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 2,
+          "contactTargetMax": 2.3260359348067755e-7,
+          "lo": 0.5964836268537632,
+          "hi": 1.9675446848619746,
+          "rigid": 1.3877787807814457e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 2,
+          "contactTargetMax": 2.3260359348067755e-7,
+          "lo": 0.5964836268537573,
+          "hi": 1.9675446848619835,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 109,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 2,
+          "contactTargetMax": 2.3841003084425426e-7,
+          "lo": 0.5963607448537233,
+          "hi": 1.9698269297747182,
+          "rigid": 1.532107773982716e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 2,
+          "contactTargetMax": 2.3841003084425426e-7,
+          "lo": 0.5963607448537277,
+          "hi": 1.9698269297747095,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 110,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 2,
+          "contactTargetMax": 2.4425342759433906e-7,
+          "lo": 0.5952784538589734,
+          "hi": 1.9721722281374807,
+          "rigid": 1.2545520178264269e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 2,
+          "contactTargetMax": 2.4425342759433906e-7,
+          "lo": 0.5952784538589801,
+          "hi": 1.9721722281374807,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 111,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 2,
+          "contactTargetMax": 2.501319461964622e-7,
+          "lo": 0.5949027790120012,
+          "hi": 1.9745149965289186,
+          "rigid": 1.2212453270876722e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 2,
+          "contactTargetMax": 2.501319461964622e-7,
+          "lo": 0.5949027790119965,
+          "hi": 1.9745149965289277,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 112,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 2,
+          "contactTargetMax": 2.5604371878371495e-7,
+          "lo": 0.5945754576102369,
+          "hi": 1.9767172354288447,
+          "rigid": 1.4654943925052066e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 2,
+          "contactTargetMax": 2.5604371878371495e-7,
+          "lo": 0.5945754576102354,
+          "hi": 1.9767172354288398,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 113,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 2,
+          "contactTargetMax": 2.6198684795077455e-7,
+          "lo": 0.5942580175983632,
+          "hi": 1.9787913218264337,
+          "rigid": 1.5765166949677223e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 2,
+          "contactTargetMax": 2.6198684795077455e-7,
+          "lo": 0.5942580175983628,
+          "hi": 1.9787913218264337,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 114,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 2,
+          "contactTargetMax": 2.6795940756356595e-7,
+          "lo": 0.5939517203390822,
+          "hi": 1.9807452537413324,
+          "rigid": 1.4210854715202004e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 2,
+          "contactTargetMax": 2.6795940756356595e-7,
+          "lo": 0.5939517203390846,
+          "hi": 1.9807452537413324,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 115,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 3,
+          "contactTargetMax": 0.000028062087287546254,
+          "lo": 0.5936521785398784,
+          "hi": 1.982590194947461,
+          "rigid": 1.1546319456101628e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 3,
+          "contactTargetMax": 0.000028062087287546254,
+          "lo": 0.5936521785398828,
+          "hi": 1.9825901949474565,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 116,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 3,
+          "contactTargetMax": 0.0006757588203225363,
+          "lo": 0.5933662461848137,
+          "hi": 1.9843310442441155,
+          "rigid": 1.3766765505351941e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 3,
+          "contactTargetMax": 0.0006757588203225363,
+          "lo": 0.5933662461848136,
+          "hi": 1.9843310442440987,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 117,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 4,
+          "contactTargetMax": 0.0013235145908562771,
+          "lo": 0.5930938582471806,
+          "hi": 1.98619097862207,
+          "rigid": 1.3322676295501878e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 4,
+          "contactTargetMax": 0.0013235145908562771,
+          "lo": 0.5930938582471826,
+          "hi": 1.9861909786220782,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 118,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 4,
+          "contactTargetMax": 0.0019712830024195814,
+          "lo": 0.592871667172733,
+          "hi": 1.988370541121793,
+          "rigid": 1.2434497875801753e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 4,
+          "contactTargetMax": 0.0019712830024195814,
+          "lo": 0.5928716671727348,
+          "hi": 1.988370541121781,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 119,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 6,
+          "contactTargetMax": 0.00261901765763784,
+          "lo": 0.5926990851407109,
+          "hi": 1.9906133471793008,
+          "rigid": 1.2212453270876722e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 6,
+          "contactTargetMax": 0.00261901765763784,
+          "lo": 0.5926990851407155,
+          "hi": 1.9906133471793128,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 120,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 7,
+          "contactTargetMax": 0.003266672161554274,
+          "lo": 0.5925487973418699,
+          "hi": 1.9927836735392757,
+          "rigid": 1.2989609388114332e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 7,
+          "contactTargetMax": 0.003266672161554274,
+          "lo": 0.5925487973418674,
+          "hi": 1.9927836735392717,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 121,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 7,
+          "contactTargetMax": 0.003914200124953094,
+          "lo": 0.5924436478382812,
+          "hi": 1.9948394823760245,
+          "rigid": 1.5432100042289676e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 7,
+          "contactTargetMax": 0.003914200124953094,
+          "lo": 0.5924436478382853,
+          "hi": 1.9948394823760323,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 122,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 11,
+          "contactTargetMax": 0.0045615551676820975,
+          "lo": 0.59234848308427,
+          "hi": 1.996770722258173,
+          "rigid": 1.4432899320127035e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 11,
+          "contactTargetMax": 0.0045615551676820975,
+          "lo": 0.5923484830842769,
+          "hi": 1.996770722258169,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 123,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 12,
+          "contactTargetMax": 0.005208690921974865,
+          "lo": 0.5919431251207514,
+          "hi": 1.9985760680489408,
+          "rigid": 1.4876988529977098e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 12,
+          "contactTargetMax": 0.005208690921974865,
+          "lo": 0.5919431251207515,
+          "hi": 1.9985760680489526,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 124,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 15,
+          "contactTargetMax": 0.005855561035771775,
+          "lo": 0.5915469985259362,
+          "hi": 2.000261819102523,
+          "rigid": 1.5987211554602254e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 15,
+          "contactTargetMax": 0.005855561035771775,
+          "lo": 0.591546998525937,
+          "hi": 2.000261819102519,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 125,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 16,
+          "contactTargetMax": 0.006502119176040119,
+          "lo": 0.5911710796152087,
+          "hi": 2.001832154850727,
+          "rigid": 1.4654943925052066e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 16,
+          "contactTargetMax": 0.006502119176040119,
+          "lo": 0.591171079615211,
+          "hi": 2.0018321548507156,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 126,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 20,
+          "contactTargetMax": 0.007148319032092782,
+          "lo": 0.5908148087828562,
+          "hi": 2.0032910135920896,
+          "rigid": 1.554312234475219e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 20,
+          "contactTargetMax": 0.007148319032092782,
+          "lo": 0.5908148087828595,
+          "hi": 2.003291013592093,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 127,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 24,
+          "contactTargetMax": 0.007794114318905242,
+          "lo": 0.5905036513163446,
+          "hi": 2.004644721225879,
+          "rigid": 1.5765166949677223e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 24,
+          "contactTargetMax": 0.007794114318905242,
+          "lo": 0.5905036513163446,
+          "hi": 2.00464472122589,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 128,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 26,
+          "contactTargetMax": 0.008439458780430861,
+          "lo": 0.590226052166012,
+          "hi": 2.005897036961539,
+          "rigid": 1.5654144647214707e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 26,
+          "contactTargetMax": 0.008439458780430861,
+          "lo": 0.5902260521660063,
+          "hi": 2.0058970369615503,
+          "rigid": 4.9182879990894435e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 129,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 26,
+          "contactTargetMax": 0.009084306192914069,
+          "lo": 0.5899706617512138,
+          "hi": 2.007051052255111,
+          "rigid": 1.9317880628477724e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 26,
+          "contactTargetMax": 0.009084306192914069,
+          "lo": 0.5899706617512194,
+          "hi": 2.0070510522551177,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 130,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 29,
+          "contactTargetMax": 0.009728610368201161,
+          "lo": 0.5897520612767405,
+          "hi": 2.0081114418650237,
+          "rigid": 1.8096635301390052e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 29,
+          "contactTargetMax": 0.009728610368201161,
+          "lo": 0.5897520612767432,
+          "hi": 2.008111441865027,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 131,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 32,
+          "contactTargetMax": 0.010372325157048569,
+          "lo": 0.5895567288932856,
+          "hi": 2.009082598440572,
+          "rigid": 1.4432899320127035e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 32,
+          "contactTargetMax": 0.010372325157048569,
+          "lo": 0.5895567288932881,
+          "hi": 2.0090825984405685,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 132,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 35,
+          "contactTargetMax": 0.011015404452428398,
+          "lo": 0.5893910929188033,
+          "hi": 2.009966446001992,
+          "rigid": 1.6209256159527285e-14,
+          "core": 1778
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 35,
+          "contactTargetMax": 0.011015404452428398,
+          "lo": 0.5893910929188061,
+          "hi": 2.0099664460019886,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1778
+        }
+      ]
+    },
+    {
+      "deg": 133,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 40,
+          "contactTargetMax": 0.011657802192830974,
+          "lo": 0.5892745662311903,
+          "hi": 2.0107655047894415,
+          "rigid": 1.7319479184152442e-14,
+          "core": 1773
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 40,
+          "contactTargetMax": 0.011657802192830974,
+          "lo": 0.5892745662311907,
+          "hi": 2.0107655047894344,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1773
+        }
+      ]
+    },
+    {
+      "deg": 134,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 42,
+          "contactTargetMax": 0.012299472365563958,
+          "lo": 0.589179120553228,
+          "hi": 2.0114838621057745,
+          "rigid": 1.5654144647214707e-14,
+          "core": 1770
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 42,
+          "contactTargetMax": 0.012299472365563958,
+          "lo": 0.5891791205532223,
+          "hi": 2.0114838621057745,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1770
+        }
+      ]
+    },
+    {
+      "deg": 135,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 43,
+          "contactTargetMax": 0.012940369010048193,
+          "lo": 0.5891078896477808,
+          "hi": 2.0121239678925744,
+          "rigid": 1.2656542480726785e-14,
+          "core": 1768
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 43,
+          "contactTargetMax": 0.012940369010048193,
+          "lo": 0.5891078896477733,
+          "hi": 2.012123967892581,
+          "rigid": 5.284661597215745e-14,
+          "core": 1768
+        }
+      ]
+    },
+    {
+      "deg": 136,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 44,
+          "contactTargetMax": 0.013580446221109559,
+          "lo": 0.5890637992437184,
+          "hi": 2.012688556627024,
+          "rigid": 2.020605904817785e-14,
+          "core": 1768
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 44,
+          "contactTargetMax": 0.013580446221109559,
+          "lo": 0.5890637992437155,
+          "hi": 2.012688556627017,
+          "rigid": 5.5289106626332796e-14,
+          "core": 1768
+        }
+      ]
+    },
+    {
+      "deg": 137,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 51,
+          "contactTargetMax": 0.014219658152267058,
+          "lo": 0.5890257961541777,
+          "hi": 2.01317932489401,
+          "rigid": 1.5765166949677223e-14,
+          "core": 1761
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 51,
+          "contactTargetMax": 0.014219658152267058,
+          "lo": 0.5890257961541827,
+          "hi": 2.01317932489401,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1761
+        }
+      ]
+    },
+    {
+      "deg": 138,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 52,
+          "contactTargetMax": 0.014857959019016735,
+          "lo": 0.588992613357349,
+          "hi": 2.0135983343922907,
+          "rigid": 2.020605904817785e-14,
+          "core": 1761
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 52,
+          "contactTargetMax": 0.014857959019016735,
+          "lo": 0.5889926133573473,
+          "hi": 2.0135983343923005,
+          "rigid": 5.639932965095795e-14,
+          "core": 1761
+        }
+      ]
+    },
+    {
+      "deg": 139,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 58,
+          "contactTargetMax": 0.015495303102110931,
+          "lo": 0.5889596191049219,
+          "hi": 2.0139494785885037,
+          "rigid": 1.6653345369377348e-14,
+          "core": 1755
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 58,
+          "contactTargetMax": 0.015495303102110931,
+          "lo": 0.5889596191049222,
+          "hi": 2.013949478588507,
+          "rigid": 5.3512749786932545e-14,
+          "core": 1755
+        }
+      ]
+    },
+    {
+      "deg": 140,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 59,
+          "contactTargetMax": 0.016131644750833025,
+          "lo": 0.5888270121315847,
+          "hi": 2.0142334102257937,
+          "rigid": 1.9539925233402755e-14,
+          "core": 1753
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 59,
+          "contactTargetMax": 0.016131644750833025,
+          "lo": 0.588827012131588,
+          "hi": 2.014233410225788,
+          "rigid": 4.8960835385969403e-14,
+          "core": 1753
+        }
+      ]
+    },
+    {
+      "deg": 141,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 61,
+          "contactTargetMax": 0.016766938386267267,
+          "lo": 0.5886744487085183,
+          "hi": 2.0144536009742633,
+          "rigid": 1.6209256159527285e-14,
+          "core": 1751
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 61,
+          "contactTargetMax": 0.016766938386267267,
+          "lo": 0.5886744487085189,
+          "hi": 2.0144536009742664,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1751
+        }
+      ]
+    },
+    {
+      "deg": 142,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 65,
+          "contactTargetMax": 0.017401138504563412,
+          "lo": 0.5885455100709863,
+          "hi": 2.014612170635563,
+          "rigid": 2.042810365310288e-14,
+          "core": 1744
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 65,
+          "contactTargetMax": 0.017401138504563412,
+          "lo": 0.5885455100709837,
+          "hi": 2.0146121706355697,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1744
+        }
+      ]
+    },
+    {
+      "deg": 143,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 71,
+          "contactTargetMax": 0.018034199680196022,
+          "lo": 0.5884332532550788,
+          "hi": 2.014708410500307,
+          "rigid": 1.5987211554602254e-14,
+          "core": 1734
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 71,
+          "contactTargetMax": 0.018034199680196022,
+          "lo": 0.5884332532550797,
+          "hi": 2.0147084105003015,
+          "rigid": 4.6629367034256575e-14,
+          "core": 1734
+        }
+      ]
+    },
+    {
+      "deg": 144,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 75,
+          "contactTargetMax": 0.018666076569218044,
+          "lo": 0.58833686422283,
+          "hi": 2.014745715493834,
+          "rigid": 1.509903313490213e-14,
+          "core": 1730
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 75,
+          "contactTargetMax": 0.018666076569218044,
+          "lo": 0.5883368642228377,
+          "hi": 2.0147457154938304,
+          "rigid": 4.6851411639181606e-14,
+          "core": 1730
+        }
+      ]
+    },
+    {
+      "deg": 145,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "contactTargetVertices": 77,
+          "contactTargetMax": 0.019296723912508782,
+          "lo": 0.5882516633835944,
+          "hi": 2.0147267210985085,
+          "rigid": 1.6209256159527285e-14,
+          "core": 1726
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "contactTargetVertices": 77,
+          "contactTargetMax": 0.019296723912508782,
+          "lo": 0.5882516633835951,
+          "hi": 2.0147267210985116,
+          "rigid": 4.6407322429331543e-14,
+          "core": 1726
+        }
+      ]
+    }
+  ],
+  "contactComparison": [
+    {
+      "deg": 90,
+      "changed": 0,
+      "max": 4.7285009206385774e-8
+    },
+    {
+      "deg": 120,
+      "changed": 5,
+      "max": 0.0033923096758318024
+    },
+    {
+      "deg": 135,
+      "changed": 48,
+      "max": 0.013399306818564879
+    },
+    {
+      "deg": 145,
+      "changed": 82,
+      "max": 0.019635790342611537
+    }
+  ]
+}
