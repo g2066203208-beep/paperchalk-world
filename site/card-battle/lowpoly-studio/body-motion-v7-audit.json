@@ -1,0 +1,441 @@
+{
+  "vertices": 520,
+  "quads": 518,
+  "rest": {
+    "deg": 0,
+    "folds": [],
+    "pairs": []
+  },
+  "sweeps": {
+    "squat": {
+      "samples": 61,
+      "failed": 0,
+      "peakPairs": 0,
+      "peakFolds": 0,
+      "bad": []
+    },
+    "jump": {
+      "samples": 61,
+      "failed": 31,
+      "peakPairs": 4,
+      "peakFolds": 0,
+      "bad": [
+        {
+          "frame": 1,
+          "pairs": 4,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 2,
+          "pairs": 4,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 3,
+          "pairs": 4,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 4,
+          "pairs": 4,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 5,
+          "pairs": 4,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 6,
+          "pairs": 4,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 7,
+          "pairs": 4,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 8,
+          "pairs": 4,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 9,
+          "pairs": 4,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 10,
+          "pairs": 4,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 11,
+          "pairs": 4,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 12,
+          "pairs": 4,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 13,
+          "pairs": 4,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 14,
+          "pairs": 4,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 15,
+          "pairs": 4,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 16,
+          "pairs": 4,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 26,
+          "pairs": 1,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 27,
+          "pairs": 1,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 31,
+          "pairs": 1,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 32,
+          "pairs": 1,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 33,
+          "pairs": 1,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 43,
+          "pairs": 2,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 44,
+          "pairs": 2,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 45,
+          "pairs": 2,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 46,
+          "pairs": 2,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 47,
+          "pairs": 2,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 48,
+          "pairs": 2,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 49,
+          "pairs": 2,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 50,
+          "pairs": 2,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 51,
+          "pairs": 2,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 52,
+          "pairs": 2,
+          "folds": 0,
+          "degenerate": 0
+        }
+      ]
+    },
+    "run": {
+      "samples": 61,
+      "failed": 0,
+      "peakPairs": 0,
+      "peakFolds": 0,
+      "bad": []
+    },
+    "slash": {
+      "samples": 61,
+      "failed": 0,
+      "peakPairs": 0,
+      "peakFolds": 0,
+      "bad": []
+    },
+    "climb": {
+      "samples": 61,
+      "failed": 23,
+      "peakPairs": 1,
+      "peakFolds": 0,
+      "bad": [
+        {
+          "frame": 19,
+          "pairs": 1,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 20,
+          "pairs": 1,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 21,
+          "pairs": 1,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 22,
+          "pairs": 1,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 23,
+          "pairs": 1,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 24,
+          "pairs": 1,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 25,
+          "pairs": 1,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 26,
+          "pairs": 1,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 27,
+          "pairs": 1,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 28,
+          "pairs": 1,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 29,
+          "pairs": 1,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 30,
+          "pairs": 1,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 31,
+          "pairs": 1,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 32,
+          "pairs": 1,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 33,
+          "pairs": 1,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 34,
+          "pairs": 1,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 35,
+          "pairs": 1,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 36,
+          "pairs": 1,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 37,
+          "pairs": 1,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 38,
+          "pairs": 1,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 39,
+          "pairs": 1,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 40,
+          "pairs": 1,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 41,
+          "pairs": 1,
+          "folds": 0,
+          "degenerate": 0
+        }
+      ]
+    },
+    "vault": {
+      "samples": 61,
+      "failed": 10,
+      "peakPairs": 2,
+      "peakFolds": 0,
+      "bad": [
+        {
+          "frame": 0,
+          "pairs": 2,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 1,
+          "pairs": 2,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 2,
+          "pairs": 2,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 3,
+          "pairs": 2,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 4,
+          "pairs": 1,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 56,
+          "pairs": 1,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 57,
+          "pairs": 2,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 58,
+          "pairs": 2,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 59,
+          "pairs": 2,
+          "folds": 0,
+          "degenerate": 0
+        },
+        {
+          "frame": 60,
+          "pairs": 2,
+          "folds": 0,
+          "degenerate": 0
+        }
+      ]
+    }
+  },
+  "note": "FK motion stress clips only; no hand/foot lock, locomotion, collision response or anatomical visual acceptance. Full-body motion is not production approved."
+}
