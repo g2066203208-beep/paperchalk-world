@@ -1,0 +1,999 @@
+{
+  "scope": "Prototype. Two-bone analytical IK with fixed world-space targets. Contact error refers to abstract end effector, not exact surface contact. Body check strict noncoplanar nonadjacent; obstacle vertex-in-box count only. No finger rig, real physics, or full production skeleton. Not approved.",
+  "audit": [
+    {
+      "id": "climb",
+      "samples": 61,
+      "contactErrorMax": 2.482534153247273e-16,
+      "bodyFailed": 61,
+      "obstacleFailed": 0,
+      "records": [
+        {
+          "t": 0,
+          "contactError": 0,
+          "intersections": 3,
+          "folds": 1,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.016666666666666666,
+          "contactError": 0,
+          "intersections": 3,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.03333333333333333,
+          "contactError": 1.1102230246251565e-16,
+          "intersections": 5,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.05,
+          "contactError": 1.1102230246251565e-16,
+          "intersections": 5,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.06666666666666667,
+          "contactError": 1.1102230246251565e-16,
+          "intersections": 5,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.08333333333333333,
+          "contactError": 0,
+          "intersections": 10,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.1,
+          "contactError": 0,
+          "intersections": 11,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.11666666666666667,
+          "contactError": 0,
+          "intersections": 11,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.13333333333333333,
+          "contactError": 1.1102230246251565e-16,
+          "intersections": 11,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.15,
+          "contactError": 5.551115123125783e-17,
+          "intersections": 11,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.16666666666666666,
+          "contactError": 0,
+          "intersections": 11,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.18333333333333332,
+          "contactError": 0,
+          "intersections": 11,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.2,
+          "contactError": 1.1102230246251565e-16,
+          "intersections": 11,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.21666666666666667,
+          "contactError": 0,
+          "intersections": 10,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.23333333333333334,
+          "contactError": 1.1102230246251565e-16,
+          "intersections": 10,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.25,
+          "contactError": 1.1102230246251565e-16,
+          "intersections": 10,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.26666666666666666,
+          "contactError": 1.1102230246251565e-16,
+          "intersections": 10,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.2833333333333333,
+          "contactError": 5.551115123125783e-17,
+          "intersections": 10,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.3,
+          "contactError": 1.1102230246251565e-16,
+          "intersections": 10,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.31666666666666665,
+          "contactError": 0,
+          "intersections": 11,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.3333333333333333,
+          "contactError": 0,
+          "intersections": 12,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.35,
+          "contactError": 1.1102230246251565e-16,
+          "intersections": 13,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.36666666666666664,
+          "contactError": 0,
+          "intersections": 13,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.38333333333333336,
+          "contactError": 0,
+          "intersections": 11,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.4,
+          "contactError": 5.551115123125783e-17,
+          "intersections": 11,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.4166666666666667,
+          "contactError": 0,
+          "intersections": 10,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.43333333333333335,
+          "contactError": 1.1102230246251565e-16,
+          "intersections": 10,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.45,
+          "contactError": 1.1102230246251565e-16,
+          "intersections": 10,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.4666666666666667,
+          "contactError": 1.5700924586837752e-16,
+          "intersections": 10,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.48333333333333334,
+          "contactError": 1.1102230246251565e-16,
+          "intersections": 10,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.5,
+          "contactError": 5.551115123125783e-17,
+          "intersections": 8,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.5166666666666667,
+          "contactError": 5.551115123125783e-17,
+          "intersections": 5,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.5333333333333333,
+          "contactError": 0,
+          "intersections": 5,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.55,
+          "contactError": 5.551115123125783e-17,
+          "intersections": 5,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.5666666666666667,
+          "contactError": 5.551115123125783e-17,
+          "intersections": 5,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.5833333333333334,
+          "contactError": 1.1102230246251565e-16,
+          "intersections": 5,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.6,
+          "contactError": 5.551115123125783e-17,
+          "intersections": 5,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.6166666666666667,
+          "contactError": 7.850462293418876e-17,
+          "intersections": 5,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.6333333333333333,
+          "contactError": 1.1102230246251565e-16,
+          "intersections": 5,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.65,
+          "contactError": 5.551115123125783e-17,
+          "intersections": 5,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.6666666666666666,
+          "contactError": 0,
+          "intersections": 7,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.6833333333333333,
+          "contactError": 2.482534153247273e-16,
+          "intersections": 8,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.7,
+          "contactError": 0,
+          "intersections": 8,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.7166666666666667,
+          "contactError": 0,
+          "intersections": 8,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.7333333333333333,
+          "contactError": 5.551115123125783e-17,
+          "intersections": 8,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.75,
+          "contactError": 2.220446049250313e-16,
+          "intersections": 8,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.7666666666666667,
+          "contactError": 5.551115123125783e-17,
+          "intersections": 3,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.7833333333333333,
+          "contactError": 0,
+          "intersections": 5,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.8,
+          "contactError": 2.220446049250313e-16,
+          "intersections": 5,
+          "folds": 1,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.8166666666666667,
+          "contactError": 7.850462293418876e-17,
+          "intersections": 6,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.8333333333333334,
+          "contactError": 1.1102230246251565e-16,
+          "intersections": 7,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.85,
+          "contactError": 5.551115123125783e-17,
+          "intersections": 8,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.8666666666666667,
+          "contactError": 0,
+          "intersections": 8,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.8833333333333333,
+          "contactError": 5.551115123125783e-17,
+          "intersections": 8,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.9,
+          "contactError": 5.551115123125783e-17,
+          "intersections": 8,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.9166666666666666,
+          "contactError": 0,
+          "intersections": 8,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.9333333333333333,
+          "contactError": 2.220446049250313e-16,
+          "intersections": 8,
+          "folds": 1,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.95,
+          "contactError": 5.551115123125783e-17,
+          "intersections": 5,
+          "folds": 1,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.9666666666666667,
+          "contactError": 7.850462293418876e-17,
+          "intersections": 4,
+          "folds": 1,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.9833333333333333,
+          "contactError": 5.551115123125783e-17,
+          "intersections": 3,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 1,
+          "contactError": 0,
+          "intersections": 3,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        }
+      ]
+    },
+    {
+      "id": "vault",
+      "samples": 61,
+      "contactErrorMax": 1.1102230246251565e-16,
+      "bodyFailed": 52,
+      "obstacleFailed": 16,
+      "records": [
+        {
+          "t": 0,
+          "contactError": 1.3877787807814457e-17,
+          "intersections": 8,
+          "folds": 1,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.016666666666666666,
+          "contactError": 0,
+          "intersections": 8,
+          "folds": 1,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.03333333333333333,
+          "contactError": 0,
+          "intersections": 11,
+          "folds": 1,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.05,
+          "contactError": 0,
+          "intersections": 14,
+          "folds": 1,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.06666666666666667,
+          "contactError": 0,
+          "intersections": 20,
+          "folds": 1,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.08333333333333333,
+          "contactError": 0,
+          "intersections": 23,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.1,
+          "contactError": 0,
+          "intersections": 25,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.11666666666666667,
+          "contactError": 0,
+          "intersections": 21,
+          "folds": 1,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.13333333333333333,
+          "contactError": 0,
+          "intersections": 22,
+          "folds": 1,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.15,
+          "contactError": 0,
+          "intersections": 22,
+          "folds": 1,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.16666666666666666,
+          "contactError": 0,
+          "intersections": 20,
+          "folds": 1,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.18333333333333332,
+          "contactError": 0,
+          "intersections": 20,
+          "folds": 1,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.2,
+          "contactError": 0,
+          "intersections": 22,
+          "folds": 2,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.21666666666666667,
+          "contactError": 0,
+          "intersections": 21,
+          "folds": 1,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.23333333333333334,
+          "contactError": 0,
+          "intersections": 24,
+          "folds": 2,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.25,
+          "contactError": 0,
+          "intersections": 14,
+          "folds": 1,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.26666666666666666,
+          "contactError": 0,
+          "intersections": 5,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.2833333333333333,
+          "contactError": 0,
+          "intersections": 0,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.3,
+          "contactError": 0,
+          "intersections": 0,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.31666666666666665,
+          "contactError": 0,
+          "intersections": 0,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.3333333333333333,
+          "contactError": 0,
+          "intersections": 2,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 2
+        },
+        {
+          "t": 0.35,
+          "contactError": 0,
+          "intersections": 2,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 8
+        },
+        {
+          "t": 0.36666666666666664,
+          "contactError": 0,
+          "intersections": 2,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 8
+        },
+        {
+          "t": 0.38333333333333336,
+          "contactError": 0,
+          "intersections": 2,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 8
+        },
+        {
+          "t": 0.4,
+          "contactError": 0,
+          "intersections": 2,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 8
+        },
+        {
+          "t": 0.4166666666666667,
+          "contactError": 0,
+          "intersections": 2,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 8
+        },
+        {
+          "t": 0.43333333333333335,
+          "contactError": 0,
+          "intersections": 9,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 8
+        },
+        {
+          "t": 0.45,
+          "contactError": 0,
+          "intersections": 14,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 8
+        },
+        {
+          "t": 0.4666666666666667,
+          "contactError": 0,
+          "intersections": 22,
+          "folds": 1,
+          "deg": 0,
+          "obstacleVertices": 8
+        },
+        {
+          "t": 0.48333333333333334,
+          "contactError": 0,
+          "intersections": 27,
+          "folds": 1,
+          "deg": 0,
+          "obstacleVertices": 8
+        },
+        {
+          "t": 0.5,
+          "contactError": 0,
+          "intersections": 31,
+          "folds": 2,
+          "deg": 0,
+          "obstacleVertices": 8
+        },
+        {
+          "t": 0.5166666666666667,
+          "contactError": 0,
+          "intersections": 35,
+          "folds": 2,
+          "deg": 0,
+          "obstacleVertices": 8
+        },
+        {
+          "t": 0.5333333333333333,
+          "contactError": 0,
+          "intersections": 37,
+          "folds": 2,
+          "deg": 0,
+          "obstacleVertices": 8
+        },
+        {
+          "t": 0.55,
+          "contactError": 0,
+          "intersections": 36,
+          "folds": 2,
+          "deg": 0,
+          "obstacleVertices": 6
+        },
+        {
+          "t": 0.5666666666666667,
+          "contactError": 0,
+          "intersections": 47,
+          "folds": 1,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.5833333333333334,
+          "contactError": 0,
+          "intersections": 87,
+          "folds": 1,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.6,
+          "contactError": 0,
+          "intersections": 121,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.6166666666666667,
+          "contactError": 0,
+          "intersections": 86,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 23
+        },
+        {
+          "t": 0.6333333333333333,
+          "contactError": 0,
+          "intersections": 52,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 18
+        },
+        {
+          "t": 0.65,
+          "contactError": 0,
+          "intersections": 9,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.6666666666666666,
+          "contactError": 0,
+          "intersections": 0,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.6833333333333333,
+          "contactError": 0,
+          "intersections": 0,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.7,
+          "contactError": 0,
+          "intersections": 0,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.7166666666666667,
+          "contactError": 0,
+          "intersections": 0,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.7333333333333333,
+          "contactError": 0,
+          "intersections": 0,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.75,
+          "contactError": 0,
+          "intersections": 0,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.7666666666666667,
+          "contactError": 0,
+          "intersections": 5,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.7833333333333333,
+          "contactError": 0,
+          "intersections": 24,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.8,
+          "contactError": 0,
+          "intersections": 21,
+          "folds": 1,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.8166666666666667,
+          "contactError": 0,
+          "intersections": 8,
+          "folds": 1,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.8333333333333334,
+          "contactError": 0,
+          "intersections": 2,
+          "folds": 1,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.85,
+          "contactError": 1.1102230246251565e-16,
+          "intersections": 5,
+          "folds": 1,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.8666666666666667,
+          "contactError": 0,
+          "intersections": 5,
+          "folds": 1,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.8833333333333333,
+          "contactError": 1.1102230246251565e-16,
+          "intersections": 10,
+          "folds": 1,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.9,
+          "contactError": 0,
+          "intersections": 16,
+          "folds": 1,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.9166666666666666,
+          "contactError": 1.1102230246251565e-16,
+          "intersections": 31,
+          "folds": 1,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.9333333333333333,
+          "contactError": 0,
+          "intersections": 27,
+          "folds": 1,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.95,
+          "contactError": 0,
+          "intersections": 17,
+          "folds": 1,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.9666666666666667,
+          "contactError": 0,
+          "intersections": 19,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 0.9833333333333333,
+          "contactError": 0,
+          "intersections": 14,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        },
+        {
+          "t": 1,
+          "contactError": 0,
+          "intersections": 14,
+          "folds": 0,
+          "deg": 0,
+          "obstacleVertices": 0
+        }
+      ]
+    }
+  ]
+}
