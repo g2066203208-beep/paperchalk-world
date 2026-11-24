@@ -1,0 +1,3656 @@
+{
+  "sourceBlob": "0b7ab98f30d4c5cc08b0d9f1b693d30fab1e7771",
+  "results": [
+    {
+      "deg": 0,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 0,
+          "handVertices": 436,
+          "lo": 1,
+          "hi": 1,
+          "rigid": 0,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 0,
+          "handVertices": 436,
+          "lo": 1,
+          "hi": 1,
+          "rigid": 0,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 1,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 9.992007221626409e-15,
+          "handVertices": 436,
+          "lo": 0.9943601015104256,
+          "hi": 1.0100025671443966,
+          "rigid": 9.992007221626409e-15,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 9.769962616701378e-15,
+          "handVertices": 436,
+          "lo": 0.9943601015104256,
+          "hi": 1.0100025671443966,
+          "rigid": 9.547918011776346e-15,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 2,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.0436096431476471e-14,
+          "handVertices": 436,
+          "lo": 0.9888731843818745,
+          "hi": 1.0201337921550393,
+          "rigid": 1.0436096431476471e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.176836406102666e-14,
+          "handVertices": 436,
+          "lo": 0.9888731843818743,
+          "hi": 1.0201337921550393,
+          "rigid": 1.0436096431476471e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 3,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.199040866595169e-14,
+          "handVertices": 436,
+          "lo": 0.9834409614528078,
+          "hi": 1.03038898049629,
+          "rigid": 1.199040866595169e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.2212453270876722e-14,
+          "handVertices": 436,
+          "lo": 0.9834409614528078,
+          "hi": 1.03038898049629,
+          "rigid": 1.2212453270876722e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 4,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 8.881784197001252e-15,
+          "handVertices": 436,
+          "lo": 0.9778889728469301,
+          "hi": 1.0407635607807675,
+          "rigid": 8.659739592076221e-15,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 8.659739592076221e-15,
+          "handVertices": 436,
+          "lo": 0.9778889728469301,
+          "hi": 1.0407635607807675,
+          "rigid": 8.43769498715119e-15,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 5,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 9.2148511043888e-15,
+          "handVertices": 436,
+          "lo": 0.9723203214216269,
+          "hi": 1.0512530840479855,
+          "rigid": 8.43769498715119e-15,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 8.659739592076221e-15,
+          "handVertices": 436,
+          "lo": 0.9723203214216266,
+          "hi": 1.0512530840479855,
+          "rigid": 8.659739592076221e-15,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 6,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.4654943925052066e-14,
+          "handVertices": 436,
+          "lo": 0.9667346780721189,
+          "hi": 1.0618532226817485,
+          "rigid": 1.0658141036401503e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.0658141036401503e-14,
+          "handVertices": 436,
+          "lo": 0.9667346780721185,
+          "hi": 1.0618532226817485,
+          "rigid": 1.0658141036401503e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 7,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.27675647831893e-14,
+          "handVertices": 436,
+          "lo": 0.961131696137597,
+          "hi": 1.0725772037335353,
+          "rigid": 1.27675647831893e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 8.43769498715119e-15,
+          "handVertices": 436,
+          "lo": 0.961131696137597,
+          "hi": 1.0725772037335346,
+          "rigid": 8.43769498715119e-15,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 8,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.1324274851176597e-14,
+          "handVertices": 436,
+          "lo": 0.9555110103897526,
+          "hi": 1.0834409966059602,
+          "rigid": 1.1324274851176597e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.0880185641326534e-14,
+          "handVertices": 436,
+          "lo": 0.9555110103897526,
+          "hi": 1.08344099660596,
+          "rigid": 1.0880185641326534e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 9,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.0880185641326534e-14,
+          "handVertices": 436,
+          "lo": 0.9498722360464156,
+          "hi": 1.0944150112561681,
+          "rigid": 1.0880185641326534e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.0658141036401503e-14,
+          "handVertices": 436,
+          "lo": 0.9498722360464156,
+          "hi": 1.094415011256168,
+          "rigid": 1.0658141036401503e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 10,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.27675647831893e-14,
+          "handVertices": 436,
+          "lo": 0.944214967810842,
+          "hi": 1.1054949984768896,
+          "rigid": 1.27675647831893e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.354472090042691e-14,
+          "handVertices": 436,
+          "lo": 0.944214967810842,
+          "hi": 1.105494998476889,
+          "rigid": 1.2323475573339238e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 11,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.0436096431476471e-14,
+          "handVertices": 436,
+          "lo": 0.9385387789366314,
+          "hi": 1.116676830160535,
+          "rigid": 1.0436096431476471e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.0436096431476471e-14,
+          "handVertices": 436,
+          "lo": 0.9385387789366313,
+          "hi": 1.1166768301605345,
+          "rigid": 1.0436096431476471e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 12,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.0658141036401503e-14,
+          "handVertices": 436,
+          "lo": 0.9328432203186181,
+          "hi": 1.1279564971280442,
+          "rigid": 1.0658141036401503e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.0658141036401503e-14,
+          "handVertices": 436,
+          "lo": 0.9328432203186179,
+          "hi": 1.1279564971280436,
+          "rigid": 1.021405182655144e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 13,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.0436096431476471e-14,
+          "handVertices": 436,
+          "lo": 0.9271278196100928,
+          "hi": 1.1393301067759483,
+          "rigid": 8.881784197001252e-15,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 9.769962616701378e-15,
+          "handVertices": 436,
+          "lo": 0.9271278196100926,
+          "hi": 1.1393301067759476,
+          "rigid": 9.103828801926284e-15,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 14,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 9.325873406851315e-15,
+          "handVertices": 436,
+          "lo": 0.9213920803662491,
+          "hi": 1.15079388057278,
+          "rigid": 8.992806499463768e-15,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 9.547918011776346e-15,
+          "handVertices": 436,
+          "lo": 0.921392080366249,
+          "hi": 1.150793880572779,
+          "rigid": 9.547918011776346e-15,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 15,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.099120794378905e-14,
+          "handVertices": 436,
+          "lo": 0.9156354812141565,
+          "hi": 1.162344151432969,
+          "rigid": 9.880984919163893e-15,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.099120794378905e-14,
+          "handVertices": 436,
+          "lo": 0.9156354812141564,
+          "hi": 1.1623441514329682,
+          "rigid": 9.880984919163893e-15,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 16,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.354472090042691e-14,
+          "handVertices": 436,
+          "lo": 0.9098574750494617,
+          "hi": 1.1739773609937896,
+          "rigid": 1.354472090042691e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.3100631690576847e-14,
+          "handVertices": 436,
+          "lo": 0.9098574750494615,
+          "hi": 1.1739773609937887,
+          "rigid": 1.3100631690576847e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 17,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.176836406102666e-14,
+          "handVertices": 436,
+          "lo": 0.90405748825964,
+          "hi": 1.185690056818086,
+          "rigid": 9.43689570931383e-15,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.0880185641326534e-14,
+          "handVertices": 436,
+          "lo": 0.9040574882596398,
+          "hi": 1.185690056818085,
+          "rigid": 8.326672684688674e-15,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 18,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.021405182655144e-14,
+          "handVertices": 436,
+          "lo": 0.8982349199742281,
+          "hi": 1.1974788895433643,
+          "rigid": 8.770761894538737e-15,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.021405182655144e-14,
+          "handVertices": 436,
+          "lo": 0.8982349199742281,
+          "hi": 1.197478889543363,
+          "rigid": 8.770761894538737e-15,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 19,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 9.769962616701378e-15,
+          "handVertices": 436,
+          "lo": 0.8923891413416086,
+          "hi": 1.209340609995363,
+          "rigid": 9.325873406851315e-15,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 8.992806499463768e-15,
+          "handVertices": 436,
+          "lo": 0.8923891413416085,
+          "hi": 1.2093406099953616,
+          "rigid": 8.992806499463768e-15,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 20,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.4432899320127035e-14,
+          "handVertices": 436,
+          "lo": 0.8865194948327055,
+          "hi": 1.2212720662822951,
+          "rigid": 1.2656542480726785e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.2989609388114332e-14,
+          "handVertices": 436,
+          "lo": 0.8865194948327054,
+          "hi": 1.2212720662823005,
+          "rigid": 1.2989609388114332e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 21,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.0436096431476471e-14,
+          "handVertices": 436,
+          "lo": 0.8806252935713851,
+          "hi": 1.2332702008840097,
+          "rigid": 8.770761894538737e-15,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.0436096431476471e-14,
+          "handVertices": 436,
+          "lo": 0.8806252935713849,
+          "hi": 1.2332702008840086,
+          "rigid": 7.882583474838611e-15,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 22,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 9.769962616701378e-15,
+          "handVertices": 436,
+          "lo": 0.8747058206913946,
+          "hi": 1.2453320477484133,
+          "rigid": 9.103828801926284e-15,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 9.992007221626409e-15,
+          "handVertices": 436,
+          "lo": 0.8747058206913945,
+          "hi": 1.2453320477484182,
+          "rigid": 9.103828801926284e-15,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 23,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.532107773982716e-14,
+          "handVertices": 436,
+          "lo": 0.8687603287199837,
+          "hi": 1.2574547294062575,
+          "rigid": 1.1546319456101628e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.1657341758564144e-14,
+          "handVertices": 436,
+          "lo": 0.8687603287199837,
+          "hi": 1.257454729406256,
+          "rigid": 1.1546319456101628e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 24,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 9.325873406851315e-15,
+          "handVertices": 436,
+          "lo": 0.8627880389876496,
+          "hi": 1.2696354541134638,
+          "rigid": 8.881784197001252e-15,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.1546319456101628e-14,
+          "handVertices": 436,
+          "lo": 0.8627880389876494,
+          "hi": 1.2696354541134622,
+          "rigid": 8.881784197001252e-15,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 25,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 9.547918011776346e-15,
+          "handVertices": 436,
+          "lo": 0.856788141064256,
+          "hi": 1.2818715130292746,
+          "rigid": 9.547918011776346e-15,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 9.658940314238862e-15,
+          "handVertices": 436,
+          "lo": 0.8567881410642558,
+          "hi": 1.2818715130292733,
+          "rigid": 9.547918011776346e-15,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 26,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 9.769962616701378e-15,
+          "handVertices": 436,
+          "lo": 0.8507597922210123,
+          "hi": 1.2941602774369971,
+          "rigid": 9.769962616701378e-15,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.176836406102666e-14,
+          "handVertices": 436,
+          "lo": 0.8507597922210122,
+          "hi": 1.2941602774369954,
+          "rigid": 9.769962616701378e-15,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 27,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.199040866595169e-14,
+          "handVertices": 436,
+          "lo": 0.8447021169181078,
+          "hi": 1.3065981436060674,
+          "rigid": 1.199040866595169e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.2212453270876722e-14,
+          "handVertices": 436,
+          "lo": 0.8447021169181076,
+          "hi": 1.3065981436060674,
+          "rigid": 1.2212453270876722e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 28,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.3766765505351941e-14,
+          "handVertices": 436,
+          "lo": 0.8386142063180634,
+          "hi": 1.3190936422189048,
+          "rigid": 1.199040866595169e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.3988810110276972e-14,
+          "handVertices": 436,
+          "lo": 0.8386142063180634,
+          "hi": 1.3190936422189048,
+          "rigid": 1.021405182655144e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 29,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.2212453270876722e-14,
+          "handVertices": 436,
+          "lo": 0.8324951178238605,
+          "hi": 1.3316397272198697,
+          "rigid": 9.325873406851315e-15,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.2212453270876722e-14,
+          "handVertices": 436,
+          "lo": 0.8324951178238602,
+          "hi": 1.3316397272198697,
+          "rigid": 1.1324274851176597e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 30,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.2434497875801753e-14,
+          "handVertices": 436,
+          "lo": 0.8263438746423858,
+          "hi": 1.3442338839474044,
+          "rigid": 1.2434497875801753e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.4654943925052066e-14,
+          "handVertices": 436,
+          "lo": 0.8263438746423856,
+          "hi": 1.3442338839474044,
+          "rigid": 1.2434497875801753e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 31,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.5765166949677223e-14,
+          "handVertices": 436,
+          "lo": 0.8201594653721072,
+          "hi": 1.3568736706764268,
+          "rigid": 1.0880185641326534e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.554312234475219e-14,
+          "handVertices": 436,
+          "lo": 0.820159465372107,
+          "hi": 1.3568736706764268,
+          "rigid": 1.0880185641326534e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 32,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.5654144647214707e-14,
+          "handVertices": 436,
+          "lo": 0.8139408436153585,
+          "hi": 1.3695567160395505,
+          "rigid": 1.0658141036401503e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.0880185641326534e-14,
+          "handVertices": 436,
+          "lo": 0.8139408436153583,
+          "hi": 1.3695567160395505,
+          "rigid": 1.0658141036401503e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 33,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.4988010832439613e-14,
+          "handVertices": 436,
+          "lo": 0.8076869276144326,
+          "hi": 1.3822807165116857,
+          "rigid": 1.176836406102666e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.2434497875801753e-14,
+          "handVertices": 436,
+          "lo": 0.8076869276144326,
+          "hi": 1.3822807165116857,
+          "rigid": 1.176836406102666e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 34,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.0880185641326534e-14,
+          "handVertices": 436,
+          "lo": 0.8013965999116475,
+          "hi": 1.3950434339601983,
+          "rigid": 1.0880185641326534e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.2434497875801753e-14,
+          "handVertices": 436,
+          "lo": 0.8013965999116471,
+          "hi": 1.3950434339601983,
+          "rigid": 1.1657341758564144e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 35,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.687538997430238e-14,
+          "handVertices": 436,
+          "lo": 0.7950687070327991,
+          "hi": 1.407842693261756,
+          "rigid": 1.3211653993039363e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.4654943925052066e-14,
+          "handVertices": 436,
+          "lo": 0.795068707032799,
+          "hi": 1.407842693261756,
+          "rigid": 1.3433698597964394e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 36,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.1324274851176597e-14,
+          "handVertices": 436,
+          "lo": 0.7887020591942648,
+          "hi": 1.4206763799869893,
+          "rigid": 9.769962616701378e-15,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 9.103828801926284e-15,
+          "handVertices": 436,
+          "lo": 0.7887020591942648,
+          "hi": 1.4206763799869893,
+          "rigid": 9.103828801926284e-15,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 37,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.1324274851176597e-14,
+          "handVertices": 436,
+          "lo": 0.7822954300332914,
+          "hi": 1.4335424381533055,
+          "rigid": 1.021405182655144e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.021405182655144e-14,
+          "handVertices": 436,
+          "lo": 0.7822954300332912,
+          "hi": 1.4335424381533055,
+          "rigid": 1.021405182655144e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 38,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.4210854715202004e-14,
+          "handVertices": 436,
+          "lo": 0.7758475563616283,
+          "hi": 1.4464388680460996,
+          "rigid": 1.0658141036401503e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.3988810110276972e-14,
+          "handVertices": 436,
+          "lo": 0.775847556361628,
+          "hi": 1.4464388680460996,
+          "rigid": 1.0658141036401503e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 39,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.1102230246251565e-14,
+          "handVertices": 436,
+          "lo": 0.7693571379427815,
+          "hi": 1.459363724108157,
+          "rigid": 1.354472090042691e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.1102230246251565e-14,
+          "handVertices": 436,
+          "lo": 0.7693571379427813,
+          "hi": 1.459363724108157,
+          "rigid": 1.3322676295501878e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 40,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.1102230246251565e-14,
+          "handVertices": 436,
+          "lo": 0.7628228372928615,
+          "hi": 1.4723151128968146,
+          "rigid": 1.1102230246251565e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.4654943925052066e-14,
+          "handVertices": 436,
+          "lo": 0.7628228372928613,
+          "hi": 1.4723151128968146,
+          "rigid": 1.1102230246251565e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 41,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.3322676295501878e-14,
+          "handVertices": 436,
+          "lo": 0.7562432795058379,
+          "hi": 1.4852911911081836,
+          "rigid": 1.3322676295501878e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.3322676295501878e-14,
+          "handVertices": 436,
+          "lo": 0.7562432795058378,
+          "hi": 1.4852911911081836,
+          "rigid": 1.3322676295501878e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 42,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.3766765505351941e-14,
+          "handVertices": 436,
+          "lo": 0.7496170521033924,
+          "hi": 1.4982901636675905,
+          "rigid": 1.199040866595169e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.199040866595169e-14,
+          "handVertices": 436,
+          "lo": 0.7496170521033922,
+          "hi": 1.4982901636675905,
+          "rigid": 1.199040866595169e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 43,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.2656542480726785e-14,
+          "handVertices": 436,
+          "lo": 0.7429427049109498,
+          "hi": 1.5113102818851967,
+          "rigid": 1.2656542480726785e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.2656542480726785e-14,
+          "handVertices": 436,
+          "lo": 0.7429427049109497,
+          "hi": 1.5113102818851967,
+          "rigid": 1.2656542480726785e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 44,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.199040866595169e-14,
+          "handVertices": 436,
+          "lo": 0.7362187499603587,
+          "hi": 1.5243498416756296,
+          "rigid": 1.199040866595169e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.2656542480726785e-14,
+          "handVertices": 436,
+          "lo": 0.7362187499603585,
+          "hi": 1.5243498416756296,
+          "rigid": 1.199040866595169e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 45,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.1324274851176597e-14,
+          "handVertices": 436,
+          "lo": 0.7294436614214392,
+          "hi": 1.537407181840335,
+          "rigid": 1.1324274851176597e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.6653345369377348e-14,
+          "handVertices": 436,
+          "lo": 0.7294436614214391,
+          "hi": 1.537407181840335,
+          "rigid": 1.199040866595169e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 46,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.2434497875801753e-14,
+          "handVertices": 436,
+          "lo": 0.7226158755641793,
+          "hi": 1.5504806824113027,
+          "rigid": 1.2434497875801753e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.2434497875801753e-14,
+          "handVertices": 436,
+          "lo": 0.7226158755641793,
+          "hi": 1.5504806824113027,
+          "rigid": 1.2434497875801753e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 47,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.6764367671839864e-14,
+          "handVertices": 436,
+          "lo": 0.7157337907539097,
+          "hi": 1.56356876305464,
+          "rigid": 1.6764367671839864e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.6764367671839864e-14,
+          "handVertices": 436,
+          "lo": 0.7157337907539095,
+          "hi": 1.56356876305464,
+          "rigid": 1.6764367671839864e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 48,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.4654943925052066e-14,
+          "handVertices": 436,
+          "lo": 0.7087957674830081,
+          "hi": 1.5766698815326,
+          "rigid": 1.4654943925052066e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.4654943925052066e-14,
+          "handVertices": 436,
+          "lo": 0.708795767483008,
+          "hi": 1.5766698815326,
+          "rigid": 1.4654943925052066e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 49,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.709743457922741e-14,
+          "handVertices": 436,
+          "lo": 0.7018001284426358,
+          "hi": 1.5897825322224612,
+          "rigid": 1.709743457922741e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.5987211554602254e-14,
+          "handVertices": 436,
+          "lo": 0.7018001284426357,
+          "hi": 1.5897825322224612,
+          "rigid": 1.4654943925052066e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 50,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.7763568394002505e-14,
+          "handVertices": 436,
+          "lo": 0.6947451586391662,
+          "hi": 1.6029052446906538,
+          "rigid": 1.7763568394002505e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.6542323066914832e-14,
+          "handVertices": 436,
+          "lo": 0.694745158639166,
+          "hi": 1.6029052446906538,
+          "rigid": 1.6542323066914832e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 51,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.6653345369377348e-14,
+          "handVertices": 436,
+          "lo": 0.6876291055611424,
+          "hi": 1.6160365823206302,
+          "rigid": 1.6653345369377348e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.6431300764452317e-14,
+          "handVertices": 436,
+          "lo": 0.6876291055611421,
+          "hi": 1.6160365823206302,
+          "rigid": 1.6431300764452317e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 52,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.4654943925052066e-14,
+          "handVertices": 436,
+          "lo": 0.6804501794031417,
+          "hi": 1.6291751409928292,
+          "rigid": 1.4654943925052066e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.4654943925052066e-14,
+          "handVertices": 436,
+          "lo": 0.6804501794031416,
+          "hi": 1.6291751409928292,
+          "rigid": 1.4654943925052066e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 53,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.7541523789077473e-14,
+          "handVertices": 436,
+          "lo": 0.6732065533548315,
+          "hi": 1.642319547815124,
+          "rigid": 1.7541523789077473e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.7763568394002505e-14,
+          "handVertices": 436,
+          "lo": 0.6732065533548314,
+          "hi": 1.642319547815124,
+          "rigid": 1.7763568394002505e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 54,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.709743457922741e-14,
+          "handVertices": 436,
+          "lo": 0.6658963639647003,
+          "hi": 1.655468459902219,
+          "rigid": 1.709743457922741e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.6209256159527285e-14,
+          "handVertices": 436,
+          "lo": 0.6658963639647002,
+          "hi": 1.655468459902219,
+          "rigid": 1.6209256159527285e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 55,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.4210854715202004e-14,
+          "handVertices": 436,
+          "lo": 0.6585177115898148,
+          "hi": 1.6686205632024194,
+          "rigid": 1.4210854715202004e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.354472090042691e-14,
+          "handVertices": 436,
+          "lo": 0.6585177115898146,
+          "hi": 1.6686205632024194,
+          "rigid": 1.354472090042691e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 56,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.6431300764452317e-14,
+          "handVertices": 436,
+          "lo": 0.6510686609450637,
+          "hi": 1.6817745713701766,
+          "rigid": 1.6431300764452317e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.6431300764452317e-14,
+          "handVertices": 436,
+          "lo": 0.6510686609450635,
+          "hi": 1.6817745713701766,
+          "rigid": 1.6431300764452317e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 57,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.5765166949677223e-14,
+          "handVertices": 436,
+          "lo": 0.6499795413890169,
+          "hi": 1.6949292246829066,
+          "rigid": 1.509903313490213e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.4876988529977098e-14,
+          "handVertices": 436,
+          "lo": 0.6499795413890176,
+          "hi": 1.6949292246829066,
+          "rigid": 1.4876988529977098e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 58,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.5765166949677223e-14,
+          "handVertices": 436,
+          "lo": 0.6499554587640196,
+          "hi": 1.708083289000636,
+          "rigid": 1.5765166949677223e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.554312234475219e-14,
+          "handVertices": 436,
+          "lo": 0.6499554587640186,
+          "hi": 1.708083289000636,
+          "rigid": 1.554312234475219e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 59,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.7319479184152442e-14,
+          "handVertices": 436,
+          "lo": 0.6499311338774247,
+          "hi": 1.7212355547669127,
+          "rigid": 1.7319479184152442e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.7541523789077473e-14,
+          "handVertices": 436,
+          "lo": 0.6499311338774251,
+          "hi": 1.7212355547669127,
+          "rigid": 1.7541523789077473e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 60,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.2434497875801753e-14,
+          "handVertices": 436,
+          "lo": 0.6499065601670511,
+          "hi": 1.7343848360496321,
+          "rigid": 1.2434497875801753e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.2656542480726785e-14,
+          "handVertices": 436,
+          "lo": 0.6499065601670508,
+          "hi": 1.7343848360496321,
+          "rigid": 1.2656542480726785e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 61,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.532107773982716e-14,
+          "handVertices": 436,
+          "lo": 0.6498817309732917,
+          "hi": 1.7475299696202888,
+          "rigid": 1.532107773982716e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.532107773982716e-14,
+          "handVertices": 436,
+          "lo": 0.6498817309732916,
+          "hi": 1.7475299696202888,
+          "rigid": 1.532107773982716e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 62,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.1649348980190553e-14,
+          "handVertices": 436,
+          "lo": 0.6498566395441684,
+          "hi": 1.7500180483798649,
+          "rigid": 2.1649348980190553e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.1649348980190553e-14,
+          "handVertices": 436,
+          "lo": 0.6498566395441677,
+          "hi": 1.7500180483798649,
+          "rigid": 2.1649348980190553e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 63,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.5987211554602254e-14,
+          "handVertices": 436,
+          "lo": 0.6498312790413798,
+          "hi": 1.750040264064261,
+          "rigid": 1.5987211554602254e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.5987211554602254e-14,
+          "handVertices": 436,
+          "lo": 0.6498312790413804,
+          "hi": 1.750040264064261,
+          "rigid": 1.5987211554602254e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 64,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.4432899320127035e-14,
+          "handVertices": 436,
+          "lo": 0.6498056425473859,
+          "hi": 1.7500736412597562,
+          "rigid": 1.4432899320127035e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.454392162258955e-14,
+          "handVertices": 436,
+          "lo": 0.6498056425473858,
+          "hi": 1.750073641259761,
+          "rigid": 1.454392162258955e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 65,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.4988010832439613e-14,
+          "handVertices": 436,
+          "lo": 0.6497797230738263,
+          "hi": 1.7501098809947617,
+          "rigid": 1.4988010832439613e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.509903313490213e-14,
+          "handVertices": 436,
+          "lo": 0.6497797230738266,
+          "hi": 1.7501098809947626,
+          "rigid": 1.509903313490213e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 66,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.554312234475219e-14,
+          "handVertices": 436,
+          "lo": 0.6497412222549159,
+          "hi": 1.75019062664429,
+          "rigid": 1.554312234475219e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.5765166949677223e-14,
+          "handVertices": 436,
+          "lo": 0.6497412222549146,
+          "hi": 1.750190626644289,
+          "rigid": 1.5765166949677223e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 67,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.3766765505351941e-14,
+          "handVertices": 436,
+          "lo": 0.6496924247557013,
+          "hi": 1.7503403565313116,
+          "rigid": 1.3766765505351941e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.3988810110276972e-14,
+          "handVertices": 436,
+          "lo": 0.6496924247557008,
+          "hi": 1.750340356531313,
+          "rigid": 1.3988810110276972e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 68,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.709743457922741e-14,
+          "handVertices": 436,
+          "lo": 0.649643245520936,
+          "hi": 1.7504901663395964,
+          "rigid": 1.709743457922741e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.709743457922741e-14,
+          "handVertices": 436,
+          "lo": 0.6496432455209363,
+          "hi": 1.7504901663395955,
+          "rigid": 1.709743457922741e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 69,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.9206858326015208e-14,
+          "handVertices": 436,
+          "lo": 0.6495936950937613,
+          "hi": 1.7506400302763647,
+          "rigid": 1.9206858326015208e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.7763568394002505e-14,
+          "handVertices": 436,
+          "lo": 0.6495936950937625,
+          "hi": 1.7506400302763645,
+          "rigid": 1.7763568394002505e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 70,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.765254609153999e-14,
+          "handVertices": 436,
+          "lo": 0.6495437875513796,
+          "hi": 1.7507817061694118,
+          "rigid": 1.765254609153999e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.865174681370263e-14,
+          "handVertices": 436,
+          "lo": 0.6495437875513794,
+          "hi": 1.7507817752468577,
+          "rigid": 1.865174681370263e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 71,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.63202784619898e-14,
+          "handVertices": 436,
+          "lo": 0.6494935410213133,
+          "hi": 1.75098316165487,
+          "rigid": 1.63202784619898e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.4876988529977098e-14,
+          "handVertices": 436,
+          "lo": 0.6494935410213132,
+          "hi": 1.7509825627560118,
+          "rigid": 1.4876988529977098e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 72,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.454392162258955e-14,
+          "handVertices": 436,
+          "lo": 0.6494429784441335,
+          "hi": 1.7512082324032554,
+          "rigid": 1.454392162258955e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.5987211554602254e-14,
+          "handVertices": 436,
+          "lo": 0.6494429784441335,
+          "hi": 1.751207664269172,
+          "rigid": 1.5987211554602254e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 73,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.5987211554602254e-14,
+          "handVertices": 436,
+          "lo": 0.6493921284731075,
+          "hi": 1.7514334198685984,
+          "rigid": 1.5987211554602254e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.5987211554602254e-14,
+          "handVertices": 436,
+          "lo": 0.6493921284731062,
+          "hi": 1.7514328823652423,
+          "rigid": 1.5987211554602254e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 74,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.509903313490213e-14,
+          "handVertices": 436,
+          "lo": 0.649341026532936,
+          "hi": 1.7517109219801388,
+          "rigid": 1.509903313490213e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.5987211554602254e-14,
+          "handVertices": 436,
+          "lo": 0.6493410265329375,
+          "hi": 1.7517105428297668,
+          "rigid": 1.5987211554602254e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 75,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.5210055437364645e-14,
+          "handVertices": 436,
+          "lo": 0.6492897160615739,
+          "hi": 1.7519865865769861,
+          "rigid": 1.5210055437364645e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.5210055437364645e-14,
+          "handVertices": 436,
+          "lo": 0.6492897160615749,
+          "hi": 1.7519863486082872,
+          "rigid": 1.5210055437364645e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 76,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.354472090042691e-14,
+          "handVertices": 436,
+          "lo": 0.6492382499608901,
+          "hi": 1.7522352320411159,
+          "rigid": 1.354472090042691e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.3766765505351941e-14,
+          "handVertices": 436,
+          "lo": 0.6492382499608911,
+          "hi": 1.7522351354100523,
+          "rigid": 1.3766765505351941e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 77,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.4654943925052066e-14,
+          "handVertices": 436,
+          "lo": 0.6491866922813607,
+          "hi": 1.7524744501990122,
+          "rigid": 1.4654943925052066e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.4654943925052066e-14,
+          "handVertices": 436,
+          "lo": 0.6491866922813612,
+          "hi": 1.752474383909973,
+          "rigid": 1.4654943925052066e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 78,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.7541523789077473e-14,
+          "handVertices": 436,
+          "lo": 0.6491351201641014,
+          "hi": 1.7527944375523115,
+          "rigid": 1.7541523789077473e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.7541523789077473e-14,
+          "handVertices": 436,
+          "lo": 0.6491351201641024,
+          "hi": 1.7527931350984418,
+          "rigid": 1.7541523789077473e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 79,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.7319479184152442e-14,
+          "handVertices": 436,
+          "lo": 0.6490836260573031,
+          "hi": 1.753120910539709,
+          "rigid": 1.7319479184152442e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.709743457922741e-14,
+          "handVertices": 436,
+          "lo": 0.649083626057303,
+          "hi": 1.7531196801689637,
+          "rigid": 1.709743457922741e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 80,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.5210055437364645e-14,
+          "handVertices": 436,
+          "lo": 0.6490323202126376,
+          "hi": 1.7534472965953565,
+          "rigid": 1.5210055437364645e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.432187701766452e-14,
+          "handVertices": 436,
+          "lo": 0.649032320212638,
+          "hi": 1.7534461789576918,
+          "rigid": 1.432187701766452e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 81,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.454392162258955e-14,
+          "handVertices": 436,
+          "lo": 0.6489687815960941,
+          "hi": 1.7537653976905556,
+          "rigid": 1.454392162258955e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.454392162258955e-14,
+          "handVertices": 436,
+          "lo": 0.6489772592915873,
+          "hi": 1.7537645955607912,
+          "rigid": 1.454392162258955e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 82,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.354472090042691e-14,
+          "handVertices": 436,
+          "lo": 0.6489017523587415,
+          "hi": 1.7540801074569532,
+          "rigid": 1.354472090042691e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.3988810110276972e-14,
+          "handVertices": 436,
+          "lo": 0.6489129793316677,
+          "hi": 1.7540792716832638,
+          "rigid": 1.3988810110276972e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 83,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.4988010832439613e-14,
+          "handVertices": 436,
+          "lo": 0.6488367561717941,
+          "hi": 1.754462190458656,
+          "rigid": 1.4654943925052066e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.4654943925052066e-14,
+          "handVertices": 436,
+          "lo": 0.6488501691500288,
+          "hi": 1.7544588913216694,
+          "rigid": 1.4654943925052066e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 84,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.7319479184152442e-14,
+          "handVertices": 436,
+          "lo": 0.6487773355192099,
+          "hi": 1.7548588346951655,
+          "rigid": 1.7319479184152442e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.7319479184152442e-14,
+          "handVertices": 436,
+          "lo": 0.6487918144596669,
+          "hi": 1.7548556627797878,
+          "rigid": 1.7319479184152442e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 85,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.2101430968414206e-14,
+          "handVertices": 436,
+          "lo": 0.6487237229504134,
+          "hi": 1.7552567660044371,
+          "rigid": 1.2101430968414206e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.2323475573339238e-14,
+          "handVertices": 436,
+          "lo": 0.6487383058279469,
+          "hi": 1.755253643815539,
+          "rigid": 1.2323475573339238e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 86,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.3988810110276972e-14,
+          "handVertices": 436,
+          "lo": 0.6486778533131828,
+          "hi": 1.7558060270442295,
+          "rigid": 1.3988810110276972e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.4210854715202004e-14,
+          "handVertices": 436,
+          "lo": 0.6486917359119351,
+          "hi": 1.7558005489782933,
+          "rigid": 1.4210854715202004e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 87,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.8984813721090177e-14,
+          "handVertices": 436,
+          "lo": 0.6486330644519998,
+          "hi": 1.7567761893153553,
+          "rigid": 1.8984813721090177e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.8984813721090177e-14,
+          "handVertices": 436,
+          "lo": 0.6486533275045404,
+          "hi": 1.7567707471563363,
+          "rigid": 1.8984813721090177e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 88,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.63202784619898e-14,
+          "handVertices": 436,
+          "lo": 0.648455797748013,
+          "hi": 1.7577835996275801,
+          "rigid": 1.63202784619898e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.63202784619898e-14,
+          "handVertices": 436,
+          "lo": 0.6486218801313396,
+          "hi": 1.7577781734787612,
+          "rigid": 1.63202784619898e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 89,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.7763568394002505e-14,
+          "handVertices": 436,
+          "lo": 0.6482873548037447,
+          "hi": 1.7588281094832983,
+          "rigid": 1.7763568394002505e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.687538997430238e-14,
+          "handVertices": 436,
+          "lo": 0.6485963418672565,
+          "hi": 1.7588227019627944,
+          "rigid": 1.687538997430238e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 90,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 9.547918011776346e-15,
+          "handVertices": 436,
+          "lo": 0.6481277648935838,
+          "hi": 1.7599092033372519,
+          "rigid": 9.547918011776346e-15,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 8.881784197001252e-15,
+          "handVertices": 436,
+          "lo": 0.6485757869367326,
+          "hi": 1.7599038201533441,
+          "rigid": 8.881784197001252e-15,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 91,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.5987211554602254e-14,
+          "handVertices": 436,
+          "lo": 0.647976889100494,
+          "hi": 1.7611235479479077,
+          "rigid": 1.5987211554602254e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.609823385706477e-14,
+          "handVertices": 436,
+          "lo": 0.6484865243757697,
+          "hi": 1.761111102208415,
+          "rigid": 1.609823385706477e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 92,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.1316282072803006e-14,
+          "handVertices": 436,
+          "lo": 0.6478344435701247,
+          "hi": 1.7625713486512085,
+          "rigid": 2.1316282072803006e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.1094237467877974e-14,
+          "handVertices": 436,
+          "lo": 0.6483956739172438,
+          "hi": 1.7625590525100834,
+          "rigid": 2.1094237467877974e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 93,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.4210854715202004e-14,
+          "handVertices": 436,
+          "lo": 0.6477001487040338,
+          "hi": 1.7640623553479002,
+          "rigid": 1.4210854715202004e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.4210854715202004e-14,
+          "handVertices": 436,
+          "lo": 0.648311922671753,
+          "hi": 1.7640501026586677,
+          "rigid": 1.4210854715202004e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 94,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.531308496145357e-14,
+          "handVertices": 436,
+          "lo": 0.6475734559285516,
+          "hi": 1.7655968347131428,
+          "rigid": 2.531308496145357e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.531308496145357e-14,
+          "handVertices": 436,
+          "lo": 0.6482222116416613,
+          "hi": 1.7655846311607357,
+          "rigid": 2.531308496145357e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 95,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.531308496145357e-14,
+          "handVertices": 436,
+          "lo": 0.647453328420742,
+          "hi": 1.7671738416327194,
+          "rigid": 2.531308496145357e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.531308496145357e-14,
+          "handVertices": 436,
+          "lo": 0.6481143539863119,
+          "hi": 1.7671616895029227,
+          "rigid": 2.531308496145357e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 96,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.1871393585115584e-14,
+          "handVertices": 436,
+          "lo": 0.6473397924419771,
+          "hi": 1.7689036682619417,
+          "rigid": 2.1871393585115584e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.1871393585115584e-14,
+          "handVertices": 436,
+          "lo": 0.6480146522227587,
+          "hi": 1.7688052832652643,
+          "rigid": 2.1871393585115584e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 97,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 1.9761969838327786e-14,
+          "handVertices": 436,
+          "lo": 0.6472333180066787,
+          "hi": 1.7711221168662825,
+          "rigid": 1.9761969838327786e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 1.9761969838327786e-14,
+          "handVertices": 436,
+          "lo": 0.6479230756890736,
+          "hi": 1.7710865522327282,
+          "rigid": 1.9761969838327786e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 98,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.886579864025407e-14,
+          "handVertices": 436,
+          "lo": 0.6471359294405952,
+          "hi": 1.7732438381911737,
+          "rigid": 2.886579864025407e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.886579864025407e-14,
+          "handVertices": 436,
+          "lo": 0.6478393596872851,
+          "hi": 1.773210414712954,
+          "rigid": 2.886579864025407e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 99,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 3.1308289294429414e-14,
+          "handVertices": 436,
+          "lo": 0.6470546947356376,
+          "hi": 1.7753986777565693,
+          "rigid": 3.1308289294429414e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 3.1308289294429414e-14,
+          "handVertices": 436,
+          "lo": 0.6477593935654044,
+          "hi": 1.7753655446301952,
+          "rigid": 3.1308289294429414e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 100,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.3869795029440866e-14,
+          "handVertices": 436,
+          "lo": 0.6470655294343413,
+          "hi": 1.7775998194922111,
+          "rigid": 2.3869795029440866e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.5757174171303632e-14,
+          "handVertices": 436,
+          "lo": 0.6476660157665688,
+          "hi": 1.777566367472886,
+          "rigid": 2.5757174171303632e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 101,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 3.241851231905457e-14,
+          "handVertices": 436,
+          "lo": 0.6473516119576749,
+          "hi": 1.779850271113562,
+          "rigid": 3.241851231905457e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 3.197442310920451e-14,
+          "handVertices": 436,
+          "lo": 0.6476092012307763,
+          "hi": 1.7798163160486635,
+          "rigid": 3.197442310920451e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 102,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.864375403532904e-14,
+          "handVertices": 436,
+          "lo": 0.6476954484791352,
+          "hi": 1.7821498836358844,
+          "rigid": 2.864375403532904e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.864375403532904e-14,
+          "handVertices": 436,
+          "lo": 0.6476880447713741,
+          "hi": 1.782115365787544,
+          "rigid": 2.864375403532904e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 103,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 3.086420008457935e-14,
+          "handVertices": 436,
+          "lo": 0.6476251479987848,
+          "hi": 1.78543439023144,
+          "rigid": 3.086420008457935e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 3.108624468950438e-14,
+          "handVertices": 436,
+          "lo": 0.6475954969519349,
+          "hi": 1.7844626060257178,
+          "rigid": 3.108624468950438e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 104,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.5091040356528538e-14,
+          "handVertices": 436,
+          "lo": 0.6476846347194889,
+          "hi": 1.7895335864220898,
+          "rigid": 2.5091040356528538e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.5757174171303632e-14,
+          "handVertices": 436,
+          "lo": 0.6480877025072592,
+          "hi": 1.7873262884255736,
+          "rigid": 2.5757174171303632e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 105,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.9753977059954195e-14,
+          "handVertices": 436,
+          "lo": 0.6477521579379534,
+          "hi": 1.7936016886867783,
+          "rigid": 2.9753977059954195e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.9753977059954195e-14,
+          "handVertices": 436,
+          "lo": 0.6481210523102754,
+          "hi": 1.7905880949239814,
+          "rigid": 2.9753977059954195e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 106,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 3.3084646133829665e-14,
+          "handVertices": 436,
+          "lo": 0.6479967737223584,
+          "hi": 1.7977176238613568,
+          "rigid": 3.3084646133829665e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 3.3084646133829665e-14,
+          "handVertices": 436,
+          "lo": 0.6483098337899148,
+          "hi": 1.7939205893068606,
+          "rigid": 3.3084646133829665e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 107,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.6201263381153694e-14,
+          "handVertices": 436,
+          "lo": 0.6483159654823807,
+          "hi": 1.8019020664835061,
+          "rigid": 2.6201263381153694e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.6201263381153694e-14,
+          "handVertices": 436,
+          "lo": 0.6481652071481396,
+          "hi": 1.7972610034792438,
+          "rigid": 2.6201263381153694e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 108,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 3.1308289294429414e-14,
+          "handVertices": 436,
+          "lo": 0.6482378875046041,
+          "hi": 1.806158804254799,
+          "rigid": 3.1308289294429414e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 3.108624468950438e-14,
+          "handVertices": 436,
+          "lo": 0.6481561498914168,
+          "hi": 1.8006387821139613,
+          "rigid": 3.108624468950438e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 109,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 3.3639757646142243e-14,
+          "handVertices": 436,
+          "lo": 0.6481682187589501,
+          "hi": 1.8104867442068031,
+          "rigid": 3.3639757646142243e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 3.3639757646142243e-14,
+          "handVertices": 436,
+          "lo": 0.6481739211964805,
+          "hi": 1.80406352296142,
+          "rigid": 3.3639757646142243e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 110,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.609024107869118e-14,
+          "handVertices": 436,
+          "lo": 0.6481698966426642,
+          "hi": 1.8149029143718016,
+          "rigid": 2.609024107869118e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.6201263381153694e-14,
+          "handVertices": 436,
+          "lo": 0.6482092985497524,
+          "hi": 1.8075358524366376,
+          "rigid": 2.6201263381153694e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 111,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.930988785010413e-14,
+          "handVertices": 436,
+          "lo": 0.6481883666875117,
+          "hi": 1.8219359860301831,
+          "rigid": 2.930988785010413e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.930988785010413e-14,
+          "handVertices": 436,
+          "lo": 0.6483794450424938,
+          "hi": 1.8110549476473246,
+          "rigid": 2.930988785010413e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 112,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.5979218776228663e-14,
+          "handVertices": 436,
+          "lo": 0.648233559417876,
+          "hi": 1.8279561168680463,
+          "rigid": 2.4424906541753444e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.4424906541753444e-14,
+          "handVertices": 436,
+          "lo": 0.6483350317895947,
+          "hi": 1.8151119676767646,
+          "rigid": 2.4424906541753444e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 113,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.398081733190338e-14,
+          "handVertices": 436,
+          "lo": 0.6482618142209966,
+          "hi": 1.839609004173653,
+          "rigid": 2.2648549702353193e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.398081733190338e-14,
+          "handVertices": 436,
+          "lo": 0.6481901639836939,
+          "hi": 1.8224982852345832,
+          "rigid": 2.2648549702353193e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 114,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.7422508708241367e-14,
+          "handVertices": 436,
+          "lo": 0.6482590561637608,
+          "hi": 1.8541437549066235,
+          "rigid": 2.7422508708241367e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.7422508708241367e-14,
+          "handVertices": 436,
+          "lo": 0.6480945762789989,
+          "hi": 1.8331541190428768,
+          "rigid": 2.7422508708241367e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 115,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.8199664825478976e-14,
+          "handVertices": 436,
+          "lo": 0.6483139864606579,
+          "hi": 1.8678588161818253,
+          "rigid": 2.7977620220553945e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.8199664825478976e-14,
+          "handVertices": 436,
+          "lo": 0.6479963976879659,
+          "hi": 1.8468114935341622,
+          "rigid": 2.7977620220553945e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 116,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 3.4638958368304884e-14,
+          "handVertices": 436,
+          "lo": 0.6483210579559616,
+          "hi": 1.881039739840588,
+          "rigid": 3.4638958368304884e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 3.4638958368304884e-14,
+          "handVertices": 436,
+          "lo": 0.6480742381921446,
+          "hi": 1.8598441425265972,
+          "rigid": 3.4638958368304884e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 117,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.930988785010413e-14,
+          "handVertices": 436,
+          "lo": 0.6483299893875272,
+          "hi": 1.8938383808353008,
+          "rigid": 2.930988785010413e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.9531932455029164e-14,
+          "handVertices": 436,
+          "lo": 0.6480320470182034,
+          "hi": 1.87248117990403,
+          "rigid": 2.9531932455029164e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 118,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 3.019806626980426e-14,
+          "handVertices": 436,
+          "lo": 0.6483392629945419,
+          "hi": 1.9063374114713045,
+          "rigid": 3.019806626980426e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.9976021664879227e-14,
+          "handVertices": 436,
+          "lo": 0.6476604748056296,
+          "hi": 1.8848058312281453,
+          "rigid": 2.9976021664879227e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 119,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.6645352591003757e-14,
+          "handVertices": 436,
+          "lo": 0.6476215702489526,
+          "hi": 1.9185805903049078,
+          "rigid": 2.6645352591003757e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.6645352591003757e-14,
+          "handVertices": 436,
+          "lo": 0.6470391194448991,
+          "hi": 1.8968590142142558,
+          "rigid": 2.6645352591003757e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 120,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.8754776337791554e-14,
+          "handVertices": 436,
+          "lo": 0.6467549812821315,
+          "hi": 1.930580236598753,
+          "rigid": 2.8754776337791554e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.5868196473766147e-14,
+          "handVertices": 436,
+          "lo": 0.6459396013851487,
+          "hi": 1.908662983328769,
+          "rigid": 2.5868196473766147e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 121,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.8754776337791554e-14,
+          "handVertices": 436,
+          "lo": 0.6461804365647446,
+          "hi": 1.9423441562907693,
+          "rigid": 2.8754776337791554e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.8754776337791554e-14,
+          "handVertices": 436,
+          "lo": 0.6445454439265662,
+          "hi": 1.9202249787446897,
+          "rigid": 2.8754776337791554e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 122,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.4424906541753444e-14,
+          "handVertices": 436,
+          "lo": 0.6458249943036787,
+          "hi": 1.9538716688713285,
+          "rigid": 2.4424906541753444e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.4424906541753444e-14,
+          "handVertices": 436,
+          "lo": 0.6436364208968509,
+          "hi": 1.9315416097342788,
+          "rigid": 2.4424906541753444e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 123,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.6756374893466273e-14,
+          "handVertices": 436,
+          "lo": 0.6447554673847615,
+          "hi": 1.9651567156364724,
+          "rigid": 2.6756374893466273e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.6645352591003757e-14,
+          "handVertices": 436,
+          "lo": 0.642990578611701,
+          "hi": 1.9426069162525044,
+          "rigid": 2.6645352591003757e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 124,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.3869795029440866e-14,
+          "handVertices": 436,
+          "lo": 0.643987619649429,
+          "hi": 1.9761874833872326,
+          "rigid": 2.3869795029440866e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.3869795029440866e-14,
+          "handVertices": 436,
+          "lo": 0.642091163291914,
+          "hi": 1.9534099039292458,
+          "rigid": 2.3869795029440866e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 125,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.4868995751603507e-14,
+          "handVertices": 436,
+          "lo": 0.64378946123508,
+          "hi": 1.9869547173560347,
+          "rigid": 2.4868995751603507e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.4868995751603507e-14,
+          "handVertices": 436,
+          "lo": 0.6396120822805083,
+          "hi": 1.963936854616101,
+          "rigid": 2.4868995751603507e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 126,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.708944180085382e-14,
+          "handVertices": 436,
+          "lo": 0.6421024111872575,
+          "hi": 1.997441169859709,
+          "rigid": 2.6423307986078726e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.708944180085382e-14,
+          "handVertices": 436,
+          "lo": 0.636848415637802,
+          "hi": 1.9741724163190246,
+          "rigid": 2.6423307986078726e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 127,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.4868995751603507e-14,
+          "handVertices": 436,
+          "lo": 0.6404242582226475,
+          "hi": 2.00763248611735,
+          "rigid": 2.4868995751603507e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.4868995751603507e-14,
+          "handVertices": 436,
+          "lo": 0.6344255752771518,
+          "hi": 1.984100180302307,
+          "rigid": 2.4868995751603507e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 128,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.3314683517128287e-14,
+          "handVertices": 436,
+          "lo": 0.6415596913285396,
+          "hi": 2.017604266032559,
+          "rigid": 2.3314683517128287e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.4868995751603507e-14,
+          "handVertices": 436,
+          "lo": 0.6320997465715642,
+          "hi": 1.9936975324335122,
+          "rigid": 2.4868995751603507e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 129,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.5091040356528538e-14,
+          "handVertices": 436,
+          "lo": 0.642257452717075,
+          "hi": 2.0272490599749835,
+          "rigid": 2.5091040356528538e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.5091040356528538e-14,
+          "handVertices": 436,
+          "lo": 0.6301370486388946,
+          "hi": 2.002951268461691,
+          "rigid": 2.5091040356528538e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 130,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.55351295663786e-14,
+          "handVertices": 436,
+          "lo": 0.6429954748641051,
+          "hi": 2.0365246688371976,
+          "rigid": 2.55351295663786e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 1,
+          "handPairError": 2.55351295663786e-14,
+          "handVertices": 436,
+          "lo": 0.6288494062777836,
+          "hi": 2.0118392858470875,
+          "rigid": 2.55351295663786e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 131,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.4424906541753444e-14,
+          "handVertices": 436,
+          "lo": 0.6428395781153181,
+          "hi": 2.0460077041044005,
+          "rigid": 2.4424906541753444e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 1,
+          "handPairError": 2.7533531010703882e-14,
+          "handVertices": 436,
+          "lo": 0.627593382598727,
+          "hi": 2.0215555089966397,
+          "rigid": 2.7533531010703882e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 132,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 3.319566843629218e-14,
+          "handVertices": 436,
+          "lo": 0.6421031982124724,
+          "hi": 2.0562269462937572,
+          "rigid": 3.319566843629218e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 3.319566843629218e-14,
+          "handVertices": 436,
+          "lo": 0.6262100448625014,
+          "hi": 2.03217259625026,
+          "rigid": 3.319566843629218e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 133,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.353672812205332e-14,
+          "handVertices": 436,
+          "lo": 0.6413810384358462,
+          "hi": 2.0670805030773667,
+          "rigid": 2.353672812205332e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.353672812205332e-14,
+          "handVertices": 436,
+          "lo": 0.624743057648417,
+          "hi": 2.0436287207975115,
+          "rigid": 2.353672812205332e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 134,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.4868995751603507e-14,
+          "handVertices": 436,
+          "lo": 0.6404996795082093,
+          "hi": 2.0784341892317766,
+          "rigid": 2.4868995751603507e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.3647750424515834e-14,
+          "handVertices": 436,
+          "lo": 0.6231044721440274,
+          "hi": 2.055920757363632,
+          "rigid": 2.3647750424515834e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 135,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.653433028854124e-14,
+          "handVertices": 436,
+          "lo": 0.6395944458771398,
+          "hi": 2.090147259253103,
+          "rigid": 2.653433028854124e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.4646951146678475e-14,
+          "handVertices": 436,
+          "lo": 0.621415556718847,
+          "hi": 2.06863995191287,
+          "rigid": 2.4646951146678475e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 136,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.5979218776228663e-14,
+          "handVertices": 436,
+          "lo": 0.6386465366596491,
+          "hi": 2.1020359121704613,
+          "rigid": 2.5979218776228663e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 3.141931159689193e-14,
+          "handVertices": 436,
+          "lo": 0.6196820303634761,
+          "hi": 2.081602571902615,
+          "rigid": 3.141931159689193e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 137,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 3.5083047578154947e-14,
+          "handVertices": 436,
+          "lo": 0.6378314686769663,
+          "hi": 2.11390850724937,
+          "rigid": 3.5083047578154947e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 3.5083047578154947e-14,
+          "handVertices": 436,
+          "lo": 0.6178776940713657,
+          "hi": 2.0946077888295296,
+          "rigid": 3.5083047578154947e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 138,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.842170943040401e-14,
+          "handVertices": 436,
+          "lo": 0.6372294427240991,
+          "hi": 2.1255254535457992,
+          "rigid": 2.842170943040401e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.8199664825478976e-14,
+          "handVertices": 436,
+          "lo": 0.6161730130753448,
+          "hi": 2.1074208712807234,
+          "rigid": 2.8199664825478976e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 139,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.631228568361621e-14,
+          "handVertices": 436,
+          "lo": 0.6367671651955751,
+          "hi": 2.1366414024183262,
+          "rigid": 2.631228568361621e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.653433028854124e-14,
+          "handVertices": 436,
+          "lo": 0.6146598296842016,
+          "hi": 2.1195817656182796,
+          "rigid": 2.653433028854124e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 140,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.5979218776228663e-14,
+          "handVertices": 436,
+          "lo": 0.6362905598947874,
+          "hi": 2.1469783728400857,
+          "rigid": 2.5979218776228663e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.55351295663786e-14,
+          "handVertices": 436,
+          "lo": 0.6134131063878147,
+          "hi": 2.130808963301664,
+          "rigid": 2.55351295663786e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 141,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.90878432451791e-14,
+          "handVertices": 436,
+          "lo": 0.6356364102706789,
+          "hi": 2.156246098488387,
+          "rigid": 2.90878432451791e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.55351295663786e-14,
+          "handVertices": 436,
+          "lo": 0.6124389740516529,
+          "hi": 2.140738572247779,
+          "rigid": 2.55351295663786e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 142,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.9753977059954195e-14,
+          "handVertices": 436,
+          "lo": 0.634880093148659,
+          "hi": 2.1641507028363125,
+          "rigid": 2.9753977059954195e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.55351295663786e-14,
+          "handVertices": 436,
+          "lo": 0.6118875625726795,
+          "hi": 2.1490759840205556,
+          "rigid": 2.55351295663786e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 143,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.8199664825478976e-14,
+          "handVertices": 436,
+          "lo": 0.6342393433475407,
+          "hi": 2.170395363926784,
+          "rigid": 2.8199664825478976e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.5979218776228663e-14,
+          "handVertices": 436,
+          "lo": 0.6117340271481111,
+          "hi": 2.1553740178542022,
+          "rigid": 2.5979218776228663e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 144,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 2.2426505097428162e-14,
+          "handVertices": 436,
+          "lo": 0.6337411089843257,
+          "hi": 2.1746995030789917,
+          "rigid": 2.2426505097428162e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 2.3314683517128287e-14,
+          "handVertices": 436,
+          "lo": 0.6118008720753889,
+          "hi": 2.1594263979891917,
+          "rigid": 2.220446049250313e-14,
+          "core": 1738
+        }
+      ]
+    },
+    {
+      "deg": 145,
+      "arms": [
+        {
+          "side": 1,
+          "intersections": 0,
+          "handPairError": 3.141931159689193e-14,
+          "handVertices": 436,
+          "lo": 0.6333944477687168,
+          "hi": 2.176812373453001,
+          "rigid": 3.141931159689193e-14,
+          "core": 1738
+        },
+        {
+          "side": 2,
+          "intersections": 0,
+          "handPairError": 3.141931159689193e-14,
+          "handVertices": 436,
+          "lo": 0.6120161865590039,
+          "hi": 2.1610410500144477,
+          "rigid": 3.141931159689193e-14,
+          "core": 1738
+        }
+      ]
+    }
+  ],
+  "limitations": "isolated nonadjacent triangle interior crossing only, no coplanar contact or full-body collision test"
+}
