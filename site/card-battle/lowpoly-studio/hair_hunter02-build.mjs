@@ -3,16 +3,16 @@ let m={name:"Hunter 02 / Ash blonde low ponytail",base:"V46",positions:[],polygo
 function card(id,layer,rows,material,uvfn=(p,i,j,n,h)=>[i/(n-1),1-j/(h-1)]){let vs=m.positions.length,fs=m.polygons.length,n=rows[0].length;rows.forEach((r,j)=>r.forEach((p,i)=>{m.positions.push(p.slice());m.uv.push(uvfn(p,i,j,n,rows.length))}));for(let j=0;j<rows.length-1;j++)for(let i=0;i<n-1;i++){let k=vs+j*n+i;m.polygons.push([k,k+n,k+n+1,k+1]);m.faceColors.push([40,38,39]);m.materials.push(material)}m.groups.push({name:id,layer,faceStart:fs,faceCount:m.polygons.length-fs});m.slots.push({id,material,vertexStart:vs,vertexCount:m.positions.length-vs,faceStart:fs,faceCount:m.polygons.length-fs})}
 let F=Array.from({length:5},(_,j)=>L.positions.slice(j*5,j*5+5).map(p=>p.slice()));F.push([[-.245,2.16,.235],[-.125,2.16,.31],[0,2.16,.326],[.125,2.16,.31],[.245,2.16,.235]]);
 card("swept-front",3,F,"front",p=>[(p[0]+.36)/.72,(p[1]-2.14)/.78]);
-let B=Array.from({length:6},(_,j)=>L.positions.slice(43+j*5,48+j*5).map(p=>p.slice()));B[5]=[[-.29,2.35,-.238],[-.16,2.35,-.345],[0,2.35,-.385],[.16,2.35,-.345],[.29,2.35,-.238]];B.push([[-.145,2.22,-.19],[-.08,2.225,-.24],[0,2.225,-.27],[.08,2.225,-.24],[.145,2.22,-.19]]);
+let B=Array.from({length:6},(_,j)=>L.positions.slice(43+j*5,48+j*5).map(p=>p.slice()));B.push(B[5].map((p,i)=>p.map((x,k)=>x+(L.positions[73+i][k]-x)*.43)));
 card("combed-back",1,B,"back");
 for(let s of [-1,1]){
 let i=s===1?4:0;
 let S=Array.from({length:5},(_,j)=>{let f=F[j][i],b=B[j+1][i],old=L.positions[(s===1?120:93)+j*3+1];return [f,old.slice(),b]});
-S.push([[s*.24,2.22,.18],[s*.245,2.22,-.015],B[6][i]]);
+let j0=(s===1?120:93)+12,j1=j0+3;let frontEnd=L.positions[j0].map((x,k)=>x+(L.positions[j1][k]-x)*.43),mid=L.positions[j0+1].map((x,k)=>x+(L.positions[j1+1][k]-x)*.43);S.push([frontEnd,mid,B[6][i]]);
 card(s===1?"temple-right":"temple-left",2,S,s===1?"sideR":"sideL");
 }
 const tail=[
-[[-.075,2.385,-.322],[0,2.385,-.359],[.075,2.385,-.322]],
+[[-.075,2.385,-.367],[0,2.385,-.399],[.075,2.385,-.367]],
 [[-.09,2.29,-.35],[.008,2.29,-.395],[.09,2.29,-.35]],
 [[-.115,2.12,-.35],[.015,2.12,-.41],[.145,2.12,-.35]],
 [[-.10,1.94,-.36],[.045,1.95,-.43],[.18,1.94,-.36]],
@@ -62,7 +62,7 @@ for(let l of locks){if(!inside(l.p,u,v))continue;let d=u-l.axis(v),shade=.03+.18
 // Fine, directional accents, not repeated vertical stripes.
 if(v>.18&&v<.66&&Math.abs(d+.035-.014*Math.sin(v*8))<.006)col=mix(col,[235,224,197],.40);
 }
-if(col){if((kind==="extra"||kind==="tailProfile")&&v>.055&&v<.15)col=mix([53,46,38],[108,93,67],.24+u*.35);data.set([...col.map(Math.round),255],(y*width+x)*4)}
+if(col){if(kind==="back"&&v>.90&&Math.abs(u-.5)>.50-(v-.90)*1.6)continue;if((kind==="extra"||kind==="tailProfile")&&v>.055&&v<.15)col=mix([53,46,38],[108,93,67],.24+u*.35);data.set([...col.map(Math.round),255],(y*width+x)*4)}
 }return {width,height,data}
 }
 
