@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {mkdirSync,writeFileSync} from 'node:fs';
-import {buildBody} from '../site/card-battle/lowpoly-studio/body-topology-v6.mjs';
+import {buildBody} from '../site/card-battle/lowpoly-studio/body-face-v7.mjs';
 import {chromium} from 'playwright';
 const data=buildBody();assert.equal(data.stats.connected,true);assert.equal(data.stats.boundaryOrNonManifoldEdges,0);assert.equal(data.stats.degenerate,0);assert.equal(data.stats.euler,2);assert.equal(data.stats.normalizedWeights,true);assert.equal(data.bones.length,15);
 const dir='artifacts/lowpoly-studio';mkdirSync(dir,{recursive:true});writeFileSync(dir+'/topology.json',JSON.stringify(data.stats,null,2));
