@@ -1,0 +1,23 @@
+# V46 低多边形实体头发建模规范
+
+状态：Bob 01 V1/V2 未通过外观验收；此文档为学习与后续建模规范，不代表新版已完成。
+
+## 专业资料（已阅读网页中的头发建模章节）
+- UCBUGG Polygon Hair Modeling: https://www.ucbugg.com/labs/modeling/polygon-hair-modeling — 后发/侧发使用贴头皮导向曲线及 Sweep Mesh；前发亦可用贴合额头的平面分割、内嵌棱线和实体挤出；短发后部可使用较大连续面，底层发帽仅用于填补缝隙。
+- Ascalon Flat Modeling Anime/Toon Hair: https://blenderartists.org/t/flat-modeling-anime-toon-hair/1204349 ; https://www.youtube.com/watch?v=lo_FxdSe_F8 — 平面建模后用曲线和变形贴头、发尖拓扑和 UV 连接。视频页面与作者说明已查阅，未逐帧观看视频。
+- CoderNunk hair chapter: https://codernunk.com/tutorials/complete-3d-character-guide/#modeling-the-hair — 低分辨率曲线截面，内侧较平、外侧凸起，分层制作刘海/主发，保留曲线源文件后转网格并优化。
+- CG Cookie: https://cgcookie.mavenseed.com/posts/how-to-model-hair-in-blender — 先大体积、再中小发束；曲线宽度和扭转，转换网格后精修；从各角度检查。
+- Blender 官方曲线几何: https://docs.blender.org/manual/en/5.1/modeling/curves/properties/geometry.html — 自定义 bevel 截面、低分辨率、端部闭合。
+- Maya 官方 Sweep Mesh: https://help.autodesk.com/cloudhelp/2026/ENU/Maya-Modeling/files/GUID-515863CF-D31E-4D70-ADAB-0E36F342EB37.htm — 独立控制截面宽度、角度、扭转、收缩曲线、沿路径的分段密度。
+- Polycount 从业者讨论: https://polycount.com/discussion/158947/faster-ways-to-polygon-model-anime-hair-in-maya-modo-or-zbrush — 前部及侧部独特发束、后部复用并调整轮廓，最后手工整理。
+
+## 实施规范
+1. 冻结 body_v46 的网格、耳朵、面部 UV/贴图和基础渲染参数。禁止改素体迎合头发。
+2. 用已确认头部三视图与发型参考建立前/侧/后/顶的根部、流向、体积、发梢位置。先拟合低面数底层体积，仅用来防止露头皮，不当最终头发。
+3. 先单独制作中心刘海测试件：根部到尖端的三维导向点；截面使用低边数扁宽棱形或带脊的多边形，内面贴头、外面鼓起；每站独立宽度、厚度、朝向。沿路径挤出四边形纵向面，尖端保留极小非退化四边形封口或使用四边形收束拓扑。禁止全头纬圈+锯齿代替发束。单束检查正侧背及线框后再扩展。
+4. 刘海独立中心束与镜像侧束，宽窄及走势分主次；侧发顺头骨向下，末端内扣；后发少量宽大连续体积配合纵向折面，避免等间距锯齿和同质重复。必要时使用贴合面挤厚法而非一律扫掠。
+5. 保留可编辑每束导向、截面、分组和网格生成代码。局部控制截面扭转，防止翻转；根部覆盖自然，层间接触与有意隐藏重叠应区分于可见穿模。若需整体无交叠则执行局部拓扑合并重建，不把所有发束强行压入球壳。
+6. 保持左右镜像与源四边形要求。检查退化面、法线、非流形、重复面、自交、身体及耳朵的双向穿插，区分渲染时三角化与源拓扑。
+7. 每阶段输出同视角、同光源的原始头部对照/参考图/真实网格渲染，另有单束和全发型线框、顶视/四分之三视角。截图不通过不宣称完成。先审单束与发型轮廓再全头组合。
+
+Bob 01 不以顶点数或碰撞计数替代视觉验收。V1/V2 保留为失败对照，不覆盖原始 V46。
