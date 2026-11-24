@@ -1,0 +1,93 @@
+{
+  "scope": "Same V4 combined algorithm, three local ring density settings, 21 samples per action per topology. No new rest shape or production rig. Added rings alone are not a retopology solution.",
+  "results": [
+    {
+      "name": "current",
+      "band": [
+        "arm0",
+        "arm2",
+        "arm3",
+        "leg2",
+        "leg3"
+      ],
+      "quads": 506,
+      "stats": [
+        {
+          "id": "climb",
+          "pairs": 80,
+          "folds": 0,
+          "bad": 11,
+          "shapeBad": 21
+        },
+        {
+          "id": "vault",
+          "pairs": 395,
+          "folds": 0,
+          "bad": 14,
+          "shapeBad": 8
+        }
+      ]
+    },
+    {
+      "name": "root+knee",
+      "band": [
+        "arm0",
+        "arm1",
+        "arm2",
+        "arm3",
+        "leg0",
+        "leg2",
+        "leg3"
+      ],
+      "quads": 534,
+      "stats": [
+        {
+          "id": "climb",
+          "pairs": 77,
+          "folds": 0,
+          "bad": 17,
+          "shapeBad": 21
+        },
+        {
+          "id": "vault",
+          "pairs": 380,
+          "folds": 0,
+          "bad": 14,
+          "shapeBad": 4
+        }
+      ]
+    },
+    {
+      "name": "all bands",
+      "band": [
+        "arm0",
+        "arm1",
+        "arm2",
+        "arm3",
+        "arm4",
+        "leg0",
+        "leg2",
+        "leg3",
+        "leg5",
+        "leg6"
+      ],
+      "quads": 578,
+      "stats": [
+        {
+          "id": "climb",
+          "pairs": 77,
+          "folds": 0,
+          "bad": 17,
+          "shapeBad": 21
+        },
+        {
+          "id": "vault",
+          "pairs": 378,
+          "folds": 0,
+          "bad": 13,
+          "shapeBad": 4
+        }
+      ]
+    }
+  ]
+}
