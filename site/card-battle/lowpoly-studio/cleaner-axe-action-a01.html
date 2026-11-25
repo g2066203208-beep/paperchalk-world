@@ -355,6 +355,11 @@ function evaluate(id,t,hair=true){let q=sample(id,t),M=model(hair),dir=unit(q.a)
 if(id==='sweep'&&dir[0]<-.3)other=add(main,mul(dir,-.32)); // keep hand order invariant on shaft for other clips
 // Preserve the signed secondary grip distance for sweep too: reverse grip is avoided by using an outward elbow target.
 other=add(main,mul(dir,.32));
+// Project the shared grip root into both arm reach spheres before solving either elbow.
+const limit=r=>len(sub(r.E,r.S))+len(sub(r.H,r.E))-.026;
+const constrain=(p,c,r)=>{let d=sub(p,c),n=len(d);return n>r?add(c,mul(d,r/n)):p};
+for(let j=0;j<24;j++){main=constrain(main,armRest[1].S,limit(armRest[1]));if(q.both>.99)main=constrain(main,sub(armRest[0].S,mul(dir,.32)),limit(armRest[0]));}
+other=add(main,mul(dir,.32));
 let R=solve(armRest[0],mix(q.free,other,q.both),1,dir,q.both),L=solve(armRest[1],main,-1,dir,1);
 let piv=[0,1.43,0],torso=(p,w=1)=>add(piv,ry(rx(sub(p,piv),rad(q.pitch)*w),rad(q.twist)*w));
 function leg(p,s){let hip=[s*.145,1.36,0],K=avg(body,ring(s>0?244:360)),a=-rad(s>0?q.hr:q.hl),b=rad(s>0?q.kr:q.kl),v=sub(p,K),fold=add(K,rx(v,b*(1-sm((p[1]-.86)/.13)))),z=add(hip,rx(sub(fold,hip),a));return mix(p,add(z,[s*q.spread,0,0]),1-sm((p[1]-1.16)/.23))}
