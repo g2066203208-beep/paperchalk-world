@@ -1,0 +1,3 @@
+# V04 actual renderer capture
+
+Decoded embedded original face PNG; executed actual V04 renderer with canvas adapter. 12 stills at 240×240 each and a 90-frame blink/wink/talk GIF at 12.5 fps. No generated character imagery. 12 stills each verified 1471 finite vertices. GIF palette quantized. Browser UI, live deployment, and collision tests not run. Second lifestyle GIF upload failed; not included in this commit. Sheet order: idle, half blink, closed blink, smile, yawn, talk, look, sleep, wake, wink, surprise, annoyed. Mouth absent in rest because original PNG has no resting mouth. Current gaze uses head rotation only.
