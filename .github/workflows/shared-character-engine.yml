@@ -1,0 +1,19 @@
+name: Shared character engine regression
+on:
+  push:
+    paths:
+      - 'site/card-battle/lowpoly-studio/character-engine/**'
+      - '.github/workflows/shared-character-engine.yml'
+  pull_request:
+    paths:
+      - 'site/card-battle/lowpoly-studio/character-engine/**'
+  workflow_dispatch:
+jobs:
+  static-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node site/card-battle/lowpoly-studio/character-engine/tests.mjs
