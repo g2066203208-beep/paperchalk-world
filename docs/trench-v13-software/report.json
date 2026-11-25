@@ -1,0 +1,28 @@
+{
+  "source": "7b5e204cd8472e826c7e9762aee4994f1362a847",
+  "scope": "Exact game CPU rasterizer under synthetic DOM; not Chromium or hardware FPS",
+  "width": 277,
+  "height": 416,
+  "times": [
+    163,
+    61,
+    64,
+    68,
+    59,
+    62,
+    67,
+    60,
+    60,
+    74,
+    61,
+    58,
+    57,
+    82,
+    58,
+    58,
+    62,
+    60
+  ],
+  "frames": 14,
+  "heading": 0
+}
