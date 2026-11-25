@@ -10,11 +10,27 @@ const solid=(x,z,w,d)=>colliders.push([x-w/2,z-d/2,x+w/2,z+d/2]);
 const surface=(x,z,w,d,y=.04,m='road')=>box(x,y-.12,z,w,.24,d,m);
 const local=(x,z,r,u,v)=>[x+Math.cos(r)*u-Math.sin(r)*v,z+Math.sin(r)*u+Math.cos(r)*v];
 const shopTypes=['BOULANGERIE','PHARMACIE','EPICERIE','CAFE','LIBRAIRIE','MERCERIE','BOUCHERIE','HOTEL','TABAC','CORDONNERIE'];
+// Period façade families: limestone townhouses, slate mansions and older timber fronts.
+const letters={A:['010','101','111','101','101'],B:['110','101','110','101','110'],C:['011','100','100','100','011'],D:['110','101','101','101','110'],E:['111','100','110','100','111'],F:['111','100','110','100','100'],G:['011','100','101','101','011'],H:['101','101','111','101','101'],I:['111','010','010','010','111'],J:['001','001','001','101','010'],K:['101','101','110','101','101'],L:['100','100','100','100','111'],M:['101','111','111','101','101'],N:['101','111','111','111','101'],O:['010','101','101','101','010'],P:['110','101','110','100','100'],Q:['010','101','101','111','011'],R:['110','101','110','101','101'],S:['011','100','010','001','110'],T:['111','010','010','010','010'],U:['101','101','101','101','111'],V:['101','101','101','101','010'],W:['101','101','111','111','101'],X:['101','101','010','101','101'],Y:['101','101','010','010','010'],Z:['111','001','010','100','111']};
 function house(x,z,w,d,floors,rot,commercial=false,ruin=false){
-let h=3.05*floors,wall=pick(['plaster','cream','ochre','stone','rose']),roof=pick(['roof','roof2','roof3']);
+let h=3.05*floors,style=Math.abs(Math.round(x*13+z*7))%5,wall=style===0?'cream':style===1?'plaster':style===2?'stone':pick(['cream','ochre','plaster']),roof=style===1?'roof2':pick(['roof','roof2','roof3']);
 const b=(u,y,v,a,hh,l,m)=>{let [X,Z]=local(x,z,rot,u,v);return box(X,y,Z,a,hh,l,m,{rot})};
 let wx=Math.abs(Math.cos(rot))*w+Math.abs(Math.sin(rot))*d,wz=Math.abs(Math.sin(rot))*w+Math.abs(Math.cos(rot))*d;
-if(!ruin){b(0,h/2,0,w,h,d,wall);add('gable',[x,h,z],[w+.45,1.8+rand()*1.3,d+.35],roof,{rot});b(w*.31,h+1.65,-d*.22,.73,2.45,.73,'brick');b(w*.31,h+2.92,-d*.22,.91,.15,.91,'stone')}
+if(!ruin){
+ b(0,h/2,0,w,h,d,wall);const rh=2.3+rand()*1.4,frontGable=style===1;
+ add('gable',[x,h,z],frontGable?[w+.22,rh,d+.24]:[d+.24,rh,w+.22],roof,{rot:frontGable?rot:rot+Math.PI/2});
+ for(let side of [-1,1]){b(side*w*.36,h+rh*.68,0,.67,rh*.9,.72,'stone');b(side*w*.36,h+rh*1.13,0,.86,.16,.91,'trim');}
+ for(let side of [-1,1]){
+  b(0,h-.13,side*(d/2+.08),w+.12,.24,.27,'trim');
+  for(let k=1;k<floors;k++)if(style!==1)b(0,k*3.05+.07,side*(d/2+.055),w,.13,.12,'trim');
+  if(style===1){ // surviving older timber-framed buildings
+   for(let j=0;j<=4;j++)b((j/4-.5)*(w-.18),h*.68,side*(d/2+.09),.16,h*.64,.15,'wood');
+   for(let k=1;k<=floors;k++)b(0,Math.min(h-.09,k*3.05),side*(d/2+.10),w,.20,.18,'wood');
+  }else if(style===2||style===4){
+   for(let u of [-w/2+.16,w/2-.16])for(let k=1;k<Math.ceil(h/.55);k++)b(u,k*.55,side*(d/2+.09),k%2?.33:.48,.48,.14,'trim');
+  }
+ }
+}
 else{
  // Shell with real missing roof and uneven broken side walls.
  for(let s of [-1,1]){b(s*(w/2-.20),h*.37,0,.40,h*.74,d,wall);b(s*(w/2-.20),h*.82,-d*.29,.40,h*.23,d*.34,'brick')}
@@ -24,10 +40,14 @@ else{
  smoke.push([x,h*.66,z]);
 }
 solid(x,z,wx,wz);b(0,.22,d/2+.05,w,.42,.18,'darkStone');
-for(let s of [-1,1])for(let k=0;k<floors;k++){if(ruin&&k>0&&s===1)continue;if(commercial&&s===1&&k===0&&!ruin)continue;let n=Math.max(2,Math.round(w/2.5));for(let j=0;j<n;j++){let u=(j-(n-1)/2)*w/n,y=k*3.05+1.68;if(ruin&&k>0)continue;b(u,y,s*(d/2+.045),1.18,1.62,.13,'darkStone');b(u,y,s*(d/2+.125),.91,1.34,.06,ruin?'black':'glass');b(u,y,s*(d/2+.17),.07,1.36,.06,'woodLight');b(u,y,s*(d/2+.17),.94,.08,.06,'woodLight');b(u,y-.81,s*(d/2+.14),1.35,.12,.24,'trim');if(!ruin&&j%2===0){b(u-.75,y,s*(d/2+.13),.37,1.42,.10,'green');b(u+.75,y,s*(d/2+.13),.37,1.42,.10,'green')}}}
+for(let s of [-1,1])for(let k=0;k<floors;k++){if(ruin&&k>0&&s===1)continue;if(commercial&&s===1&&k===0&&!ruin)continue;let n=Math.max(2,Math.round(w/2.5));for(let j=0;j<n;j++){let u=(j-(n-1)/2)*w/n,y=k*3.05+1.68;if(ruin&&k>0)continue;b(u,y,s*(d/2+.045),1.18,1.62,.13,'darkStone');b(u,y,s*(d/2+.125),.91,1.34,.06,ruin?'black':'glass');b(u,y,s*(d/2+.17),.07,1.36,.06,'woodLight');b(u,y,s*(d/2+.17),.94,.08,.06,'woodLight');b(u,y-.81,s*(d/2+.14),1.35,.12,.24,'trim');if(!ruin&&style!==1){b(u,y+.88,s*(d/2+.10),1.44,.20,.20,'trim');for(let t of [-1,1])b(u+t*.65,y,s*(d/2+.09),.12,1.65,.13,'trim');}if(!ruin&&style===3&&k===1){b(u,y-.77,s*(d/2+.39),1.48,.12,.65,'stone');for(let q=-2;q<=2;q++)b(u+q*.26,y-.43,s*(d/2+.68),.045,.56,.045,'iron');b(u,y-.13,s*(d/2+.68),1.34,.065,.08,'iron');}if(!ruin&&j%2===0){b(u-.75,y,s*(d/2+.13),.37,1.42,.10,'green');b(u+.75,y,s*(d/2+.13),.37,1.42,.10,'green')}}}
 if(!ruin)for(let side of [-1,1])for(let k=0;k<floors;k++)for(let j=0;j<2;j++){let v=(j-.5)*d*.5;b(side*(w/2+.06),k*3.05+1.7,v,.13,1.4,1.1,'darkStone');b(side*(w/2+.15),k*3.05+1.7,v,.06,1.18,.88,'glass')}
 if(commercial&&!ruin){let type=shopTypes[shops.length%shopTypes.length];b(0,1.36,d/2+.10,w-.7,2.72,.16,'wood');b(0,1.16,d/2+.20,1.16,2.30,.12,'black');for(let s of [-1,1]){b(s*w*.27,1.58,d/2+.21,w*.34,1.58,.10,'glass');b(s*w*.27,1.58,d/2+.28,.10,1.58,.10,'woodLight');b(s*w*.27,1.58,d/2+.28,w*.34,.09,.10,'woodLight');b(s*w*.27,.57,d/2+.25,w*.34,.16,.38,'trim')}
- b(0,2.94,d/2+.22,w-.9,.48,.18,'black');
+ b(0,2.94,d/2+.22,w-.9,.48,.18,style===3?'blue':'black');
+ // Actual extruded sign lettering, not an empty rectangular panel.
+ const unit=Math.min(.063,(w-1.1)/(type.length*4)),total=(type.length*4-1)*unit;
+ for(let i=0;i<type.length;i++){const glyph=letters[type[i]];if(!glyph)continue;for(let row=0;row<5;row++){let line=glyph[row];for(let j=0;j<3;){if(line[j]!=='1'){j++;continue}let end=j+1;while(end<3&&line[end]==='1')end++;b(-total/2+(i*4+(j+end-1)/2+.5)*unit,2.94+(2-row)*unit,d/2+.319,(end-j)*unit*.98,unit*.94,.025,'cream');j=end;}}}
+ b(0,3.21,d/2+.22,w-.65,.12,.23,'woodLight');
  if(shops.length%3!==0){let m=pick(['cream','red','blue','green']);for(let j=0;j<8;j++){b((j-3.5)*(w-.45)/8,3.05,d/2+.78,(w-.45)/8,.11,1.38,j%2?'cloth':m);b((j-3.5)*(w-.45)/8,2.88,d/2+1.44,(w-.45)/8,.24,.09,j%2?'cloth':m)}}
  let [sx,sz]=local(x,z,rot,0,d/2+.34);shops.push({type,x:sx,z:sz,rotation:rot}); // sign art added as mesh strokes in world module
  if(type==='BOULANGERIE'||type==='EPICERIE'){b(w*.31,.42,d/2+1.03,1.1,.84,.72,'woodLight');for(let j=0;j<4;j++)b(w*.31+(j-1.5)*.23,.93,d/2+1.02,.20,.18,.22,'gold')}
@@ -47,7 +67,7 @@ for(let x of xs)for(let s of [-1,1]){surface(x,s*110,9,180,.045,'asphalt');for(l
 for(let z of zs){surface(0,z,368,9,.05,'cobble');for(let q of [-1,1])surface(0,z+q*5.8,368,2.6,.105,'stone')}
 // Compact street-front blocks, narrower parcels, period masonry. Keep central axes open.
 for(let ix=0;ix<xs.length-1;ix++)for(let s of [-1,1])for(let iz=0;iz<3;iz++){let xc=(xs[ix]+xs[ix+1])/2,zc=s*(iz===0?35:72+(iz-1)*48);if(s===-1&&iz===2&&Math.abs(xc)<49)continue;if(s===1&&iz===1&&Math.abs(xc)<25)continue;
-for(let row of (iz===0?[s]:[-1,1]))for(let j=0;j<3;j++){let x=xc+(j-1)*10.9,z=iz===0?s*35.5:zc+row*8.4,w=8.8+rand()*.9,d=9+rand()*1.2;let ruined=rand()<(s===1?.24:.13);house(x,z,w,d,2+Math.floor(rand()*2),row===1?0:Math.PI,iz!==2||j===1,ruined)}}
+for(let row of (iz===0?[s]:[-1,1]))for(let j=0;j<4;j++){let x=xc+(j-1.5)*8.25,z=iz===0?s*35.5:zc+row*12.1,w=7.78+rand()*.39,d=9+rand()*.7;let ruined=rand()<(s===1?.24:.13);house(x,z,w,d,2+Math.floor(rand()*3),row===1?0:Math.PI,iz!==2||j===1||j===2,ruined)}}
 for(let x of [-96,0,96])bridge(x);
 // Civilian square and administrative quarter; no medieval crenellations or fantasy towers.
 surface(0,72,38,35,.065,'cobble');landmarks.push({name:'市政广场',x:0,z:72});for(let s of [-1,1])for(let z of [60,84]){lamp(s*13,z);tree(s*16,z)}
@@ -55,7 +75,7 @@ cyl(0,.42,72,1.7,.84,'stone',12);cyl(0,.86,72,1.85,.18,'trim',12);cyl(0,.96,72,1
 surface(0,-132,90,68,.06,'cobble');landmarks.push({name:'市政厅与教堂',x:0,z:-132});
 house(-25,-144,28,19,3,0,false,false);house(25,-144,28,19,3,0,false,false);
 box(0,5.2,-154,17,10.4,19,'stone');solid(0,-154,17,19);add('gable',[0,10.4,-154],[18,4.6,20],'roof2');
-box(0,10,-141,5.6,20,5.6,'stone');solid(0,-141,5.6,5.6);cyl(0,23,-141,4.0,6,'roof2',4,.03);box(0,13.4,-138.15,1.7,3.3,.14,'black');box(0,5.2,-138.08,2.0,3.9,.16,'wood');for(let s of [-1,1])for(let z of [-150,-156,-162])box(s*8.6,6.0,z,.15,3,1.25,'glass');
+box(0,10,-141,5.6,20,5.6,'stone');solid(0,-141,5.6,5.6);for(let y of [10.2,18.9,20])box(0,y,-141,6.0,.25,6.0,'trim');cyl(0,26,-141,3.65,12,'roof2',8,.03);for(let side of [-1,1]){box(side*2.3,15.5,-138.15,.58,5.6,.22,'trim');box(side*2.3,19.3,-138.15,.8,.8,.8,'trim');}box(0,13.4,-138.15,1.7,3.3,.14,'black');box(0,5.2,-138.08,2.0,3.9,.16,'wood');for(let s of [-1,1])for(let z of [-150,-156,-162])box(s*8.6,6.0,z,.15,3,1.25,'glass');
 for(let z of zs)for(let x of xs){lamp(x+6.6,z+6.4);if((x+z)%96===0)tree(x-6.8,z-6.8)}
 // Parked civilian lorries, period street furniture, broken masonry and sparse smoke sources.
 for(let [x,z] of [[53,89],[-53,41],[101,-55],[-101,-103]]){box(x,.58,z,1.85,.26,4.6,'black');box(x,1.42,z+1.12,1.85,1.44,1.68,'green');box(x,1.62,z+1.96,1.46,.58,.10,'glass');box(x,1.08,z-1,1.82,.88,2.50,'wood');for(let s of [-1,1])for(let j of [-1,1])cyl(x+s*.92,.48,z+j*1.4,.45,.26,'black',8);solid(x,z,2,4.7)}
