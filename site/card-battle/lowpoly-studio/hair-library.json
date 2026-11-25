@@ -42,6 +42,19 @@
       "vertices": 441,
       "quads": 288,
       "notes": "V8 extends original scalp cap through actual rear skull rings to nape, behind ears. Tapers outer rear edge toward tie, slightly lowers crest, preserves pixel cluster design. Strict static body/ear triangle crossing test zero; hair layers overlap, low-angle side/nape skin remains visible; aesthetic review pending."
+    },
+    {
+      "id": "hair-003",
+      "name": "赏金枪手·实体低马尾 V9",
+      "status": "modeled-draft",
+      "reference": "../../assets/characters/monster-hunters/04-bounty-markswoman.png",
+      "character": "04-markswoman",
+      "mesh": "hair_markswoman-v9.json",
+      "preview": "hair_markswoman-v9-review.svg",
+      "viewer": "markswoman-hair-v9.html",
+      "vertices": 267,
+      "quads": 246,
+      "notes": "V45 skull; independent volumetric locks, no alpha cards; awaiting aesthetic and collision approval"
     }
   ]
 }
