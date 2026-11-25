@@ -1,0 +1,23 @@
+{
+  "vertices": 2156193,
+  "shadowed": 920552,
+  "contacted": 871377,
+  "grid": [
+    800,
+    1400
+  ],
+  "cell": 0.5,
+  "cache": 448194,
+  "sun": [
+    -0.62,
+    0.58,
+    0.52
+  ],
+  "method": "heightfield occlusion + contact AO, baked at vertices",
+  "oldTriangles": 350837,
+  "newTriangles": 718731,
+  "finite": true,
+  "scope": "Actual scene geometry and original atlas, independent software shader approximation; browser GPU and fps not measured",
+  "views": 4,
+  "gifFrames": 12
+}
