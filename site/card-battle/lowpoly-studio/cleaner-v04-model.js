@@ -39,9 +39,21 @@ if(show.hair){
 // V04: the scalp is only a recessed root coverage layer, not the visible hairstyle.
 // Reuse the actual head topology to stop light skin appearing between root overlaps.
 const roots=new Map(),center=[0,2.55,-.005];
-for(const f of quads){const c=avg(rest,f);if(!f.every(i=>rest[i][1]>2.20)||!(c[1]>2.69||(c[1]>2.34&&c[2]<.035)))continue;
-  face(f.map(i=>{if(!roots.has(i))roots.set(i,vert(add(P[i],mul(unit(sub(rest[i],center)),.014))));return roots.get(i)}),'hairDark');
+for(const f of quads){const c=avg(rest,f);if(!f.every(i=>rest[i][1]>2.20)||!(c[1]>2.61||(c[1]>2.43&&c[2]<.17)||(c[1]>2.34&&c[2]<.035)))continue;
+  face(f.map(i=>{if(!roots.has(i))roots.set(i,vert(add(P[i],mul(unit(sub(rest[i],center)),.027))));return roots.get(i)}),'hairDark');
 }
+// Small recessed crossing lock at crown. It bridges the gap between the
+// back and front root paths, not a visible helmet or global shell.
+patch([
+ [[-.185,2.950,-.075],[-.085,3.008,-.080],[.015,2.997,-.075]],
+ [[-.18,2.973,.026],[-.065,3.020,.023],[.065,3.008,.035]],
+ [[-.165,2.936,.147],[-.053,2.999,.149],[.071,2.962,.148]]
+],'hair');
+patch([
+ [[-.025,2.994,-.079],[.090,3.020,-.080],[.205,2.958,-.063]],
+ [[-.015,3.003,.020],[.102,3.027,.031],[.206,2.977,.039]],
+ [[.024,2.958,.137],[.134,2.992,.153],[.222,2.920,.147]]
+],'hair');
 // Each row defines a left edge, crest and right edge. Hand-authored swept locks,
 // differing root paths and hem lengths, with overlaps only where strands interleave.
 function lock(rows,material='hair'){patch(rows,material)}
@@ -106,7 +118,7 @@ lock([
 [[-.27,2.818,.289],[-.116,2.91,.377],[.036,2.854,.33]],
 [[-.252,2.65,.323],[-.122,2.718,.403],[.016,2.694,.371]],
 [[-.196,2.502,.318],[-.117,2.54,.394],[-.018,2.565,.373]],
-[[-.155,2.468,.312],[-.097,2.472,.365],[-.048,2.505,.356]]
+[[-.150,2.475,.320],[-.097,2.488,.380],[-.058,2.493,.359]]
 ]);
 lock([
 [[.005,3.015,.019],[.078,3.034,.055],[.151,2.997,.056]],
@@ -114,7 +126,7 @@ lock([
 [[-.022,2.84,.338],[.065,2.874,.388],[.156,2.83,.333]],
 [[-.012,2.695,.357],[.075,2.721,.405],[.163,2.704,.352]],
 [[.012,2.565,.351],[.079,2.586,.381],[.136,2.61,.339]],
-[[.032,2.52,.333],[.075,2.532,.36],[.111,2.57,.344]]
+[[.024,2.525,.337],[.075,2.54,.369],[.111,2.556,.344]]
 ]);
 lock([
 [[.10,3.006,.013],[.18,3.005,.057],[.255,2.948,.069]],
