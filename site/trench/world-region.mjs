@@ -20,6 +20,8 @@ export function extendWorld(world){
  world.tri(shift(a),shift(b),shift(c),[contact,contact,contact],ids[part.mat]??ids.stone)});
  const shift=p=>[p[0],p[1]+CITY_Y,p[2]+CITY_Z];
  for(let part of city.parts)addPart(part,shift);
+ // A few distant smoke columns, not every damaged building. Original particle system consumes these coordinates.
+ for(let p of city.smoke.filter((_,i)=>i%9===0).slice(0,4))world.fires.push(shift(p));
  // Rural scenery, same world coordinates and real geometry.
  const add=(kind,pos,size,mat,extra={})=>{let p={kind,pos,size,mat,...extra};countryProps.push(p);addPart(p);return p};
  const box=(x,y,z,w,h,d,m,rot=0,coll=false)=>{add('box',[x,y,z],[w,h,d],m,{rot});if(coll)countryColliders.push({x,z,w,l:d,y,h,rot:-rot,kind:'box',walkable:false,region:'country'})};
@@ -58,11 +60,11 @@ export function extendAtlas(original){
  for(let name of names){let id=ids[name],base=[1,3,5].map(i=>parseInt(PALETTE[name].slice(i,i+2),16)),ox=id%4*64,oy=Math.floor(id/4)*64;
  for(let y=0;y<64;y++)for(let x=0;x<64;x++){
  let q=1,grain=((Math.imul(x+id*71,73856093)^Math.imul(y+19,19349663))>>>0)%19;
- if(stone.has(name)){let small=name==='road'||name==='cobble',bh=small?10:16,bw=small?16:32,row=Math.floor(y/bh),u=m(x+(row%2)*bw/2,bw),v=m(y,bh);q=u<1||v<1?.73:u===1||v===1?1.08:v===bh-1?.91:1+(grain-9)*.003}
+ if(stone.has(name)){let small=name==='road'||name==='cobble',brick=name==='brick',bh=small?8:brick?8:16,bw=small?12:brick?16:32,row=Math.floor(y/bh),u=m(x+(row%2)*bw/2,bw),v=m(y,bh),chip=(u===1&&v%5===2)||(v===1&&u%7===3),block=((Math.imul(Math.floor((x+(row%2)*bw/2)/bw)+id*11,3711)^Math.imul(row+17,4153))>>>0)%15;q=u<1||v<1||chip?.70:u===1||v===1?1.12:v===bh-1?.88:1+(block-7)*.012+(grain-9)*.003}
  else if(wood.has(name)){let u=x%16;q=u===0?.68:u===1?1.10:1+(grain-9)*.003;if((x+Math.floor(y/13)*7)%13===3)q*=.88}
  else if(roof.has(name)){let v=y%12,u=m(x+Math.floor(y/12)%2*8,16);q=v===0||u===0?.73:v===1?1.12:1+(grain-9)*.003}
  else if(name==='water'){q=m(x+Math.floor(y/4)*17,37)<8&&y%7===0?1.12:1+(grain-9)*.002}
- else if(['grass','leaf','leaf2','earth','mud','moss','asphalt'].includes(name)){q=1+(grain-9)*.008;if((x%8===1)&&(y%7===2))q*=.88}
+ else if(['grass','leaf','leaf2','earth','mud','moss','asphalt'].includes(name)){let block=((Math.imul(Math.floor(x/4)+id*9,7411)^Math.imul(Math.floor(y/4)+12,17971))>>>0)%17;q=1+(block-8)*.012+(grain-9)*.004;if((x%8===1)&&(y%7===2))q*=.84;if(name==='mud'&&y%17<2)q*=.90}
  else if(name==='rail'||name==='iron'||name==='rust'){q=.94+(grain-9)*.008;if(x%16===0)q*=1.10}
  else if(name==='glass'){q=(x+y*2)%61<2?1.15:.97}
  else q=1+(grain-9)*.002;
