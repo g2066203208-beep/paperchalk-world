@@ -84,7 +84,7 @@ function poseAvatar(phase,walk,duck,raise,look,dir=[0,1]){
   legInfo.push({l1,l2,upper:Alen(newA),lower:Alen(newB),footY:A[1]-ankle[1],targetError:Alen(Asub(A,target))})
  }
  // Rifle exterior is a rigid game-art object. Raise it as a whole and follow the camera pitch.
- let angle=(.70*(1-raise)+Math.max(-.60,Math.min(.65,look))*raise),axis=Anorm([0,-Math.sin(angle),Math.cos(angle)]),side=[1,0,0],up=Anorm(Across(axis,side)),anchor=[.015,1.70+root+.24*raise,.23+.015*Math.sin(phase)*walk];
+ let angle=(.45*(1-raise)-Math.max(-.45,Math.min(.45,look))*raise),axis=Anorm([0,-Math.sin(angle),Math.cos(angle)]),side=[1,0,0],up=Anorm(Across(axis,side)),anchor=[0,1.85+root+.33*raise,.18+.015*Math.sin(phase)*walk];
  const Rscale=.9250127025144491,gunAt=(p)=>Aadd(anchor,Aadd(Amul(axis,(p[1]-.82)*Rscale),Aadd(Amul(up,-p[0]*Rscale),Amul(side,p[2]*Rscale))));
  // Two wrist targets tied to the same prop transform. Elbows solved with original segment lengths.
  for(let k=0;k<2;k++){
