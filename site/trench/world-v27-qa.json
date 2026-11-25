@@ -1,0 +1,138 @@
+{
+  "originalTriangles": 68273,
+  "addedTriangles": 282564,
+  "buildings": 162,
+  "shops": 85,
+  "bridges": 3,
+  "cityCenter": [
+    0,
+    2.2,
+    -420
+  ],
+  "ruins": 39,
+  "countryProps": 313,
+  "bounds": {
+    "xmin": -184,
+    "xmax": 184,
+    "zmin": -611,
+    "zmax": 57
+  },
+  "historicalStatus": "fictional Normandy-inspired 1944; not a verified town reconstruction",
+  "oldGeometryPrefixPreserved": true,
+  "originalObjects": 1853,
+  "combinedObjects": 2741,
+  "atlasBytes": 786432,
+  "originalAtlasPreserved": true,
+  "finite": true,
+  "points": [
+    {
+      "x": -8,
+      "z": -27.85,
+      "floor": 0.02,
+      "valid": true,
+      "clear": true
+    },
+    {
+      "x": 0,
+      "z": -100,
+      "floor": 0.24435842735889832,
+      "valid": true,
+      "clear": true
+    },
+    {
+      "x": 0,
+      "z": -158,
+      "floor": 2.2,
+      "valid": true,
+      "clear": true
+    },
+    {
+      "x": 0,
+      "z": -220,
+      "floor": 2.2,
+      "valid": true,
+      "clear": true
+    },
+    {
+      "x": 0,
+      "z": -228,
+      "floor": 2.3200000000000003,
+      "valid": true,
+      "clear": true
+    },
+    {
+      "x": 48,
+      "z": -324,
+      "floor": 2.3200000000000003,
+      "valid": true,
+      "clear": true
+    },
+    {
+      "x": 0,
+      "z": -389,
+      "floor": 2.3200000000000003,
+      "valid": true,
+      "clear": true
+    },
+    {
+      "x": 0,
+      "z": -420,
+      "floor": 4.5,
+      "valid": true,
+      "clear": true
+    },
+    {
+      "x": 0,
+      "z": -451,
+      "floor": 2.3200000000000003,
+      "valid": true,
+      "clear": true
+    },
+    {
+      "x": 0,
+      "z": -532,
+      "floor": 2.3200000000000003,
+      "valid": true,
+      "clear": true
+    },
+    {
+      "x": 0,
+      "z": -539,
+      "floor": 2.3200000000000003,
+      "valid": true,
+      "clear": true
+    }
+  ],
+  "route1": {
+    "found": true,
+    "visited": 3873,
+    "steps": 87,
+    "exactPassed": true,
+    "fail": null,
+    "end": [
+      -5.2031185398247434e-259,
+      -99.99999999999994
+    ]
+  },
+  "route2": {
+    "found": true,
+    "visited": 102435,
+    "steps": 444,
+    "exactPassed": false,
+    "fail": {
+      "expected": [
+        1,
+        -100
+      ],
+      "actual": [
+        0.8571428571428569,
+        -100
+      ]
+    },
+    "end": [
+      0,
+      -100
+    ]
+  },
+  "scope": "actual original scene and movement physics executed without browser; no runtime GPU test"
+}
