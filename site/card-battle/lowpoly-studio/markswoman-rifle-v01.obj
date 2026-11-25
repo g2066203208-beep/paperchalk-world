@@ -1,0 +1,1628 @@
+# Fictional low-poly decorative prop; arbitrary art units
+mtllib markswoman-rifle-v01.mtl
+v 0.273907 0.000000 0.026022
+v 0.180822 0.000000 0.062824
+v 0.049178 0.000000 0.062824
+v -0.043907 0.000000 0.026022
+v -0.043907 0.000000 -0.026022
+v 0.049178 0.000000 -0.062824
+v 0.180822 0.000000 -0.062824
+v 0.273907 0.000000 -0.026022
+v 0.273679 0.025000 0.027171
+v 0.178970 0.025000 0.065595
+v 0.045030 0.025000 0.065595
+v -0.049679 0.025000 0.027171
+v -0.049679 0.025000 -0.027171
+v 0.045030 0.025000 -0.065595
+v 0.178970 0.025000 -0.065595
+v 0.273679 0.025000 -0.027171
+v 0.269060 0.090000 0.024874
+v 0.177056 0.090000 0.060052
+v 0.046944 0.090000 0.060052
+v -0.045060 0.090000 0.024874
+v -0.045060 0.090000 -0.024874
+v 0.046944 0.090000 -0.060052
+v 0.177056 0.090000 -0.060052
+v 0.269060 0.090000 -0.024874
+v 0.199343 0.280000 0.022961
+v 0.123576 0.280000 0.055433
+v 0.016424 0.280000 0.055433
+v -0.059343 0.280000 0.022961
+v -0.059343 0.280000 -0.022961
+v 0.016424 0.280000 -0.055433
+v 0.123576 0.280000 -0.055433
+v 0.199343 0.280000 -0.022961
+v 0.084291 0.490000 0.017221
+v 0.043701 0.490000 0.041575
+v -0.013701 0.490000 0.041575
+v -0.054291 0.490000 0.017221
+v -0.054291 0.490000 -0.017221
+v -0.013701 0.490000 -0.041575
+v 0.043701 0.490000 -0.041575
+v 0.084291 0.490000 -0.017221
+v 0.070509 0.570000 0.016838
+v 0.038578 0.570000 0.040651
+v -0.006578 0.570000 0.040651
+v -0.038509 0.570000 0.016838
+v -0.038509 0.570000 -0.016838
+v -0.006578 0.570000 -0.040651
+v 0.038578 0.570000 -0.040651
+v 0.070509 0.570000 -0.016838
+v 0.211485 0.630000 0.023344
+v 0.143835 0.630000 0.056357
+v 0.048165 0.630000 0.056357
+v -0.019485 0.630000 0.023344
+v -0.019485 0.630000 -0.023344
+v 0.048165 0.630000 -0.056357
+v 0.143835 0.630000 -0.056357
+v 0.211485 0.630000 -0.023344
+v 0.179692 0.720000 0.021430
+v 0.127738 0.720000 0.051737
+v 0.054262 0.720000 0.051737
+v 0.002308 0.720000 0.021430
+v 0.002308 0.720000 -0.021430
+v 0.054262 0.720000 -0.051737
+v 0.127738 0.720000 -0.051737
+v 0.179692 0.720000 -0.021430
+v 0.084291 0.800000 0.019900
+v 0.043701 0.800000 0.048042
+v -0.013701 0.800000 0.048042
+v -0.054291 0.800000 0.019900
+v -0.054291 0.800000 -0.019900
+v -0.013701 0.800000 -0.048042
+v 0.043701 0.800000 -0.048042
+v 0.084291 0.800000 -0.019900
+v 0.115000 0.000000 0.000000
+v 0.015000 0.800000 -0.000000
+v 0.276679 0.000000 0.027171
+v 0.181970 0.000000 0.065595
+v 0.048030 0.000000 0.065595
+v -0.046679 0.000000 0.027171
+v -0.046679 0.000000 -0.027171
+v 0.048030 0.000000 -0.065595
+v 0.181970 0.000000 -0.065595
+v 0.276679 0.000000 -0.027171
+v 0.273679 0.035000 0.027171
+v 0.178970 0.035000 0.065595
+v 0.045030 0.035000 0.065595
+v -0.049679 0.035000 0.027171
+v -0.049679 0.035000 -0.027171
+v 0.045030 0.035000 -0.065595
+v 0.178970 0.035000 -0.065595
+v 0.273679 0.035000 -0.027171
+v 0.115000 0.000000 0.000000
+v 0.112000 0.035000 0.000000
+v 0.096464 0.780000 0.026405
+v 0.042886 0.780000 0.063748
+v -0.032886 0.780000 0.063748
+v -0.086464 0.780000 0.026405
+v -0.086464 0.780000 -0.026405
+v -0.032886 0.780000 -0.063748
+v 0.042886 0.780000 -0.063748
+v 0.096464 0.780000 -0.026405
+v 0.083540 0.830000 0.027553
+v 0.030503 0.830000 0.066519
+v -0.044503 0.830000 0.066519
+v -0.097540 0.830000 0.027553
+v -0.097540 0.830000 -0.027553
+v -0.044503 0.830000 -0.066519
+v 0.030503 0.830000 -0.066519
+v 0.083540 0.830000 -0.027553
+v 0.087312 1.100000 0.027171
+v 0.032651 1.100000 0.065595
+v -0.044651 1.100000 0.065595
+v -0.099312 1.100000 0.027171
+v -0.099312 1.100000 -0.027171
+v -0.044651 1.100000 -0.065595
+v 0.032651 1.100000 -0.065595
+v 0.087312 1.100000 -0.027171
+v 0.067986 1.280000 0.024874
+v 0.025232 1.280000 0.060052
+v -0.035232 1.280000 0.060052
+v -0.077986 1.280000 0.024874
+v -0.077986 1.280000 -0.024874
+v -0.035232 1.280000 -0.060052
+v 0.025232 1.280000 -0.060052
+v 0.067986 1.280000 -0.024874
+v 0.064672 1.330000 0.022196
+v 0.026788 1.330000 0.053585
+v -0.026788 1.330000 0.053585
+v -0.064672 1.330000 0.022196
+v -0.064672 1.330000 -0.022196
+v -0.026788 1.330000 -0.053585
+v 0.026788 1.330000 -0.053585
+v 0.064672 1.330000 -0.022196
+v 0.005000 0.780000 -0.000000
+v -0.000000 1.330000 0.000000
+v 0.137000 0.850000 0.042500
+v 0.047000 0.850000 0.042500
+v 0.047000 0.850000 -0.042500
+v 0.137000 0.850000 -0.042500
+v 0.137000 1.150000 0.042500
+v 0.047000 1.150000 0.042500
+v 0.047000 1.150000 -0.042500
+v 0.137000 1.150000 -0.042500
+v -0.035500 1.150000 0.040500
+v -0.100500 1.150000 0.040500
+v -0.100500 1.150000 -0.040500
+v -0.035500 1.150000 -0.040500
+v -0.035500 1.300000 0.040500
+v -0.100500 1.300000 0.040500
+v -0.100500 1.300000 -0.040500
+v -0.035500 1.300000 -0.040500
+v 0.148475 1.260000 0.027171
+v 0.087861 1.260000 0.065595
+v 0.002139 1.260000 0.065595
+v -0.058475 1.260000 0.027171
+v -0.058475 1.260000 -0.027171
+v 0.002139 1.260000 -0.065595
+v 0.087861 1.260000 -0.065595
+v 0.148475 1.260000 -0.027171
+v 0.126464 1.330000 0.027553
+v 0.072886 1.330000 0.066519
+v -0.002886 1.330000 0.066519
+v -0.056464 1.330000 0.027553
+v -0.056464 1.330000 -0.027553
+v -0.002886 1.330000 -0.066519
+v 0.072886 1.330000 -0.066519
+v 0.126464 1.330000 -0.027553
+v 0.092606 1.640000 0.024874
+v 0.047145 1.640000 0.060052
+v -0.017145 1.640000 0.060052
+v -0.062606 1.640000 0.024874
+v -0.062606 1.640000 -0.024874
+v -0.017145 1.640000 -0.060052
+v 0.047145 1.640000 -0.060052
+v 0.092606 1.640000 -0.024874
+v 0.065063 2.140000 0.021430
+v 0.022849 2.140000 0.051737
+v -0.036849 2.140000 0.051737
+v -0.079063 2.140000 0.021430
+v -0.079063 2.140000 -0.021430
+v -0.036849 2.140000 -0.051737
+v 0.022849 2.140000 -0.051737
+v 0.065063 2.140000 -0.021430
+v 0.048052 2.270000 0.017986
+v 0.012874 2.270000 0.043422
+v -0.036874 2.270000 0.043422
+v -0.072052 2.270000 0.017986
+v -0.072052 2.270000 -0.017986
+v -0.036874 2.270000 -0.043422
+v 0.012874 2.270000 -0.043422
+v 0.048052 2.270000 -0.017986
+v 0.045000 1.260000 0.000000
+v -0.012000 2.270000 0.000000
+v 0.014727 2.170000 0.016073
+v -0.008545 2.170000 0.038803
+v -0.041455 2.170000 0.038803
+v -0.064727 2.170000 0.016073
+v -0.064727 2.170000 -0.016073
+v -0.041455 2.170000 -0.038803
+v -0.008545 2.170000 -0.038803
+v 0.014727 2.170000 -0.016073
+v 0.014727 2.250000 0.016073
+v -0.008545 2.250000 0.038803
+v -0.041455 2.250000 0.038803
+v -0.064727 2.250000 0.016073
+v -0.064727 2.250000 -0.016073
+v -0.041455 2.250000 -0.038803
+v -0.008545 2.250000 -0.038803
+v 0.014727 2.250000 -0.016073
+v 0.009184 3.120000 0.014159
+v -0.010841 3.120000 0.034184
+v -0.039159 3.120000 0.034184
+v -0.059184 3.120000 0.014159
+v -0.059184 3.120000 -0.014159
+v -0.039159 3.120000 -0.034184
+v -0.010841 3.120000 -0.034184
+v 0.009184 3.120000 -0.014159
+v 0.009184 3.150000 0.014159
+v -0.010841 3.150000 0.034184
+v -0.039159 3.150000 0.034184
+v -0.059184 3.150000 0.014159
+v -0.059184 3.150000 -0.014159
+v -0.039159 3.150000 -0.034184
+v -0.010841 3.150000 -0.034184
+v 0.009184 3.150000 -0.014159
+v -0.025000 2.170000 0.000000
+v -0.025000 3.150000 -0.000000
+v 0.017498 2.280000 0.017603
+v -0.007397 2.280000 0.042498
+v -0.042603 2.280000 0.042498
+v -0.067498 2.280000 0.017603
+v -0.067498 2.280000 -0.017603
+v -0.042603 2.280000 -0.042498
+v -0.007397 2.280000 -0.042498
+v 0.017498 2.280000 -0.017603
+v 0.017498 2.350000 0.017603
+v -0.007397 2.350000 0.042498
+v -0.042603 2.350000 0.042498
+v -0.067498 2.350000 0.017603
+v -0.067498 2.350000 -0.017603
+v -0.042603 2.350000 -0.042498
+v -0.007397 2.350000 -0.042498
+v 0.017498 2.350000 -0.017603
+v -0.025000 2.280000 0.000000
+v -0.025000 2.350000 0.000000
+v -0.001000 3.066500 0.014000
+v -0.051000 3.066500 0.014000
+v -0.051000 3.066500 -0.014000
+v -0.001000 3.066500 -0.014000
+v -0.001000 3.143500 0.014000
+v -0.051000 3.143500 0.014000
+v -0.051000 3.143500 -0.014000
+v -0.001000 3.143500 -0.014000
+v -0.068000 1.420000 0.020000
+v -0.108000 1.420000 0.020000
+v -0.108000 1.420000 -0.020000
+v -0.068000 1.420000 -0.020000
+v -0.068000 1.900000 0.020000
+v -0.108000 1.900000 0.020000
+v -0.108000 1.900000 -0.020000
+v -0.068000 1.900000 -0.020000
+v -0.160654 0.550000 0.018369
+v -0.186631 0.550000 0.044346
+v -0.223369 0.550000 0.044346
+v -0.249346 0.550000 0.018369
+v -0.249346 0.550000 -0.018369
+v -0.223369 0.550000 -0.044346
+v -0.186631 0.550000 -0.044346
+v -0.160654 0.550000 -0.018369
+v -0.160654 0.700000 0.018369
+v -0.186631 0.700000 0.044346
+v -0.223369 0.700000 0.044346
+v -0.249346 0.700000 0.018369
+v -0.249346 0.700000 -0.018369
+v -0.223369 0.700000 -0.044346
+v -0.186631 0.700000 -0.044346
+v -0.160654 0.700000 -0.018369
+v -0.146796 0.740000 0.024109
+v -0.180891 0.740000 0.058204
+v -0.229109 0.740000 0.058204
+v -0.263204 0.740000 0.024109
+v -0.263204 0.740000 -0.024109
+v -0.229109 0.740000 -0.058204
+v -0.180891 0.740000 -0.058204
+v -0.146796 0.740000 -0.024109
+v -0.148643 0.830000 0.023344
+v -0.181656 0.830000 0.056357
+v -0.228344 0.830000 0.056357
+v -0.261357 0.830000 0.023344
+v -0.261357 0.830000 -0.023344
+v -0.228344 0.830000 -0.056357
+v -0.181656 0.830000 -0.056357
+v -0.148643 0.830000 -0.023344
+v -0.168969 1.090000 0.014925
+v -0.190075 1.090000 0.036031
+v -0.219925 1.090000 0.036031
+v -0.241031 1.090000 0.014925
+v -0.241031 1.090000 -0.014925
+v -0.219925 1.090000 -0.036031
+v -0.190075 1.090000 -0.036031
+v -0.168969 1.090000 -0.014925
+v -0.148643 1.180000 0.023344
+v -0.181656 1.180000 0.056357
+v -0.228344 1.180000 0.056357
+v -0.261357 1.180000 0.023344
+v -0.261357 1.180000 -0.023344
+v -0.228344 1.180000 -0.056357
+v -0.181656 1.180000 -0.056357
+v -0.148643 1.180000 -0.023344
+v -0.125546 1.310000 0.032911
+v -0.172089 1.310000 0.079454
+v -0.237911 1.310000 0.079454
+v -0.284454 1.310000 0.032911
+v -0.284454 1.310000 -0.032911
+v -0.237911 1.310000 -0.079454
+v -0.172089 1.310000 -0.079454
+v -0.125546 1.310000 -0.032911
+v -0.124622 1.350000 0.033293
+v -0.171707 1.350000 0.080378
+v -0.238293 1.350000 0.080378
+v -0.285378 1.350000 0.033293
+v -0.285378 1.350000 -0.033293
+v -0.238293 1.350000 -0.080378
+v -0.171707 1.350000 -0.080378
+v -0.124622 1.350000 -0.033293
+v -0.205000 0.550000 -0.000000
+v -0.205000 1.350000 0.000000
+v -0.156958 0.548000 0.019900
+v -0.185100 0.548000 0.048042
+v -0.224900 0.548000 0.048042
+v -0.253042 0.548000 0.019900
+v -0.253042 0.548000 -0.019900
+v -0.224900 0.548000 -0.048042
+v -0.185100 0.548000 -0.048042
+v -0.156958 0.548000 -0.019900
+v -0.156958 0.572000 0.019900
+v -0.185100 0.572000 0.048042
+v -0.224900 0.572000 0.048042
+v -0.253042 0.572000 0.019900
+v -0.253042 0.572000 -0.019900
+v -0.224900 0.572000 -0.048042
+v -0.185100 0.572000 -0.048042
+v -0.156958 0.572000 -0.019900
+v -0.205000 0.548000 -0.000000
+v -0.205000 0.572000 -0.000000
+v -0.144948 0.768000 0.024874
+v -0.180126 0.768000 0.060052
+v -0.229874 0.768000 0.060052
+v -0.265052 0.768000 0.024874
+v -0.265052 0.768000 -0.024874
+v -0.229874 0.768000 -0.060052
+v -0.180126 0.768000 -0.060052
+v -0.144948 0.768000 -0.024874
+v -0.144948 0.792000 0.024874
+v -0.180126 0.792000 0.060052
+v -0.229874 0.792000 0.060052
+v -0.265052 0.792000 0.024874
+v -0.265052 0.792000 -0.024874
+v -0.229874 0.792000 -0.060052
+v -0.180126 0.792000 -0.060052
+v -0.144948 0.792000 -0.024874
+v -0.205000 0.768000 0.000000
+v -0.205000 0.792000 0.000000
+v -0.121851 1.318000 0.034442
+v -0.170558 1.318000 0.083149
+v -0.239442 1.318000 0.083149
+v -0.288149 1.318000 0.034442
+v -0.288149 1.318000 -0.034442
+v -0.239442 1.318000 -0.083149
+v -0.170558 1.318000 -0.083149
+v -0.121851 1.318000 -0.034442
+v -0.121851 1.342000 0.034442
+v -0.170558 1.342000 0.083149
+v -0.239442 1.342000 0.083149
+v -0.288149 1.342000 0.034442
+v -0.288149 1.342000 -0.034442
+v -0.239442 1.342000 -0.083149
+v -0.170558 1.342000 -0.083149
+v -0.121851 1.342000 -0.034442
+v -0.205000 1.318000 0.000000
+v -0.205000 1.342000 0.000000
+v -0.137557 1.364000 0.027936
+v -0.177064 1.364000 0.067443
+v -0.232936 1.364000 0.067443
+v -0.272443 1.364000 0.027936
+v -0.272443 1.364000 -0.027936
+v -0.232936 1.364000 -0.067443
+v -0.177064 1.364000 -0.067443
+v -0.137557 1.364000 -0.027936
+v -0.205000 1.364000 0.000000
+v -0.167121 0.542000 0.015690
+v -0.189310 0.542000 0.037879
+v -0.220690 0.542000 0.037879
+v -0.242879 0.542000 0.015690
+v -0.242879 0.542000 -0.015690
+v -0.220690 0.542000 -0.037879
+v -0.189310 0.542000 -0.037879
+v -0.167121 0.542000 -0.015690
+v -0.205000 0.542000 -0.000000
+v -0.057500 0.848500 0.027500
+v -0.192500 0.848500 0.027500
+v -0.192500 0.848500 -0.027500
+v -0.057500 0.848500 -0.027500
+v -0.057500 0.891500 0.027500
+v -0.192500 0.891500 0.027500
+v -0.192500 0.891500 -0.027500
+v -0.057500 0.891500 -0.027500
+v -0.057500 1.118500 0.027500
+v -0.192500 1.118500 0.027500
+v -0.192500 1.118500 -0.027500
+v -0.057500 1.118500 -0.027500
+v -0.057500 1.161500 0.027500
+v -0.192500 1.161500 0.027500
+v -0.192500 1.161500 -0.027500
+v -0.057500 1.161500 -0.027500
+v 0.067000 0.890000 0.028000
+v 0.158000 0.880000 0.028000
+v 0.176000 0.790000 0.028000
+v 0.142000 0.730000 0.028000
+v 0.082000 0.740000 0.028000
+v 0.055000 0.800000 0.028000
+v 0.083100 0.862000 0.028000
+v 0.142250 0.855500 0.028000
+v 0.153950 0.797000 0.028000
+v 0.131850 0.758000 0.028000
+v 0.092850 0.764500 0.028000
+v 0.075300 0.803500 0.028000
+v 0.067000 0.890000 -0.028000
+v 0.158000 0.880000 -0.028000
+v 0.176000 0.790000 -0.028000
+v 0.142000 0.730000 -0.028000
+v 0.082000 0.740000 -0.028000
+v 0.055000 0.800000 -0.028000
+v 0.083100 0.862000 -0.028000
+v 0.142250 0.855500 -0.028000
+v 0.153950 0.797000 -0.028000
+v 0.131850 0.758000 -0.028000
+v 0.092850 0.764500 -0.028000
+v 0.075300 0.803500 -0.028000
+g wood-stock
+usemtl m0
+f 1 2 10 9
+g wood-stock
+usemtl m0
+f 2 3 11 10
+g wood-stock
+usemtl m0
+f 3 4 12 11
+g wood-stock
+usemtl m0
+f 4 5 13 12
+g wood-stock
+usemtl m0
+f 5 6 14 13
+g wood-stock
+usemtl m0
+f 6 7 15 14
+g wood-stock
+usemtl m0
+f 7 8 16 15
+g wood-stock
+usemtl m0
+f 8 1 9 16
+g wood-stock
+usemtl m0
+f 9 10 18 17
+g wood-stock
+usemtl m0
+f 10 11 19 18
+g wood-stock
+usemtl m0
+f 11 12 20 19
+g wood-stock
+usemtl m0
+f 12 13 21 20
+g wood-stock
+usemtl m0
+f 13 14 22 21
+g wood-stock
+usemtl m0
+f 14 15 23 22
+g wood-stock
+usemtl m0
+f 15 16 24 23
+g wood-stock
+usemtl m0
+f 16 9 17 24
+g wood-stock
+usemtl m0
+f 17 18 26 25
+g wood-stock
+usemtl m0
+f 18 19 27 26
+g wood-stock
+usemtl m0
+f 19 20 28 27
+g wood-stock
+usemtl m0
+f 20 21 29 28
+g wood-stock
+usemtl m0
+f 21 22 30 29
+g wood-stock
+usemtl m0
+f 22 23 31 30
+g wood-stock
+usemtl m0
+f 23 24 32 31
+g wood-stock
+usemtl m0
+f 24 17 25 32
+g wood-stock
+usemtl m0
+f 25 26 34 33
+g wood-stock
+usemtl m0
+f 26 27 35 34
+g wood-stock
+usemtl m0
+f 27 28 36 35
+g wood-stock
+usemtl m0
+f 28 29 37 36
+g wood-stock
+usemtl m0
+f 29 30 38 37
+g wood-stock
+usemtl m0
+f 30 31 39 38
+g wood-stock
+usemtl m0
+f 31 32 40 39
+g wood-stock
+usemtl m0
+f 32 25 33 40
+g wood-stock
+usemtl m0
+f 33 34 42 41
+g wood-stock
+usemtl m0
+f 34 35 43 42
+g wood-stock
+usemtl m0
+f 35 36 44 43
+g wood-stock
+usemtl m0
+f 36 37 45 44
+g wood-stock
+usemtl m0
+f 37 38 46 45
+g wood-stock
+usemtl m0
+f 38 39 47 46
+g wood-stock
+usemtl m0
+f 39 40 48 47
+g wood-stock
+usemtl m0
+f 40 33 41 48
+g wood-stock
+usemtl m0
+f 41 42 50 49
+g wood-stock
+usemtl m0
+f 42 43 51 50
+g wood-stock
+usemtl m0
+f 43 44 52 51
+g wood-stock
+usemtl m0
+f 44 45 53 52
+g wood-stock
+usemtl m0
+f 45 46 54 53
+g wood-stock
+usemtl m0
+f 46 47 55 54
+g wood-stock
+usemtl m0
+f 47 48 56 55
+g wood-stock
+usemtl m0
+f 48 41 49 56
+g wood-stock
+usemtl m0
+f 49 50 58 57
+g wood-stock
+usemtl m0
+f 50 51 59 58
+g wood-stock
+usemtl m0
+f 51 52 60 59
+g wood-stock
+usemtl m0
+f 52 53 61 60
+g wood-stock
+usemtl m0
+f 53 54 62 61
+g wood-stock
+usemtl m0
+f 54 55 63 62
+g wood-stock
+usemtl m0
+f 55 56 64 63
+g wood-stock
+usemtl m0
+f 56 49 57 64
+g wood-stock
+usemtl m0
+f 57 58 66 65
+g wood-stock
+usemtl m0
+f 58 59 67 66
+g wood-stock
+usemtl m0
+f 59 60 68 67
+g wood-stock
+usemtl m0
+f 60 61 69 68
+g wood-stock
+usemtl m0
+f 61 62 70 69
+g wood-stock
+usemtl m0
+f 62 63 71 70
+g wood-stock
+usemtl m0
+f 63 64 72 71
+g wood-stock
+usemtl m0
+f 64 57 65 72
+g wood-stock
+usemtl m0
+f 73 3 2 1
+g wood-stock
+usemtl m0
+f 73 5 4 3
+g wood-stock
+usemtl m0
+f 73 7 6 5
+g wood-stock
+usemtl m0
+f 73 1 8 7
+g wood-stock
+usemtl m0
+f 65 66 67 74
+g wood-stock
+usemtl m0
+f 67 68 69 74
+g wood-stock
+usemtl m0
+f 69 70 71 74
+g wood-stock
+usemtl m0
+f 71 72 65 74
+g stock-butt
+usemtl m1
+f 75 76 84 83
+g stock-butt
+usemtl m1
+f 76 77 85 84
+g stock-butt
+usemtl m1
+f 77 78 86 85
+g stock-butt
+usemtl m1
+f 78 79 87 86
+g stock-butt
+usemtl m1
+f 79 80 88 87
+g stock-butt
+usemtl m1
+f 80 81 89 88
+g stock-butt
+usemtl m1
+f 81 82 90 89
+g stock-butt
+usemtl m1
+f 82 75 83 90
+g stock-butt
+usemtl m1
+f 91 77 76 75
+g stock-butt
+usemtl m1
+f 91 79 78 77
+g stock-butt
+usemtl m1
+f 91 81 80 79
+g stock-butt
+usemtl m1
+f 91 75 82 81
+g stock-butt
+usemtl m1
+f 83 84 85 92
+g stock-butt
+usemtl m1
+f 85 86 87 92
+g stock-butt
+usemtl m1
+f 87 88 89 92
+g stock-butt
+usemtl m1
+f 89 90 83 92
+g receiver
+usemtl m2
+f 93 94 102 101
+g receiver
+usemtl m2
+f 94 95 103 102
+g receiver
+usemtl m2
+f 95 96 104 103
+g receiver
+usemtl m2
+f 96 97 105 104
+g receiver
+usemtl m2
+f 97 98 106 105
+g receiver
+usemtl m2
+f 98 99 107 106
+g receiver
+usemtl m2
+f 99 100 108 107
+g receiver
+usemtl m2
+f 100 93 101 108
+g receiver
+usemtl m2
+f 101 102 110 109
+g receiver
+usemtl m2
+f 102 103 111 110
+g receiver
+usemtl m2
+f 103 104 112 111
+g receiver
+usemtl m2
+f 104 105 113 112
+g receiver
+usemtl m2
+f 105 106 114 113
+g receiver
+usemtl m2
+f 106 107 115 114
+g receiver
+usemtl m2
+f 107 108 116 115
+g receiver
+usemtl m2
+f 108 101 109 116
+g receiver
+usemtl m2
+f 109 110 118 117
+g receiver
+usemtl m2
+f 110 111 119 118
+g receiver
+usemtl m2
+f 111 112 120 119
+g receiver
+usemtl m2
+f 112 113 121 120
+g receiver
+usemtl m2
+f 113 114 122 121
+g receiver
+usemtl m2
+f 114 115 123 122
+g receiver
+usemtl m2
+f 115 116 124 123
+g receiver
+usemtl m2
+f 116 109 117 124
+g receiver
+usemtl m2
+f 117 118 126 125
+g receiver
+usemtl m2
+f 118 119 127 126
+g receiver
+usemtl m2
+f 119 120 128 127
+g receiver
+usemtl m2
+f 120 121 129 128
+g receiver
+usemtl m2
+f 121 122 130 129
+g receiver
+usemtl m2
+f 122 123 131 130
+g receiver
+usemtl m2
+f 123 124 132 131
+g receiver
+usemtl m2
+f 124 117 125 132
+g receiver
+usemtl m2
+f 133 95 94 93
+g receiver
+usemtl m2
+f 133 97 96 95
+g receiver
+usemtl m2
+f 133 99 98 97
+g receiver
+usemtl m2
+f 133 93 100 99
+g receiver
+usemtl m2
+f 125 126 127 134
+g receiver
+usemtl m2
+f 127 128 129 134
+g receiver
+usemtl m2
+f 129 130 131 134
+g receiver
+usemtl m2
+f 131 132 125 134
+g receiver-side
+usemtl m3
+f 135 136 140 139
+g receiver-side
+usemtl m3
+f 136 137 141 140
+g receiver-side
+usemtl m3
+f 137 138 142 141
+g receiver-side
+usemtl m3
+f 138 135 139 142
+g receiver-side
+usemtl m3
+f 138 137 136 135
+g receiver-side
+usemtl m3
+f 139 140 141 142
+g receiver-accent
+usemtl m4
+f 143 144 148 147
+g receiver-accent
+usemtl m4
+f 144 145 149 148
+g receiver-accent
+usemtl m4
+f 145 146 150 149
+g receiver-accent
+usemtl m4
+f 146 143 147 150
+g receiver-accent
+usemtl m4
+f 146 145 144 143
+g receiver-accent
+usemtl m4
+f 147 148 149 150
+g forestock
+usemtl m0
+f 151 152 160 159
+g forestock
+usemtl m0
+f 152 153 161 160
+g forestock
+usemtl m0
+f 153 154 162 161
+g forestock
+usemtl m0
+f 154 155 163 162
+g forestock
+usemtl m0
+f 155 156 164 163
+g forestock
+usemtl m0
+f 156 157 165 164
+g forestock
+usemtl m0
+f 157 158 166 165
+g forestock
+usemtl m0
+f 158 151 159 166
+g forestock
+usemtl m0
+f 159 160 168 167
+g forestock
+usemtl m0
+f 160 161 169 168
+g forestock
+usemtl m0
+f 161 162 170 169
+g forestock
+usemtl m0
+f 162 163 171 170
+g forestock
+usemtl m0
+f 163 164 172 171
+g forestock
+usemtl m0
+f 164 165 173 172
+g forestock
+usemtl m0
+f 165 166 174 173
+g forestock
+usemtl m0
+f 166 159 167 174
+g forestock
+usemtl m0
+f 167 168 176 175
+g forestock
+usemtl m0
+f 168 169 177 176
+g forestock
+usemtl m0
+f 169 170 178 177
+g forestock
+usemtl m0
+f 170 171 179 178
+g forestock
+usemtl m0
+f 171 172 180 179
+g forestock
+usemtl m0
+f 172 173 181 180
+g forestock
+usemtl m0
+f 173 174 182 181
+g forestock
+usemtl m0
+f 174 167 175 182
+g forestock
+usemtl m0
+f 175 176 184 183
+g forestock
+usemtl m0
+f 176 177 185 184
+g forestock
+usemtl m0
+f 177 178 186 185
+g forestock
+usemtl m0
+f 178 179 187 186
+g forestock
+usemtl m0
+f 179 180 188 187
+g forestock
+usemtl m0
+f 180 181 189 188
+g forestock
+usemtl m0
+f 181 182 190 189
+g forestock
+usemtl m0
+f 182 175 183 190
+g forestock
+usemtl m0
+f 191 153 152 151
+g forestock
+usemtl m0
+f 191 155 154 153
+g forestock
+usemtl m0
+f 191 157 156 155
+g forestock
+usemtl m0
+f 191 151 158 157
+g forestock
+usemtl m0
+f 183 184 185 192
+g forestock
+usemtl m0
+f 185 186 187 192
+g forestock
+usemtl m0
+f 187 188 189 192
+g forestock
+usemtl m0
+f 189 190 183 192
+g barrel-silhouette
+usemtl m3
+f 193 194 202 201
+g barrel-silhouette
+usemtl m3
+f 194 195 203 202
+g barrel-silhouette
+usemtl m3
+f 195 196 204 203
+g barrel-silhouette
+usemtl m3
+f 196 197 205 204
+g barrel-silhouette
+usemtl m3
+f 197 198 206 205
+g barrel-silhouette
+usemtl m3
+f 198 199 207 206
+g barrel-silhouette
+usemtl m3
+f 199 200 208 207
+g barrel-silhouette
+usemtl m3
+f 200 193 201 208
+g barrel-silhouette
+usemtl m3
+f 201 202 210 209
+g barrel-silhouette
+usemtl m3
+f 202 203 211 210
+g barrel-silhouette
+usemtl m3
+f 203 204 212 211
+g barrel-silhouette
+usemtl m3
+f 204 205 213 212
+g barrel-silhouette
+usemtl m3
+f 205 206 214 213
+g barrel-silhouette
+usemtl m3
+f 206 207 215 214
+g barrel-silhouette
+usemtl m3
+f 207 208 216 215
+g barrel-silhouette
+usemtl m3
+f 208 201 209 216
+g barrel-silhouette
+usemtl m3
+f 209 210 218 217
+g barrel-silhouette
+usemtl m3
+f 210 211 219 218
+g barrel-silhouette
+usemtl m3
+f 211 212 220 219
+g barrel-silhouette
+usemtl m3
+f 212 213 221 220
+g barrel-silhouette
+usemtl m3
+f 213 214 222 221
+g barrel-silhouette
+usemtl m3
+f 214 215 223 222
+g barrel-silhouette
+usemtl m3
+f 215 216 224 223
+g barrel-silhouette
+usemtl m3
+f 216 209 217 224
+g barrel-silhouette
+usemtl m3
+f 225 195 194 193
+g barrel-silhouette
+usemtl m3
+f 225 197 196 195
+g barrel-silhouette
+usemtl m3
+f 225 199 198 197
+g barrel-silhouette
+usemtl m3
+f 225 193 200 199
+g barrel-silhouette
+usemtl m3
+f 217 218 219 226
+g barrel-silhouette
+usemtl m3
+f 219 220 221 226
+g barrel-silhouette
+usemtl m3
+f 221 222 223 226
+g barrel-silhouette
+usemtl m3
+f 223 224 217 226
+g upper-band
+usemtl m2
+f 227 228 236 235
+g upper-band
+usemtl m2
+f 228 229 237 236
+g upper-band
+usemtl m2
+f 229 230 238 237
+g upper-band
+usemtl m2
+f 230 231 239 238
+g upper-band
+usemtl m2
+f 231 232 240 239
+g upper-band
+usemtl m2
+f 232 233 241 240
+g upper-band
+usemtl m2
+f 233 234 242 241
+g upper-band
+usemtl m2
+f 234 227 235 242
+g upper-band
+usemtl m2
+f 243 229 228 227
+g upper-band
+usemtl m2
+f 243 231 230 229
+g upper-band
+usemtl m2
+f 243 233 232 231
+g upper-band
+usemtl m2
+f 243 227 234 233
+g upper-band
+usemtl m2
+f 235 236 237 244
+g upper-band
+usemtl m2
+f 237 238 239 244
+g upper-band
+usemtl m2
+f 239 240 241 244
+g upper-band
+usemtl m2
+f 241 242 235 244
+g top-accent
+usemtl m2
+f 245 246 250 249
+g top-accent
+usemtl m2
+f 246 247 251 250
+g top-accent
+usemtl m2
+f 247 248 252 251
+g top-accent
+usemtl m2
+f 248 245 249 252
+g top-accent
+usemtl m2
+f 248 247 246 245
+g top-accent
+usemtl m2
+f 249 250 251 252
+g forestock-inlay
+usemtl m3
+f 253 254 258 257
+g forestock-inlay
+usemtl m3
+f 254 255 259 258
+g forestock-inlay
+usemtl m3
+f 255 256 260 259
+g forestock-inlay
+usemtl m3
+f 256 253 257 260
+g forestock-inlay
+usemtl m3
+f 256 255 254 253
+g forestock-inlay
+usemtl m3
+f 257 258 259 260
+g scope-body
+usemtl m3
+f 261 262 270 269
+g scope-body
+usemtl m3
+f 262 263 271 270
+g scope-body
+usemtl m3
+f 263 264 272 271
+g scope-body
+usemtl m3
+f 264 265 273 272
+g scope-body
+usemtl m3
+f 265 266 274 273
+g scope-body
+usemtl m3
+f 266 267 275 274
+g scope-body
+usemtl m3
+f 267 268 276 275
+g scope-body
+usemtl m3
+f 268 261 269 276
+g scope-body
+usemtl m3
+f 269 270 278 277
+g scope-body
+usemtl m3
+f 270 271 279 278
+g scope-body
+usemtl m3
+f 271 272 280 279
+g scope-body
+usemtl m3
+f 272 273 281 280
+g scope-body
+usemtl m3
+f 273 274 282 281
+g scope-body
+usemtl m3
+f 274 275 283 282
+g scope-body
+usemtl m3
+f 275 276 284 283
+g scope-body
+usemtl m3
+f 276 269 277 284
+g scope-body
+usemtl m3
+f 277 278 286 285
+g scope-body
+usemtl m3
+f 278 279 287 286
+g scope-body
+usemtl m3
+f 279 280 288 287
+g scope-body
+usemtl m3
+f 280 281 289 288
+g scope-body
+usemtl m3
+f 281 282 290 289
+g scope-body
+usemtl m3
+f 282 283 291 290
+g scope-body
+usemtl m3
+f 283 284 292 291
+g scope-body
+usemtl m3
+f 284 277 285 292
+g scope-body
+usemtl m3
+f 285 286 294 293
+g scope-body
+usemtl m3
+f 286 287 295 294
+g scope-body
+usemtl m3
+f 287 288 296 295
+g scope-body
+usemtl m3
+f 288 289 297 296
+g scope-body
+usemtl m3
+f 289 290 298 297
+g scope-body
+usemtl m3
+f 290 291 299 298
+g scope-body
+usemtl m3
+f 291 292 300 299
+g scope-body
+usemtl m3
+f 292 285 293 300
+g scope-body
+usemtl m3
+f 293 294 302 301
+g scope-body
+usemtl m3
+f 294 295 303 302
+g scope-body
+usemtl m3
+f 295 296 304 303
+g scope-body
+usemtl m3
+f 296 297 305 304
+g scope-body
+usemtl m3
+f 297 298 306 305
+g scope-body
+usemtl m3
+f 298 299 307 306
+g scope-body
+usemtl m3
+f 299 300 308 307
+g scope-body
+usemtl m3
+f 300 293 301 308
+g scope-body
+usemtl m3
+f 301 302 310 309
+g scope-body
+usemtl m3
+f 302 303 311 310
+g scope-body
+usemtl m3
+f 303 304 312 311
+g scope-body
+usemtl m3
+f 304 305 313 312
+g scope-body
+usemtl m3
+f 305 306 314 313
+g scope-body
+usemtl m3
+f 306 307 315 314
+g scope-body
+usemtl m3
+f 307 308 316 315
+g scope-body
+usemtl m3
+f 308 301 309 316
+g scope-body
+usemtl m3
+f 309 310 318 317
+g scope-body
+usemtl m3
+f 310 311 319 318
+g scope-body
+usemtl m3
+f 311 312 320 319
+g scope-body
+usemtl m3
+f 312 313 321 320
+g scope-body
+usemtl m3
+f 313 314 322 321
+g scope-body
+usemtl m3
+f 314 315 323 322
+g scope-body
+usemtl m3
+f 315 316 324 323
+g scope-body
+usemtl m3
+f 316 309 317 324
+g scope-body
+usemtl m3
+f 325 263 262 261
+g scope-body
+usemtl m3
+f 325 265 264 263
+g scope-body
+usemtl m3
+f 325 267 266 265
+g scope-body
+usemtl m3
+f 325 261 268 267
+g scope-body
+usemtl m3
+f 317 318 319 326
+g scope-body
+usemtl m3
+f 319 320 321 326
+g scope-body
+usemtl m3
+f 321 322 323 326
+g scope-body
+usemtl m3
+f 323 324 317 326
+g scope-rim
+usemtl m5
+f 327 328 336 335
+g scope-rim
+usemtl m5
+f 328 329 337 336
+g scope-rim
+usemtl m5
+f 329 330 338 337
+g scope-rim
+usemtl m5
+f 330 331 339 338
+g scope-rim
+usemtl m5
+f 331 332 340 339
+g scope-rim
+usemtl m5
+f 332 333 341 340
+g scope-rim
+usemtl m5
+f 333 334 342 341
+g scope-rim
+usemtl m5
+f 334 327 335 342
+g scope-rim
+usemtl m5
+f 343 329 328 327
+g scope-rim
+usemtl m5
+f 343 331 330 329
+g scope-rim
+usemtl m5
+f 343 333 332 331
+g scope-rim
+usemtl m5
+f 343 327 334 333
+g scope-rim
+usemtl m5
+f 335 336 337 344
+g scope-rim
+usemtl m5
+f 337 338 339 344
+g scope-rim
+usemtl m5
+f 339 340 341 344
+g scope-rim
+usemtl m5
+f 341 342 335 344
+g scope-rim
+usemtl m5
+f 345 346 354 353
+g scope-rim
+usemtl m5
+f 346 347 355 354
+g scope-rim
+usemtl m5
+f 347 348 356 355
+g scope-rim
+usemtl m5
+f 348 349 357 356
+g scope-rim
+usemtl m5
+f 349 350 358 357
+g scope-rim
+usemtl m5
+f 350 351 359 358
+g scope-rim
+usemtl m5
+f 351 352 360 359
+g scope-rim
+usemtl m5
+f 352 345 353 360
+g scope-rim
+usemtl m5
+f 361 347 346 345
+g scope-rim
+usemtl m5
+f 361 349 348 347
+g scope-rim
+usemtl m5
+f 361 351 350 349
+g scope-rim
+usemtl m5
+f 361 345 352 351
+g scope-rim
+usemtl m5
+f 353 354 355 362
+g scope-rim
+usemtl m5
+f 355 356 357 362
+g scope-rim
+usemtl m5
+f 357 358 359 362
+g scope-rim
+usemtl m5
+f 359 360 353 362
+g scope-rim
+usemtl m5
+f 363 364 372 371
+g scope-rim
+usemtl m5
+f 364 365 373 372
+g scope-rim
+usemtl m5
+f 365 366 374 373
+g scope-rim
+usemtl m5
+f 366 367 375 374
+g scope-rim
+usemtl m5
+f 367 368 376 375
+g scope-rim
+usemtl m5
+f 368 369 377 376
+g scope-rim
+usemtl m5
+f 369 370 378 377
+g scope-rim
+usemtl m5
+f 370 363 371 378
+g scope-rim
+usemtl m5
+f 379 365 364 363
+g scope-rim
+usemtl m5
+f 379 367 366 365
+g scope-rim
+usemtl m5
+f 379 369 368 367
+g scope-rim
+usemtl m5
+f 379 363 370 369
+g scope-rim
+usemtl m5
+f 371 372 373 380
+g scope-rim
+usemtl m5
+f 373 374 375 380
+g scope-rim
+usemtl m5
+f 375 376 377 380
+g scope-rim
+usemtl m5
+f 377 378 371 380
+g scope-glass
+usemtl m6
+f 381 382 383 389
+g scope-glass
+usemtl m6
+f 383 384 385 389
+g scope-glass
+usemtl m6
+f 385 386 387 389
+g scope-glass
+usemtl m6
+f 387 388 381 389
+g scope-glass
+usemtl m6
+f 398 392 391 390
+g scope-glass
+usemtl m6
+f 398 394 393 392
+g scope-glass
+usemtl m6
+f 398 396 395 394
+g scope-glass
+usemtl m6
+f 398 390 397 396
+g scope-support
+usemtl m2
+f 399 400 404 403
+g scope-support
+usemtl m2
+f 400 401 405 404
+g scope-support
+usemtl m2
+f 401 402 406 405
+g scope-support
+usemtl m2
+f 402 399 403 406
+g scope-support
+usemtl m2
+f 402 401 400 399
+g scope-support
+usemtl m2
+f 403 404 405 406
+g scope-support
+usemtl m2
+f 407 408 412 411
+g scope-support
+usemtl m2
+f 408 409 413 412
+g scope-support
+usemtl m2
+f 409 410 414 413
+g scope-support
+usemtl m2
+f 410 407 411 414
+g scope-support
+usemtl m2
+f 410 409 408 407
+g scope-support
+usemtl m2
+f 411 412 413 414
+g guard-outline
+usemtl m2
+f 415 416 422 421
+g guard-outline
+usemtl m2
+f 428 427 433 434
+g guard-outline
+usemtl m3
+f 415 427 428 416
+g guard-outline
+usemtl m3
+f 422 434 433 421
+g guard-outline
+usemtl m2
+f 416 417 423 422
+g guard-outline
+usemtl m2
+f 429 428 434 435
+g guard-outline
+usemtl m3
+f 416 428 429 417
+g guard-outline
+usemtl m3
+f 423 435 434 422
+g guard-outline
+usemtl m2
+f 417 418 424 423
+g guard-outline
+usemtl m2
+f 430 429 435 436
+g guard-outline
+usemtl m3
+f 417 429 430 418
+g guard-outline
+usemtl m3
+f 424 436 435 423
+g guard-outline
+usemtl m2
+f 418 419 425 424
+g guard-outline
+usemtl m2
+f 431 430 436 437
+g guard-outline
+usemtl m3
+f 418 430 431 419
+g guard-outline
+usemtl m3
+f 425 437 436 424
+g guard-outline
+usemtl m2
+f 419 420 426 425
+g guard-outline
+usemtl m2
+f 432 431 437 438
+g guard-outline
+usemtl m3
+f 419 431 432 420
+g guard-outline
+usemtl m3
+f 426 438 437 425
+g guard-outline
+usemtl m2
+f 420 415 421 426
+g guard-outline
+usemtl m2
+f 427 432 438 433
+g guard-outline
+usemtl m3
+f 420 432 427 415
+g guard-outline
+usemtl m3
+f 421 433 438 426
