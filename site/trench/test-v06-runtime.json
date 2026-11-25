@@ -1,0 +1,77 @@
+{
+  "frames": 315,
+  "draws": 1140,
+  "uploads": 630,
+  "results": [
+    {
+      "mode": "idle",
+      "run": 0,
+      "crouch": 0,
+      "air": 0,
+      "vertical": 0,
+      "vertices": 1334
+    },
+    {
+      "mode": "walk",
+      "run": 0,
+      "crouch": 0,
+      "air": 0,
+      "vertical": 0,
+      "vertices": 1334
+    },
+    {
+      "mode": "run",
+      "run": 0.9932620530009146,
+      "crouch": 0,
+      "air": 0,
+      "vertical": 0,
+      "vertices": 1334
+    },
+    {
+      "mode": "jump",
+      "run": 0.006692547069322835,
+      "crouch": 0,
+      "air": 0.9932620530009147,
+      "vertical": 0.5237499999999973,
+      "vertices": 1334
+    },
+    {
+      "mode": "crouch",
+      "run": 0.00004509402744198377,
+      "crouch": 0.9932620530009143,
+      "air": 0.006692547069323242,
+      "vertical": 0,
+      "vertices": 1334
+    },
+    {
+      "mode": "crouch-walk",
+      "run": 3.038411668794059e-7,
+      "crouch": 0.9999546000702375,
+      "air": 0.000045094027441986826,
+      "vertical": 0,
+      "vertices": 1334
+    },
+    {
+      "mode": "aim",
+      "run": 2.0472656785738115e-9,
+      "crouch": 0.00673764109676527,
+      "air": 3.038411668794267e-7,
+      "vertical": 0,
+      "vertices": 1334
+    },
+    {
+      "mode": "crouch-aim",
+      "run": 1.3794367635277705e-11,
+      "crouch": 0.9933074508695231,
+      "air": 2.0472656785739525e-9,
+      "vertical": 0,
+      "vertices": 1334
+    }
+  ],
+  "input": {
+    "run": 0.9994469156298523,
+    "air": 0.9179150013761124,
+    "vertical": 0.5480000000000038
+  },
+  "scope": "Mock DOM and WebGL, not real Chromium; actual browser workflow unverified"
+}
