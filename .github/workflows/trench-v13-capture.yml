@@ -1,0 +1,42 @@
+name: Trench V13 screenshots GIF and frame timings
+on:
+  push:
+    branches: [main]
+    paths: ['site/trench/capture-v13.cjs','.github/workflows/trench-v13-capture.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: site/trench
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright
+      - run: npx playwright install --with-deps chromium
+      - run: |
+          python -m http.server 8765 --directory site >/tmp/trench-http.log 2>&1 &
+          node site/trench/capture-v13.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: trench-v13-evidence
+          path: /tmp/trench-v13-evidence
+      - name: Publish unmodified browser captures on isolated evidence branch
+        if: always()
+        run: |
+          test -f /tmp/trench-v13-evidence/report.json
+          mkdir /tmp/evidence-repo
+          cd /tmp/evidence-repo
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          cp /tmp/trench-v13-evidence/* .
+          git add .
+          git commit -m "V13 Chromium captures and measured frame intervals"
+          git push "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:refs/heads/trench-v13-evidence
