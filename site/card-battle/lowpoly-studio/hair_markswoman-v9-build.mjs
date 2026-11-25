@@ -15,5 +15,8 @@ export function buildHair(V){
  lock("low tie",[[0,2.348,-.341,.063,.047],[0,2.303,-.354,.058,.042]],[[77,65,49]],"back");
  lock("ponytail main",[[0,2.307,-.35,.049,.039],[.014,2.23,-.391,.077,.054],[.034,2.07,-.408,.083,.050],[.052,1.88,-.399,.069,.042],[.09,1.70,-.388,.047,.029],[.15,1.57,-.390,.023,.016],[.205,1.55,-.398,.003,.004]],c,"back");
  lock("ponytail secondary",[[.007,2.25,-.405,.036,.023],[-.036,2.07,-.443,.045,.025],[-.021,1.86,-.448,.033,.020],[.023,1.67,-.429,.018,.012],[.045,1.58,-.423,.002,.004]],[[158,145,120],[173,160,134],[186,171,144]],"back");
+ for(let g of groups.slice(1))for(let i=g.faceStart;i<g.faceStart+g.faceCount;i++)Q[i].reverse();
+ for(let j=4;j<=8;j++){let p=P[j],d=[.009,.032,.041,.032,.009][j-4];p[1]-=d;p[0]*=1-d*.8;p[2]*=1-d*.45}
+ for(let i=0;i<colors.length;i++)if(colors[i][0]>100)colors[i]=colors[i].map((v,k)=>Math.min(255,v+[9,9,10][k]));
  return {name:"04 marks­woman volumetric low ponytail v9",base:"V45 rest / V47 joints",positions:P,polygons:Q,faceColors:colors,groups}
 }
