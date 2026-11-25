@@ -1,0 +1,7 @@
+# V31 curved Norman commercial quarter
+
+References: https://www.fortunapost.com/caen/63831-14-caen-rue-saint-pierre-nombreux-commerces-1922.html ; https://archives.collections.ed.ac.uk/repositories/2/archival_objects/86821 ; https://www.cadomus.org/articles/les-transformations-de-caen-dans-lentre-deux-guerres .
+
+Actual geometry deformation, not a texture warp: oldStreetOffset reaches 19m; taper is monotonic in z (minimum sampled 0.0968m per 0.5m). Road geometry subdivided, all affected facade vertices, shop coordinates and collider bounds warped consistently. Bridge/river connections stay fixed. 240 buildings,174 shops,539523 emitted raw triangles,24 degenerate skipped by region emitter, all finite. 281 centerline samples with 0.3m margin clear of major building colliders. This is not full player-physics testing. Previous city triangle count 610585. Reference-inspired fictional layout, not exact historical cadastral reconstruction.
+
+Archived actual software raster screenshot and 12-frame camera movement GIF. Independent shader approximation, not browser WebGL capture; no measured FPS or full character collision test. Streets still lack vehicles, crowds, sufficiently varied corner architecture and period street details. Clean atlas unchanged.
