@@ -1,0 +1,69 @@
+{
+  "report": [
+    {
+      "faces": 606,
+      "vertices": 608,
+      "changed": 51,
+      "local": 74,
+      "nonmanifold": 0,
+      "oppositeQuadTriNormals": 0,
+      "triNormalReversals": 0,
+      "minArea": 0.0008889386930491902
+    },
+    {
+      "faces": 2424,
+      "vertices": 2426,
+      "changed": 249,
+      "local": 296,
+      "nonmanifold": 0,
+      "oppositeQuadTriNormals": 0,
+      "triNormalReversals": 0,
+      "minArea": 0.0001803072583479642
+    }
+  ],
+  "profile": [
+    {
+      "y": 1.39,
+      "oldCenter": 0.1303,
+      "newCenter": 0.1998,
+      "newSide": 0.2002
+    },
+    {
+      "y": 1.37,
+      "oldCenter": 0.085,
+      "newCenter": 0.2007,
+      "newSide": 0.2011
+    },
+    {
+      "y": 1.35,
+      "oldCenter": 0.0397,
+      "newCenter": 0.2017,
+      "newSide": 0.2017
+    },
+    {
+      "y": 1.33,
+      "oldCenter": -0.0056,
+      "newCenter": 0.2026,
+      "newSide": 0.1954
+    },
+    {
+      "y": 1.32,
+      "oldCenter": -0.0282,
+      "newCenter": 0.198,
+      "newSide": 0.1919
+    },
+    {
+      "y": 1.3,
+      "oldCenter": null,
+      "newCenter": 0.148,
+      "newSide": 0.1847
+    },
+    {
+      "y": 1.28,
+      "oldCenter": null,
+      "newCenter": 0.098,
+      "newSide": 0.1771
+    }
+  ],
+  "scope": "neutral geometry; no full self-intersection or animation check"
+}
