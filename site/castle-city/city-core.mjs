@@ -46,7 +46,7 @@ function tower(x,z,r,h,cone=true){cylinder(x,h/2,z,r,h,'stone',12);solid(x,z,r*1
 function archBridge(x){
  let w=9,z0=-20,z1=20,span=10,deck=2.15;
  // Four real arch openings: segmented voussoirs and separate piers; no solid wall in opening.
- for(let i=0;i<4;i++){let c=z0+span*(i+.5);for(let j=0;j<14;j++){let a=j*Math.PI/14,b=(j+1)*Math.PI/14;add('arch',[x,-2.35,c],[4.3,.78,w], 'stone',{a,b});}for(let s of [-1,1])box(x,-1.6,c+s*4.7,w,2.3,1.25,'darkStone')}
+ for(let i=0;i<4;i++){let c=z0+span*(i+.5);for(let j=0;j<14;j++){let a=j*Math.PI/14,b=(j+1)*Math.PI/14;add('arch',[x,-3.05,c],[4.3,.78,w], 'stone',{a,b});}for(let s of [-1,1])box(x,-1.6,c+s*4.7,w,2.3,1.25,'darkStone')}
  box(x,deck-.30,0,w,.60,40,'stone');surface(x,0,w-1,40,deck+.03,'cobble');
  for(let s of [-1,1]){box(x+s*4.12,deck+.55,0,.52,1.1,40,'stone');box(x+s*4.12,deck+1.13,0,.72,.18,40,'trim');solid(x+s*4.12,0,.52,40);for(let z=-18;z<=18;z+=6)box(x+s*4.12,deck+.63,z,.82,1.4,.85,'trim')}
  for(let s of [-1,1])add('ramp',[x,0,s*25],[w,deck,10],'cobble',{direction:s});
@@ -62,7 +62,7 @@ function archBridge(x){
  let xc=(roadsX[ix]+roadsX[ix+1])/2,zc=s*(48+iz*48-24);if(iz===0)zc=s*33;
  if(s===-1&&iz===2&&Math.abs(xc)<49)continue;
  if(s===1&&iz===1&&Math.abs(xc)<25)continue;
- for(let row of [-1,1])for(let j=0;j<3;j++){let x=xc+(j-1)*11,z=zc+row*8.3,d=9+rand()*2,w=8.8+rand()*1.1,rot=row===1?0:Math.PI;house(x,z,w,d,2+Math.floor(rand()*2),rot,iz!==2||j===1)}
+ for(let row of (iz===0?[s]:[-1,1]))for(let j=0;j<3;j++){let x=xc+(j-1)*11,z=iz===0?s*35.4:zc+row*8.3,d=9+rand()*1.5,w=8.8+rand()*1.1,rot=row===1?0:Math.PI;house(x,z,w,d,2+Math.floor(rand()*2),rot,iz!==2||j===1)}
  }
  for(let x of [-96,0,96])archBridge(x);
  // Market square with actual stalls, well, and goods.
@@ -87,3 +87,18 @@ function archBridge(x){
 export function walkHeight(city,x,z){if(Math.abs(z)<30){let b=city.bridges.find(b=>Math.abs(x-b.x)<b.width/2-.45);if(b){let a=Math.abs(z);return a<=20?b.deck+.15:Math.max(0,b.deck*(30-a)/10)+.12}if(Math.abs(z)<19.5)return null}return .12}
 export function canWalk(city,x,z,r=.30){let [a,b,c,d]=city.bounds;if(x<a+r||x>c-r||z<b+r||z>d-r||walkHeight(city,x,z)===null)return false;return !city.colliders.some(q=>x>q[0]-r&&x<q[2]+r&&z>q[1]-r&&z<q[3]+r)}
 export function auditCity(city){return {buildings:city.buildings.length,shops:city.shops.length,bridges:city.bridges.length,parts:city.parts.length,colliders:city.colliders.length,finite:city.parts.every(p=>[...p.pos,...p.size].every(Number.isFinite)),spawnClear:canWalk(city,city.spawn[0],city.spawn[2]),bridgeCenters:city.bridges.map(b=>canWalk(city,b.x,0)),riverBlocked:!canWalk(city,24,0)}}
+
+// Shared geometry expansion used by both WebGL and software verification.
+export function triangles(part,emit){
+ const [x,y,z]=part.pos,[w,h,d]=part.size,a=part.rot||0,c=Math.cos(a),s=Math.sin(a);
+ const tr=p=>[x+c*p[0]-s*p[2],y+p[1],z+s*p[0]+c*p[2]];
+ const tri=(a,b,c)=>emit(tr(a),tr(b),tr(c),part);
+ const quad=(a,b,c,d)=>{tri(a,b,c);tri(a,c,d)};
+ function cube(v){for(let f of [[0,3,2,1],[4,5,6,7],[0,1,5,4],[3,7,6,2],[0,4,7,3],[1,2,6,5]])quad(...f.map(i=>v[i]))}
+ if(part.kind==='box'||part.kind==='sign'){let A=w/2,B=h/2,C=d/2;cube([[-A,-B,-C],[A,-B,-C],[A,B,-C],[-A,B,-C],[-A,-B,C],[A,-B,C],[A,B,C],[-A,B,C]])}
+ else if(part.kind==='gable'){let A=w/2,C=d/2;quad([-A,0,-C],[-A,0,C],[0,h,C],[0,h,-C]);quad([A,0,C],[A,0,-C],[0,h,-C],[0,h,C]);tri([-A,0,C],[A,0,C],[0,h,C]);tri([A,0,-C],[-A,0,-C],[0,h,-C]);}
+ else if(part.kind==='cylinder'){let n=part.n||8;for(let i=0;i<n;i++){let a=i*2*Math.PI/n,b=(i+1)*2*Math.PI/n,A=[Math.cos(a)*w,-h/2,Math.sin(a)*w],B=[Math.cos(b)*w,-h/2,Math.sin(b)*w],C=[Math.cos(b)*d,h/2,Math.sin(b)*d],D=[Math.cos(a)*d,h/2,Math.sin(a)*d];quad(A,D,C,B);tri([0,-h/2,0],A,B);tri([0,h/2,0],C,D)}}
+ else if(part.kind==='arch'){let p=(r,t,X)=>[X,r*Math.sin(t),r*Math.cos(t)],v=[p(w,part.a,-d/2),p(w,part.b,-d/2),p(w+h,part.b,-d/2),p(w+h,part.a,-d/2),p(w,part.a,d/2),p(w,part.b,d/2),p(w+h,part.b,d/2),p(w+h,part.a,d/2)];cube(v)}
+ else if(part.kind==='ramp'){let A=w/2,B=d/2,lo=part.direction===1?h:0,hi=part.direction===1?0:h;cube([[-A,0,-B],[A,0,-B],[A,lo,-B],[-A,lo,-B],[-A,0,B],[A,0,B],[A,hi,B],[-A,hi,B]])}
+ else if(part.kind==='foliage'){let p=[[0,h/2,0],[w,0,0],[0,0,d],[-w,0,0],[0,0,-d],[0,-h/2,0]];for(let i=1;i<=4;i++){let j=i%4+1;tri(p[0],p[j],p[i]);tri(p[5],p[i],p[j])}}
+}
