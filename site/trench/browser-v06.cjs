@@ -29,6 +29,18 @@ const assert=require('node:assert/strict');
   if(viewport.width>=500){await page.keyboard.down('d');await page.keyboard.down('Shift');await page.waitForTimeout(500);assert((await page.evaluate(()=>window.__avatarV06.run))>.5);await page.keyboard.up('Shift');await page.keyboard.up('d');await page.keyboard.press('Space');await page.waitForTimeout(200);assert((await page.evaluate(()=>window.__avatarV06.vertical))>0);}
   await page.close();
  }
+ // Force the non-WebGL path in real Chromium, and inspect the actual canvas pixel buffer.
+ for(const viewport of [{width:960,height:540},{width:390,height:844}]){
+  const page=await browser.newPage({viewport,deviceScaleFactor:1});
+  page.on('pageerror',e=>report.errors.push(e.message));
+  await page.goto('http://127.0.0.1:8765/trench/?renderer=cpu&test=1&view=first',{waitUntil:'load',timeout:60000});
+  await page.waitForFunction(()=>window.__trenchBoot?.mode==='cpu'&&window.__softwareFrame?.frame>0,null,{timeout:60000});
+  const d=await page.evaluate(()=>{let c=document.getElementById('softwareView'),p=c.getContext('2d').getImageData(0,0,c.width,c.height).data,colors=new Set();let black=0;for(let i=0;i<p.length;i+=4){colors.add((p[i]<<16)|(p[i+1]<<8)|p[i+2]);if(p[i]+p[i+1]+p[i+2]===0)black++;}return {width:c.width,height:c.height,colors:colors.size,black,boot:window.__trenchBoot};});
+  assert(d.colors>30);assert(d.black<d.width*d.height*.1);assert(!d.boot.error);
+  report.fallback??=[];report.fallback.push(d);
+  await page.screenshot({path:'/tmp/trench-review/'+viewport.width+'-cpu-fallback.png'});
+  await page.close();
+ }
  assert.deepEqual(report.errors,[]);
  }finally{fs.writeFileSync('/tmp/trench-review/browser-report.json',JSON.stringify(report,null,2));await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1)});
