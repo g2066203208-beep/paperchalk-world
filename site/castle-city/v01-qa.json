@@ -2,7 +2,7 @@
   "buildings": 158,
   "shops": 116,
   "bridges": 3,
-  "parts": 22948,
+  "parts": 27538,
   "colliders": 213,
   "finite": true,
   "spawnClear": true,
@@ -12,10 +12,9 @@
     true
   ],
   "riverBlocked": true,
-  "nondegenerateTriangles": 281958,
+  "nondegenerateTriangles": 337038,
   "reachableGridPoints": 26603,
-  "castleGateReachable": true,
   "castleCourtyardReachable": true,
   "bridgeCrossingReachable": true,
-  "scope": "CPU geometry preview with approximate materials; live WebGL unverified"
+  "scope": "CPU actual geometry, approximate textures; WebGL not verified"
 }
