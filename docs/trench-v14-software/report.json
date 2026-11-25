@@ -1,0 +1,836 @@
+{
+  "source": "91d55c1289da14db3fd89a4c83803ca5007b184c",
+  "scope": "Exact game software renderer, synthetic DOM, profile camera, no browser verification",
+  "actions": [
+    {
+      "name": "walk",
+      "states": [
+        {
+          "lean": 0.0357936173323806,
+          "root": -0.016054614702245312,
+          "prepare": 0,
+          "flight": 0,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.0518767263303474,
+          "root": -0.01972911663673232,
+          "prepare": 0,
+          "flight": 0,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.05910333303618819,
+          "root": -0.0021241942001738834,
+          "prepare": 0,
+          "flight": 0.08333333333333333,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.0623504567414062,
+          "root": -0.007748683776455566,
+          "prepare": 0,
+          "flight": 0.19444444444444448,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.06380948347223228,
+          "root": -0.029574730757574788,
+          "prepare": 0,
+          "flight": 0.3055555555555556,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.0644650664418137,
+          "root": -0.0229069826886548,
+          "prepare": 0,
+          "flight": 0.41666666666666674,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.06475963885842861,
+          "root": -0.0014536257161061577,
+          "prepare": 0,
+          "flight": 0.5277777777777779,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.06489199877724369,
+          "root": -0.009735909890366752,
+          "prepare": 0,
+          "flight": 0.638888888888889,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.06495147192245551,
+          "root": -0.030882775751824475,
+          "prepare": 0,
+          "flight": 0.7500000000000001,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.06497819492918634,
+          "root": -0.02137022771908773,
+          "prepare": 0,
+          "flight": 0.8611111111111109,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.06499020235011879,
+          "root": -0.0007799978240182849,
+          "prepare": 0,
+          "flight": 0.9722222222222222,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.0649955976321281,
+          "root": -0.011510648026831227,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.06499802188860446,
+          "root": -0.03148105484600588,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.06499911117725574,
+          "root": -0.019584169754118114,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.06499960062619703,
+          "root": -0.0003086574530200726,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.06499982054978282,
+          "root": -0.013331884940562519,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.0649999193678198,
+          "root": -0.03184711436517574,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.064999963769626,
+          "root": -0.01774260971770767,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.06499998372064358,
+          "root": -0.00005107879562334192,
+          "prepare": 0,
+          "flight": 0,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.06499999268521364,
+          "root": -0.015188780443485126,
+          "prepare": 0,
+          "flight": 0,
+          "vertical": 0,
+          "heading": 0
+        }
+      ],
+      "frames": 20
+    },
+    {
+      "name": "run",
+      "states": [
+        {
+          "lean": 0.12684241818840963,
+          "root": -0.05371812760681818,
+          "prepare": 0,
+          "flight": 0,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.24301336454940733,
+          "root": -0.057836119607624435,
+          "prepare": 0,
+          "flight": 0,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.3071643628997853,
+          "root": -0.12593699872130792,
+          "prepare": 0,
+          "flight": 0.08333333333333333,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.3384023372429046,
+          "root": -0.13370607226113868,
+          "prepare": 0,
+          "flight": 0.19444444444444448,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.35292565487288213,
+          "root": -0.09093444934166448,
+          "prepare": 0,
+          "flight": 0.3055555555555556,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.35954976430101315,
+          "root": -0.16772199077108524,
+          "prepare": 0,
+          "flight": 0.41666666666666674,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.3625460275065461,
+          "root": -0.10949159930623514,
+          "prepare": 0,
+          "flight": 0.5277777777777779,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.3638963448074181,
+          "root": -0.12188232910423122,
+          "prepare": 0,
+          "flight": 0.638888888888889,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.3645038909771603,
+          "root": -0.16430558532522477,
+          "prepare": 0,
+          "flight": 0.7500000000000001,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.3647770425026294,
+          "root": -0.09027988755898354,
+          "prepare": 0,
+          "flight": 0.8611111111111109,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.3648998103914448,
+          "root": -0.15736888955210532,
+          "prepare": 0,
+          "flight": 0.9722222222222222,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.36495498022169803,
+          "root": -0.13269364733080813,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.36497977096939976,
+          "root": -0.10206117705211087,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.36499091044193976,
+          "root": -0.17195274009135675,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.3649959157844231,
+          "root": -0.09952967703003483,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.36499816484084546,
+          "root": -0.13645234028288855,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.36499917540927274,
+          "root": -0.15442663669355916,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.3649996294873885,
+          "root": -0.09099710807931498,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.3649998335179291,
+          "root": -0.1665685060832618,
+          "prepare": 0,
+          "flight": 0,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.3649999251947788,
+          "root": -0.11854667947038199,
+          "prepare": 0,
+          "flight": 0,
+          "vertical": 0,
+          "heading": 0
+        }
+      ],
+      "frames": 20
+    },
+    {
+      "name": "crouch",
+      "states": [
+        {
+          "lean": 0.25333049674403035,
+          "root": -0.2643222337799037,
+          "prepare": 0,
+          "flight": 0,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.3671374007473922,
+          "root": -0.3830896886020159,
+          "prepare": 0,
+          "flight": 0,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.418274143979089,
+          "root": -0.43645538256751903,
+          "prepare": 0,
+          "flight": 0.08333333333333333,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.4412513642924501,
+          "root": -0.4604341440566206,
+          "prepare": 0,
+          "flight": 0.19444444444444448,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.45157569493485405,
+          "root": -0.4712084974303778,
+          "prepare": 0,
+          "flight": 0.3055555555555556,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.45621471573130207,
+          "root": -0.47604972574413107,
+          "prepare": 0,
+          "flight": 0.41666666666666674,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.45829916214062333,
+          "root": -0.47822502893437074,
+          "prepare": 0,
+          "flight": 0.5277777777777779,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.45923576428651186,
+          "root": -0.47920245499427105,
+          "prepare": 0,
+          "flight": 0.638888888888889,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.4596566067585167,
+          "root": -0.47964164041947493,
+          "prepare": 0,
+          "flight": 0.7500000000000001,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.45984570347051945,
+          "root": -0.4798389789169011,
+          "prepare": 0,
+          "flight": 0.8611111111111109,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.45993067010024163,
+          "root": -0.4799276486932655,
+          "prepare": 0,
+          "flight": 0.9722222222222222,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.45996884806795924,
+          "root": -0.47996749052656473,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.4599860025346459,
+          "root": -0.479985392583231,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.45999371053339216,
+          "root": -0.47999343647951287,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.45999717396048423,
+          "root": -0.47999705082719824,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.4599987301785919,
+          "root": -0.4799986748545299,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.4599994294324621,
+          "root": -0.4799994045752738,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.45999974362747925,
+          "root": -0.47999973245911465,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.45999988480440085,
+          "root": -0.47999987978644204,
+          "prepare": 0,
+          "flight": 0,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.45999994823928075,
+          "root": -0.4799999459847051,
+          "prepare": 0,
+          "flight": 0,
+          "vertical": 0,
+          "heading": 0
+        }
+      ],
+      "frames": 20
+    },
+    {
+      "name": "jump",
+      "states": [
+        {
+          "lean": 0.12871183472877926,
+          "root": -0.12229066788371591,
+          "prepare": 0.6427876096865394,
+          "flight": 0,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.1970308878091835,
+          "root": -0.18718582494022362,
+          "prepare": 0.9848077530122081,
+          "flight": 0,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.08263181059769666,
+          "root": -0.03857948230165169,
+          "prepare": 0,
+          "flight": 0.08333333333333333,
+          "vertical": 0.19234199999999999,
+          "heading": 0
+        },
+        {
+          "lean": 0.11972952124141022,
+          "root": -0.05588185133057431,
+          "prepare": 0,
+          "flight": 0.19444444444444448,
+          "vertical": 0.39386200000000005,
+          "heading": 0
+        },
+        {
+          "lean": 0.1363985971360705,
+          "root": -0.06365630688311404,
+          "prepare": 0,
+          "flight": 0.3055555555555556,
+          "vertical": 0.532598,
+          "heading": 0
+        },
+        {
+          "lean": 0.14388849574060955,
+          "root": -0.06714959494311208,
+          "prepare": 0,
+          "flight": 0.41666666666666674,
+          "vertical": 0.6085500000000001,
+          "heading": 0
+        },
+        {
+          "lean": 0.14725392412193009,
+          "root": -0.06871923044847407,
+          "prepare": 0,
+          "flight": 0.5277777777777779,
+          "vertical": 0.621718,
+          "heading": 0
+        },
+        {
+          "lean": 0.14876610857031955,
+          "root": -0.06942451314413998,
+          "prepare": 0,
+          "flight": 0.638888888888889,
+          "vertical": 0.5721019999999999,
+          "heading": 0
+        },
+        {
+          "lean": 0.14944557684206858,
+          "root": -0.06974141708719334,
+          "prepare": 0,
+          "flight": 0.7500000000000001,
+          "vertical": 0.45970199999999983,
+          "heading": 0
+        },
+        {
+          "lean": 0.14975088161676406,
+          "root": -0.06988381120765016,
+          "prepare": 0,
+          "flight": 0.8611111111111109,
+          "vertical": 0.28451800000000005,
+          "heading": 0
+        },
+        {
+          "lean": 0.14988806389491802,
+          "root": -0.06994779301029143,
+          "prepare": 0,
+          "flight": 0.9722222222222222,
+          "vertical": 0.04654999999999987,
+          "heading": 0
+        },
+        {
+          "lean": 0.12190248772836235,
+          "root": -0.08919203445845962,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.08132832815713886,
+          "root": -0.06819257463961818,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.049468397532933556,
+          "root": -0.04432643031134218,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.028518965803975276,
+          "root": -0.02657861229194723,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.015876741736194744,
+          "root": -0.015185022606955147,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.00862448295035455,
+          "root": -0.008401356041875228,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.004600784378926703,
+          "root": -0.004543206666202261,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.03679690121249631,
+          "root": -0.03503454810181228,
+          "prepare": 0.1736481776669324,
+          "flight": 0,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 0.15413777096994546,
+          "root": -0.1464657017990425,
+          "prepare": 0.7660444431189798,
+          "flight": 0,
+          "vertical": 0,
+          "heading": 0
+        }
+      ],
+      "frames": 20
+    },
+    {
+      "name": "aim",
+      "states": [
+        {
+          "lean": 2.7756910786710096e-7,
+          "root": -3.077056471187034e-7,
+          "prepare": 0,
+          "flight": 0,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 9.022065564769066e-8,
+          "root": -1.3826105967286635e-7,
+          "prepare": 0,
+          "flight": 0,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 2.4078416510947085e-8,
+          "root": -6.212469872055838e-8,
+          "prepare": 0,
+          "flight": 0.08333333333333333,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 6.438911667291319e-9,
+          "root": -2.791442652220298e-8,
+          "prepare": 0,
+          "flight": 0.19444444444444448,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 2.794378251103568e-9,
+          "root": -1.254276035314776e-8,
+          "prepare": 0,
+          "flight": 0.3055555555555556,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 1.2555950849200596e-9,
+          "root": -5.635825516650441e-9,
+          "prepare": 0,
+          "flight": 0.41666666666666674,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 5.641752388578051e-10,
+          "root": -2.5323396413419467e-9,
+          "prepare": 0,
+          "flight": 0.5277777777777779,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 2.5350027565656364e-10,
+          "root": -1.1378535478371533e-9,
+          "prepare": 0,
+          "flight": 0.638888888888889,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 1.1390501626419388e-10,
+          "root": -5.112705559667736e-10,
+          "prepare": 0,
+          "flight": 0.7500000000000001,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 5.11808229657455e-11,
+          "root": -2.2972866929618636e-10,
+          "prepare": 0,
+          "flight": 0.8611111111111109,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 2.2997026165865333e-11,
+          "root": -1.0322374500288317e-10,
+          "prepare": 0,
+          "flight": 0.9722222222222222,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 1.0333229944884907e-11,
+          "root": -4.6381418414445724e-11,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 4.643019507120191e-12,
+          "root": -2.0840514690450322e-11,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 2.0862431455103678e-12,
+          "root": -9.36424687752978e-12,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 9.374094714688274e-13,
+          "root": -4.2076273492183826e-12,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 4.212052267687604e-13,
+          "root": -1.8906088382155867e-12,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 1.8925970822476654e-13,
+          "root": -8.495053108262734e-13,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 8.503986864576194e-14,
+          "root": -3.817073413256477e-13,
+          "prepare": 0,
+          "flight": 1,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 3.82108760872648e-14,
+          "root": -1.71512164273792e-13,
+          "prepare": 0,
+          "flight": 0,
+          "vertical": 0,
+          "heading": 0
+        },
+        {
+          "lean": 1.7169253370302204e-14,
+          "root": -7.70653831066457e-14,
+          "prepare": 0,
+          "flight": 0,
+          "vertical": 0,
+          "heading": 0
+        }
+      ],
+      "frames": 20
+    }
+  ]
+}
