@@ -21,6 +21,9 @@ function shopFront(x,z,rot,w,type,id){
  let color=pick(['red','blue','green','cloth']);for(let j=0;j<8;j++){b(-w*.43+(j+.5)*w*.86/8,3.20,.86,w*.86/8+.01,.11,1.48,j%2?'cream':color);b(-w*.43+(j+.5)*w*.86/8,3.04,1.56,w*.86/8+.01,.30,.09,j%2?'cream':color)}
  let [sx,sz]=local(x,z,rot,0,.29);add('sign',[sx,2.98,sz],[w-.9,.39,.06],'wood',{rot,text:type});
  for(let s of [-1,1]){b(s*(w*.38),.36,1.15,.8,.72,.65,'woodLight');for(let j=0;j<3;j++)b(s*w*.38+(j-1)*.22,.80,1.16,.19,.23,.27,pick(goods))}
+ // Purposeful shop-specific goods on the exterior display, not generic random piles.
+ if(type==='BAKERY'||type==='GROCER'){for(let j=0;j<4;j++)b(-w*.25+(j-1.5)*.23,.93,1.2,.22,.18,.20,type==='BAKERY'?'gold':'green')}
+ if(type==='APOTHECARY'||type==='CANDLE'){for(let j=0;j<4;j++)b(w*.38+(j-1.5)*.16,.93,1.18,.11,.28,.13,type==='APOTHECARY'?'green':'cream')}
  shops.push({id,type,x,z,rotation:rot});
 }
 function house(x,z,w,d,floors,rot,commercial=false){
@@ -30,13 +33,14 @@ function house(x,z,w,d,floors,rot,commercial=false){
  add('gable',[x,h,z],[w+.65,2.0+rand()*1.4,d+.65],rm,{rot});
  for(let s of [-1,1]){b(s*(w/2-.08),h/2,d/2+.03,.18,h,.15,'wood');b(s*(w/2-.08),h/2,-d/2-.03,.18,h,.15,'wood')}
  for(let k=0;k<=floors;k++)for(let s of [-1,1])b(0,k*3.2+.10,s*(d/2+.04),w,.20,.18,'wood');
- for(let s of [-1,1])for(let k=0;k<floors;k++){if(commercial&&s===1&&k===0)continue;let n=Math.max(2,Math.round(w/2.8));for(let j=0;j<n;j++){let u=(j-(n-1)/2)*w/n,yy=k*3.2+1.75;b(u,yy,s*(d/2+.055),1.28,1.65,.13,'wood');b(u,yy,s*(d/2+.135),.99,1.38,.08,'glass');b(u,yy,s*(d/2+.19),.09,1.38,.08,'trim');b(u,yy,s*(d/2+.19),.99,.09,.08,'trim');b(u,yy-.81,s*(d/2+.19),1.42,.14,.28,'trim');if(k>0&&j%2===0){b(u-.80,yy,s*(d/2+.12),.34,1.45,.12,'woodLight');b(u+.80,yy,s*(d/2+.12),.34,1.45,.12,'woodLight')}}}
+ for(let s of [-1,1])for(let k=0;k<floors;k++){if(commercial&&s===1&&k===0)continue;let n=Math.max(2,Math.round(w/2.8));for(let j=0;j<n;j++){let u=(j-(n-1)/2)*w/n,yy=k*3.2+1.75;b(u,yy,s*(d/2+.055),1.28,1.65,.13,'wood');b(u,yy,s*(d/2+.135),.99,1.38,.08,'glass');b(u,yy,s*(d/2+.19),.09,1.38,.08,'trim');b(u,yy,s*(d/2+.19),.99,.09,.08,'trim');b(u,yy-.81,s*(d/2+.19),1.42,.14,.28,'trim');if(k>0&&j%2===0){b(u-.80,yy,s*(d/2+.12),.34,1.45,.12,'woodLight');b(u+.80,yy,s*(d/2+.12),.34,1.45,.12,'woodLight');if(s===1){b(u,yy-.91,d/2+.33,1.25,.24,.34,'woodLight');for(let f=0;f<4;f++){b(u-.45+f*.30,yy-.69,d/2+.37,.20,.23,.25,'leaf');b(u-.45+f*.30,yy-.55,d/2+.39,.10,.12,.12,f%2?'red':'gold')}}}}}
  // Visible side elevations, not a billboard.
  for(let side of [-1,1])for(let k=1;k<floors;k++)for(let j=0;j<2;j++){let v=(j-.5)*d*.46;b(side*(w/2+.06),k*3.2+1.75,v,.13,1.30,1.05,'wood');b(side*(w/2+.15),k*3.2+1.75,v,.08,1.05,.80,'glass')}
  if(commercial){let [fx,fz]=local(x,z,rot,0,d/2);shopFront(fx,fz,rot,w,shopTypes[shops.length%shopTypes.length],shops.length)}else{b(0,1.15,d/2+.10,1.35,2.30,.18,'wood');b(0,.13,d/2+.40,1.7,.25,.72,'stone')}
  let [cx,cz]=local(x,z,rot,w*.29,-d*.18);box(cx,h+2.3,cz,.82,2.7,.85,'darkStone');box(cx,h+3.64,cz,1.04,.22,1.06,'stone');
  buildings.push({x,z,w,d,floors,commercial});
 }
+function bench(x,z){box(x,.49,z,1.9,.13,.48,'woodLight');for(let s of [-1,1])box(x+s*.65,.25,z,.13,.50,.37,'iron');box(x,.89,z+.23,1.9,.31,.09,'wood');for(let s of [-1,1])box(x+s*.65,.65,z+.23,.09,.65,.09,'iron')}
 function lamp(x,z){cylinder(x,.24,z,.32,.48,'stone');cylinder(x,1.60,z,.075,2.7,'iron',6);box(x,3.01,z,.38,.52,.38,'iron');box(x,3.01,z,.30,.40,.40,'light');add('cylinder',[x,3.36,z],[.32,.22,.04],'iron',{n:4})}
 function tree(x,z){cylinder(x,1.35,z,.16,2.7,'wood',7,.11);add('foliage',[x,3.3,z],[1.45,2.2,1.45],'leaf');add('foliage',[x+.4,4.05,z-.22],[1.1,1.6,1.1],'leaf2')}
 function crate(x,z,y=.45){box(x,y,z,.9,.9,.9,'woodLight');for(let s of [-1,1])box(x+s*.35,y,z+.46,.12,.9,.06,'wood')}
@@ -57,6 +61,8 @@ function archBridge(x){
  box(0,-3.1,0,410,.2,40,'water');for(let s of [-1,1]){box(0,-1.0,s*19.8,390,2.0,1,'darkStone');surface(0,s*24,380,7,.035,'cobble')}
  for(let x of roadsX)for(let s of [-1,1])surface(x,s*110,10,180,.04,'cobble');
  for(let z of roadsZ)surface(0,z,368,10,.045,'cobble');
+ for(let x of roadsX)for(let s of [-1,1])for(let side of [-1,1])surface(x+side*6.3,s*115,2.6,168,.10,'stone');
+ for(let z of roadsZ)for(let side of [-1,1])surface(0,z+side*6.35,368,2.7,.105,'stone');
  // Staggered parcels with service alleys; main streets remain clear.
  for(let ix=0;ix<roadsX.length-1;ix++)for(let s of [-1,1])for(let iz=0;iz<3;iz++){
  let xc=(roadsX[ix]+roadsX[ix+1])/2,zc=s*(48+iz*48-24);if(iz===0)zc=s*33;
@@ -79,7 +85,7 @@ function archBridge(x){
  // City perimeter walls; openings on the axial streets.
  for(let s of [-1,1]){for(let z of [-145,-65,65,145])wall(s*185,z,3,76,8);for(let x of [-135,-45,45,135])wall(x,s*192,78,3,8);for(let z of [-184,-30,30,184])tower(s*185,z,4.5,12,false)}
  for(let z of roadsZ)for(let x of roadsX){lamp(x+5.9,z+5.9);if((x+z)%96===0)tree(x-6.5,z-6.5)}
- for(let s of [-1,1])for(let x=-170;x<=170;x+=12){lamp(x,s*24);if(x%24===-2){barrel(x,s*28);crate(x+1.25,s*28)}}
+ for(let s of [-1,1])for(let x=-170;x<=170;x+=12){lamp(x,s*24);if(x%24===-2){bench(x+3,s*25.8)}if(x%24===-2){barrel(x,s*28);crate(x+1.25,s*28)}}
  // River moorings and small boats.
  for(let x of [-154,-126,126,154]){let s=x<0?1:-1;box(x,-.28,s*15,4.5,.22,9,'woodLight');for(let j of [-1,1])cylinder(x+j*1.8,-.85,s*11,.20,2.3,'wood');box(x,-2.7,s*8,5.8,.5,2.1,'wood');box(x,-2.35,s*8,4.8,.22,1.8,'woodLight')}
  return {seed,parts,colliders,buildings,shops,bridges,landmarks,spawn:[0,1.7,91],bounds:[-185,-192,185,192]};
