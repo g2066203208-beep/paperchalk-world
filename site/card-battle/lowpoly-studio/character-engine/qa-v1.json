@@ -1,0 +1,43 @@
+{
+  "results": {
+    "marksman": {
+      "vertices": 1334,
+      "faces": 1196,
+      "invalid": 0,
+      "degenerate": 0,
+      "badUV": 0,
+      "bodyBoundary": 0,
+      "bodyNonManifold": 0,
+      "bodyChecked": false,
+      "selfIntersection": "not tested",
+      "rig": "not tested"
+    },
+    "cleaner": {
+      "vertices": 1471,
+      "faces": 1296,
+      "invalid": 0,
+      "degenerate": 0,
+      "badUV": 0,
+      "bodyBoundary": 0,
+      "bodyNonManifold": 0,
+      "bodyChecked": true,
+      "selfIntersection": "not tested",
+      "rig": "not tested"
+    },
+    "doctor": {
+      "vertices": 884,
+      "faces": 876,
+      "invalid": 0,
+      "degenerate": 0,
+      "badUV": 0,
+      "bodyBoundary": 0,
+      "bodyNonManifold": 0,
+      "bodyChecked": true,
+      "selfIntersection": "not tested",
+      "rig": "not tested"
+    }
+  },
+  "cardFaces": 6,
+  "paint": true,
+  "scope": "In-process static geometry and untextured render; browser not tested"
+}
