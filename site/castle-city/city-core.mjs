@@ -101,7 +101,9 @@ export function triangles(part,emit){
  const tri=(a,b,c)=>emit(tr(a),tr(b),tr(c),part);
  const quad=(a,b,c,d)=>{tri(a,b,c);tri(a,c,d)};
  function cube(v){for(let f of [[0,3,2,1],[4,5,6,7],[0,1,5,4],[3,7,6,2],[0,4,7,3],[1,2,6,5]])quad(...f.map(i=>v[i]))}
- if(part.kind==='box'||part.kind==='sign'){let A=w/2,B=h/2,C=d/2;cube([[-A,-B,-C],[A,-B,-C],[A,B,-C],[-A,B,-C],[-A,-B,C],[A,-B,C],[A,B,C],[-A,B,C]])}
+ if(part.kind==='mesh'){for(const face of part.faces){for(let i=1;i+1<face.length;i++)tri(part.vertices[face[0]],part.vertices[face[i]],part.vertices[face[i+1]])}}
+ else if(part.kind==='face'){let A=w/2,B=h/2;quad([-A,-B,0],[A,-B,0],[A,B,0],[-A,B,0]);}
+ else if(part.kind==='box'||part.kind==='sign'){let A=w/2,B=h/2,C=d/2;cube([[-A,-B,-C],[A,-B,-C],[A,B,-C],[-A,B,-C],[-A,-B,C],[A,-B,C],[A,B,C],[-A,B,C]])}
  else if(part.kind==='gable'){let A=w/2,C=d/2;quad([-A,0,-C],[-A,0,C],[0,h,C],[0,h,-C]);quad([A,0,C],[A,0,-C],[0,h,-C],[0,h,C]);tri([-A,0,C],[A,0,C],[0,h,C]);tri([A,0,-C],[-A,0,-C],[0,h,-C]);}
  else if(part.kind==='cylinder'){let n=part.n||8;for(let i=0;i<n;i++){let a=i*2*Math.PI/n,b=(i+1)*2*Math.PI/n,A=[Math.cos(a)*w,-h/2,Math.sin(a)*w],B=[Math.cos(b)*w,-h/2,Math.sin(b)*w],C=[Math.cos(b)*d,h/2,Math.sin(b)*d],D=[Math.cos(a)*d,h/2,Math.sin(a)*d];quad(A,D,C,B);tri([0,-h/2,0],A,B);tri([0,h/2,0],C,D)}}
  else if(part.kind==='arch'){let p=(r,t,X)=>[X,r*Math.sin(t),r*Math.cos(t)],v=[p(w,part.a,-d/2),p(w,part.b,-d/2),p(w+h,part.b,-d/2),p(w+h,part.a,-d/2),p(w,part.a,d/2),p(w,part.b,d/2),p(w+h,part.b,d/2),p(w+h,part.a,d/2)];cube(v)}
