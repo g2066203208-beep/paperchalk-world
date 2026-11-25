@@ -3,7 +3,7 @@ const CLEANER=(()=>{
 const palette={jacket:[77,83,65],cuff:[55,59,45],shorts:[63,68,49],tights:[55,43,42],boot:[91,72,48],sole:[56,48,39],glove:[107,89,49],apron:[112,72,57],pocket:[129,83,64],seam:[77,49,40],scarf:[130,49,43],scarfDark:[103,37,34],hair:[76,63,57],hairLight:[99,84,74],hairDark:[57,48,44],wood:[143,109,72],steel:[82,82,83],edge:[146,143,138],iron:[49,47,48],gold:[190,148,66],paper:[208,210,189],bottle:[48,71,67],cap:[121,118,105]};
 const avg=(P,f)=>[0,1,2].map(k=>f.reduce((v,i)=>v+P[i][k],0)/f.length),sub=(a,b)=>a.map((v,i)=>v-b[i]),add=(a,b)=>a.map((v,i)=>v+b[i]),mul=(a,t)=>a.map(v=>v*t),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],unit=a=>mul(a,1/(Math.hypot(...a)||1));
 function build(P,rest,quads,zones,show={hair:true,clothes:true,axe:true}){
-let out=P.map(p=>p.slice()),faces=quads.map(f=>f.slice()),mats=quads.map(()=>'skin'),orig=quads.map((_,i)=>i),norm=P.map(()=>[0,0,0]);
+let out=P.map(p=>p.slice()),faces=quads.map(f=>f.slice()),mats=quads.map(()=>'skin'),orig=quads.map((_,i)=>i),norm=P.map(()=>[0,0,0]),restNorm=P.map(()=>[0,0,0]);
 function face(f,m){faces.push(f);mats.push(m);orig.push(-1)}
 function vert(p){out.push(p);return out.length-1}
 function patch(rows,m){let ids=rows.map(r=>r.map(vert));for(let j=0;j<ids.length-1;j++)for(let i=0;i<ids[j].length-1;i++)face([ids[j][i],ids[j][i+1],ids[j+1][i+1],ids[j+1][i]],m);return ids}
@@ -13,21 +13,21 @@ function tube(a,b,r1,r2,m,n=8){let d=unit(sub(b,a)),u=unit(cross(d,Math.abs(d[2]
 function ell(y,rx,rz,cz=0,n=12){return Array.from({length:n},(_,i)=>{let t=i*Math.PI*2/n;return [Math.sin(t)*rx,y,cz+Math.cos(t)*rz]})}
 if(show.clothes){
 // Covered body faces become the clothing surface. Same index and pose, no hidden duplicate body.
-for(let f of quads){let n=unit(cross(sub(P[f[1]],P[f[0]]),sub(P[f[2]],P[f[0]])));for(let i of f)norm[i]=add(norm[i],n)}
+for(let f of quads){let n=unit(cross(sub(P[f[1]],P[f[0]]),sub(P[f[2]],P[f[0]])));let rn=unit(cross(sub(rest[f[1]],rest[f[0]]),sub(rest[f[2]],rest[f[0]])));for(let i of f){norm[i]=add(norm[i],n);restNorm[i]=add(restNorm[i],rn)}}
 // Tailored ease: a garment envelope rather than a constant skin offset.
 // The original covered vertices are reused, including all V48 joint corrections.
 const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v)),smooth=t=>{t=clamp(t);return t*t*(3-2*t)},lerp=(a,b,t)=>a+(b-a)*t;
 function sample(rows,y){if(y<=rows[0][0])return rows[0].slice(1);for(let i=1;i<rows.length;i++)if(y<=rows[i][0]){let a=rows[i-1],b=rows[i],t=(y-a[0])/(b[0]-a[0]);return a.slice(1).map((x,k)=>lerp(x,b[k+1],t))}return rows.at(-1).slice(1)}
 const torso=[[1.23,.27,.20,.018],[1.36,.30,.226,.020],[1.49,.30,.226,.025],[1.67,.287,.226,.022],[1.86,.278,.239,.020],[1.98,.256,.173,.009],[2.06,.16,.125,0]];
 const sleeves=[[1.445,.37,.069,.075],[1.49,.365,.111,.103],[1.61,.332,.117,.108],[1.73,.283,.124,.106],[1.86,.25,.122,.110],[1.97,.221,.102,.100],[2.025,.19,.078,.085]];
-function restDelta(i){let p=rest[i],y=p[1],z=zones[i],sg=Math.sign(p[0])||1,x=Math.abs(p[0]);if(y>=2.075)return [0,0,0];if(z===1||z===2){if(y<1.445)return mul(unit(norm[i]),.014);let [cx,rx,rz]=sample(sleeves,y),dx=x-cx,dz=p[2],r=Math.hypot(dx/rx,dz/rz)||1,wr=.010*Math.sin((y-1.45)*65)*(1-smooth((y-1.64)/.25));let target=[sg*(cx+dx*Math.max(1.06,1/r)),y,dz*Math.max(1.08,1/r)];target[0]+=sg*wr*dx/(Math.hypot(dx,dz)||1);target[2]+=wr*dz/(Math.hypot(dx,dz)||1);return sub(target,p)}
-if(z===3||z===4){let amt=y<.53?.044:y>1.10?.042:.008;return mul(unit(norm[i]),amt)}
+function restDelta(i){let p=rest[i],y=p[1],z=zones[i],sg=Math.sign(p[0])||1,x=Math.abs(p[0]);if(y>=2.075)return [0,0,0];if(z===1||z===2){if(y<1.445)return mul(unit(restNorm[i]),.014);let [cx,rx,rz]=sample(sleeves,y),dx=x-cx,dz=p[2],r=Math.hypot(dx/rx,dz/rz)||1,wr=.010*Math.sin((y-1.45)*65)*(1-smooth((y-1.64)/.25));let target=[sg*(cx+dx*Math.max(1.06,1/r)),y,dz*Math.max(1.08,1/r)];target[0]+=sg*wr*dx/(Math.hypot(dx,dz)||1);target[2]+=wr*dz/(Math.hypot(dx,dz)||1);return sub(target,p)}
+if(z===3||z===4){let amt=y<.53?.044:y>1.10?.042:.008;return mul(unit(restNorm[i]),amt)}
 let [rx,rz,cz]=sample(torso,y),dx=p[0],dz=p[2]-cz,ang=Math.atan2(dx/rx,dz/rz),r=Math.hypot(dx/rx,dz/rz)||1;let q=[dx*Math.max(1.025,1/r),y,cz+dz*Math.max(1.025,1/r)];let t=smooth((y-1.25)/.13)*(1-smooth((y-1.98)/.10));return mul(sub(q,p),t)}
 for(let i=0;i<P.length;i++){let delta=restDelta(i); // rotate the offset into the local posed surface normal where the pose bends.
-let n0=[0,0,0];for(let f of quads)if(f.includes(i)){let n=unit(cross(sub(rest[f[1]],rest[f[0]]),sub(rest[f[2]],rest[f[0]])));n0=add(n0,n)}let a=unit(n0),b=unit(norm[i]),v=cross(a,b),c=a.reduce((t,x,k)=>t+x*b[k],0);if(c>-.95){let u=cross(v,delta),w=cross(v,u);delta=add(delta,add(u,mul(w,1/(1+c))))}out[i]=add(P[i],delta)}
+let a=unit(restNorm[i]),b=unit(norm[i]),v=cross(a,b),c=a.reduce((t,x,k)=>t+x*b[k],0);if(c>-.95){let u=cross(v,delta),w=cross(v,u);delta=add(delta,add(u,mul(w,1/(1+c))))}out[i]=add(P[i],delta)}
 for(let [i,f] of quads.entries()){let y=avg(rest,f)[1],arm=f.filter(j=>zones[j]===1||zones[j]===2).length>=2,leg=f.filter(j=>zones[j]===3||zones[j]===4).length>=2;if(y>2.075)continue;mats[i]=arm?(y<1.44?'glove':y<1.50?'cuff':'jacket'):leg?(y<.365?'sole':y<.53?'boot':y>1.10?'shorts':'tights'):y<1.36?'shorts':'jacket'}
 patch([[1.12,.318,.277],[1.31,.321,.280],[1.50,.316,.280],[1.68,.263,.277],[1.87,.185,.282],[1.91,.166,.278]].map(([y,w,z])=>[-1,-.5,0,.5,1].map(t=>[w*t,y,z-.026*t*t])),'apron');
-for(let sg of [-1,1]){patch([[1.90,.258],[2.025,.151],[2.065,.015],[2.02,-.125],[1.86,-.164]].map(([y,z])=>[[sg*.115-.026,y,z],[sg*.115+.026,y,z]]),'apron');box(sg*.115,1.938,.239,.063,.044,.018,'cap');box(sg*.115,1.968,.221,.068,.015,.016,'iron');box(sg*.172,1.39,.291,.158,.218,.025,'pocket');box(sg*.172,1.50,.309,.168,.028,.02,'seam')}
+for(let sg of [-1,1]){patch([[1.90,.287],[2.025,.174],[2.065,.015],[2.02,-.125],[1.86,-.164]].map(([y,z])=>[[sg*.115-.026,y,z],[sg*.115+.026,y,z]]),'apron');box(sg*.115,1.938,.262,.063,.044,.018,'cap');box(sg*.115,1.968,.245,.068,.015,.016,'iron');box(sg*.172,1.39,.291,.158,.218,.025,'pocket');box(sg*.172,1.50,.309,.168,.028,.02,'seam')}
 box(0,1.80,.286,.115,.103,.014,'gold');box(0,1.80,.297,.082,.074,.012,'seam');box(0,1.80,.306,.024,.062,.008,'gold');box(0,1.80,.308,.059,.019,.008,'gold');
 box(.174,1.405,.316,.098,.14,.010,'paper');for(let j=0;j<5;j++)box(.174,1.44-j*.018,.323,.070,.005,.003,'cuff');box(.174,1.48,.327,.035,.018,.012,'cap');
 for(let x of [-.206,-.147]){tube([x,1.50,.306],[x,1.66,.306],.023,.020,'bottle');tube([x,1.66,.306],[x,1.68,.306],.022,.022,'cap')}
