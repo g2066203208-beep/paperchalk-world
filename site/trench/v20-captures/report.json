@@ -1,0 +1,329 @@
+{
+  "source": "c6e6926eb04136f9e73436b993965f0453b97339",
+  "renderer": "original game CPU renderer in synthetic DOM; not Chromium",
+  "frames": 29,
+  "checks": [
+    {
+      "name": "ready",
+      "eye": [
+        -7.9892,
+        1.5511929502968336,
+        -28.066000000000003
+      ],
+      "uniqueSampleColors": 262,
+      "frame": 1
+    },
+    {
+      "name": "aim",
+      "eye": [
+        -7.922079603641932,
+        1.3962079974882184,
+        -28.10984803790895
+      ],
+      "uniqueSampleColors": 206,
+      "frame": 2
+    },
+    {
+      "name": "lookdown",
+      "eye": [
+        -7.9892,
+        1.5511929502968336,
+        -28.066000000000003
+      ],
+      "uniqueSampleColors": 303,
+      "frame": 3
+    },
+    {
+      "name": "crouch-aim",
+      "eye": [
+        -7.9220789555158895,
+        1.1002271094951244,
+        -28.07353282838766
+      ],
+      "uniqueSampleColors": 219,
+      "frame": 4
+    },
+    {
+      "name": "kneel",
+      "eye": [
+        -7.9892,
+        1.1105297143192743,
+        -28.226183692075377
+      ],
+      "uniqueSampleColors": 234,
+      "frame": 5
+    },
+    {
+      "name": "prone",
+      "eye": [
+        -7.989062432506081,
+        0.1739777973717782,
+        -28.67999708446124
+      ],
+      "uniqueSampleColors": 166,
+      "frame": 6
+    },
+    {
+      "name": "side-aim",
+      "eye": [
+        -5.65,
+        1.4189361273941243,
+        -27.85
+      ],
+      "uniqueSampleColors": 347,
+      "frame": 7
+    },
+    {
+      "name": "ready-loop-0",
+      "eye": [
+        -7.9892,
+        1.5511929502968336,
+        -28.066000000000003
+      ],
+      "uniqueSampleColors": 263,
+      "frame": 8
+    },
+    {
+      "name": "ready-loop-1",
+      "eye": [
+        -7.9892,
+        1.5511929502968336,
+        -28.066000000000003
+      ],
+      "uniqueSampleColors": 263,
+      "frame": 9
+    },
+    {
+      "name": "ready-loop-2",
+      "eye": [
+        -7.9892,
+        1.5511929502968336,
+        -28.066000000000003
+      ],
+      "uniqueSampleColors": 263,
+      "frame": 10
+    },
+    {
+      "name": "ready-loop-3",
+      "eye": [
+        -7.9892,
+        1.5511929502968336,
+        -28.066000000000003
+      ],
+      "uniqueSampleColors": 263,
+      "frame": 11
+    },
+    {
+      "name": "raise-loop-0",
+      "eye": [
+        -7.96358796066783,
+        1.5205702493166424,
+        -28.06313898942406
+      ],
+      "uniqueSampleColors": 285,
+      "frame": 12
+    },
+    {
+      "name": "raise-loop-1",
+      "eye": [
+        -7.909574981254938,
+        1.4250492377265187,
+        -28.087826736412584
+      ],
+      "uniqueSampleColors": 270,
+      "frame": 13
+    },
+    {
+      "name": "raise-loop-2",
+      "eye": [
+        -7.918263880968168,
+        1.3931605243927456,
+        -28.108092855754137
+      ],
+      "uniqueSampleColors": 212,
+      "frame": 14
+    },
+    {
+      "name": "raise-loop-3",
+      "eye": [
+        -7.922079602074319,
+        1.3962079952358764,
+        -28.109848037320976
+      ],
+      "uniqueSampleColors": 206,
+      "frame": 15
+    },
+    {
+      "name": "raise-loop-4",
+      "eye": [
+        -7.922079602755381,
+        1.396207996213572,
+        -28.10984803757649
+      ],
+      "uniqueSampleColors": 206,
+      "frame": 16
+    },
+    {
+      "name": "raise-loop-5",
+      "eye": [
+        -7.92207960314055,
+        1.3962079967668544,
+        -28.109848037720965
+      ],
+      "uniqueSampleColors": 206,
+      "frame": 17
+    },
+    {
+      "name": "raise-loop-6",
+      "eye": [
+        -7.9220796033583785,
+        1.396207997079966,
+        -28.109848037802657
+      ],
+      "uniqueSampleColors": 206,
+      "frame": 18
+    },
+    {
+      "name": "raise-loop-7",
+      "eye": [
+        -7.92207960348157,
+        1.3962079972571653,
+        -28.10984803784885
+      ],
+      "uniqueSampleColors": 206,
+      "frame": 19
+    },
+    {
+      "name": "raise-loop-8",
+      "eye": [
+        -7.92207960355124,
+        1.3962079973574495,
+        -28.10984803787497
+      ],
+      "uniqueSampleColors": 206,
+      "frame": 20
+    },
+    {
+      "name": "raise-loop-9",
+      "eye": [
+        -7.922079603590642,
+        1.3962079974142056,
+        -28.109848037889737
+      ],
+      "uniqueSampleColors": 206,
+      "frame": 21
+    },
+    {
+      "name": "lower-loop-0",
+      "eye": [
+        -7.907646693392509,
+        1.4017262396985064,
+        -28.09817435426155
+      ],
+      "uniqueSampleColors": 226,
+      "frame": 22
+    },
+    {
+      "name": "lower-loop-1",
+      "eye": [
+        -7.9547427104162995,
+        1.5084940851545328,
+        -28.064456605734605
+      ],
+      "uniqueSampleColors": 280,
+      "frame": 23
+    },
+    {
+      "name": "lower-loop-2",
+      "eye": [
+        -7.9892,
+        1.5511929502968336,
+        -28.066000000000003
+      ],
+      "uniqueSampleColors": 263,
+      "frame": 24
+    },
+    {
+      "name": "lower-loop-3",
+      "eye": [
+        -7.9892,
+        1.5511929502968336,
+        -28.066000000000003
+      ],
+      "uniqueSampleColors": 263,
+      "frame": 25
+    },
+    {
+      "name": "lower-loop-4",
+      "eye": [
+        -7.9892,
+        1.5511929502968336,
+        -28.066000000000003
+      ],
+      "uniqueSampleColors": 263,
+      "frame": 26
+    },
+    {
+      "name": "lower-loop-5",
+      "eye": [
+        -7.9892,
+        1.5511929502968336,
+        -28.066000000000003
+      ],
+      "uniqueSampleColors": 263,
+      "frame": 27
+    },
+    {
+      "name": "lower-loop-6",
+      "eye": [
+        -7.9892,
+        1.5511929502968336,
+        -28.066000000000003
+      ],
+      "uniqueSampleColors": 263,
+      "frame": 28
+    },
+    {
+      "name": "lower-loop-7",
+      "eye": [
+        -7.9892,
+        1.5511929502968336,
+        -28.066000000000003
+      ],
+      "uniqueSampleColors": 263,
+      "frame": 29
+    }
+  ],
+  "images": [
+    {
+      "name": "ready",
+      "bytes": 231623
+    },
+    {
+      "name": "aim",
+      "bytes": 231623
+    },
+    {
+      "name": "lookdown",
+      "bytes": 231623
+    },
+    {
+      "name": "crouch-aim",
+      "bytes": 231623
+    },
+    {
+      "name": "kneel",
+      "bytes": 231623
+    },
+    {
+      "name": "prone",
+      "bytes": 231623
+    },
+    {
+      "name": "side-aim",
+      "bytes": 231623
+    }
+  ],
+  "gifFrames": 22,
+  "gifBytes": 782107
+}
