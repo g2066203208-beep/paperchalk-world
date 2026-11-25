@@ -1,0 +1,27 @@
+{
+  "report": [
+    {
+      "faces": 616,
+      "verts": 618,
+      "nonmanifold": 0,
+      "minNewTriArea": 0.0003663522894701221,
+      "negativeNewQuadTriNormals": 0,
+      "minDot": 0.16585357758928984,
+      "bad": []
+    },
+    {
+      "faces": 2464,
+      "verts": 2466,
+      "nonmanifold": 0,
+      "minNewTriArea": 0.00009986576928557661,
+      "negativeNewQuadTriNormals": 0,
+      "minDot": 0.3491606014583111,
+      "bad": []
+    }
+  ],
+  "changedOriginalCoarse": 41,
+  "addedCoarse": 10,
+  "frozenMax": 0,
+  "source": "V37 d8aabb5",
+  "scope": "neutral; new patch triangle normal and closed orientable manifold edge audit only; no full self-intersection, browser or hip animation approval"
+}
