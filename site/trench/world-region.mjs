@@ -49,7 +49,7 @@ export function extendWorld(world){
  world.height=height;
  world.region=(x,z)=>z>=-92?'前线战壕':z>=-220?'诺曼底乡野与农舍':Math.abs(z-CITY_Z)<30?'石桥与河岸':z<CITY_Z-100?'教堂及市政区':'1944 欧洲城镇';
  world.valid=(x,z)=>{if(z<BOUNDS.zmin||z>BOUNDS.zmax)return false;if(z>=-92)return Math.abs(x)<=73;if(z>=-220)return Math.abs(x)<=73;let local=z-CITY_Z;return Math.abs(x)<=184&&(local>192?Math.abs(x)<6:walkHeight(city,x,local)!==null)};
- world.city=city;world.integration={originalTriangles:start,addedTriangles:world.V.length/30-start,buildings:city.buildings.length,shops:city.shops.length,bridges:city.bridges.length,cityCenter:[0,CITY_Y,CITY_Z],ruins:city.buildings.filter(b=>b.ruin).length,countryProps:countryProps.length,bounds:BOUNDS,historicalStatus:'fictional Normandy-inspired 1944; not a verified town reconstruction'};
+ world.lamps=city.parts.filter(p=>p.mat==='light'&&p.kind==='box').map(p=>[p.pos[0],p.pos[1]+CITY_Y,p.pos[2]+CITY_Z,12.5]);world.city=city;world.integration={originalTriangles:start,addedTriangles:world.V.length/30-start,buildings:city.buildings.length,shops:city.shops.length,bridges:city.bridges.length,cityCenter:[0,CITY_Y,CITY_Z],ruins:city.buildings.filter(b=>b.ruin).length,countryProps:countryProps.length,bounds:BOUNDS,historicalStatus:'fictional Normandy-inspired 1944; not a verified town reconstruction'};
  return world;
 }
 export function extendAtlas(original){
@@ -69,9 +69,9 @@ export function extendAtlas(original){
     if(v===0||u===0)q*=paving?.93:.90;else if(v===1)q*=1.035;
    }else if(['plaster','cream','ochre','rose','trim','white'].includes(name)){
     // Mostly clean lime plaster: broad irregular patches, not grain.
-    q=1+(cluster(x,y,id,32)-2)*.009;
+    q=1+(cluster(x,y,id,32)-2)*.013;const patch=(hash(Math.floor(x/16),Math.floor(y/24),id)%9);if(patch===0&&y%24>8)q*=.89;
    }else if(name==='road'||name==='asphalt'){
-    q=1+(cluster(x,y,id,32)-2)*.010;
+    q=1+(cluster(x,y,id,16)-2)*.021;const patch=hash(Math.floor(x/16),Math.floor(y/16),id)%7;if(patch===0)q*=.89;
    }else if(['wood','woodLight'].includes(name)){
     const u=x%16;q=u===0?.89:u===1?1.04:1+(hash(Math.floor(x/16),0,id)%3-1)*.035;
    }else if(['roof','roof2','roof3'].includes(name)){
