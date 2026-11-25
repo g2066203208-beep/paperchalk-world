@@ -96,8 +96,8 @@ export function auditCity(city){return {buildings:city.buildings.length,shops:ci
 
 // Shared geometry expansion used by both WebGL and software verification.
 export function triangles(part,emit){
- const [x,y,z]=part.pos,[w,h,d]=part.size,a=part.rot||0,c=Math.cos(a),s=Math.sin(a);
- const tr=p=>[x+c*p[0]-s*p[2],y+p[1],z+s*p[0]+c*p[2]];
+ const [x,y,z]=part.sourcePos||part.pos,[w,h,d]=part.size,a=part.rot||0,c=Math.cos(a),s=Math.sin(a);
+ const tr=p=>{const q=[x+c*p[0]-s*p[2],y+p[1],z+s*p[0]+c*p[2]];return part.warp?part.warp(q):q;};
  const tri=(a,b,c)=>emit(tr(a),tr(b),tr(c),part);
  const quad=(a,b,c,d)=>{tri(a,b,c);tri(a,c,d)};
  function cube(v){for(let f of [[0,3,2,1],[4,5,6,7],[0,1,5,4],[3,7,6,2],[0,4,7,3],[1,2,6,5]])quad(...f.map(i=>v[i]))}
