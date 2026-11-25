@@ -5,3 +5,7 @@
 - Texture: 116×188 source-pixel crop from 04-bounty-markswoman.png, x=307 y=12. Each card samples its own UV strip. No recoloring, gradient, generated highlights, or hair lighting.
 - Three columns per row form a hard depth ridge. Front and both oblique views plus side rendered with the same CPU rasterizer offline.
 - Still an isolated fringe experiment. Crown, side/back hair, ponytail, face, and apparel not built. Source UV positions and inferred depth are provisional; Pages browser deployment not verified.
+
+## V13 revision
+- Root vertices moved toward the scalp; narrower source polygons and transparent edge masks applied. 175 pixels cloned from nearby original hair to reduce the occluding eye-line; some line and dark tip pixels remain. No generated RGB or gradient.
+- Four-angle CPU render verified; crown and rear hair absent, side-view lift and silhouette remain provisional. Live Pages and browser interactions not verified.
