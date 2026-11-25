@@ -1,0 +1,116 @@
+{
+  "scope": "single right arm, rest elbow, sampled poses; no full sweep or browser verification",
+  "coarseFaces": 606,
+  "fineFaces": 2424,
+  "restGeometryUnchanged": true,
+  "coarsePeakEdgeRatioBefore": 7.2294,
+  "coarsePeakEdgeRatioAfter": 2.7011,
+  "coarseFullyWeightedEdgeMaxError": 1.3e-14,
+  "coarseNonAdjacentNonCoplanarFacePairs": [
+    {
+      "pose": [
+        0,
+        0,
+        0
+      ],
+      "count": 0
+    },
+    {
+      "pose": [
+        0,
+        45,
+        0
+      ],
+      "count": 0
+    },
+    {
+      "pose": [
+        0,
+        90,
+        0
+      ],
+      "count": 0
+    },
+    {
+      "pose": [
+        0,
+        150,
+        0
+      ],
+      "count": 37
+    },
+    {
+      "pose": [
+        45,
+        0,
+        0
+      ],
+      "count": 0
+    },
+    {
+      "pose": [
+        90,
+        0,
+        0
+      ],
+      "count": 1
+    },
+    {
+      "pose": [
+        150,
+        0,
+        0
+      ],
+      "count": 27
+    },
+    {
+      "pose": [
+        -35,
+        0,
+        0
+      ],
+      "count": 2
+    },
+    {
+      "pose": [
+        0,
+        0,
+        75
+      ],
+      "count": 10
+    },
+    {
+      "pose": [
+        0,
+        0,
+        -75
+      ],
+      "count": 0
+    },
+    {
+      "pose": [
+        45,
+        60,
+        45
+      ],
+      "count": 4
+    },
+    {
+      "pose": [
+        60,
+        70,
+        -45
+      ],
+      "count": 0
+    }
+  ],
+  "fineLODResidualFoldExamples": [
+    421,
+    645,
+    641,
+    653,
+    654
+  ],
+  "approved": false,
+  "forearmTwistAndWristDeviationImplemented": false
+}
