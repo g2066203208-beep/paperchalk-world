@@ -1,0 +1,110 @@
+{
+  "autoFallback": {
+    "boot": {
+      "mode": "cpu",
+      "frames": 3,
+      "last": 1795593247942,
+      "error": null
+    },
+    "software": {
+      "width": 360,
+      "height": 206,
+      "triangles": 2195,
+      "frame": 3
+    },
+    "colors": 615,
+    "nonbg": 62275,
+    "total": 74160,
+    "frameMs": [
+      758,
+      474,
+      533
+    ],
+    "mode": "idle"
+  },
+  "aim": {
+    "boot": {
+      "mode": "cpu",
+      "frames": 8,
+      "last": 1795593250948,
+      "error": null
+    },
+    "software": {
+      "width": 360,
+      "height": 206,
+      "triangles": 1356,
+      "frame": 8
+    },
+    "colors": 689,
+    "nonbg": 64108,
+    "total": 74160,
+    "frameMs": [
+      758,
+      474,
+      533,
+      782,
+      496,
+      478,
+      769,
+      463
+    ],
+    "mode": "aim"
+  },
+  "lookDown": {
+    "boot": {
+      "mode": "cpu",
+      "frames": 12,
+      "last": 1795593252746,
+      "error": null
+    },
+    "software": {
+      "width": 360,
+      "height": 206,
+      "triangles": 1570,
+      "frame": 12
+    },
+    "colors": 403,
+    "nonbg": 71981,
+    "total": 74160,
+    "frameMs": [
+      758,
+      474,
+      533,
+      782,
+      496,
+      478,
+      769,
+      463,
+      472,
+      432,
+      446,
+      431
+    ],
+    "mode": "aim"
+  },
+  "forcedMobile": {
+    "boot": {
+      "mode": "cpu",
+      "frames": 4,
+      "last": 1795593254521,
+      "error": null
+    },
+    "software": {
+      "width": 120,
+      "height": 260,
+      "triangles": 5241,
+      "frame": 4
+    },
+    "colors": 646,
+    "nonbg": 30276,
+    "total": 31200,
+    "frameMs": [
+      323,
+      228,
+      220,
+      352
+    ],
+    "mode": "aim"
+  },
+  "scope": "Exact committed page logic, actual CPU output pixels; DOM and canvas presentation sink simulated; hosted availability not verified"
+}
