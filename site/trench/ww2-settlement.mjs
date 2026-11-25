@@ -2,8 +2,8 @@
 // Whitebox meshes first; material IDs are assigned separately by world-region.mjs.
 export const PALETTE={grass:'#62694b',earth:'#746451',road:'#888276',cobble:'#88867e',stone:'#a6a59a',darkStone:'#72766f',trim:'#b9b6a4',plaster:'#b8b19a',cream:'#c7c1ad',ochre:'#b2a18a',rose:'#a38e80',wood:'#625345',woodLight:'#88735b',roof:'#75645e',roof2:'#535c61',roof3:'#81776a',glass:'#52676a',black:'#333936',iron:'#535754',water:'#526c6d',cloth:'#a0977b',red:'#895b50',blue:'#586e74',green:'#626d53',gold:'#b5a175',leaf:'#59634a',leaf2:'#778060',light:'#d7aa70',brick:'#987b6d',rubble:'#81786c',char:'#474744',asphalt:'#777974',mud:'#6d6250',moss:'#777e59',paper:'#c2b79b',white:'#d3d0bd',smoke:'#757a72',rail:'#45494a',rust:'#82614d'};
 // Curved old town axis: the original bridge and road connections stay fixed.
-export function oldStreetOffset(x){if(x<=-148||x>=-4)return 0;const t=(x+148)/144;return 21*Math.sin(Math.PI*t)**2;}
-export function oldStreetPoint(p){const [x,y,z]=p,a=Math.abs(z-96);const k=a<=16?1:a>=45?0:(.5+.5*Math.cos(Math.PI*(a-16)/29));return [x,y,z+oldStreetOffset(x)*k];}
+export function oldStreetOffset(x){if(x<=-148||x>=-4)return 0;const t=(x+148)/144;return 19*Math.sin(Math.PI*t)**2;}
+export function oldStreetPoint(p){const [x,y,z]=p,a=Math.abs(z-96);const k=a<=16?1:a>=53?0:(.5+.5*Math.cos(Math.PI*(a-16)/37));return [x,y,z+oldStreetOffset(x)*k];}
 export function generateCity(seed=194406){
 let rng=seed>>>0,rand=()=>((rng=Math.imul(rng,1664525)+1013904223>>>0)/4294967296),pick=a=>a[Math.floor(rand()*a.length)];
 const parts=[],colliders=[],buildings=[],shops=[],bridges=[],landmarks=[],smoke=[];
@@ -13,7 +13,7 @@ const solid=(x,z,w,d)=>colliders.push([x-w/2,z-d/2,x+w/2,z+d/2]);
 const surface=(x,z,w,d,y=.04,m='road')=>{
  // Subdivide the actual roadway so curved geometry does not interpolate across whole blocks.
  const nx=Math.ceil(w/7),nz=Math.ceil(d/7);
- if(z+d/2<51||z-d/2>141||x+w/2<=-148||x-w/2>=-4)return box(x,y-.12,z,w,.24,d,m);
+ if(z+d/2<43||z-d/2>149||x+w/2<=-148||x-w/2>=-4)return box(x,y-.12,z,w,.24,d,m);
  for(let i=0;i<nx;i++)for(let j=0;j<nz;j++)box(x-w/2+(i+.5)*w/nx,y-.12,z-d/2+(j+.5)*d/nz,w/nx,.24,d/nz,m);
 };
 const local=(x,z,r,u,v)=>[x+Math.cos(r)*u-Math.sin(r)*v,z+Math.sin(r)*u+Math.cos(r)*v];
@@ -135,11 +135,11 @@ for(let z of [65,108,-65,-108])house(-177,z,10,15,2,Math.PI/2,false,false);
 landmarks.push({name:'货运铁路',x:-166,z:90});
 // Warp all connected geometry, not only the road texture. Collision AABBs
 // are transformed conservatively; original bridge/river coordinates are unchanged.
-for(const p of parts){let [x,y,z]=p.pos,rad=Math.max(...p.size);if(x+rad<-148||x-rad>-4||z+rad<51||z-rad>141)continue;
+for(const p of parts){let [x,y,z]=p.pos,rad=Math.max(...p.size);if(x+rad<-148||x-rad>-4||z+rad<43||z-rad>149)continue;
  if((p.kind==='box')&&p.size[0]>250&&p.size[2]>100)continue; // flat base, no visual boundary in old quarter
  p.sourcePos=p.pos.slice();p.pos=oldStreetPoint(p.pos);p.warp=oldStreetPoint;
 }
-for(const q of colliders){if(q[2]<-148||q[0]>-4||q[3]<51||q[1]>141)continue;let pts=[];for(let x=q[0];x<=q[2]+.001;x+=Math.max(.01,(q[2]-q[0])/8)){for(let z of [q[1],q[3]])pts.push(oldStreetPoint([x,0,z]));}pts.push(oldStreetPoint([q[2],0,q[1]]),oldStreetPoint([q[2],0,q[3]]));q[1]=Math.min(...pts.map(p=>p[2]));q[3]=Math.max(...pts.map(p=>p[2]));}
+for(const q of colliders){if(q[2]<-148||q[0]>-4||q[3]<43||q[1]>149)continue;let pts=[];for(let x=q[0];x<=q[2]+.001;x+=Math.max(.01,(q[2]-q[0])/8)){for(let z of [q[1],q[3]])pts.push(oldStreetPoint([x,0,z]));}pts.push(oldStreetPoint([q[2],0,q[1]]),oldStreetPoint([q[2],0,q[3]]));q[1]=Math.min(...pts.map(p=>p[2]));q[3]=Math.max(...pts.map(p=>p[2]));}
 for(const o of [...buildings,...shops,...landmarks]){const x=o.x,z=o.z;[o.x,,o.z]=oldStreetPoint([x,0,z]);}
 for(let i=0;i<smoke.length;i++)smoke[i]=oldStreetPoint(smoke[i]);
 return {seed,parts,colliders,buildings,shops,bridges,landmarks,smoke,spawn:[0,1.7,91],bounds:[-185,-192,185,192]}
