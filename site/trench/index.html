@@ -98,7 +98,7 @@ const FLEX_GROUPS=new Set(['coat','trousers','coat-hem','hem-thickness','hem-ret
 const flexEdges=new Map(),flexMass=new Map();
 for(let face of AVATAR.quads.filter(f=>FLEX_GROUPS.has(f.group))){
  for(let i of face.f){let p=REST[i],w=face.group==='trousers'?(p[1]>.84&&p[1]<1.4?.8:0):face.group==='coat'?(i>=164&&i<=193||i>=280&&i<=309||i>=440&&i<=475?1:p[1]<1.49?.75:Math.abs(p[0])>.18?.55:0):face.group==='cuff-thickness'?0:.75;
- if(i>=194&&i<=225||i>=310&&i<=341||i>=852&&i<=863)w=0;
+ if(i>=194&&i<=225||i>=310&&i<=341||i>=852&&i<=863||ARMROWS.some(rows=>rows.some(row=>row.includes(i))))w=0;
  if(face.group==='trousers'&&(i===147||i===153||i===163))w=.3;
  flexMass.set(i,Math.max(flexMass.get(i)||0,w));}
  for(let j=0;j<4;j++){let a=face.f[j],b=face.f[(j+1)%4];if(a>b)[a,b]=[b,a];let key=a+':'+b;if(!flexEdges.has(key))flexEdges.set(key,[a,b,Alen(Asub(REST[b],REST[a]))]);}
@@ -179,12 +179,12 @@ function poseAvatar(phase,walk,duck,raise,look,dir=[0,1],run=0,air=0,landing=0,h
  axis=Anorm(AlERP(axis,[.45,.89,-.06],sling));
  anchor=AlERP(anchor,[-.36+.10*raise+hipX,1.77+root-.06*shot,.10+hipZ+.05*raise],prone);
  anchor=AlERP(anchor,[-.45+hipX,.71+root,-.44+hipZ],sling);
- let ready=(1-raise)*(1-prone)*(1-single)*(1-sling)*(1-low)*(1-high)*(1-strike)*(1-inspect)*(1-reload);axis=Anorm(AlERP(axis,Anorm([.40,-.10,.91]),ready));anchor=AlERP(anchor,[-.29+hipX,2.02+root,.23+hipZ],ready);
+ let ready=(1-raise)*(1-prone)*(1-single)*(1-sling)*(1-low)*(1-high)*(1-strike)*(1-inspect)*(1-reload);axis=Anorm(AlERP(axis,Anorm([.068,.188,1]),ready));anchor=AlERP(anchor,[-.185+hipX,2.093+root,.353+hipZ],ready);
  let side=Anorm(Across([0,1,0],axis)),up=Across(axis,side);
  // First-person sight pose uses a smaller, consistently scaled original prop; both wrists must be reachable.
- const aimW=raise*(1-prone)*(1-sling)*(1-single);if(aimW>0){let targetAxis=[0,Math.sin(Math.max(-.38,Math.min(.38,look))),Math.cos(Math.max(-.38,Math.min(.38,look)))];axis=Anorm(AlERP(axis,targetAxis,aimW));side=Anorm(Across([0,1,0],axis));up=Across(axis,side);anchor=AlERP(anchor,[-.15+hipX,2.19+root-.065*shot,.13+hipZ-.035*shot],aimW);}
- const gripAt=k=>k===0?[.12,1.20,.08]:[.08,.66,-.06],offsetAt=k=>Aadd(Amul(axis,k===0?-.21:-.06),Aadd(Amul(up,k===0?-.065:-.06),Amul(side,k===0?.115:-.05)));
- const Rscale=.51,gunAt=p=>Aadd(anchor,Aadd(Amul(axis,p[1]*Rscale),Aadd(Amul(up,-p[0]*Rscale),Amul(side,p[2]*Rscale))));
+ const aimW=raise*(1-prone)*(1-sling)*(1-single);if(aimW>0){let targetAxis=[0,Math.sin(Math.max(-.38,Math.min(.38,look))),Math.cos(Math.max(-.38,Math.min(.38,look)))];axis=Anorm(AlERP(axis,targetAxis,aimW));side=Anorm(Across([0,1,0],axis));up=Across(axis,side);anchor=AlERP(anchor,[-.149+hipX,2.121+root-.065*shot,.313+hipZ-.035*shot],aimW);}
+ const gripAt=k=>k===0?[.12,1.109,.08]:[.08,.66,-.06],offsetAt=k=>Aadd(Amul(axis,k===0?-.298:-.06),Aadd(Amul(up,k===0?-.065:-.06),Amul(side,k===0?.115:-.05)));
+ const Rscale=.488,gunAt=p=>Aadd(anchor,Aadd(Amul(axis,p[1]*Rscale),Aadd(Amul(up,-p[0]*Rscale),Amul(side,p[2]*Rscale))));
  // Project the shared prop into both reachable wrist spheres, not the hands away from the prop.
  for(let it=0;it<16;it++)for(let k=0;k<2;k++){let rows=ARMROWS[k],S=armCenter(rows[0]),E=armCenter(rows[5]),W=armCenter(Arange(k===0?194:310,6)),ns=Aadd(S,shift),max=Alen(Asub(E,S))+Alen(Asub(W,E))-.009,wt=(1-sling)*(1-crawl)*(1-(k===0?Math.max(single,reload):0)),v=Asub(Aadd(gunAt(gripAt(k)),offsetAt(k)),ns),len=Alen(v);if(len>max&&wt>0)anchor=Asub(anchor,Amul(v,(len-max)/len*wt));}
  // Two wrist targets tied to the same prop transform. Elbows solved with original segment lengths.
@@ -223,9 +223,9 @@ function poseAvatar(phase,walk,duck,raise,look,dir=[0,1],run=0,air=0,landing=0,h
  for(let a of armsInfo){a.grip=torsoMap(a.grip);a.wrist=torsoMap(a.wrist)}
  let eyeLocal=torsoMap(Aadd([-.015-.135*aimW,2.43-.12*aimW,.30-.055*aimW],shift)),scopeLocal=torsoMap(gunAt([-.205,.542,0])),scopeDirection=bodyRotate(axis);
  // Optical camera is behind the actual rear scope ring, never inside the mesh. Head follows the same small aim offset.
- let sightWeight=Asmooth(aimW)*Asmooth(1-Math.max(0,Math.abs(look)-.30)/.35),sightEye=Asub(scopeLocal,Amul(scopeDirection,.19)),headOffset=Amul(Asub(sightEye,eyeLocal),sightWeight);
+ let sightWeight=Asmooth(aimW)*Asmooth(1-Math.max(0,Math.abs(look)-.30)/.35),sightEye=Asub(scopeLocal,Amul(scopeDirection,.132)),headOffset=Amul(Asub(sightEye,eyeLocal),sightWeight);
  eyeLocal=Aadd(eyeLocal,headOffset);
- for(let i=0;i<REST.length;i++){let p=REST[i],w=Asmooth((p[1]-2.04)/.23);if(i>=624&&i<828)w=1;if(w>0)P[i]=Aadd(P[i],Amul(headOffset,w))}
+ // Keep the original head and hair geometry; do not drag head vertices into the prop to force optical alignment.
 
  if(prone>0.00001){
  const a=prone*1.48,co=Math.cos(a),si=Math.sin(a),pivotY=1.3+root,rot=p=>{let dy=p[1]-pivotY;return [p[0],pivotY+dy*co-p[2]*si,dy*si+p[2]*co]};
