@@ -429,8 +429,8 @@ function clothStep(M,Q,X,V,dt,prevRoot,root){let meta=clothMeta(M),P=Q.model.pos
 for(let i=608;i<618;i++){let j=i-608,p=X[j],v=V[j],rootDelta=sub(root,prevRoot),target=P[i];let newp=add(p,add(mul(v,.94),add(mul(rootDelta,.72),add([0,-4.0*dt*dt,0],mul(sub(target,p),.045)))));V[j]=sub(newp,p);X[j]=newp}
 let caps=[];for(let off of [0,116]){let a=avg(P,ring(226+off)),b=avg(P,ring(244+off)),c=avg(P,ring(256+off));caps.push([a,b,.115],[b,c,.09])}
 let maxPen=0;
-for(let pass=0;pass<12;pass++){for(let e of meta.edges){let a=e.a-608,b=e.b-608,wa=e.a<618?1:0,wb=e.b<618?1:0;if(!wa&&!wb)continue;let d=sub(X[b],X[a]),l=len(d);if(l<1e-8)continue;let c=mul(d,(l-e.L)/l*e.st/(wa+wb));if(wa)X[a]=add(X[a],c);if(wb)X[b]=sub(X[b],c)}
-for(let i=0;i<10;i++){let p=X[i],push=Math.max(...caps.map(c=>capsuleFront(p,...c)));if(push>0)X[i]=add(p,[0,0,push+.009]);}}
+for(let pass=0;pass<24;pass++){for(let e of meta.edges){let a=e.a-608,b=e.b-608,wa=e.a<618?1:0,wb=e.b<618?1:0;if(!wa&&!wb)continue;let d=sub(X[b],X[a]),l=len(d);if(l<1e-8)continue;let c=mul(d,(l-e.L)/l*e.st/(wa+wb));if(wa)X[a]=add(X[a],c);if(wb)X[b]=sub(X[b],c)}
+for(let i=0;i<10;i++)for(let it=0;it<5;it++){let p=X[i],push=Math.max(...caps.map(c=>capsuleFront(p,...c)));if(push<.0001)break;X[i]=add(p,[0,0,push+.009]);}}
 let strain=0;for(let e of meta.edges)if(e.a<618||e.b<618)strain=Math.max(strain,Math.abs(len(sub(X[e.a-608],X[e.b-608]))/e.L-1));for(let i=0;i<10;i++)for(let c of caps)maxPen=Math.max(maxPen,capsuleFront(X[i],...c));return {strain,maxPen}}
 function clothRun(id,hair){let key=id+':'+hair;if(clothCache.has(key))return clothCache.get(key);let M=model(hair),dur=durations[id],n=Math.ceil(dur*90),dt=dur/n,frames=[],X=null,V=Array.from({length:30},()=>[0,0,0]),prevRoot=null;
 for(let k=0;k<3*n;k++){let t=(k%n)*dt,Q=evaluateRaw(id,t,hair),P=Q.model.positions,root=[0,Q.audit.gait?.rootBob||0,Q.audit.rootTravel||0];if(!X){X=P.slice(608,638).map(p=>p.slice());prevRoot=root}
@@ -439,7 +439,7 @@ let old=X.map(p=>p.slice()),audit=clothStep(M,Q,X,V,dt,prevRoot,root);for(let j=
 let out={n,frames};clothCache.set(key,out);return out}
 function evaluate(id,t,hair=true){let Q=evaluateRaw(id,t,hair),M=model(hair),meta=clothMeta(M),P=Q.model.positions;
 let dur=durations[id],u=((t%dur)+dur)%dur/dur,cache=clothRun(id,hair),k=Math.min(cache.n-1,Math.floor(u*cache.n)),f=cache.frames[k],g=cache.frames[(k+1)%cache.n],a=u*cache.n-k;
-for(let i=608;i<618;i++)P[i]=k===cache.n-1?f.X[i-608].slice():mix(f.X[i-608],g.X[i-608],a);
+for(let i=608;i<618;i++)P[i]=mix(f.X[i-608],k===cache.n-1?add(g.X[i-608],[0,0,Q.audit.gait?(Q.audit.gait.running?.66/.42:.50/.62):0]):g.X[i-608],a);
 for(let [i,b] of Object.entries(meta.anchors))P[i]=bound(P,b);
 for(let [i,b] of Object.entries(meta.items))P[i]=bound(P,b);
 Q.audit.cloth={...f.audit,anchors:Object.keys(meta.anchors).length,attachments:Object.keys(meta.items).length,activeVertices:10};return Q}
