@@ -107,6 +107,9 @@ for(let z of zs){surface(0,z,368,9,.05,z===96?'road':'cobble');for(let q of [-1,
 // Street-level landmarks for the preserved old commercial quarter, same continuous world.
 landmarks.push({name:'圣皮埃尔风格旧商业街',x:-72,z:96});
 for(let x=-132;x<-12;x+=13){for(let side of [-1,1]){let z=96+side*6.4;cyl(x,.24,z,.095,.48,'iron',8);cyl(x,.51,z,.13,.10,'iron',8);}}
+// Sparse alternating old cast-iron street lanterns; real lamp geometry supplies the renderer light positions.
+for(let i=0;i<7;i++){let x=-137+i*20.5,z=96+(i%2===0?-6.4:6.4);lamp(x,z);}
+
 
 // Compact street-front blocks, narrower parcels, period masonry. Keep central axes open.
 for(let ix=0;ix<xs.length-1;ix++)for(let s of [-1,1])for(let iz=0;iz<3;iz++){let xc=(xs[ix]+xs[ix+1])/2,zc=s*(iz===0?35:72+(iz-1)*48);if(s===-1&&iz===2&&Math.abs(xc)<49)continue;if(s===1&&iz===1&&Math.abs(xc)<25)continue;
