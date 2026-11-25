@@ -1,0 +1,5 @@
+# V05 integrated coat
+
+Research: https://design.tutsplus.com/articles/game-character-creation-series-kila-chapter-2-low-resolution-modeling--cg-25788 (remove hidden geometry, weld boundaries); https://area.autodesk.jp/column/tutorial/maya-lowpoly-season-2/03-create-clothes/ (quad sleeve topology); https://studio.blender.org/training/realistic-human-research/retopology/ (public excerpt only).
+
+Actual hidden torso/arm polygons removed: 248. Coat shares neck, wrist and hip boundary vertices with surviving body. Original V45 and HAIR-001 assets untouched. {"removedSkinFaces":248,"coatQuads":330,"allQuads":true,"vertices":952,"coreBoundaryEdges":0,"coreNonmanifoldEdges":0,"groups":{"integrated-coat":184,"hard-hem":24,"hem-edge":12,"inner-hem-to-hip":12,"sleeve-lower":12,"cuff-edge":12,"cuff-to-wrist":12,"collar":4,"collar-edge":4,"diagonal-lapel":4,"front-overlap":6,"shoulder-seam":4,"panel-seam":4,"brass-buttons":36}}. Decorative collar, lapel, buttons and seams remain separate geometry. Static views only; self-intersection, rig deformation and deployment still require verification.
