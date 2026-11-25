@@ -1,0 +1,271 @@
+{
+  "report": [
+    {
+      "lod": 606,
+      "flex": 0,
+      "abd": 0,
+      "twist": 0,
+      "minEdge": 1,
+      "maxEdge": 1,
+      "folds": 1,
+      "rigid": 0
+    },
+    {
+      "lod": 606,
+      "flex": 45,
+      "abd": 0,
+      "twist": 0,
+      "minEdge": 0.5088,
+      "maxEdge": 1.9678,
+      "folds": 1,
+      "rigid": 9.881e-15
+    },
+    {
+      "lod": 606,
+      "flex": 90,
+      "abd": 0,
+      "twist": 0,
+      "minEdge": 0.2766,
+      "maxEdge": 3.7109,
+      "folds": 1,
+      "rigid": 9.992e-15
+    },
+    {
+      "lod": 606,
+      "flex": 150,
+      "abd": 0,
+      "twist": 0,
+      "minEdge": 0.5589,
+      "maxEdge": 6.2918,
+      "folds": 2,
+      "rigid": 1.088e-14
+    },
+    {
+      "lod": 606,
+      "flex": -35,
+      "abd": 0,
+      "twist": 0,
+      "minEdge": 0.6019,
+      "maxEdge": 1.6452,
+      "folds": 2,
+      "rigid": 5.551e-15
+    },
+    {
+      "lod": 606,
+      "flex": 0,
+      "abd": 45,
+      "twist": 0,
+      "minEdge": 0.8125,
+      "maxEdge": 2.4708,
+      "folds": 0,
+      "rigid": 5.773e-15
+    },
+    {
+      "lod": 606,
+      "flex": 0,
+      "abd": 90,
+      "twist": 0,
+      "minEdge": 0.7001,
+      "maxEdge": 4.445,
+      "folds": 1,
+      "rigid": 1.31e-14
+    },
+    {
+      "lod": 606,
+      "flex": 0,
+      "abd": 150,
+      "twist": 0,
+      "minEdge": 0.6903,
+      "maxEdge": 7.2294,
+      "folds": 1,
+      "rigid": 1.243e-14
+    },
+    {
+      "lod": 606,
+      "flex": 0,
+      "abd": 0,
+      "twist": 75,
+      "minEdge": 0.8754,
+      "maxEdge": 2.0166,
+      "folds": 2,
+      "rigid": 8.105e-15
+    },
+    {
+      "lod": 606,
+      "flex": 0,
+      "abd": 0,
+      "twist": -75,
+      "minEdge": 0.8854,
+      "maxEdge": 2.04,
+      "folds": 0,
+      "rigid": 7.772e-15
+    },
+    {
+      "lod": 606,
+      "flex": 45,
+      "abd": 60,
+      "twist": 45,
+      "minEdge": 0.7364,
+      "maxEdge": 3.6229,
+      "folds": 1,
+      "rigid": 5.44e-15
+    },
+    {
+      "lod": 606,
+      "flex": 60,
+      "abd": 70,
+      "twist": -45,
+      "minEdge": 0.404,
+      "maxEdge": 3.7713,
+      "folds": 1,
+      "rigid": 9.881e-15
+    },
+    {
+      "lod": 606,
+      "flex": 100,
+      "abd": 40,
+      "twist": 0,
+      "minEdge": 0.4534,
+      "maxEdge": 3.8481,
+      "folds": 1,
+      "rigid": 1.177e-14
+    },
+    {
+      "lod": 2424,
+      "flex": 0,
+      "abd": 0,
+      "twist": 0,
+      "minEdge": 1,
+      "maxEdge": 1,
+      "folds": 0,
+      "rigid": 0
+    },
+    {
+      "lod": 2424,
+      "flex": 45,
+      "abd": 0,
+      "twist": 0,
+      "minEdge": 0.5085,
+      "maxEdge": 2.1015,
+      "folds": 0,
+      "rigid": 1.654e-14
+    },
+    {
+      "lod": 2424,
+      "flex": 90,
+      "abd": 0,
+      "twist": 0,
+      "minEdge": 0.1747,
+      "maxEdge": 4.0887,
+      "folds": 5,
+      "rigid": 1.843e-14
+    },
+    {
+      "lod": 2424,
+      "flex": 150,
+      "abd": 0,
+      "twist": 0,
+      "minEdge": 0.4127,
+      "maxEdge": 6.9918,
+      "folds": 8,
+      "rigid": 2.243e-14
+    },
+    {
+      "lod": 2424,
+      "flex": -35,
+      "abd": 0,
+      "twist": 0,
+      "minEdge": 0.5081,
+      "maxEdge": 1.7947,
+      "folds": 4,
+      "rigid": 1.643e-14
+    },
+    {
+      "lod": 2424,
+      "flex": 0,
+      "abd": 45,
+      "twist": 0,
+      "minEdge": 0.8015,
+      "maxEdge": 2.6756,
+      "folds": 1,
+      "rigid": 1.243e-14
+    },
+    {
+      "lod": 2424,
+      "flex": 0,
+      "abd": 90,
+      "twist": 0,
+      "minEdge": 0.7698,
+      "maxEdge": 4.9531,
+      "folds": 2,
+      "rigid": 2.42e-14
+    },
+    {
+      "lod": 2424,
+      "flex": 0,
+      "abd": 150,
+      "twist": 0,
+      "minEdge": 0.6887,
+      "maxEdge": 8.0625,
+      "folds": 2,
+      "rigid": 3.619e-14
+    },
+    {
+      "lod": 2424,
+      "flex": 0,
+      "abd": 0,
+      "twist": 75,
+      "minEdge": 0.8704,
+      "maxEdge": 2.7459,
+      "folds": 1,
+      "rigid": 1.443e-14
+    },
+    {
+      "lod": 2424,
+      "flex": 0,
+      "abd": 0,
+      "twist": -75,
+      "minEdge": 0.8827,
+      "maxEdge": 2.5626,
+      "folds": 2,
+      "rigid": 2.054e-14
+    },
+    {
+      "lod": 2424,
+      "flex": 45,
+      "abd": 60,
+      "twist": 45,
+      "minEdge": 0.3493,
+      "maxEdge": 4.0048,
+      "folds": 2,
+      "rigid": 1.754e-14
+    },
+    {
+      "lod": 2424,
+      "flex": 60,
+      "abd": 70,
+      "twist": -45,
+      "minEdge": 0.3212,
+      "maxEdge": 4.1788,
+      "folds": 1,
+      "rigid": 2.509e-14
+    },
+    {
+      "lod": 2424,
+      "flex": 100,
+      "abd": 40,
+      "twist": 0,
+      "minEdge": 0.3817,
+      "maxEdge": 4.2767,
+      "folds": 3,
+      "rigid": 2.909e-14
+    }
+  ],
+  "scope": "neutral elbow, single right shoulder sampled poses; edge ratios, local quad triangulation fold counts, rigid edge check only; not self-intersection, not browser, not final approval",
+  "pivot": [
+    0.207,
+    1.971,
+    0
+  ],
+  "weights": "estimated anatomical region, not fitted anatomical joint or pose targets"
+}
