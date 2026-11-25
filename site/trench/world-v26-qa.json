@@ -1,0 +1,266 @@
+{
+  "originalTriangles": 68273,
+  "addedTriangles": 347198,
+  "buildings": 158,
+  "shops": 116,
+  "bridges": 3,
+  "cityCenter": [
+    0,
+    2.2,
+    -420
+  ],
+  "bounds": {
+    "xmin": -184,
+    "xmax": 184,
+    "zmin": -611,
+    "zmax": 57
+  },
+  "originalGeometryPreserved": true,
+  "originalAtlasPreserved": true,
+  "atlasBytes": 786432,
+  "originalObjects": 1853,
+  "combinedObjects": 2466,
+  "allFinite": true,
+  "points": [
+    {
+      "x": -8,
+      "z": -28,
+      "floor": 0.02,
+      "clear": true,
+      "region": "战壕前线"
+    },
+    {
+      "x": 0,
+      "z": -90,
+      "floor": 0.022351561954064653,
+      "clear": true,
+      "region": "战壕前线"
+    },
+    {
+      "x": 0,
+      "z": -100,
+      "floor": 0.24435842735889832,
+      "clear": true,
+      "region": "城外古道"
+    },
+    {
+      "x": 0,
+      "z": -158,
+      "floor": 2.2,
+      "clear": true,
+      "region": "城外古道"
+    },
+    {
+      "x": 0,
+      "z": -220,
+      "floor": 2.2,
+      "clear": true,
+      "region": "城外古道"
+    },
+    {
+      "x": 0,
+      "z": -228,
+      "floor": 2.3200000000000003,
+      "clear": true,
+      "region": "王城旧城区"
+    },
+    {
+      "x": 0,
+      "z": -229,
+      "floor": 2.3200000000000003,
+      "clear": true,
+      "region": "王城旧城区"
+    },
+    {
+      "x": 0,
+      "z": -329,
+      "floor": 2.3200000000000003,
+      "clear": true,
+      "region": "王城旧城区"
+    },
+    {
+      "x": 0,
+      "z": -389,
+      "floor": 2.3200000000000003,
+      "clear": true,
+      "region": "王城旧城区"
+    },
+    {
+      "x": 0,
+      "z": -420,
+      "floor": 4.5,
+      "clear": true,
+      "region": "河岸与石桥"
+    },
+    {
+      "x": 0,
+      "z": -451,
+      "floor": 2.3200000000000003,
+      "clear": true,
+      "region": "王城旧城区"
+    },
+    {
+      "x": 0,
+      "z": -508,
+      "floor": 2.3200000000000003,
+      "clear": true,
+      "region": "王城旧城区"
+    },
+    {
+      "x": 0,
+      "z": -539,
+      "floor": 2.3200000000000003,
+      "clear": true,
+      "region": "王城堡垒"
+    },
+    {
+      "x": 83,
+      "z": -324,
+      "floor": 2.3200000000000003,
+      "clear": true,
+      "region": "王城旧城区"
+    }
+  ],
+  "trenchToRoad": {
+    "found": true,
+    "visited": 1734,
+    "pathLength": 86,
+    "exactMovementPassed": true,
+    "failAt": null,
+    "end": [
+      -5.2031185398247434e-259,
+      -99.99999999999994
+    ],
+    "path": [
+      [
+        -8,
+        -28
+      ],
+      [
+        0,
+        -32
+      ],
+      [
+        1,
+        -43
+      ],
+      [
+        2,
+        -54
+      ],
+      [
+        1,
+        -65
+      ],
+      [
+        -1,
+        -75
+      ],
+      [
+        0,
+        -86
+      ],
+      [
+        0,
+        -98
+      ],
+      [
+        0,
+        -100
+      ]
+    ]
+  },
+  "roadToCastle": {
+    "found": true,
+    "visited": 5283,
+    "pathLength": 442,
+    "exactMovementPassed": true,
+    "failAt": null,
+    "end": [
+      -2e-323,
+      -537.9999999999986
+    ],
+    "path": [
+      [
+        0,
+        -100
+      ],
+      [
+        -2,
+        -122
+      ],
+      [
+        -2,
+        -146
+      ],
+      [
+        -2,
+        -170
+      ],
+      [
+        -2,
+        -194
+      ],
+      [
+        -2,
+        -218
+      ],
+      [
+        -2,
+        -242
+      ],
+      [
+        -2,
+        -266
+      ],
+      [
+        -2,
+        -290
+      ],
+      [
+        -2,
+        -314
+      ],
+      [
+        -2,
+        -338
+      ],
+      [
+        0,
+        -360
+      ],
+      [
+        0,
+        -384
+      ],
+      [
+        0,
+        -408
+      ],
+      [
+        0,
+        -432
+      ],
+      [
+        0,
+        -456
+      ],
+      [
+        0,
+        -480
+      ],
+      [
+        0,
+        -504
+      ],
+      [
+        0,
+        -528
+      ],
+      [
+        0,
+        -538
+      ]
+    ]
+  }
+}
