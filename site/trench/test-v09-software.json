@@ -1,0 +1,78 @@
+{
+  "boot": {
+    "mode": "cpu",
+    "frames": 27,
+    "last": 1795593190704,
+    "error": null
+  },
+  "software": {
+    "width": 420,
+    "height": 240,
+    "triangles": 12010,
+    "frame": 12
+  },
+  "frames": 12,
+  "frameMs": [
+    1160,
+    776,
+    809,
+    1204,
+    822,
+    811,
+    1161,
+    814,
+    743,
+    1140,
+    829,
+    804
+  ],
+  "measure": {
+    "w": 420,
+    "h": 240,
+    "colors": 683,
+    "nonBackground": 84766
+  },
+  "aim": {
+    "w": 420,
+    "h": 240,
+    "colors": 734,
+    "nonBackground": 86529,
+    "mode": "aim",
+    "pose": 0.9179150013761012,
+    "frame": {
+      "width": 420,
+      "height": 240,
+      "triangles": 11678,
+      "frame": 17
+    }
+  },
+  "crouch": {
+    "w": 420,
+    "h": 240,
+    "colors": 696,
+    "nonBackground": 100423,
+    "mode": "crouch",
+    "pose": 0.07534705162481334,
+    "frame": {
+      "width": 420,
+      "height": 240,
+      "triangles": 22990,
+      "frame": 22
+    }
+  },
+  "jump": {
+    "w": 420,
+    "h": 240,
+    "colors": 720,
+    "nonBackground": 82693,
+    "mode": "jump",
+    "pose": 0.006184862628937636,
+    "frame": {
+      "width": 420,
+      "height": 240,
+      "triangles": 12041,
+      "frame": 27
+    }
+  },
+  "scope": "Full committed page JS, actual terrain and avatar software rasterization into Canvas-compatible ImageData; DOM/canvas sink simulated; not hosted browser."
+}
