@@ -338,8 +338,15 @@ function kneeCorrect(i,p,deg){let q=KSET.has(i)?kneeBase(p,deg):p.slice(),j=KMAP
 const HIP=s=>[s*.145,1.36,0],ANK=s=>[s*.07482,.42936,-.00175];
 function hipRotate(p,s,h){let a=HIP(s);return add(a,rx(sub(p,a),-rad(h)))}
 function anklePos(s,h,k){return hipRotate(kneeBase(ANK(s),k),s,h)}
-function ikLeg(s,y,z){let h=12,k=24;for(let i=0;i<18;i++){let a=anklePos(s,h,k),b=anklePos(s,h+.05,k),c=anklePos(s,h,k+.05),dy=y-a[1],dz=z-a[2],A=(b[1]-a[1])/.05,B=(c[1]-a[1])/.05,C=(b[2]-a[2])/.05,D=(c[2]-a[2])/.05,det=A*D-B*C;if(Math.abs(det)<1e-8)break;h=cl(h+cl((D*dy-B*dz)/det,-12,12),-45,65);k=cl(k+cl((A*dz-C*dy)/det,-15,15),3,115)}return {h,k,error:Math.hypot(anklePos(s,h,k)[1]-y,anklePos(s,h,k)[2]-z)}}
-function gait(t,d){let u=((t%d)+d)%d/d,stance=.62,stride=.50,travel=stride/stance,rootBob=-.040+.014*Math.cos(4*Math.PI*u);
+function ikLeg(s,y,z){
+const A=.442,B=.489,d=1.36-y,dist=Math.hypot(d,z),bend=Math.acos(cl((dist*dist-A*A-B*B)/(2*A*B),-1,1)),theta=Math.atan2(z,d);
+let h=(theta+Math.atan2(B*Math.sin(bend),A+B*Math.cos(bend)))/Math.PI*180,k=bend/Math.PI*180;
+h=cl(h,-65,85);k=cl(k,1,135);
+for(let i=0;i<20;i++){let a=anklePos(s,h,k),b=anklePos(s,h+.05,k),c=anklePos(s,h,k+.05),dy=y-a[1],dz=z-a[2],err=Math.hypot(dy,dz);if(err<1e-7)break;let A=(b[1]-a[1])/.05,B=(c[1]-a[1])/.05,C=(b[2]-a[2])/.05,D=(c[2]-a[2])/.05,det=A*D-B*C;if(Math.abs(det)<1e-8)break;
+let dh=cl((D*dy-B*dz)/det,-10,10),dk=cl((A*dz-C*dy)/det,-12,12),ok=false;for(let w of [1,.5,.25,.125]){let nh=cl(h+dh*w,-65,85),nk=cl(k+dk*w,1,135),p=anklePos(s,nh,nk);if(Math.hypot(p[1]-y,p[2]-z)<err){h=nh;k=nk;ok=true;break}}if(!ok)break}
+return {h,k,error:Math.hypot(anklePos(s,h,k)[1]-y,anklePos(s,h,k)[2]-z)}
+}
+function gait(t,d){let u=((t%d)+d)%d/d,stance=.62,stride=.50,travel=stride/stance,rootBob=-.050-.015*Math.cos(4*Math.PI*u);
 function foot(s){let v=(u+(s===1?0:.5))%1,st=v<stance,w=(v-stance)/(1-stance),z=st?stride/2-travel*v:-stride/2+stride*sm(w),lift=st?0:.13*Math.sin(Math.PI*w)**2;return {...ikLeg(s,ANK(s)[1]-rootBob+lift,z),stance:st,z,lift}}
 return {R:foot(1),L:foot(-1),rootBob,travel:travel*u}}
 function skinLeg(i,p,s,h,k,footFlat){let r=body[i],q=kneeCorrect(i,r,k),delta=sub(p,r),kw=KSET.has(i)&&r[1]<.918?1:0;
