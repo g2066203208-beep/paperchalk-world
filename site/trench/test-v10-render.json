@@ -1,0 +1,120 @@
+{
+  "idle": {
+    "boot": {
+      "mode": "cpu",
+      "frames": 3,
+      "last": 1795594051877,
+      "error": null
+    },
+    "software": {
+      "width": 952,
+      "height": 536,
+      "triangles": 3083,
+      "frame": 3
+    },
+    "colors": 932,
+    "nonblack": 510272,
+    "total": 510272,
+    "frameMs": [
+      3959,
+      307,
+      298
+    ],
+    "mode": "idle",
+    "aim": 0
+  },
+  "aim": {
+    "boot": {
+      "mode": "cpu",
+      "frames": 8,
+      "last": 1795594069274,
+      "error": null
+    },
+    "software": {
+      "width": 952,
+      "height": 536,
+      "triangles": 3312,
+      "frame": 8
+    },
+    "colors": 932,
+    "nonblack": 510272,
+    "total": 510272,
+    "frameMs": [
+      3959,
+      307,
+      298,
+      4192,
+      4113,
+      4164,
+      4260,
+      639
+    ],
+    "mode": "aim",
+    "aim": 1
+  },
+  "lookDown": {
+    "boot": {
+      "mode": "cpu",
+      "frames": 11,
+      "last": 1795594077314,
+      "error": null
+    },
+    "software": {
+      "width": 952,
+      "height": 536,
+      "triangles": 1779,
+      "frame": 11
+    },
+    "colors": 474,
+    "nonblack": 510272,
+    "total": 510272,
+    "frameMs": [
+      3959,
+      307,
+      298,
+      4192,
+      4113,
+      4164,
+      4260,
+      639,
+      2717,
+      2690,
+      2569
+    ],
+    "mode": "aim",
+    "aim": 0
+  },
+  "mobile": {
+    "boot": {
+      "mode": "cpu",
+      "frames": 4,
+      "last": 1795594088376,
+      "error": null
+    },
+    "software": {
+      "width": 390,
+      "height": 844,
+      "triangles": 5233,
+      "frame": 4
+    },
+    "colors": 909,
+    "nonblack": 329160,
+    "total": 329160,
+    "frameMs": [
+      2317,
+      2583,
+      2707,
+      2701
+    ],
+    "mode": "aim",
+    "aim": 1
+  },
+  "transition": [
+    0.20863016486871566,
+    0.630979035212701,
+    0.9617341746387136,
+    1,
+    1
+  ],
+  "scope": "Full committed JS renderer with simulated DOM/canvas sink; no hosted browser verification"
+}
