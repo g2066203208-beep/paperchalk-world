@@ -1,0 +1,376 @@
+{
+  "test": {
+    "samples": 200,
+    "wrist": 6.206335383118183e-17,
+    "nonfinite": 0
+  },
+  "collision": {
+    "triangles": 2392,
+    "base": {
+      "count": 1057,
+      "groups": {
+        "prop / prop": 502,
+        "coat-sleeve / prop": 119,
+        "coat-body / coat-sleeve": 93,
+        "coat-sleeve / coat-sleeve": 30,
+        "skin / skin": 36,
+        "hair-head / hair-head": 26,
+        "hair-head / hair-tail": 17,
+        "coat-body / cuff-thickness": 4,
+        "coat-sleeve / glove": 33,
+        "coat-sleeve / cuff-thickness": 14,
+        "cuff-thickness / glove": 4,
+        "glove / prop": 131,
+        "cuff-thickness / prop": 31,
+        "hair-tail / hair-tail": 17
+      }
+    },
+    "result": [
+      {
+        "name": "idle",
+        "frames": 12,
+        "worst": {
+          "count": 1057,
+          "frame": 0,
+          "groups": {
+            "prop / prop": 502,
+            "coat-sleeve / prop": 119,
+            "coat-body / coat-sleeve": 93,
+            "coat-sleeve / coat-sleeve": 30,
+            "skin / skin": 36,
+            "hair-head / hair-head": 26,
+            "hair-head / hair-tail": 17,
+            "coat-body / cuff-thickness": 4,
+            "coat-sleeve / glove": 33,
+            "coat-sleeve / cuff-thickness": 14,
+            "cuff-thickness / glove": 4,
+            "glove / prop": 131,
+            "cuff-thickness / prop": 31,
+            "hair-tail / hair-tail": 17
+          }
+        },
+        "newWorst": {
+          "count": 1,
+          "frame": 4,
+          "groups": {
+            "coat-sleeve / coat-sleeve": 1
+          }
+        },
+        "minEdge": 0.743,
+        "maxEdge": 1.975,
+        "belowRestFloor": 0,
+        "nonfinite": 0,
+        "hairPeak": 0
+      },
+      {
+        "name": "walk",
+        "frames": 12,
+        "worst": {
+          "count": 1074,
+          "frame": 7,
+          "groups": {
+            "hair-head / hair-head": 43,
+            "prop / prop": 502,
+            "coat-sleeve / prop": 119,
+            "coat-body / coat-sleeve": 88,
+            "coat-sleeve / coat-sleeve": 31,
+            "skin / skin": 36,
+            "hair-head / hair-tail": 21,
+            "coat-body / cuff-thickness": 4,
+            "coat-sleeve / glove": 33,
+            "coat-sleeve / cuff-thickness": 14,
+            "cuff-thickness / glove": 4,
+            "glove / prop": 131,
+            "cuff-thickness / prop": 31,
+            "hair-tail / hair-tail": 17
+          }
+        },
+        "newWorst": {
+          "count": 26,
+          "frame": 7,
+          "groups": {
+            "hair-head / hair-head": 17,
+            "hair-head / hair-tail": 8,
+            "coat-sleeve / coat-sleeve": 1
+          }
+        },
+        "minEdge": 0.727,
+        "maxEdge": 1.975,
+        "belowRestFloor": 0,
+        "nonfinite": 0,
+        "hairPeak": 0.2
+      },
+      {
+        "name": "run",
+        "frames": 12,
+        "worst": {
+          "count": 1086,
+          "frame": 6,
+          "groups": {
+            "hair-head / hair-head": 43,
+            "prop / prop": 502,
+            "coat-sleeve / prop": 119,
+            "coat-body / coat-sleeve": 88,
+            "coat-sleeve / coat-sleeve": 31,
+            "skin / skin": 36,
+            "boot-rim / trousers": 6,
+            "trousers / trousers": 8,
+            "hair-head / hair-tail": 19,
+            "coat-body / cuff-thickness": 4,
+            "coat-sleeve / glove": 33,
+            "coat-sleeve / cuff-thickness": 14,
+            "cuff-thickness / glove": 4,
+            "glove / prop": 131,
+            "cuff-thickness / prop": 31,
+            "hair-tail / hair-tail": 17
+          }
+        },
+        "newWorst": {
+          "count": 39,
+          "frame": 6,
+          "groups": {
+            "hair-head / hair-head": 17,
+            "boot-rim / trousers": 6,
+            "trousers / trousers": 8,
+            "hair-head / hair-tail": 7,
+            "coat-sleeve / coat-sleeve": 1
+          }
+        },
+        "minEdge": 0.727,
+        "maxEdge": 1.975,
+        "belowRestFloor": 0,
+        "nonfinite": 0,
+        "hairPeak": 0.2
+      },
+      {
+        "name": "crouch",
+        "frames": 12,
+        "worst": {
+          "count": 1125,
+          "frame": 0,
+          "groups": {
+            "prop / prop": 502,
+            "coat-sleeve / prop": 119,
+            "coat-body / coat-sleeve": 93,
+            "coat-sleeve / coat-sleeve": 30,
+            "skin / skin": 36,
+            "boot / trousers": 21,
+            "boot-rim / trousers": 12,
+            "trousers / trousers": 35,
+            "hair-head / hair-head": 26,
+            "hair-head / hair-tail": 17,
+            "coat-body / cuff-thickness": 4,
+            "coat-sleeve / glove": 33,
+            "coat-sleeve / cuff-thickness": 14,
+            "cuff-thickness / glove": 4,
+            "glove / prop": 131,
+            "cuff-thickness / prop": 31,
+            "hair-tail / hair-tail": 17
+          }
+        },
+        "newWorst": {
+          "count": 69,
+          "frame": 4,
+          "groups": {
+            "boot / trousers": 21,
+            "boot-rim / trousers": 12,
+            "trousers / trousers": 35,
+            "coat-sleeve / coat-sleeve": 1
+          }
+        },
+        "minEdge": 0.743,
+        "maxEdge": 1.975,
+        "belowRestFloor": 0,
+        "nonfinite": 0,
+        "hairPeak": 0
+      },
+      {
+        "name": "crouch-walk",
+        "frames": 12,
+        "worst": {
+          "count": 1165,
+          "frame": 8,
+          "groups": {
+            "hair-head / hair-head": 35,
+            "prop / prop": 502,
+            "coat-sleeve / prop": 119,
+            "coat-body / coat-sleeve": 88,
+            "coat-sleeve / coat-sleeve": 31,
+            "skin / skin": 36,
+            "hem-return / trousers": 14,
+            "boot / trousers": 31,
+            "boot-rim / trousers": 13,
+            "trousers / trousers": 44,
+            "hair-head / hair-tail": 18,
+            "coat-body / cuff-thickness": 4,
+            "coat-sleeve / glove": 33,
+            "coat-sleeve / cuff-thickness": 14,
+            "cuff-thickness / glove": 4,
+            "glove / prop": 131,
+            "cuff-thickness / prop": 31,
+            "hair-tail / hair-tail": 17
+          }
+        },
+        "newWorst": {
+          "count": 116,
+          "frame": 8,
+          "groups": {
+            "hair-head / hair-head": 9,
+            "hem-return / trousers": 14,
+            "boot / trousers": 31,
+            "boot-rim / trousers": 13,
+            "trousers / trousers": 44,
+            "hair-head / hair-tail": 4,
+            "coat-sleeve / coat-sleeve": 1
+          }
+        },
+        "minEdge": 0.743,
+        "maxEdge": 1.975,
+        "belowRestFloor": 0,
+        "nonfinite": 0,
+        "hairPeak": 0.2
+      },
+      {
+        "name": "jump",
+        "frames": 12,
+        "worst": {
+          "count": 1118,
+          "frame": 9,
+          "groups": {
+            "prop / prop": 502,
+            "coat-sleeve / prop": 119,
+            "coat-body / coat-sleeve": 88,
+            "coat-sleeve / coat-sleeve": 31,
+            "skin / skin": 36,
+            "hair-head / hair-head": 34,
+            "boot-rim / trousers": 14,
+            "boot / trousers": 13,
+            "trousers / trousers": 27,
+            "hair-head / hair-tail": 19,
+            "coat-body / cuff-thickness": 4,
+            "coat-sleeve / glove": 33,
+            "coat-sleeve / cuff-thickness": 14,
+            "cuff-thickness / glove": 4,
+            "glove / prop": 131,
+            "cuff-thickness / prop": 31,
+            "hair-tail / hair-tail": 18
+          }
+        },
+        "newWorst": {
+          "count": 67,
+          "frame": 9,
+          "groups": {
+            "boot-rim / trousers": 14,
+            "boot / trousers": 13,
+            "trousers / trousers": 27,
+            "hair-head / hair-head": 8,
+            "hair-head / hair-tail": 3,
+            "hair-tail / hair-tail": 1,
+            "coat-sleeve / coat-sleeve": 1
+          }
+        },
+        "minEdge": 0.743,
+        "maxEdge": 1.975,
+        "belowRestFloor": 0,
+        "nonfinite": 0,
+        "hairPeak": 0.2
+      },
+      {
+        "name": "aim",
+        "frames": 12,
+        "worst": {
+          "count": 1078,
+          "frame": 1,
+          "groups": {
+            "prop / prop": 502,
+            "coat-sleeve / prop": 100,
+            "coat-body / coat-sleeve": 62,
+            "coat-sleeve / coat-sleeve": 29,
+            "skin / skin": 36,
+            "hair-head / hair-head": 26,
+            "cuff-thickness / prop": 46,
+            "coat-sleeve / glove": 54,
+            "coat-sleeve / cuff-thickness": 41,
+            "coat-sleeve / skin": 8,
+            "hair-head / hair-tail": 17,
+            "glove / prop": 136,
+            "cuff-thickness / glove": 4,
+            "hair-tail / hair-tail": 17
+          }
+        },
+        "newWorst": {
+          "count": 328,
+          "frame": 0,
+          "groups": {
+            "coat-sleeve / prop": 77,
+            "coat-body / coat-sleeve": 35,
+            "coat-sleeve / coat-sleeve": 21,
+            "cuff-thickness / prop": 30,
+            "coat-sleeve / glove": 36,
+            "coat-sleeve / cuff-thickness": 38,
+            "coat-sleeve / skin": 8,
+            "glove / prop": 83
+          }
+        },
+        "minEdge": 0.71,
+        "maxEdge": 1.958,
+        "belowRestFloor": 0,
+        "nonfinite": 0,
+        "hairPeak": 0
+      },
+      {
+        "name": "crouch-aim",
+        "frames": 12,
+        "worst": {
+          "count": 1183,
+          "frame": 2,
+          "groups": {
+            "prop / prop": 502,
+            "coat-sleeve / prop": 100,
+            "coat-body / coat-sleeve": 62,
+            "coat-sleeve / coat-sleeve": 29,
+            "skin / skin": 36,
+            "boot / trousers": 30,
+            "boot-rim / trousers": 12,
+            "trousers / trousers": 41,
+            "hair-head / hair-head": 31,
+            "cuff-thickness / prop": 46,
+            "coat-sleeve / glove": 54,
+            "coat-sleeve / cuff-thickness": 41,
+            "coat-sleeve / skin": 4,
+            "hair-head / hair-tail": 15,
+            "glove / prop": 136,
+            "cuff-thickness / glove": 4,
+            "hair-tail / hair-tail": 19,
+            "hem-return / trousers": 21
+          }
+        },
+        "newWorst": {
+          "count": 436,
+          "frame": 2,
+          "groups": {
+            "coat-sleeve / prop": 77,
+            "coat-body / coat-sleeve": 35,
+            "boot / trousers": 30,
+            "boot-rim / trousers": 12,
+            "trousers / trousers": 41,
+            "coat-sleeve / coat-sleeve": 21,
+            "cuff-thickness / prop": 30,
+            "coat-sleeve / glove": 36,
+            "coat-sleeve / cuff-thickness": 38,
+            "coat-sleeve / skin": 4,
+            "hair-head / hair-head": 6,
+            "glove / prop": 83,
+            "hem-return / trousers": 21,
+            "hair-tail / hair-tail": 2
+          }
+        },
+        "minEdge": 0.71,
+        "maxEdge": 1.958,
+        "belowRestFloor": 0,
+        "nonfinite": 0,
+        "hairPeak": 0.2
+      }
+    ]
+  }
+}
