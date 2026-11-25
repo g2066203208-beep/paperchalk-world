@@ -1,8 +1,10 @@
 {
-  "sourceCommit": "d1a2057bc8ca9de9c2bb3d2ab8f6f7454b34ef13",
-  "sourceV35": "9493433e44e9aa65b358b6b388aee9eadb771253",
-  "method": "Exact baked runtime, 146 integer poses per LOD, isolated strict nonadjacent triangle crossing, hand pair lengths and neutral recovery. Not full body collision or anatomy certification.",
-  "quantizationUnit": 0.00001,
+  "sourceCommit": "f066916b33789251578984f373aa97865a1e9109",
+  "method": "Actual low-poly runtime geometry, mirror quad diagonals aligned; isolated strict nonadjacent triangle interior crossings at 146 integer angles; not continuous or full-body collision validation.",
+  "changed": [
+    48,
+    0
+  ],
   "result": [
     {
       "faces": 606,
@@ -997,35 +999,35 @@
         {
           "deg": 141,
           "arm": 0,
-          "left": 1,
+          "left": 0,
           "knee": 0,
           "leftK": 0
         },
         {
           "deg": 142,
           "arm": 0,
-          "left": 1,
+          "left": 0,
           "knee": 0,
           "leftK": 0
         },
         {
           "deg": 143,
           "arm": 0,
-          "left": 1,
+          "left": 0,
           "knee": 0,
           "leftK": 0
         },
         {
           "deg": 144,
           "arm": 0,
-          "left": 1,
+          "left": 0,
           "knee": 0,
           "leftK": 0
         },
         {
           "deg": 145,
           "arm": 0,
-          "left": 2,
+          "left": 0,
           "knee": 0,
           "leftK": 0
         }
