@@ -348,8 +348,8 @@ return {h,k,error:Math.hypot(anklePos(s,h,k)[1]-y,anklePos(s,h,k)[2]-z)}
 }
 function gait(t,d,running=false){let u=((t%d)+d)%d/d,stance=running?.42:.62,stride=running?.66:.50,travel=stride/stance;
 let ph=(u*2)%1,flight=running&&ph>2*stance?Math.sin(Math.PI*(ph-2*stance)/(1-2*stance)):0;
-let rootBob=running?-.085+.025*Math.cos(4*Math.PI*u)+.12*flight:-.050-.015*Math.cos(4*Math.PI*u);
-function foot(s){let v=(u+(s===1?0:.5))%1,st=v<stance,w=(v-stance)/(1-stance),z=st?stride/2-travel*v:-stride/2+stride*sm(w),lift=st?0:(running?.28:.13)*Math.sin(Math.PI*w)**2;
+let rootBob=running?-.10+.015*Math.cos(4*Math.PI*u)+.045*flight:-.050-.015*Math.cos(4*Math.PI*u);
+function foot(s){let v=(u+(s===1?0:.5))%1,st=v<stance,w=(v-stance)/(1-stance),z=st?stride/2-travel*v:-stride/2+stride*sm(w),lift=st?0:running?.29*Math.sin(Math.PI*w):.13*Math.sin(Math.PI*w)**2;
 let ankle=ikLeg(s,ANK(s)[1]-rootBob+lift,z);return {...ankle,stance:st,z,lift}}
 return {R:foot(1),L:foot(-1),rootBob,travel:travel*u,flight,running}}
 function skinLeg(i,p,s,h,k,footFlat){let r=body[i],q=kneeCorrect(i,r,k),delta=sub(p,r),kw=KSET.has(i)&&r[1]<.918?1:0;
