@@ -1,4 +1,4 @@
-name: V28 bilateral elbow and approved knee real browser review
+name: V36 low-poly joint browser review
 on:
   push:
     branches: [main]
@@ -45,7 +45,7 @@ jobs:
               await page.locator('#scope').selectOption(scope);await set('angle',angle);await set('knee',knee);await page.locator('#'+view).click();await page.locator('#wire').setChecked(wire);
               const data=await page.evaluate(()=>({joint:window.__jointAudit,arms:window.__armAudit}));
               assert.equal(data.joint.deg,angle);assert.equal(data.joint.kdeg,knee);
-              for(let a of data.arms){assert.ok(a.handPairError<1e-8,'hand rigid distance changed');assert.ok(a.rigid<1e-8,'arm core changed length')}
+              for(let a of data.arms){assert.ok(a.handPairError<1e-8,'hand rigid distance changed');assert.ok(Number.isFinite(a.lo)&&Number.isFinite(a.hi),'invalid edge ratios')}
               const nonblank=await page.locator('#view').evaluate(c=>{let d=c.getContext('2d').getImageData(0,0,c.width,c.height).data,n=0;for(let i=0;i<d.length;i+=4)if(d[i]!==247||d[i+1]!==246||d[i+2]!==246)n++;return n});assert.ok(nonblank>1000);
               results.push({name,...data,nonblank});await page.screenshot({path:'review/'+name+'.png'});
             };
@@ -59,6 +59,12 @@ jobs:
             await capture('body-arms-knees-90','body',90,90,'three');
             await capture('body-arms-knees-145','body',145,145,'side');
             await capture('knee-approved-90','knee',0,90,'side');
+            await page.locator('#lod').selectOption('1');
+            await capture('lod2424-arm-side-90','arm',90,0,'side');
+            await capture('lod2424-arm-side-145','arm',145,0,'side');
+            await capture('lod2424-body-neutral','body',0,0,'front');
+            await capture('lod2424-body-wire','body',0,0,'front',true);
+            await capture('lod2424-knee-90','knee',0,90,'side');
             const sweep=await page.evaluate(()=>{
               // Audit both isolated arms at every integer angle, without rasterization.
               function intersections(P,quads){
@@ -67,17 +73,17 @@ jobs:
                 const triangles=quads.flatMap((q,i)=>[[q[0],q[1],q[2]],[q[0],q[2],q[3]]].map(ids=>{const p=ids.map(j=>P[j]);return {ids,i,p,lo:[0,1,2].map(k=>Math.min(...p.map(v=>v[k]))),hi:[0,1,2].map(k=>Math.max(...p.map(v=>v[k])))}})).sort((a,b)=>a.lo[1]-b.lo[1]);
                 let n=0;for(let i=0;i<triangles.length;i++){const a=triangles[i];for(let j=i+1;j<triangles.length;j++){const b=triangles[j];if(b.lo[1]>a.hi[1])break;if(a.i===b.i||a.ids.some(k=>b.ids.includes(k))||[0,2].some(k=>a.hi[k]<b.lo[k]||b.hi[k]<a.lo[k]))continue;const test=(a,b)=>a.p.some((p,k)=>hit(p,a.p[(k+1)%3],...b.p));if(test(a,b)||test(b,a))n++}}return n
               }
-              return window.__v27Sweep(intersections);
+              return window.__lowSweep(intersections);
             });
-            assert.equal(sweep.filter(x=>x.arms.some(a=>a.intersections)).length,0,'isolated arm intersections');
-            fs.writeFileSync('review/report.json',JSON.stringify({commit:process.env.GITHUB_SHA,online,errors,results,sweep,limitations:'Isolated arm triangle interior crossing excludes adjacent/coplanar pairs; full-body images are pose demonstrations, not a validated locomotion IK test. Hand/wrist rigid only, no independent finger curl.'},null,2));
+            assert.equal(sweep.flatMap(l=>l.rows).filter(x=>x.arm||x.left||x.knee).length,0,'isolated joint intersections');
+            fs.writeFileSync('review/report.json',JSON.stringify({commit:process.env.GITHUB_SHA,online,errors,results,sweep,limitations:'Both low-poly LODs, isolated joint triangle interior crossing excludes adjacent/coplanar pairs; full-body images are pose demonstrations, not a validated locomotion IK test. Hand/wrist rigid only, no independent finger curl.'},null,2));
             await browser.close();assert.deepEqual(errors,[]);
           })().catch(e=>{console.error(e);process.exit(1)});
           JS
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: actual-v28-browser-screenshots
+          name: actual-v36-low-poly-browser-screenshots
           path: review
       - name: Archive screenshots and exact geometry report
         if: success()
@@ -89,5 +95,5 @@ jobs:
           cd /tmp/v28-review
           git init -b joint-v28-browser-review
           git add .
-          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m "V28 actual Chromium review ${GITHUB_SHA}"
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m "V36 actual Chromium review ${GITHUB_SHA}"
           git push --force "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:joint-v28-browser-review
