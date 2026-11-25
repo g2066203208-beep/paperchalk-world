@@ -1,0 +1,34 @@
+{
+  "rest": {
+    "vertices": 1324,
+    "faces": 1196,
+    "quads": 1024
+  },
+  "posed": {
+    "vertices": 1324,
+    "faces": 1196,
+    "quads": 1024
+  },
+  "high": {
+    "vertices": 3142,
+    "faces": 3014,
+    "quads": 2842
+  },
+  "waistV01": {
+    "width": 0.326,
+    "depth": 0.319
+  },
+  "waistV02": {
+    "width": 0.541,
+    "depth": 0.453
+  },
+  "bustV01": {
+    "width": 0.378,
+    "depth": 0.392
+  },
+  "bustV02": {
+    "width": 0.537,
+    "depth": 0.468
+  },
+  "note": "Software renderer, face texture mock base with same procedural eyelid paint; actual browser uses original PNG. No intersection or garment physics validation."
+}
