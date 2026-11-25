@@ -1,0 +1,166 @@
+{
+  "v10": {
+    "idle": {
+      "boot": {
+        "mode": "cpu",
+        "frames": 2,
+        "last": 1795594653050,
+        "error": null
+      },
+      "software": {
+        "width": 640,
+        "height": 360,
+        "triangles": 3083,
+        "frame": 2
+      },
+      "colors": 797,
+      "nonblack": 230400,
+      "total": 230400,
+      "frameMs": [
+        1762,
+        156
+      ],
+      "mode": "idle",
+      "aim": 0,
+      "viewPitch": 0
+    },
+    "aim": {
+      "boot": {
+        "mode": "cpu",
+        "frames": 6,
+        "last": 1795594660339,
+        "error": null
+      },
+      "software": {
+        "width": 640,
+        "height": 360,
+        "triangles": 8119,
+        "frame": 6
+      },
+      "colors": 836,
+      "nonblack": 230400,
+      "total": 230400,
+      "frameMs": [
+        1762,
+        156,
+        1742,
+        1794,
+        1871,
+        1863
+      ],
+      "mode": "aim",
+      "aim": 1,
+      "viewPitch": 0
+    }
+  },
+  "v11": {
+    "idle": {
+      "boot": {
+        "mode": "cpu",
+        "frames": 2,
+        "last": 1795594661615,
+        "error": null
+      },
+      "software": {
+        "width": 640,
+        "height": 360,
+        "triangles": 3232,
+        "frame": 2
+      },
+      "colors": 927,
+      "nonblack": 230400,
+      "total": 230400,
+      "frameMs": [
+        521,
+        96
+      ],
+      "mode": "idle",
+      "aim": 0,
+      "viewPitch": -0.09
+    },
+    "aim": {
+      "boot": {
+        "mode": "cpu",
+        "frames": 6,
+        "last": 1795594662055,
+        "error": null
+      },
+      "software": {
+        "width": 640,
+        "height": 360,
+        "triangles": 3284,
+        "frame": 6
+      },
+      "colors": 924,
+      "nonblack": 230400,
+      "total": 230400,
+      "frameMs": [
+        521,
+        96,
+        97,
+        104,
+        108,
+        112
+      ],
+      "mode": "aim",
+      "aim": 1,
+      "viewPitch": -0.09
+    },
+    "down": {
+      "boot": {
+        "mode": "cpu",
+        "frames": 7,
+        "last": 1795594662413,
+        "error": null
+      },
+      "software": {
+        "width": 640,
+        "height": 360,
+        "triangles": 1570,
+        "frame": 7
+      },
+      "colors": 312,
+      "nonblack": 230400,
+      "total": 230400,
+      "frameMs": [
+        521,
+        96,
+        97,
+        104,
+        108,
+        112,
+        340
+      ],
+      "mode": "aim",
+      "aim": 1,
+      "viewPitch": -1.32
+    },
+    "mobile": {
+      "boot": {
+        "mode": "cpu",
+        "frames": 4,
+        "last": 1795594664201,
+        "error": null
+      },
+      "software": {
+        "width": 390,
+        "height": 844,
+        "triangles": 2951,
+        "frame": 4
+      },
+      "colors": 989,
+      "nonblack": 329160,
+      "total": 329160,
+      "frameMs": [
+        627,
+        174,
+        163,
+        170
+      ],
+      "mode": "aim",
+      "aim": 1,
+      "viewPitch": -0.09
+    }
+  },
+  "scope": "Same sandbox JS renderer, simulated DOM/canvas sink; timing is not device FPS"
+}
