@@ -1,0 +1,101 @@
+{
+  "source": "f8a51dd91893b038e13c1f298984bca70a3a8a3a",
+  "renderer": "actual game CPU renderer synthetic DOM",
+  "checks": [
+    {
+      "name": "front",
+      "gun": 0,
+      "body": 10
+    },
+    {
+      "name": "oblique",
+      "gun": 0,
+      "body": 10
+    },
+    {
+      "name": "first-lookdown",
+      "gun": 0,
+      "body": 42
+    },
+    {
+      "name": "walk-0",
+      "gun": 0,
+      "body": 10
+    },
+    {
+      "name": "walk-1",
+      "gun": 0,
+      "body": 10
+    },
+    {
+      "name": "walk-2",
+      "gun": 0,
+      "body": 10
+    },
+    {
+      "name": "walk-3",
+      "gun": 0,
+      "body": 10
+    },
+    {
+      "name": "walk-4",
+      "gun": 0,
+      "body": 10
+    },
+    {
+      "name": "walk-5",
+      "gun": 0,
+      "body": 10
+    },
+    {
+      "name": "walk-6",
+      "gun": 0,
+      "body": 10
+    },
+    {
+      "name": "walk-7",
+      "gun": 0,
+      "body": 10
+    },
+    {
+      "name": "walk-8",
+      "gun": 0,
+      "body": 10
+    },
+    {
+      "name": "walk-9",
+      "gun": 0,
+      "body": 10
+    },
+    {
+      "name": "walk-10",
+      "gun": 0,
+      "body": 10
+    },
+    {
+      "name": "walk-11",
+      "gun": 0,
+      "body": 10
+    },
+    {
+      "name": "walk-12",
+      "gun": 0,
+      "body": 10
+    },
+    {
+      "name": "walk-13",
+      "gun": 0,
+      "body": 10
+    },
+    {
+      "name": "walk-14",
+      "gun": 0,
+      "body": 10
+    },
+    {
+      "name": "walk-15",
+      "gun": 0,
+      "body": 10
+    }
+  ]
+}
