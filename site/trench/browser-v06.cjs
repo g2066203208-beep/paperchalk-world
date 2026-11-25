@@ -20,7 +20,9 @@ const assert=require('node:assert/strict');
    if(mode==='jump')assert(d.air>.2);
    const file=viewport.width+'-'+mode+'.png';await page.screenshot({path:'/tmp/trench-review/'+file});report.screenshots.push(file);report.modes.push(d);
   }
-  await page.click('#reviewSide');await page.waitForTimeout(250);await page.screenshot({path:'/tmp/trench-review/'+viewport.width+'-alternate.png'});
+  await page.click('#reviewCamera');
+  for(const mode of ['idle','walk','run','jump','crouch','aim','crouch-aim']){await page.selectOption('#reviewMode',mode);await page.waitForFunction(mode=>window.__reviewMode===mode&&!window.__firstPersonV07.third,mode);await page.waitForTimeout(500);await page.screenshot({path:'/tmp/trench-review/'+viewport.width+'-first-'+mode+'.png'});}
+  await page.click('#reviewCamera');await page.click('#reviewSide');await page.waitForTimeout(250);await page.screenshot({path:'/tmp/trench-review/'+viewport.width+'-alternate.png'});
   await page.click('#review');await page.waitForTimeout(350);
   await page.screenshot({path:'/tmp/trench-review/'+viewport.width+'-mirror.png'});
   await page.click('#down');await page.waitForTimeout(350);await page.screenshot({path:'/tmp/trench-review/'+viewport.width+'-first-person.png'});
