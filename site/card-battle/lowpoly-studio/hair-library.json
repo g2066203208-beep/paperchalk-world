@@ -68,6 +68,17 @@
       "vertices": 267,
       "quads": 246,
       "notes": "Folded flat sheets with actual thickness. V45 body unchanged. UVs provided; hand-painted texture and collision review pending."
+    },
+    {
+      "id": "hair-005",
+      "name": "赏金枪手·蓬松多层发片 V11",
+      "status": "modeled-draft",
+      "mesh": "hair_markswoman-v11.json",
+      "viewer": "markswoman-hair-v11.html",
+      "preview": "hair_markswoman-v11-review.svg",
+      "vertices": 198,
+      "quads": 123,
+      "notes": "Open double sided sheets; procedural UV shading; collision and aesthetic review pending."
     }
   ]
 }
