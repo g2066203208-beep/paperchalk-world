@@ -1,0 +1,31 @@
+name: Trench motion browser verification
+on:
+  push:
+    paths:
+      - 'site/trench/**'
+      - '.github/workflows/trench-v06-browser.yml'
+  workflow_dispatch:
+jobs:
+  chromium:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: site/trench
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright
+      - run: npx playwright install --with-deps chromium
+      - run: node site/trench/test-v05-intersections.cjs > /tmp/trench-collision.json
+      - run: |
+          mkdir -p /tmp/trench-review
+          cp /tmp/trench-collision.json /tmp/trench-review/collision.json
+          python -m http.server 8765 --directory site >/tmp/trench-http.log 2>&1 &
+          node site/trench/browser-v06.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: trench-v06-browser-evidence
+          path: /tmp/trench-review
