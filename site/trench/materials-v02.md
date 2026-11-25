@@ -1,0 +1,3 @@
+# V02 pixel materials
+
+256×256 RGB atlas, 16 authored 64×64 tiles. Tile order: wet clay, cracked concrete, wood planks, stitched canvas, puddle, rusted iron, charred wood, glove, coat, prop wood, prop metal, dry dirt, gravel, debris, moss, scorched earth. Shader uses world-space projected UVs and nearest filtering, direct atlas colors with mild face tint. 13 tiles assigned to scene or prop; remaining tiles reserved. Existing geometry unchanged in this pass; screenshots are CPU rasterizer views of actual updated terrain with the atlas, not live browser captures. Static JS syntax check and scene construction successful, WebGL runtime and deployment not verified.
