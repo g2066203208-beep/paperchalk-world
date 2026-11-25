@@ -55,6 +55,19 @@
       "vertices": 267,
       "quads": 246,
       "notes": "V45 skull; independent volumetric locks, no alpha cards; awaiting aesthetic and collision approval"
+    },
+    {
+      "id": "hair-004",
+      "name": "赏金枪手·硬折边低马尾 V10",
+      "status": "modeled-draft",
+      "reference": "../../assets/characters/monster-hunters/04-bounty-markswoman.png",
+      "character": "04-markswoman",
+      "mesh": "hair_markswoman-v10.json",
+      "preview": "hair_markswoman-v10-review.svg",
+      "viewer": "markswoman-hair-v10.html",
+      "vertices": 267,
+      "quads": 246,
+      "notes": "Folded flat sheets with actual thickness. V45 body unchanged. UVs provided; hand-painted texture and collision review pending."
     }
   ]
 }
