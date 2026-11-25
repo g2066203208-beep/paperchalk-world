@@ -1,4 +1,4 @@
-name: V36 low-poly joint browser review
+name: V37 low-poly wrist ankle browser review
 on:
   push:
     branches: [main]
@@ -65,6 +65,27 @@ jobs:
             await capture('lod2424-body-neutral','body',0,0,'front');
             await capture('lod2424-body-wire','body',0,0,'front',true);
             await capture('lod2424-knee-90','knee',0,90,'side');
+            for(const level of ['0','1']){
+              await page.locator('#lod').selectOption(level);
+              for(const [scope,slider,angles] of [['wrist','wrist',[-60,0,60]],['ankle','ankle',[-35,0,45]]]){
+                await page.locator('#scope').selectOption(scope);
+                await set('angle',0);await set('knee',0);await set('wrist',0);await set('ankle',0);
+                await page.locator('#wire').setChecked(false);
+                await page.locator('#side').click();
+                for(const value of angles){
+                  await set(slider,value);
+                  const data=await page.evaluate(()=>({joint:window.__jointAudit,distal:window.__distalAudit}));
+                  assert.equal(data.joint[slider],value);
+                  for(const d of data.distal)assert.ok(d.maxPairError<1e-8,'distal rigid core changed size');
+                  const name='lod'+level+'-'+scope+'-'+value;
+                  results.push({name,...data});await page.screenshot({path:'review/'+name+'.png'});
+                }
+                await page.locator('#wire').setChecked(true);
+                await page.screenshot({path:'review/lod'+level+'-'+scope+'-wire.png'});
+              }
+              await set('wrist',0);await set('ankle',0);
+            }
+            await page.locator('#wire').setChecked(false);
             const sweep=await page.evaluate(()=>{
               // Audit both isolated arms at every integer angle, without rasterization.
               function intersections(P,quads){
@@ -83,7 +104,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: actual-v36-low-poly-browser-screenshots
+          name: actual-v37-low-poly-browser-screenshots
           path: review
       - name: Archive screenshots and exact geometry report
         if: success()
@@ -95,5 +116,5 @@ jobs:
           cd /tmp/v28-review
           git init -b joint-v28-browser-review
           git add .
-          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m "V36 actual Chromium review ${GITHUB_SHA}"
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m "V37 actual Chromium review ${GITHUB_SHA}"
           git push --force "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:joint-v28-browser-review
