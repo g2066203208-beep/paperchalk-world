@@ -1,26 +1,39 @@
 // Reusable, deterministic 1944 Normandy-inspired fictional settlement. Metre coordinates.
 // Whitebox meshes first; material IDs are assigned separately by world-region.mjs.
 export const PALETTE={grass:'#62694b',earth:'#746451',road:'#888276',cobble:'#88867e',stone:'#a6a59a',darkStone:'#72766f',trim:'#b9b6a4',plaster:'#b8b19a',cream:'#c7c1ad',ochre:'#b2a18a',rose:'#a38e80',wood:'#625345',woodLight:'#88735b',roof:'#75645e',roof2:'#535c61',roof3:'#81776a',glass:'#52676a',black:'#333936',iron:'#535754',water:'#526c6d',cloth:'#a0977b',red:'#895b50',blue:'#586e74',green:'#626d53',gold:'#b5a175',leaf:'#59634a',leaf2:'#778060',light:'#d7aa70',brick:'#987b6d',rubble:'#81786c',char:'#474744',asphalt:'#777974',mud:'#6d6250',moss:'#777e59',paper:'#c2b79b',white:'#d3d0bd',smoke:'#757a72',rail:'#45494a',rust:'#82614d'};
+// Curved old town axis: the original bridge and road connections stay fixed.
+export function oldStreetOffset(x){if(x<=-148||x>=-4)return 0;const t=(x+148)/144;return 21*Math.sin(Math.PI*t)**2;}
+export function oldStreetPoint(p){const [x,y,z]=p,a=Math.abs(z-96);const k=a<=16?1:a>=45?0:(.5+.5*Math.cos(Math.PI*(a-16)/29));return [x,y,z+oldStreetOffset(x)*k];}
 export function generateCity(seed=194406){
 let rng=seed>>>0,rand=()=>((rng=Math.imul(rng,1664525)+1013904223>>>0)/4294967296),pick=a=>a[Math.floor(rand()*a.length)];
 const parts=[],colliders=[],buildings=[],shops=[],bridges=[],landmarks=[],smoke=[];
 const add=(kind,pos,size,mat,extra={})=>{parts.push({kind,pos,size,mat,...extra});return parts.at(-1)};
 const box=(x,y,z,w,h,d,m,extra)=>add('box',[x,y,z],[w,h,d],m,extra),cyl=(x,y,z,r,h,m,n=8,top=r)=>add('cylinder',[x,y,z],[r,h,top],m,{n});
 const solid=(x,z,w,d)=>colliders.push([x-w/2,z-d/2,x+w/2,z+d/2]);
-const surface=(x,z,w,d,y=.04,m='road')=>box(x,y-.12,z,w,.24,d,m);
+const surface=(x,z,w,d,y=.04,m='road')=>{
+ // Subdivide the actual roadway so curved geometry does not interpolate across whole blocks.
+ const nx=Math.ceil(w/7),nz=Math.ceil(d/7);
+ if(z+d/2<51||z-d/2>141||x+w/2<=-148||x-w/2>=-4)return box(x,y-.12,z,w,.24,d,m);
+ for(let i=0;i<nx;i++)for(let j=0;j<nz;j++)box(x-w/2+(i+.5)*w/nx,y-.12,z-d/2+(j+.5)*d/nz,w/nx,.24,d/nz,m);
+};
 const local=(x,z,r,u,v)=>[x+Math.cos(r)*u-Math.sin(r)*v,z+Math.sin(r)*u+Math.cos(r)*v];
 const shopTypes=['BOULANGERIE','PHARMACIE','EPICERIE','CAFE','LIBRAIRIE','MERCERIE','BOUCHERIE','HOTEL','TABAC','CORDONNERIE'];
 // Period façade families: limestone townhouses, slate mansions and older timber fronts.
 const letters={A:['010','101','111','101','101'],B:['110','101','110','101','110'],C:['011','100','100','100','011'],D:['110','101','101','101','110'],E:['111','100','110','100','111'],F:['111','100','110','100','100'],G:['011','100','101','101','011'],H:['101','101','111','101','101'],I:['111','010','010','010','111'],J:['001','001','001','101','010'],K:['101','101','110','101','101'],L:['100','100','100','100','111'],M:['101','111','111','101','101'],N:['101','111','111','111','101'],O:['010','101','101','101','010'],P:['110','101','110','100','100'],Q:['010','101','101','111','011'],R:['110','101','110','101','101'],S:['011','100','010','001','110'],T:['111','010','010','010','010'],U:['101','101','101','101','111'],V:['101','101','101','101','010'],W:['101','101','111','111','101'],X:['101','101','010','101','101'],Y:['101','101','010','010','010'],Z:['111','001','010','100','111']};
 function house(x,z,w,d,floors,rot,commercial=false,ruin=false){
-let h=3.05*floors,style=Math.abs(Math.round(x*13+z*7))%5,wall=style===0?'cream':style===1?'plaster':style===2?'stone':pick(['cream','ochre','plaster']),roof=style===1?'roof2':pick(['roof','roof2','roof3']);
+let h=3.05*floors,variant=Math.abs(Math.round(x*13+z*7))%9,style=variant===1?1:variant===2?2:variant===3||variant===6?3:variant===4||variant===7?4:0,wall=style===1?'cream':style===2?'stone':pick(['cream','plaster','trim']),roof=style===1?'roof2':style===3||style===4?'roof2':pick(['roof2','roof3']);
 const b=(u,y,v,a,hh,l,m)=>{let [X,Z]=local(x,z,rot,u,v);return l<=.035?add('face',[X,y,Z],[a,hh,0],m,{rot:rot+(v<0?Math.PI:0)}):box(X,y,Z,a,hh,l,m,{rot})};
 const mesh=(u,y,v,vertices,faces,mat)=>{let [X,Z]=local(x,z,rot,u,v);let dims=[0,1,2].map(i=>Math.max(...vertices.map(p=>Math.abs(p[i])))*2);return add('mesh',[X,y,Z],dims,mat,{rot,vertices,faces})};
 const beam=(x1,y1,x2,y2,v,t,m)=>{let L=Math.hypot(x2-x1,y2-y1),a=(y2-y1)/L*t/2,b=-(x2-x1)/L*t/2;mesh(0,0,v,[[x1+a,y1+b,0],[x2+a,y2+b,0],[x2-a,y2-b,0],[x1-a,y1-b,0]],[[0,1,2,3]],m)};
 let wx=Math.abs(Math.cos(rot))*w+Math.abs(Math.sin(rot))*d,wz=Math.abs(Math.sin(rot))*w+Math.abs(Math.cos(rot))*d;
 if(!ruin){
  b(0,h/2,0,w,h,d,wall);const rh=style===1?3.0+w*.18:2.2+rand()*1.6,frontGable=style===1;
- add('gable',[x,h,z],frontGable?[w+.22,rh,d+.24]:[d+.24,rh,w+.22],roof,{rot:frontGable?rot:rot+Math.PI/2});
+ if(style===3||style===4){
+  // French slate mansard: real two-pitch roof with recessed upper ridge.
+  const a=w/2+.12,c=d/2+.12,H=rh+1.0,t=H*.68;
+  mesh(0,h,0,[[-a,0,-c],[a,0,-c],[a,0,c],[-a,0,c],[-a*.77,t,-c*.63],[a*.77,t,-c*.63],[a*.77,t,c*.63],[-a*.77,t,c*.63],[-a*.66,H,0],[a*.66,H,0]],[[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7],[4,5,9,8],[5,6,9],[6,7,8,9],[7,4,8]],roof);
+  for(let u of [-w*.25,w*.25]){let v=d*.38; b(u,h+1.0,v,.98,1.56,.75,'trim');b(u,h+1.0,v+.40,.64,1.05,.035,'black');b(u,h+1.0,v+.43,.48,.86,.035,'glass');b(u,h+1.0,v+.46,.055,.90,.035,'woodLight');let [X,Z]=local(x,z,rot,u,v);add('gable',[X,h+1.76,Z],[1.15,.50,1.05],'roof2',{rot});}
+ }else add('gable',[x,h,z],frontGable?[w+.22,rh,d+.24]:[d+.24,rh,w+.22],roof,{rot:frontGable?rot:rot+Math.PI/2});
  for(let side of [-1,1]){b(side*w*.36,h+rh*.68,0,.67,rh*.9,.72,'stone');b(side*w*.36,h+rh*1.13,0,.86,.16,.91,'trim');}
  for(let side of [-1,1]){
   b(0,h-.13,side*(d/2+.08),w+.12,.24,.27,'trim');
@@ -49,10 +62,10 @@ else{
  smoke.push([x,h*.66,z]);
 }
 solid(x,z,wx,wz);b(0,.22,d/2+.05,w,.42,.18,'darkStone');
-for(let s of [-1,1])for(let k=0;k<floors;k++){if(ruin&&k>0&&s===1)continue;if(commercial&&s===1&&k===0&&!ruin)continue;let n=Math.max(2,Math.round(w/2.5));for(let j=0;j<n;j++){let u=(j-(n-1)/2)*w/n,y=k*3.05+1.68;if(ruin&&k>0)continue;b(u,y,s*(d/2+.045),1.18,1.62,.13,'darkStone');b(u,y,s*(d/2+.125),.91,1.34,.06,ruin?'black':'glass');b(u,y,s*(d/2+.17),.07,1.36,.06,'woodLight');b(u,y,s*(d/2+.17),.94,.08,.06,'woodLight');b(u,y-.81,s*(d/2+.14),1.35,.12,.24,'trim');if(!ruin&&style!==1){b(u,y+.88,s*(d/2+.10),1.44,.20,.20,'trim');for(let t of [-1,1])b(u+t*.65,y,s*(d/2+.09),.12,1.65,.13,'trim');}if(!ruin&&style===3&&k===1){b(u,y-.77,s*(d/2+.39),1.48,.12,.65,'stone');for(let q=-2;q<=2;q++)b(u+q*.26,y-.43,s*(d/2+.68),.045,.56,.045,'iron');b(u,y-.13,s*(d/2+.68),1.34,.065,.08,'iron');}if(!ruin&&j%2===0){b(u-.75,y,s*(d/2+.13),.37,1.42,.10,'green');b(u+.75,y,s*(d/2+.13),.37,1.42,.10,'green')}}}
+for(let s of [-1,1])for(let k=0;k<floors;k++){if(ruin&&k>0&&s===1)continue;if(commercial&&s===1&&k===0&&!ruin)continue;let n=Math.max(2,Math.round(w/2.5));for(let j=0;j<n;j++){let u=(j-(n-1)/2)*w/n,y=k*3.05+1.68;if(ruin&&k>0)continue;b(u,y,s*(d/2+.045),1.03,2.02,.13,'darkStone');b(u,y,s*(d/2+.125),.78,1.78,.06,ruin?'black':'glass');b(u,y,s*(d/2+.17),.055,1.78,.035,'woodLight');b(u,y+.38,s*(d/2+.17),.80,.065,.035,'woodLight');b(u,y-.99,s*(d/2+.14),1.20,.15,.28,'trim');if(!ruin&&style!==1){b(u,y+1.08,s*(d/2+.10),1.22,.17,.22,'trim');for(let t of [-1,1])b(u+t*.52,y,s*(d/2+.09),.11,2.04,.13,'trim');if(style===3||style===4){b(u,y+1.21,s*(d/2+.12),.24,.22,.19,'trim');b(u,y+1.33,s*(d/2+.12),1.35,.07,.22,'trim');}}if(!ruin&&style===3&&k===1){b(u,y-.77,s*(d/2+.39),1.48,.12,.65,'stone');for(let q=-2;q<=2;q++)b(u+q*.26,y-.43,s*(d/2+.68),.045,.56,.045,'iron');b(u,y-.13,s*(d/2+.68),1.34,.065,.08,'iron');}if(!ruin&&style===2&&j%2===0){b(u-.76,y,s*(d/2+.13),.38,1.84,.10,'wood');b(u+.76,y,s*(d/2+.13),.38,1.84,.10,'wood')}}}
 if(!ruin&&!commercial)for(let side of [-1,1])for(let k=0;k<floors;k++)for(let j=0;j<2;j++){let v=(j-.5)*d*.5;b(side*(w/2+.06),k*3.05+1.7,v,.13,1.4,1.1,'darkStone');b(side*(w/2+.15),k*3.05+1.7,v,.06,1.18,.88,'glass')}
 if(commercial&&!ruin){
- const shopId=shops.length,type=shopTypes[shopId%shopTypes.length],frame=['green','wood','blue','red','woodLight'][shopId%5],sign=['black','green','blue','wood','red'][shopId%5],door=shopId%3===0?w*.28:0,front=d/2;
+ const shopId=shops.length,type=shopTypes[shopId%shopTypes.length],frame=['wood','black','woodLight','green','wood'][shopId%5],sign=['black','wood','green','black','wood'][shopId%5],door=shopId%3===0?w*.28:0,front=d/2;
  b(0,1.45,front+.12,w-.17,2.9,.24,frame);
  b(door,1.22,front+.27,1.02,2.34,.15,'darkStone');b(door,1.48,front+.36,.76,1.55,.035,'glass');b(door,.36,front+.36,.72,.42,.035,'woodLight');
  b(door+.35,1.05,front+.40,.065,.16,.06,'gold');
@@ -70,7 +83,7 @@ if(commercial&&!ruin){
  b(0,3.15,front+.29,w-.13,.10,.29,'trim');
  const unit=Math.min(.080,(w-.75)/(type.length*4)),total=(type.length*4-1)*unit;
  for(let i=0;i<type.length;i++){const glyph=letters[type[i]];if(!glyph)continue;for(let row=0;row<5;row++){let line=glyph[row];for(let j=0;j<3;){if(line[j]!=='1'){j++;continue}let end=j+1;while(end<3&&line[end]==='1')end++;b(-total/2+(i*4+(j+end-1)/2+.5)*unit,2.83+(2-row)*unit,front+.36,(end-j)*unit*.98,unit*.94,.025,'cream');j=end;}}}
- if(shopId%4!==2){let m=['cream','red','blue','green'][shopId%4],reach=1.12+(shopId%3)*.15,width=w-.25,n=shopId%3===0?1:8;
+ if(shopId%5<3){let m=['cream','cloth','red','cream','woodLight'][shopId%5],reach=.96+(shopId%3)*.21,width=w-.45,n=shopId%5===2?6:1;
  for(let j=0;j<n;j++){let a=-width/2+j*width/n,bx=a+width/n,mat=n===1?m:j%2?'cloth':m;mesh(0,2.65,front+.29,[[a,.27,0],[bx,.27,0],[bx,-.15,reach],[a,-.15,reach]],[[0,3,2,1]],mat);b((a+bx)/2,2.40,front+.29+reach,bx-a,.22,.045,mat);}
  }
  if(shopId%4===0){b(w*.32,3.64,front+.60,.07,.08,.85,'iron');let [X,Z]=local(x,z,rot,w*.32,front+.91);box(X,3.39,Z,.11,.45,.58,sign,{rot});}
@@ -120,6 +133,15 @@ for(let s of [-1,1])for(let x=-160;x<=160;x+=16){lamp(x,s*24);if((x+160)%48===0)
 for(let z=-180;z<=180;z+=2.8){if(Math.abs(z)<32)continue;box(-166,.08,z,3.2,.16,.34,'wood');for(let s of [-1,1])box(-166+s*.82,.20,z,.10,.12,2.8,'rail')}
 for(let z of [65,108,-65,-108])house(-177,z,10,15,2,Math.PI/2,false,false);
 landmarks.push({name:'货运铁路',x:-166,z:90});
+// Warp all connected geometry, not only the road texture. Collision AABBs
+// are transformed conservatively; original bridge/river coordinates are unchanged.
+for(const p of parts){let [x,y,z]=p.pos,rad=Math.max(...p.size);if(x+rad<-148||x-rad>-4||z+rad<51||z-rad>141)continue;
+ if((p.kind==='box')&&p.size[0]>250&&p.size[2]>100)continue; // flat base, no visual boundary in old quarter
+ p.sourcePos=p.pos.slice();p.pos=oldStreetPoint(p.pos);p.warp=oldStreetPoint;
+}
+for(const q of colliders){if(q[2]<-148||q[0]>-4||q[3]<51||q[1]>141)continue;let pts=[];for(let x=q[0];x<=q[2]+.001;x+=Math.max(.01,(q[2]-q[0])/8)){for(let z of [q[1],q[3]])pts.push(oldStreetPoint([x,0,z]));}pts.push(oldStreetPoint([q[2],0,q[1]]),oldStreetPoint([q[2],0,q[3]]));q[1]=Math.min(...pts.map(p=>p[2]));q[3]=Math.max(...pts.map(p=>p[2]));}
+for(const o of [...buildings,...shops,...landmarks]){const x=o.x,z=o.z;[o.x,,o.z]=oldStreetPoint([x,0,z]);}
+for(let i=0;i<smoke.length;i++)smoke[i]=oldStreetPoint(smoke[i]);
 return {seed,parts,colliders,buildings,shops,bridges,landmarks,smoke,spawn:[0,1.7,91],bounds:[-185,-192,185,192]}
 }
 export function walkHeight(city,x,z){if(Math.abs(z)<30){let b=city.bridges.find(b=>Math.abs(x-b.x)<b.width/2-.45);if(b){let a=Math.abs(z);return a<=20?b.deck+.15:Math.max(0,b.deck*(30-a)/10)+.12}if(Math.abs(z)<19.5)return null}return .12}
