@@ -55,20 +55,38 @@ export function extendWorld(world){
 export function extendAtlas(original){
  if(original.length!==256*256*3)throw Error('original terrain atlas size mismatch');
  const data=new Uint8Array(256*ATLAS_HEIGHT*3);data.set(original);
- const stone=new Set(['stone','darkStone','trim','road','cobble','brick','rubble']),wood=new Set(['wood','woodLight']),roof=new Set(['roof','roof2','roof3']);
- const m=(a,b)=>((a%b)+b)%b;
- for(let name of names){let id=ids[name],base=[1,3,5].map(i=>parseInt(PALETTE[name].slice(i,i+2),16)),ox=id%4*64,oy=Math.floor(id/4)*64;
- for(let y=0;y<64;y++)for(let x=0;x<64;x++){
- let q=1,grain=((Math.imul(x+id*71,73856093)^Math.imul(y+19,19349663))>>>0)%19;
- if(stone.has(name)){let small=name==='road'||name==='cobble',brick=name==='brick',bh=small?8:brick?8:16,bw=small?12:brick?16:32,row=Math.floor(y/bh),u=m(x+(row%2)*bw/2,bw),v=m(y,bh),chip=(u===1&&v%5===2)||(v===1&&u%7===3),block=((Math.imul(Math.floor((x+(row%2)*bw/2)/bw)+id*11,3711)^Math.imul(row+17,4153))>>>0)%15;q=u<1||v<1||chip?.70:u===1||v===1?1.12:v===bh-1?.88:1+(block-7)*.012+(grain-9)*.003}
- else if(wood.has(name)){let u=x%16;q=u===0?.68:u===1?1.10:1+(grain-9)*.003;if((x+Math.floor(y/13)*7)%13===3)q*=.88}
- else if(roof.has(name)){let v=y%12,u=m(x+Math.floor(y/12)%2*8,16);q=v===0||u===0?.73:v===1?1.12:1+(grain-9)*.003}
- else if(name==='water'){q=m(x+Math.floor(y/4)*17,37)<8&&y%7===0?1.12:1+(grain-9)*.002}
- else if(['grass','leaf','leaf2','earth','mud','moss','asphalt'].includes(name)){let block=((Math.imul(Math.floor(x/4)+id*9,7411)^Math.imul(Math.floor(y/4)+12,17971))>>>0)%17;q=1+(block-8)*.012+(grain-9)*.004;if((x%8===1)&&(y%7===2))q*=.84;if(name==='mud'&&y%17<2)q*=.90}
- else if(name==='rail'||name==='iron'||name==='rust'){q=.94+(grain-9)*.008;if(x%16===0)q*=1.10}
- else if(name==='glass'){q=(x+y*2)%61<2?1.15:.97}
- else q=1+(grain-9)*.002;
- let k=((oy+y)*256+ox+x)*3;for(let c=0;c<3;c++)data[k+c]=cl(Math.round(base[c]*q),0,255)
- }}
+ // V29: deliberate pixel clusters, no per-texel random grain. Keep original material IDs and atlas layout.
+ const mod=(a,b)=>((a%b)+b)%b;
+ const hash=(x,y,id)=>((Math.imul(x+id*37+19,3711)^Math.imul(y+53,4153))>>>0);
+ const cluster=(x,y,id,step=16)=>hash(Math.floor(x/step),Math.floor(y/step),id)%5;
+ for(let name of names){
+  const id=ids[name],base=[1,3,5].map(i=>parseInt(PALETTE[name].slice(i,i+2),16)),ox=id%4*64,oy=Math.floor(id/4)*64;
+  for(let y=0;y<64;y++)for(let x=0;x<64;x++){
+   let q=1;
+   if(['stone','darkStone','brick','cobble','rubble'].includes(name)){
+    const brick=name==='brick', paving=name==='cobble', bw=brick||paving?16:32,bh=brick?8:16,row=Math.floor(y/bh),xx=mod(x+(row%2)*bw/2,64),u=xx%bw,v=y%bh;
+    q=1+((hash(Math.floor(xx/bw),row,id)%5)-2)*(paving?.012:.017);
+    if(v===0||u===0)q*=paving?.93:.90;else if(v===1)q*=1.035;
+   }else if(['plaster','cream','ochre','rose','trim','white'].includes(name)){
+    // Mostly clean lime plaster: broad irregular patches, not grain.
+    q=1+(cluster(x,y,id,32)-2)*.009;
+   }else if(name==='road'||name==='asphalt'){
+    q=1+(cluster(x,y,id,32)-2)*.010;
+   }else if(['wood','woodLight'].includes(name)){
+    const u=x%16;q=u===0?.89:u===1?1.04:1+(hash(Math.floor(x/16),0,id)%3-1)*.035;
+   }else if(['roof','roof2','roof3'].includes(name)){
+    const v=y%16,u=mod(x+Math.floor(y/16)%2*16,32);
+    q=v===0?.90:u===0?.96:1+(hash(Math.floor(mod(x+Math.floor(y/16)%2*16,64)/32),Math.floor(y/16),id)%3-1)*.02;
+   }else if(['grass','leaf','leaf2','earth','mud','moss'].includes(name)){
+    // Coherent large pixel groups, not salt-and-pepper.
+    q=1+(cluster(x,y,id,16)-2)*.027;
+   }else if(name==='water'){
+    q=y%16===3&&mod(x+Math.floor(y/16)*16,64)<16?1.055:1;
+   }else if(name==='glass'){
+    q=y<16?1.055:y>=48?.94:1;
+   }
+   const k=((oy+y)*256+ox+x)*3;for(let c=0;c<3;c++)data[k+c]=cl(Math.round(base[c]*q),0,255);
+  }
+ }
  return data;
 }
