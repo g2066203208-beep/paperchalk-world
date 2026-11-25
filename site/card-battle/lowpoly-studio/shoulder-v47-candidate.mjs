@@ -1,0 +1,40 @@
+function make47(b){
+ const ring=[101,113,114,115,103,102],r1=[164,165,166,167,168,169],r2=[508,509,512,514,516,518],r3=[170,171,172,173,174,175],mirror=new Map();for(let i of [...ring,...r1,...r2,...r3,100,104,96])mirror.set(i,b.rest.slice(0,608).findIndex(p=>p.every((x,k)=>Math.abs(x-(k===0?-b.rest[i][k]:b.rest[i][k]))<1e-7)));
+ const parents=new Map();for(let [fi,f] of b.lods[0].polygons.entries())for(let c of b.lods[1].polygons.slice(fi*4,fi*4+4)){let j=f.indexOf(c[0]);for(let [i,ps] of [[c[1],[f[j],f[(j+1)%4]]],[c[2],f],[c[3],[f[j],f[(j+3)%4]]]])if(!parents.has(i))parents.set(i,ps)}
+ return {ring,r1,r2,r3,mirror,parents}
+}
+const shoulderMeta47=make47(baked);
+function shoulder47(P,lod,flex,abd,twist,side="both",params=[.24,.62,.17,.42]){
+ if(!flex&&!abd&&!twist)return P;const b=baked, {ring,r1,r2,r3,mirror,parents}=shoulderMeta47;
+ const dot=(a,b)=>a.reduce((s,x,k)=>s+x*b[k],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],unit=a=>a.map(x=>x/(Math.hypot(...a)||1)),sub=(a,b)=>a.map((x,k)=>x-b[k]),add=(a,b)=>a.map((x,k)=>x+b[k]),mix=(a,b,t)=>a.map((x,k)=>x*(1-t)+b[k]*t),sm=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x)};
+ const rad=Math.PI/180,pivot=[.207,1.971,0],clav=[.064,2.005,0],long=unit(sub(b.F.B,pivot)),out=P.map(p=>p.slice()),q=(axis,a)=>[Math.cos(a/2),...axis.map(x=>x*Math.sin(a/2))],mul=(a,b)=>[a[0]*b[0]-dot(a.slice(1),b.slice(1)),...cross(a.slice(1),b.slice(1)).map((x,k)=>x+a[0]*b[k+1]+b[0]*a[k+1])],rot=(v,Q)=>{let u=Q.slice(1),t=cross(u,v).map(x=>2*x),k=cross(u,t);return v.map((x,i)=>x+Q[0]*t[i]+k[i])};
+ const swing=mul(q([0,0,1],abd*rad),q([-1,0,0],flex*rad)),Q=mul(swing,q(long,twist*rad)),ang=Math.acos(Math.max(-1,Math.min(1,dot(long,rot(long,swing)))))/rad,raise=sm((ang-25)/105);
+ const clavQ=mul(q([0,1,0],Math.max(-8,Math.min(14,flex*.12))*rad),q([0,0,1],(22*raise+Math.min(6,abd*.05))*rad));
+ const C=add(clav,rot(sub(pivot,clav),clavQ)),arm=p=>add(C,rot(sub(p,pivot),Q)),collar=p=>add(clav,rot(sub(p,clav),clavQ));
+ const ringSet=new Set([...ring,...r1,...r2,...r3,100,104,96].flatMap(i=>[i,mirror.get(i)]));const corrected=new Set();
+ for(let sg of [1,-1]){if(side!=="both"&&side!==(sg===1?"right":"left"))continue;const id=i=>sg===1?i:mirror.get(i),read=i=>{let p=P[id(i)];return [sg*p[0],p[1],p[2]]},write=(i,p)=>{let j=id(i);out[j]=[sg*p[0],p[1],p[2]];corrected.add(j)};
+ for(let i=0;i<Math.min(608,P.length);i++){if(b.zones[i]!== (sg===1?1:2))continue;let p=P[i],v=arm([sg*p[0],p[1],p[2]]);out[i]=[sg*v[0],v[1],v[2]]}
+ for(let i of [100,104,96])write(i,mix(read(i),collar(read(i)),i===96?.10:.24));
+ for(let j=0;j<6;j++){let root=read(ring[j]),p1=read(r1[j]),p2=read(r2[j]),distal=read(r3[j]),r= mix(root,collar(root),[.75,.14,.07,.14,.75,.9][j]);
+ // A modest upward/inward armpit slide, not rotation of the ribs around humerus.
+ let inner=[0,.65,1,.65,0,0][j],up=Math.max(0,rot(long,swing)[1]-long[1]),forward=rot(long,swing)[2]-long[2];
+ r[0]+=.018*inner*up;r[1]+=.026*inner*up;r[2]+=.008*inner*forward;write(ring[j],r);
+ let d=arm(distal),length=Math.hypot(...sub(distal,root)),activation=sm(Math.hypot(flex,abd,twist)/50);
+ for(let [i,p,k,defaultT] of [[r1[j],p1,0,params[0]],[r2[j],p2,1,params[1]]]){let t=Math.max(k?.42:.10,Math.min(k?.85:.55,Math.hypot(...sub(p,root))/(length||1))),f=t*.65+defaultT*.35;
+ let restOff=sub(p,mix(root,distal,f)),local=rot(restOff,q(unit(swing.slice(1)),2*Math.acos(Math.max(-1,Math.min(1,swing[0])))*f));
+ let bridge=add(mix(r,d,f),local),blend=mix(mix(collar(p),arm(p),f),bridge,activation);
+ // Restore deltoid cap locally, in the pose plane. Not a whole-torso offset.
+ let cap=[.65,0,0,0,.65,1][j]*Math.sin(Math.min(Math.PI,ang*rad))*(k?.65:1);let outward=unit(sub(arm(p),C));blend=add(blend,outward.map(x=>x*params[2]*.09*cap));
+ write(i,blend)}
+ }
+ }
+ // Higher LOD preserves original offsets on rigid areas; mixed shoulder cells inherit coarse pose and rotated residual.
+ if(lod.count>608)for(let [i,ps] of parents){let p=P[i],sg=Math.sign(b.rest[i][0]);if(!sg||(side!=="both"&&side!==(sg>0?"right":"left")))continue;
+ if(ps.some(j=>corrected.has(j))){let restAvg=ps.reduce((a,j)=>add(a,P[j]),[0,0,0]).map(x=>x/ps.length),poseAvg=ps.reduce((a,j)=>add(a,out[j]),[0,0,0]).map(x=>x/ps.length),delta=sub(p,restAvg),active=sm(Math.hypot(flex,abd,twist)/45);out[i]=add(poseAvg,delta.map(x=>x*(1-params[3]*active)));}
+ else if(ps.every(j=>b.zones[j]===(sg>0?1:2))){let v=arm([sg*p[0],p[1],p[2]]);out[i]=[sg*v[0],v[1],v[2]]}
+ else if(ps.some(j=>b.zones[j]===(sg>0?1:2))){out[i]=add(p,ps.reduce((a,j)=>add(a,sub(out[j],P[j])),[0,0,0]).map(x=>x/ps.length))}
+ }
+ return out;
+}
+
+export {make47,shoulder47};
