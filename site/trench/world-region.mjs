@@ -1,3 +1,4 @@
+import {paintTile} from './pixel-art-materials.mjs';
 import {triangles} from '../castle-city/city-core.mjs';
 import {generateCity,PALETTE,walkHeight} from './ww2-settlement.mjs';
 export const CITY_Z=-420,CITY_Y=2.20,BOUNDS={xmin:-184,xmax:184,zmin:-611,zmax:57};
@@ -55,38 +56,7 @@ export function extendWorld(world){
 export function extendAtlas(original){
  if(original.length!==256*256*3)throw Error('original terrain atlas size mismatch');
  const data=new Uint8Array(256*ATLAS_HEIGHT*3);data.set(original);
- // V29: deliberate pixel clusters, no per-texel random grain. Keep original material IDs and atlas layout.
- const mod=(a,b)=>((a%b)+b)%b;
- const hash=(x,y,id)=>((Math.imul(x+id*37+19,3711)^Math.imul(y+53,4153))>>>0);
- const cluster=(x,y,id,step=16)=>hash(Math.floor(x/step),Math.floor(y/step),id)%5;
- for(let name of names){
-  const id=ids[name],base=[1,3,5].map(i=>parseInt(PALETTE[name].slice(i,i+2),16)),ox=id%4*64,oy=Math.floor(id/4)*64;
-  for(let y=0;y<64;y++)for(let x=0;x<64;x++){
-   let q=1;
-   if(['stone','darkStone','brick','cobble','rubble'].includes(name)){
-    const brick=name==='brick', paving=name==='cobble', bw=brick||paving?16:32,bh=brick?8:16,row=Math.floor(y/bh),xx=mod(x+(row%2)*bw/2,64),u=xx%bw,v=y%bh;
-    q=1+((hash(Math.floor(xx/bw),row,id)%5)-2)*(paving?.012:.017);
-    if(v===0||u===0)q*=paving?.93:.90;else if(v===1)q*=1.035;
-   }else if(['plaster','cream','ochre','rose','trim','white'].includes(name)){
-    // Mostly clean lime plaster: broad irregular patches, not grain.
-    q=1+(cluster(x,y,id,32)-2)*.013;const patch=(hash(Math.floor(x/16),Math.floor(y/24),id)%9);if(patch===0&&y%24>8)q*=.89;
-   }else if(name==='road'||name==='asphalt'){
-    q=1+(cluster(x,y,id,16)-2)*.021;const patch=hash(Math.floor(x/16),Math.floor(y/16),id)%7;if(patch===0)q*=.89;
-   }else if(['wood','woodLight'].includes(name)){
-    const u=x%16;q=u===0?.89:u===1?1.04:1+(hash(Math.floor(x/16),0,id)%3-1)*.035;
-   }else if(['roof','roof2','roof3'].includes(name)){
-    const v=y%16,u=mod(x+Math.floor(y/16)%2*16,32);
-    q=v===0?.90:u===0?.96:1+(hash(Math.floor(mod(x+Math.floor(y/16)%2*16,64)/32),Math.floor(y/16),id)%3-1)*.02;
-   }else if(['grass','leaf','leaf2','earth','mud','moss'].includes(name)){
-    // Coherent large pixel groups, not salt-and-pepper.
-    q=1+(cluster(x,y,id,16)-2)*.027;
-   }else if(name==='water'){
-    q=y%16===3&&mod(x+Math.floor(y/16)*16,64)<16?1.055:1;
-   }else if(name==='glass'){
-    q=y<16?1.055:y>=48?.94:1;
-   }
-   const k=((oy+y)*256+ox+x)*3;for(let c=0;c<3;c++)data[k+c]=cl(Math.round(base[c]*q),0,255);
-  }
- }
+ for(const name of names){const id=ids[name],tile=paintTile(name,PALETTE[name]),ox=id%4*64,oy=Math.floor(id/4)*64;
+ for(let y=0;y<64;y++)data.set(tile.subarray(y*192,(y+1)*192),((oy+y)*256+ox)*3);}
  return data;
 }
