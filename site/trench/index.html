@@ -134,7 +134,7 @@ function smoothAction(mode,dt,t){
 }
 function poseAvatar(phase,walk,duck,raise,look,dir=[0,1],run=0,air=0,landing=0,hairMotion=null,prepare=0,flight=0,extra={}){
  const {prone=0,crawl=0,kneel=0,single=0,sling=0,strike=0,shot=0,reload=0,inspect=0,low=0,high=0}=extra;duck=Math.max(duck,kneel*.64);walk*=1-prone*.85;raise*=1-sling;
- let P=REST.map(p=>p.slice()),sprint=run*walk*(1-duck)*(1-air),stride=walk*(1-air),c=Math.cos(phase),s=Math.sin(phase),root=-.37*duck-.12*kneel-.18*landing-.19*prepare-.09*sprint-(.016+.025*run)*stride*(1-Math.cos(phase*2))-.07*air,breath=.006*Math.sin(phase*.35),hipX=.025*stride*c+.022*sprint*c,hipZ=.065*sprint-.14*duck-.075*prepare-.08*landing,shift=[hipX,root,hipZ];animRoot=root;
+ let P=REST.map(p=>p.slice()),sprint=run*walk*(1-duck)*(1-air),stride=walk*(1-air),c=Math.cos(phase),s=Math.sin(phase),root=-.37*duck-.24*kneel-.18*landing-.19*prepare-.09*sprint-(.016+.025*run)*stride*(1-Math.cos(phase*2))-.07*air,breath=.006*Math.sin(phase*.35),hipX=.025*stride*c+.022*sprint*c,hipZ=.065*sprint-.14*duck-.075*prepare-.08*landing,shift=[hipX,root,hipZ];animRoot=root;
  let lean=(.065*stride+.30*sprint+.46*duck+.20*prepare+.17*landing+.15*air)*(1-.78*raise),torsoYaw=(.055*stride+.11*sprint)*s*(1-.75*raise),torsoRoll=(.025*stride+.05*sprint)*c*(1-.75*raise);
  const pivot=[hipX,1.31+root,hipZ],bodyRotate=(v,p=lean,y=torsoYaw,r=torsoRoll)=>{let a=[v[0],v[1]*Math.cos(p)-v[2]*Math.sin(p),v[1]*Math.sin(p)+v[2]*Math.cos(p)],b=[a[0]*Math.cos(y)+a[2]*Math.sin(y),a[1],-a[0]*Math.sin(y)+a[2]*Math.cos(y)];return [b[0]*Math.cos(r)-b[1]*Math.sin(r),b[0]*Math.sin(r)+b[1]*Math.cos(r),b[2]]},torsoMap=q=>Aadd(pivot,bodyRotate(Asub(q,pivot)));
  // Pelvis/spine/coat stay connected; the original head/hair retain all vertices.
@@ -154,11 +154,11 @@ function poseAvatar(phase,walk,duck,raise,look,dir=[0,1],run=0,air=0,landing=0,h
  }
  // Rifle exterior is a rigid game-art object. Raise it as a whole and follow the camera pitch.
  // Game-art pose: two separate hand attachments on the original prop, not independent moving meshes.
- let theta=1-raise+single*.48+strike*1.1+inspect*.40-sling*.8,angle=.30*(1-raise)-Math.max(-.25,Math.min(.25,look))*raise+single*.58+low*.45-high*.75+shot*.10+reload*.45,axis=[Math.sin(theta)*Math.cos(angle),-Math.sin(angle),Math.cos(theta)*Math.cos(angle)],anchor=[-.42+.42*raise+hipX+.008*Math.sin(phase)*(1-raise)*walk-single*.13+strike*.26,2.08+root-.10*raise+.006*Math.sin(phase*.35)+.025*Math.cos(phase*2)*walk*(1-.75*raise)-single*.22-low*.10+high*.08+strike*.09,.20-.37*raise+hipZ+.010*Math.sin(phase)*walk*(1-.75*raise)-shot*.10+strike*.19];
- axis=Anorm(AlERP(axis,[.20,.96,.12],prone));
- axis=Anorm(AlERP(axis,[.32,.92,-.12],sling));
- anchor=AlERP(anchor,[-.26+hipX,2.10+root,.14+hipZ],prone);
- anchor=AlERP(anchor,[-.25+hipX,1.40+root,-.43+hipZ],sling);
+ let theta=1-raise+single*.48+strike*1.1+inspect*.40-sling*.8,angle=.30*(1-raise)-Math.max(-.25,Math.min(.25,look))*raise+single*.29+low*.45-high*.75+shot*.10+reload*.45,axis=[Math.sin(theta)*Math.cos(angle),-Math.sin(angle),Math.cos(theta)*Math.cos(angle)],anchor=[-.42+.42*raise+hipX+.008*Math.sin(phase)*(1-raise)*walk-single*.13+strike*.26,2.08+root-.10*raise+.006*Math.sin(phase*.35)+.025*Math.cos(phase*2)*walk*(1-.75*raise)-single*.22-low*.10+high*.08+strike*.09,.20-.37*raise+hipZ+.010*Math.sin(phase)*walk*(1-.75*raise)-shot*.10+strike*.19];
+ axis=Anorm(AlERP(axis,Anorm([.39-.30*raise,.89+.10*raise,.18-.11*raise+shot*.08]),prone));
+ axis=Anorm(AlERP(axis,[.45,.89,-.06],sling));
+ anchor=AlERP(anchor,[-.36+.10*raise+hipX,1.77+root-.06*shot,.10+hipZ+.05*raise],prone);
+ anchor=AlERP(anchor,[-.45+hipX,.71+root,-.44+hipZ],sling);
  let side=Anorm(Across([0,1,0],axis)),up=Across(axis,side);
  const Rscale=.70,gunAt=p=>Aadd(anchor,Aadd(Amul(axis,p[1]*Rscale),Aadd(Amul(up,-p[0]*Rscale),Amul(side,p[2]*Rscale))));
  // Two wrist targets tied to the same prop transform. Elbows solved with original segment lengths.
