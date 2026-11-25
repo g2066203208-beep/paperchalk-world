@@ -1,0 +1,67 @@
+[
+  {
+    "name": "desktop",
+    "error": "TimeoutError: page.waitForFunction: Timeout 60000ms exceeded.",
+    "errors": [],
+    "boot": {
+      "mode": "cpu",
+      "frames": 0,
+      "last": 1795595443896,
+      "error": "Cannot read properties of undefined (reading 'includes')"
+    }
+  },
+  {
+    "name": "mobile",
+    "stats": {
+      "frames": [
+        -7.699999999991178,
+        50,
+        16.699999999999818,
+        16.600000000000136,
+        16.700000000000045,
+        16.699999999999818,
+        16.600000000000136,
+        16.59999999999991,
+        16.700000000000045,
+        16.700000000000045,
+        16.700000000000045,
+        16.699999999999818,
+        16.600000000000136,
+        16.700000000000045,
+        16.59999999999991,
+        16.700000000000045,
+        16.700000000000045,
+        16.59999999999991,
+        16.700000000000045,
+        16.700000000000045
+      ],
+      "perf": {
+        "terrainTotal": 69361,
+        "terrainDrawn": 17703,
+        "visibleChunks": 29,
+        "mirror": false,
+        "mode": "webgl",
+        "frameMs": 12.099999999999909
+      },
+      "boot": {
+        "mode": "webgl",
+        "frames": 43,
+        "last": 1795595505874,
+        "error": null
+      },
+      "heading": 0
+    },
+    "errors": []
+  },
+  {
+    "name": "mobile-cpu",
+    "error": "TimeoutError: page.waitForFunction: Timeout 60000ms exceeded.",
+    "errors": [],
+    "boot": {
+      "mode": "cpu",
+      "frames": 0,
+      "last": 1795595514162,
+      "error": "Cannot read properties of undefined (reading 'includes')"
+    }
+  }
+]
