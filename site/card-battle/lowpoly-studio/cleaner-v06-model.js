@@ -39,6 +39,7 @@ if(show.hair){
 // V06: the scalp is only a recessed root coverage layer, not the visible hairstyle.
 // Reuse the actual head topology to stop light skin appearing between root overlaps.
 const roots=new Map(),center=[0,2.55,-.005];
+for(let fi=0;fi<quads.length;fi++){let c=avg(rest,quads[fi]);if(quads[fi].every(i=>rest[i][1]>2.20)&&(c[1]>2.71||(c[1]>2.40&&c[2]<.12)))mats[fi]='hairDark';}
 for(const f of quads){const c=avg(rest,f);if(!f.every(i=>rest[i][1]>2.20)||!(c[1]>2.58||(c[1]>2.40&&c[2]<.18)||(c[1]>2.31&&c[2]<.035)))continue;
   face(f.map(i=>{if(!roots.has(i))roots.set(i,vert(add(P[i],mul(unit(sub(rest[i],center)),.027))));return roots.get(i)}),'hairDark');
 }
@@ -138,7 +139,7 @@ lock([
 // Reference: diagonal part, narrow descending locks with almost blunt angled ends.
 // The outer left bang is longer, the inner right bangs shorter. Each centreline
 // is authored independently; widths narrow near tips and all roots interleave.
-function bang(stations){let rows=stations.map(([x,y,z,w,slope=0])=>[[x-w,y-slope,z-.020],[x,y,z+.017],[x+w,y+slope,z-.019]]);lock(rows,'hair','bang')}
+function bang(stations){let rows=stations.map(([x,y,z,w,slope=0],i)=>{let overlap=i<4?1.18:i===4?1.10:1.02;w*=overlap;return [[x-w,y-slope,z-.012],[x,y,z+.017],[x+w,y+slope,z-.012]]});lock(rows,'hair','bang')}
 bang([[-.09,3.016,.035,.075],[-.19,2.971,.205,.087],[-.235,2.837,.322,.073],[-.238,2.685,.377,.063,.012],[-.215,2.535,.352,.056,.016],[-.191,2.461,.325,.039,.018]]);
 bang([[-.045,3.028,.045,.082],[-.125,2.984,.24,.085],[-.151,2.849,.374,.074],[-.144,2.697,.419,.063,.01],[-.117,2.54,.397,.052,.014],[-.096,2.462,.374,.041,.012]]);
 bang([[.005,3.027,.035,.076],[-.038,2.985,.258,.078],[-.040,2.854,.387,.069],[-.021,2.701,.423,.059,.006],[.007,2.552,.402,.050,.009],[.026,2.489,.376,.037,.008]]);
@@ -153,6 +154,6 @@ let outline=[[-.99,.70],[-1.15,.61],[-1.24,.48],[-1.17,.34],[-.78,.03],[-.64,.15
 }
 return {positions:out,polygons:faces,mats,orig,baseCount:P.length,hairUV};
 }
-function pixel(m,p,n,uv){let c=palette[m]||[255,222,205],q=p.map(v=>Math.floor(v*92)),h=((Math.imul(q[0],73856093)^Math.imul(q[1],19349663)^Math.imul(q[2],83492791))>>>0)%17,shade=.78+.22*Math.max(0,n[1]*.45+n[2]*.8-n[0]*.15),v=(h-8)*.60;if(m.startsWith('hair')){v=(h-8)*.10;shade=.88+.12*Math.abs(n[1]*.45+n[2]*.8-n[0]*.15);if(uv){let u=Math.round(uv[0]*22)/22,t=Math.round(uv[1]*35)/35;v+=5*Math.sin(Math.PI*u)-9*Math.pow(Math.abs(2*u-1),5);v+=2.3*Math.sin(u*31.4+t*2);if(uv[2]>.5){let band=Math.abs(t-(.48+.038*Math.sin(u*4)));if(band<.034&&u>.15&&u<.87)v+=18*(1-band/.045);}}}if(['jacket','apron','pocket'].includes(m))v+=q[1]%23===0?-8:0;if(m==='wood')v+=(q[0]+q[1])%8===0?-10:0;return c.map(x=>Math.max(0,Math.min(255,x*shade+v)))}
+function pixel(m,p,n,uv){let c=palette[m]||[255,222,205],q=p.map(v=>Math.floor(v*92)),h=((Math.imul(q[0],73856093)^Math.imul(q[1],19349663)^Math.imul(q[2],83492791))>>>0)%17,shade=.78+.22*Math.max(0,n[1]*.45+n[2]*.8-n[0]*.15),v=(h-8)*.60;if(m.startsWith('hair')){v=(h-8)*.10;shade=.88+.12*Math.abs(n[1]*.45+n[2]*.8-n[0]*.15);if(uv){let u=Math.round(uv[0]*22)/22,t=Math.round(uv[1]*35)/35;v+=4*Math.sin(Math.PI*u)-5*Math.pow(Math.abs(2*u-1),5);v+=1.2*Math.sin(u*31.4+t*2);if(uv[2]>.5){let band=Math.abs(t-(.48+.038*Math.sin(u*4)));if(band<.034&&u>.15&&u<.87)v+=14*(1-band/.045);}}}if(['jacket','apron','pocket'].includes(m))v+=q[1]%23===0?-8:0;if(m==='wood')v+=(q[0]+q[1])%8===0?-10:0;return c.map(x=>Math.max(0,Math.min(255,x*shade+v)))}
 return {build,pixel,palette};
 })();
