@@ -1,0 +1,102 @@
+{
+  "source": "8eb21aa135ae01df64283b2342f10f9ff6a1a94a",
+  "scope": "Exact game software renderer in synthetic DOM, side camera, not real browser or device performance",
+  "actions": [
+    {
+      "name": "run",
+      "times": [
+        87,
+        77,
+        79,
+        79,
+        73,
+        76,
+        80,
+        78,
+        81,
+        70,
+        80,
+        71,
+        93,
+        86,
+        92,
+        91,
+        83,
+        90
+      ],
+      "frames": 18
+    },
+    {
+      "name": "crouch",
+      "times": [
+        103,
+        81,
+        107,
+        80,
+        86,
+        87,
+        84,
+        85,
+        90,
+        79,
+        79,
+        71,
+        72,
+        87,
+        70,
+        72,
+        74,
+        78
+      ],
+      "frames": 18
+    },
+    {
+      "name": "crouch-walk",
+      "times": [
+        82,
+        97,
+        73,
+        72,
+        79,
+        81,
+        76,
+        79,
+        83,
+        84,
+        77,
+        78,
+        75,
+        71,
+        75,
+        85,
+        73,
+        78
+      ],
+      "frames": 18
+    },
+    {
+      "name": "jump",
+      "times": [
+        91,
+        72,
+        71,
+        82,
+        78,
+        77,
+        88,
+        76,
+        74,
+        76,
+        70,
+        70,
+        74,
+        74,
+        77,
+        83,
+        78,
+        69
+      ],
+      "frames": 18
+    }
+  ]
+}
