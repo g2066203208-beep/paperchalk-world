@@ -14,16 +14,25 @@ const shopTypes=['BOULANGERIE','PHARMACIE','EPICERIE','CAFE','LIBRAIRIE','MERCER
 const letters={A:['010','101','111','101','101'],B:['110','101','110','101','110'],C:['011','100','100','100','011'],D:['110','101','101','101','110'],E:['111','100','110','100','111'],F:['111','100','110','100','100'],G:['011','100','101','101','011'],H:['101','101','111','101','101'],I:['111','010','010','010','111'],J:['001','001','001','101','010'],K:['101','101','110','101','101'],L:['100','100','100','100','111'],M:['101','111','111','101','101'],N:['101','111','111','111','101'],O:['010','101','101','101','010'],P:['110','101','110','100','100'],Q:['010','101','101','111','011'],R:['110','101','110','101','101'],S:['011','100','010','001','110'],T:['111','010','010','010','010'],U:['101','101','101','101','111'],V:['101','101','101','101','010'],W:['101','101','111','111','101'],X:['101','101','010','101','101'],Y:['101','101','010','010','010'],Z:['111','001','010','100','111']};
 function house(x,z,w,d,floors,rot,commercial=false,ruin=false){
 let h=3.05*floors,style=Math.abs(Math.round(x*13+z*7))%5,wall=style===0?'cream':style===1?'plaster':style===2?'stone':pick(['cream','ochre','plaster']),roof=style===1?'roof2':pick(['roof','roof2','roof3']);
-const b=(u,y,v,a,hh,l,m)=>{let [X,Z]=local(x,z,rot,u,v);return box(X,y,Z,a,hh,l,m,{rot})};
+const b=(u,y,v,a,hh,l,m)=>{let [X,Z]=local(x,z,rot,u,v);return l<=.035?add('face',[X,y,Z],[a,hh,0],m,{rot:rot+(v<0?Math.PI:0)}):box(X,y,Z,a,hh,l,m,{rot})};
+const mesh=(u,y,v,vertices,faces,mat)=>{let [X,Z]=local(x,z,rot,u,v);let dims=[0,1,2].map(i=>Math.max(...vertices.map(p=>Math.abs(p[i])))*2);return add('mesh',[X,y,Z],dims,mat,{rot,vertices,faces})};
+const beam=(x1,y1,x2,y2,v,t,m)=>{let L=Math.hypot(x2-x1,y2-y1),a=(y2-y1)/L*t/2,b=-(x2-x1)/L*t/2;mesh(0,0,v,[[x1+a,y1+b,0],[x2+a,y2+b,0],[x2-a,y2-b,0],[x1-a,y1-b,0]],[[0,1,2,3]],m)};
 let wx=Math.abs(Math.cos(rot))*w+Math.abs(Math.sin(rot))*d,wz=Math.abs(Math.sin(rot))*w+Math.abs(Math.cos(rot))*d;
 if(!ruin){
- b(0,h/2,0,w,h,d,wall);const rh=2.3+rand()*1.4,frontGable=style===1;
+ b(0,h/2,0,w,h,d,wall);const rh=style===1?3.0+w*.18:2.2+rand()*1.6,frontGable=style===1;
  add('gable',[x,h,z],frontGable?[w+.22,rh,d+.24]:[d+.24,rh,w+.22],roof,{rot:frontGable?rot:rot+Math.PI/2});
  for(let side of [-1,1]){b(side*w*.36,h+rh*.68,0,.67,rh*.9,.72,'stone');b(side*w*.36,h+rh*1.13,0,.86,.16,.91,'trim');}
  for(let side of [-1,1]){
   b(0,h-.13,side*(d/2+.08),w+.12,.24,.27,'trim');
   for(let k=1;k<floors;k++)if(style!==1)b(0,k*3.05+.07,side*(d/2+.055),w,.13,.12,'trim');
-  if(style===1){ // surviving older timber-framed buildings
+  if(style===1){ // street-facing jettied timber front, filled gable and diagonal bracing
+   if(side===1){
+    mesh(0,h,d/2+.125,[[-w/2,0,0],[w/2,0,0],[0,rh,0]],[[0,1,2]],'cream');
+    beam(-w/2,h,0,h+rh,d/2+.15,.18,'wood');beam(0,h+rh,w/2,h,d/2+.15,.18,'wood');
+    beam(0,h,0,h+rh,d/2+.16,.16,'wood');
+    b(0,h+rh*.31,d/2+.17,.76,.96,.08,'darkStone');b(0,h+rh*.31,d/2+.23,.58,.77,.04,'glass');
+    for(let k=1;k<floors;k++){let yy=k*3.05;b(0,yy-.04,d/2+.20,w+.08,.19,.42,'wood');for(let sign of [-1,1]){beam(sign*w*.48,yy+.12,sign*w*.22,yy+1.0,d/2+.19,.13,'wood');beam(sign*w*.22,yy+.12,sign*w*.48,yy+1.0,d/2+.19,.13,'wood');}}
+   }
    for(let j=0;j<=4;j++)b((j/4-.5)*(w-.18),h*.68,side*(d/2+.09),.16,h*.64,.15,'wood');
    for(let k=1;k<=floors;k++)b(0,Math.min(h-.09,k*3.05),side*(d/2+.10),w,.20,.18,'wood');
   }else if(style===2||style===4){
@@ -41,16 +50,33 @@ else{
 }
 solid(x,z,wx,wz);b(0,.22,d/2+.05,w,.42,.18,'darkStone');
 for(let s of [-1,1])for(let k=0;k<floors;k++){if(ruin&&k>0&&s===1)continue;if(commercial&&s===1&&k===0&&!ruin)continue;let n=Math.max(2,Math.round(w/2.5));for(let j=0;j<n;j++){let u=(j-(n-1)/2)*w/n,y=k*3.05+1.68;if(ruin&&k>0)continue;b(u,y,s*(d/2+.045),1.18,1.62,.13,'darkStone');b(u,y,s*(d/2+.125),.91,1.34,.06,ruin?'black':'glass');b(u,y,s*(d/2+.17),.07,1.36,.06,'woodLight');b(u,y,s*(d/2+.17),.94,.08,.06,'woodLight');b(u,y-.81,s*(d/2+.14),1.35,.12,.24,'trim');if(!ruin&&style!==1){b(u,y+.88,s*(d/2+.10),1.44,.20,.20,'trim');for(let t of [-1,1])b(u+t*.65,y,s*(d/2+.09),.12,1.65,.13,'trim');}if(!ruin&&style===3&&k===1){b(u,y-.77,s*(d/2+.39),1.48,.12,.65,'stone');for(let q=-2;q<=2;q++)b(u+q*.26,y-.43,s*(d/2+.68),.045,.56,.045,'iron');b(u,y-.13,s*(d/2+.68),1.34,.065,.08,'iron');}if(!ruin&&j%2===0){b(u-.75,y,s*(d/2+.13),.37,1.42,.10,'green');b(u+.75,y,s*(d/2+.13),.37,1.42,.10,'green')}}}
-if(!ruin)for(let side of [-1,1])for(let k=0;k<floors;k++)for(let j=0;j<2;j++){let v=(j-.5)*d*.5;b(side*(w/2+.06),k*3.05+1.7,v,.13,1.4,1.1,'darkStone');b(side*(w/2+.15),k*3.05+1.7,v,.06,1.18,.88,'glass')}
-if(commercial&&!ruin){let type=shopTypes[shops.length%shopTypes.length];b(0,1.36,d/2+.10,w-.7,2.72,.16,'wood');b(0,1.16,d/2+.20,1.16,2.30,.12,'black');for(let s of [-1,1]){b(s*w*.27,1.58,d/2+.21,w*.34,1.58,.10,'glass');b(s*w*.27,1.58,d/2+.28,.10,1.58,.10,'woodLight');b(s*w*.27,1.58,d/2+.28,w*.34,.09,.10,'woodLight');b(s*w*.27,.57,d/2+.25,w*.34,.16,.38,'trim')}
- b(0,2.94,d/2+.22,w-.9,.48,.18,style===3?'blue':'black');
- // Actual extruded sign lettering, not an empty rectangular panel.
- const unit=Math.min(.063,(w-1.1)/(type.length*4)),total=(type.length*4-1)*unit;
- for(let i=0;i<type.length;i++){const glyph=letters[type[i]];if(!glyph)continue;for(let row=0;row<5;row++){let line=glyph[row];for(let j=0;j<3;){if(line[j]!=='1'){j++;continue}let end=j+1;while(end<3&&line[end]==='1')end++;b(-total/2+(i*4+(j+end-1)/2+.5)*unit,2.94+(2-row)*unit,d/2+.319,(end-j)*unit*.98,unit*.94,.025,'cream');j=end;}}}
- b(0,3.21,d/2+.22,w-.65,.12,.23,'woodLight');
- if(shops.length%3!==0){let m=pick(['cream','red','blue','green']);for(let j=0;j<8;j++){b((j-3.5)*(w-.45)/8,3.05,d/2+.78,(w-.45)/8,.11,1.38,j%2?'cloth':m);b((j-3.5)*(w-.45)/8,2.88,d/2+1.44,(w-.45)/8,.24,.09,j%2?'cloth':m)}}
- let [sx,sz]=local(x,z,rot,0,d/2+.34);shops.push({type,x:sx,z:sz,rotation:rot}); // sign art added as mesh strokes in world module
- if(type==='BOULANGERIE'||type==='EPICERIE'){b(w*.31,.42,d/2+1.03,1.1,.84,.72,'woodLight');for(let j=0;j<4;j++)b(w*.31+(j-1.5)*.23,.93,d/2+1.02,.20,.18,.22,'gold')}
+if(!ruin&&!commercial)for(let side of [-1,1])for(let k=0;k<floors;k++)for(let j=0;j<2;j++){let v=(j-.5)*d*.5;b(side*(w/2+.06),k*3.05+1.7,v,.13,1.4,1.1,'darkStone');b(side*(w/2+.15),k*3.05+1.7,v,.06,1.18,.88,'glass')}
+if(commercial&&!ruin){
+ const shopId=shops.length,type=shopTypes[shopId%shopTypes.length],frame=['green','wood','blue','red','woodLight'][shopId%5],sign=['black','green','blue','wood','red'][shopId%5],door=shopId%3===0?w*.28:0,front=d/2;
+ b(0,1.45,front+.12,w-.17,2.9,.24,frame);
+ b(door,1.22,front+.27,1.02,2.34,.15,'darkStone');b(door,1.48,front+.36,.76,1.55,.035,'glass');b(door,.36,front+.36,.72,.42,.035,'woodLight');
+ b(door+.35,1.05,front+.40,.065,.16,.06,'gold');
+ const spans=door===0?[[-w/2+.25,-.65],[.65,w/2-.25]]:[[-w/2+.23,door-.64],[door+.64,w/2-.23]];
+ for(let [lo,hi] of spans){if(hi-lo<.45)continue;let mid=(lo+hi)/2,sw=hi-lo;
+  b(mid,1.54,front+.26,sw,1.78,.07,'black');
+  b(mid,1.54,front+.31,sw-.12,1.65,.035,'glass');
+  b(mid,.58,front+.37,sw+.08,.14,.22,'woodLight');
+  b(mid,1.52,front+.37,sw,.055,.10,'woodLight');
+  for(let j=1;j<=Math.max(1,Math.floor(sw/1.0));j++)b(lo+j*sw/(Math.max(1,Math.floor(sw/1.0))+1),1.56,front+.37,.055,1.68,.09,'woodLight');
+  // Modest silhouettes of period merchandise behind the window plane.
+  for(let j=0;j<Math.min(6,Math.floor(sw/.32));j++){let xx=lo+.18+j*.30,hh=.13+(j%3)*.11,mat=type==='LIBRAIRIE'?['paper','red','wood'][j%3]:type==='BOULANGERIE'?'gold':['paper','cloth','woodLight'][j%3];b(xx,.76+hh/2,front+.325,.20,hh,.025,mat);}
+ }
+ b(0,2.83,front+.26,w-.28,.56,.17,sign);
+ b(0,3.15,front+.29,w-.13,.10,.29,'trim');
+ const unit=Math.min(.080,(w-.75)/(type.length*4)),total=(type.length*4-1)*unit;
+ for(let i=0;i<type.length;i++){const glyph=letters[type[i]];if(!glyph)continue;for(let row=0;row<5;row++){let line=glyph[row];for(let j=0;j<3;){if(line[j]!=='1'){j++;continue}let end=j+1;while(end<3&&line[end]==='1')end++;b(-total/2+(i*4+(j+end-1)/2+.5)*unit,2.83+(2-row)*unit,front+.36,(end-j)*unit*.98,unit*.94,.025,'cream');j=end;}}}
+ if(shopId%4!==2){let m=['cream','red','blue','green'][shopId%4],reach=1.12+(shopId%3)*.15,width=w-.25,n=shopId%3===0?1:8;
+ for(let j=0;j<n;j++){let a=-width/2+j*width/n,bx=a+width/n,mat=n===1?m:j%2?'cloth':m;mesh(0,2.65,front+.29,[[a,.27,0],[bx,.27,0],[bx,-.15,reach],[a,-.15,reach]],[[0,3,2,1]],mat);b((a+bx)/2,2.40,front+.29+reach,bx-a,.22,.045,mat);}
+ }
+ if(shopId%4===0){b(w*.32,3.64,front+.60,.07,.08,.85,'iron');let [X,Z]=local(x,z,rot,w*.32,front+.91);box(X,3.39,Z,.11,.45,.58,sign,{rot});}
+ if(type==='CAFE'){for(let t of [-1,1]){let [X,Z]=local(x,z,rot,t*w*.27,front+1.07);cyl(X,.70,Z,.37,.08,'woodLight',8);cyl(X,.34,Z,.05,.65,'iron',6);for(let side of [-1,1]){let [cx,cz]=local(x,z,rot,t*w*.27+side*.52,front+1.07);box(cx,.43,cz,.30,.07,.30,'wood',{rot});for(let v of [-1,1])box(cx+v*.10,.20,cz,.035,.40,.035,'iron')}}}
+ if(type==='BOULANGERIE'||type==='EPICERIE'){b(w*.29,.39,front+.95,.82,.78,.58,'woodLight');for(let j=0;j<3;j++)b(w*.29+(j-1)*.21,.86,front+.95,.16,.17,.19,'gold');}
+ let [sx,sz]=local(x,z,rot,0,front+.34);shops.push({type,x:sx,z:sz,rotation:rot,style:frame});
  }else if(!ruin){b(0,1.12,d/2+.12,1.20,2.24,.16,'wood');b(0,.12,d/2+.38,1.55,.24,.64,'stone')}
  buildings.push({x,z,w,d,floors,commercial,ruin});
 }
@@ -64,10 +90,20 @@ box(0,-1.6,-110,390,3.2,180,'grass');box(0,-1.6,110,390,3.2,180,'grass');box(0,-
 const xs=[-144,-96,-48,0,48,96,144],zs=[-144,-96,-48,48,96,144];
 for(let s of [-1,1]){box(0,-1,s*19.8,390,2,1,'darkStone');surface(0,s*24,380,7,.035,'cobble')}
 for(let x of xs)for(let s of [-1,1]){surface(x,s*110,9,180,.045,'asphalt');for(let q of [-1,1])surface(x+q*5.8,s*110,2.6,168,.10,'stone')}
-for(let z of zs){surface(0,z,368,9,.05,'cobble');for(let q of [-1,1])surface(0,z+q*5.8,368,2.6,.105,'stone')}
+for(let z of zs){surface(0,z,368,9,.05,z===96?'road':'cobble');for(let q of [-1,1])surface(0,z+q*5.8,368,2.6,.105,'stone')}
+// Street-level landmarks for the preserved old commercial quarter, same continuous world.
+landmarks.push({name:'圣皮埃尔风格旧商业街',x:-72,z:96});
+for(let x=-132;x<-12;x+=13){for(let side of [-1,1]){let z=96+side*6.4;cyl(x,.24,z,.095,.48,'iron',8);cyl(x,.51,z,.13,.10,'iron',8);}}
+
 // Compact street-front blocks, narrower parcels, period masonry. Keep central axes open.
 for(let ix=0;ix<xs.length-1;ix++)for(let s of [-1,1])for(let iz=0;iz<3;iz++){let xc=(xs[ix]+xs[ix+1])/2,zc=s*(iz===0?35:72+(iz-1)*48);if(s===-1&&iz===2&&Math.abs(xc)<49)continue;if(s===1&&iz===1&&Math.abs(xc)<25)continue;
-for(let row of (iz===0?[s]:[-1,1]))for(let j=0;j<4;j++){let x=xc+(j-1.5)*8.25,z=iz===0?s*35.5:zc+row*12.1,w=7.78+rand()*.39,d=9+rand()*.7;let ruined=rand()<(s===1?.24:.13);house(x,z,w,d,2+Math.floor(rand()*3),row===1?0:Math.PI,iz!==2||j===1||j===2,ruined)}}
+for(let row of (iz===0?[s]:[-1,1])){
+ let parcels=ix%2===0?5:4,raw=Array.from({length:parcels},()=>.75+rand()*.55),total=raw.reduce((a,b)=>a+b,0),span=35.7,left=xc-span/2;
+ for(let j=0;j<parcels;j++){let w=span*raw[j]/total,x=left+w/2;left+=w;
+  const main=s===1&&iz>0&&ix<3,z=iz===0?s*35.5:zc+row*(main?14.0:12.1),d=9.1+rand()*.6,commercial=main||iz!==2||j===1||j===2,ruined=rand()<(main?.035:s===1?.24:.13);
+  house(x,z,w-.08,d,main?3+Math.floor(rand()*2):2+Math.floor(rand()*3),row===1?0:Math.PI,commercial,ruined);
+ }
+}}
 for(let x of [-96,0,96])bridge(x);
 // Civilian square and administrative quarter; no medieval crenellations or fantasy towers.
 surface(0,72,38,35,.065,'cobble');landmarks.push({name:'市政广场',x:0,z:72});for(let s of [-1,1])for(let z of [60,84]){lamp(s*13,z);tree(s*16,z)}
