@@ -1,0 +1,3 @@
+# Coat V02
+
+References: https://area.autodesk.jp/column/tutorial/maya-lowpoly-season-2/03-create-clothes/ and https://studio.blender.org/training/realistic-human-research/retopology/ . Extracted 184 connected V45 body faces bounded by neck, hip and two cuff rings. Duplicated with clearance, shared shoulder/armpit vertices, added skirt, collar and cuff edges. Body and hair unchanged; no body masking. Static segment/triangle intersection test excluding coplanar/boundary contacts: 54 garment faces with detected proper intersections after correction. Not a proof of all clearance; no posed animation/skinning or deployment check. Outer reference mantle and fold silhouette require further refinement.
