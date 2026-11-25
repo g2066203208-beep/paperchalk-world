@@ -1,0 +1,26 @@
+{
+  "report": [
+    {
+      "faces": 606,
+      "vertices": 608,
+      "changed": 80,
+      "bad": [],
+      "flip": [],
+      "area": 0.0006744990733870595,
+      "nonmanifold": 0
+    },
+    {
+      "faces": 2424,
+      "vertices": 2426,
+      "changed": 352,
+      "bad": [],
+      "flip": [],
+      "area": 0.00017307631906860263,
+      "nonmanifold": 0
+    }
+  ],
+  "scope": "static only, local triangle orientation and manifold edges; full intersection and hip animation not checked",
+  "source": "V44",
+  "changedRings": 5,
+  "addedFaces": 0
+}
