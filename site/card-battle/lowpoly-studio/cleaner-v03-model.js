@@ -1,6 +1,6 @@
 
 const CLEANER=(()=>{
-const palette={jacket:[77,83,65],cuff:[55,59,45],shorts:[63,68,49],tights:[55,43,42],boot:[91,72,48],sole:[56,48,39],glove:[107,89,49],apron:[112,72,57],pocket:[129,83,64],seam:[77,49,40],scarf:[130,49,43],scarfDark:[103,37,34],hair:[81,69,63],hairLight:[99,84,74],hairDark:[57,48,44],wood:[143,109,72],steel:[82,82,83],edge:[146,143,138],iron:[49,47,48],gold:[190,148,66],paper:[208,210,189],bottle:[48,71,67],cap:[121,118,105]};
+const palette={jacket:[77,83,65],cuff:[55,59,45],shorts:[63,68,49],tights:[55,43,42],boot:[91,72,48],sole:[56,48,39],glove:[107,89,49],apron:[112,72,57],pocket:[129,83,64],seam:[77,49,40],scarf:[130,49,43],scarfDark:[103,37,34],hair:[91,79,72],hairLight:[105,91,82],hairDark:[75,64,58],wood:[143,109,72],steel:[82,82,83],edge:[146,143,138],iron:[49,47,48],gold:[190,148,66],paper:[208,210,189],bottle:[48,71,67],cap:[121,118,105]};
 const avg=(P,f)=>[0,1,2].map(k=>f.reduce((v,i)=>v+P[i][k],0)/f.length),sub=(a,b)=>a.map((v,i)=>v-b[i]),add=(a,b)=>a.map((v,i)=>v+b[i]),mul=(a,t)=>a.map(v=>v*t),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],unit=a=>mul(a,1/(Math.hypot(...a)||1));
 function build(P,rest,quads,zones,show={hair:true,clothes:true,axe:true}){
 let out=P.map(p=>p.slice()),faces=quads.map(f=>f.slice()),mats=quads.map(()=>'skin'),orig=quads.map((_,i)=>i),norm=P.map(()=>[0,0,0]),restNorm=P.map(()=>[0,0,0]);
@@ -110,10 +110,43 @@ const cards=[
  [[.276,2.415,.226],[.363,2.438,.211],[.396,2.414,.081]],
  [[.264,2.308,.143],[.325,2.294,.158],[.351,2.317,.098]]
 ]]];
-for(const [name,rows] of cards){const ids=patch(rows,'hair');}
-const curl=[[-.045,3.030,.027],[-.130,3.104,.013],[-.249,3.113,.013],[-.333,3.069,.044],[-.350,3.039,.056]];
-// One tapered curved ribbon rather than several visible disconnected tubes.
-patch(curl.map(([x,y,z],i)=>[[x-.009*(1-i/5),y,z-.004],[x+.009*(1-i/5),y,z+.005]]),'hairDark');
+// Inner overlapping cards remain darker, outer ridges get modest directional color.
+for(const [name,rows] of cards){patch(rows,name==='back-centre'||name==='fringe-centre-under'?'hairDark':'hair')}
+// Bridge the crown and part with a real swept lock; the visible fringe edge
+// has distinct tapered ends rather than a continuous helmet rim.
+patch([
+ [[-.018,3.044,.001],[.079,3.062,.048],[.149,3.016,.089]],
+ [[.049,2.990,.230],[.124,3.014,.288],[.209,2.950,.236]],
+ [[.087,2.820,.362],[.155,2.852,.405],[.211,2.804,.339]],
+ [[.106,2.663,.359],[.158,2.681,.399],[.199,2.684,.333]],
+ [[.139,2.614,.343],[.162,2.604,.369],[.184,2.651,.348]]
+],'hair');
+// Offset broad swept left fringe: curved front ridge, changing width, independent tip.
+patch([
+ [[-.118,3.010,.071],[-.028,3.074,.085],[.044,3.040,.115]],
+ [[-.235,2.929,.244],[-.121,3.019,.311],[-.005,2.984,.301]],
+ [[-.253,2.777,.353],[-.166,2.858,.447],[-.071,2.822,.413]],
+ [[-.213,2.592,.367],[-.160,2.642,.449],[-.088,2.648,.412]],
+ [[-.177,2.530,.351],[-.140,2.515,.410],[-.110,2.556,.400]]
+],'hairLight');
+// Large back-side locks with a separate silhouette and continuous ridge.
+patch([
+ [[-.042,3.039,-.062],[-.151,3.028,-.100],[-.224,2.965,-.089]],
+ [[-.143,2.951,-.234],[-.283,2.940,-.292],[-.358,2.822,-.186]],
+ [[-.196,2.730,-.380],[-.334,2.752,-.390],[-.406,2.605,-.210]],
+ [[-.180,2.499,-.386],[-.345,2.482,-.381],[-.399,2.424,-.166]],
+ [[-.239,2.324,-.302],[-.326,2.268,-.310],[-.371,2.305,-.175]]
+],'hair');
+patch([
+ [[.020,3.044,-.056],[.126,3.041,-.093],[.211,2.967,-.082]],
+ [[.119,2.950,-.236],[.261,2.939,-.304],[.352,2.817,-.197]],
+ [[.184,2.733,-.376],[.332,2.738,-.399],[.405,2.592,-.208]],
+ [[.176,2.515,-.389],[.338,2.514,-.380],[.414,2.443,-.147]],
+ [[.214,2.347,-.335],[.319,2.319,-.328],[.393,2.355,-.153]]
+],'hair');
+const curl=[[-.06,3.020,.045],[-.125,3.095,.039],[-.215,3.128,.044],[-.304,3.115,.053],[-.345,3.080,.062],[-.348,3.060,.071]];
+// A single continuous five-sided tapered curved mesh, visible from front and side.
+rings(curl.map((p,i)=>{let d=unit(sub(curl[Math.min(i+1,curl.length-1)],curl[Math.max(0,i-1)])),u=unit(cross(d,[0,0,1])),v=cross(d,u),r=[.014,.013,.010,.007,.004,.002][i];return Array.from({length:5},(_,j)=>add(p,add(mul(u,r*Math.cos(j*2*Math.PI/5)),mul(v,r*Math.sin(j*2*Math.PI/5))))) }),'hairDark',true);
 }
 if(show.axe){const hand=rest.map((p,i)=>i).filter(i=>zones[i]===2&&rest[i][1]<1.36),delta=sub(avg(P,hand),avg(rest,hand)),T=p=>add(p,delta);tube(T([-.36,1.42,.06]),T([-1.03,.58,.13]),.038,.052,'wood',8);
 let outline=[[-.99,.70],[-1.15,.61],[-1.24,.48],[-1.17,.34],[-.78,.03],[-.64,.15],[-.55,.32],[-.70,.37],[-.82,.48]],layers=[-.046,.046].map(z=>outline.map(([x,y])=>vert(T([x,y,.13+z]))));for(let k=0;k<2;k++){let c=vert(T([-.98,.41,.13+(k?.046:-.046)]));for(let j=0;j<outline.length;j++)face([c,layers[k][j],layers[k][(j+1)%outline.length]],j>=3&&j<=5?'edge':'steel')}for(let j=0;j<outline.length;j++)face([layers[0][j],layers[0][(j+1)%outline.length],layers[1][(j+1)%outline.length],layers[1][j]],j>=3&&j<=5?'edge':'iron');tube(T([-1.06,.67,.13]),T([-1.19,.47,.13]),.065,.073,'iron',6);for(let z of [-.06,.06]){let p=T([-1.12,.57,.13+z]);tube(p,add(p,[0,0,z*.3]),.022,.022,'cap',8)}
