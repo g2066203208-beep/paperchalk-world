@@ -1,0 +1,110 @@
+[
+  {
+    "mode": "carry",
+    "W": 450,
+    "H": 260,
+    "prop": 5030,
+    "frontHand": 155,
+    "rearHand": 1293,
+    "body": 5440
+  },
+  {
+    "mode": "carry",
+    "W": 260,
+    "H": 450,
+    "prop": 14646,
+    "frontHand": 467,
+    "rearHand": 2966,
+    "body": 11549
+  },
+  {
+    "mode": "raise",
+    "W": 450,
+    "H": 260,
+    "prop": 6339,
+    "frontHand": 450,
+    "rearHand": 3492,
+    "body": 16329
+  },
+  {
+    "mode": "raise",
+    "W": 260,
+    "H": 450,
+    "prop": 18276,
+    "frontHand": 1344,
+    "rearHand": 5739,
+    "body": 17959
+  },
+  {
+    "mode": "down",
+    "W": 450,
+    "H": 260,
+    "prop": 6027,
+    "frontHand": 177,
+    "rearHand": 1199,
+    "body": 49799
+  },
+  {
+    "mode": "down",
+    "W": 260,
+    "H": 450,
+    "prop": 7170,
+    "frontHand": 525,
+    "rearHand": 2585,
+    "body": 87203
+  },
+  {
+    "mode": "crouch raise",
+    "W": 450,
+    "H": 260,
+    "prop": 6339,
+    "frontHand": 450,
+    "rearHand": 3492,
+    "body": 16329
+  },
+  {
+    "mode": "crouch raise",
+    "W": 260,
+    "H": 450,
+    "prop": 18276,
+    "frontHand": 1344,
+    "rearHand": 5739,
+    "body": 17959
+  },
+  {
+    "mode": "raise up",
+    "W": 450,
+    "H": 260,
+    "prop": 8537,
+    "frontHand": 419,
+    "rearHand": 2093,
+    "body": 14997
+  },
+  {
+    "mode": "raise up",
+    "W": 260,
+    "H": 450,
+    "prop": 20569,
+    "frontHand": 1250,
+    "rearHand": 4821,
+    "body": 22082
+  },
+  {
+    "mode": "raise down",
+    "W": 450,
+    "H": 260,
+    "prop": 4739,
+    "frontHand": 408,
+    "rearHand": 3156,
+    "body": 23256
+  },
+  {
+    "mode": "raise down",
+    "W": 260,
+    "H": 450,
+    "prop": 14143,
+    "frontHand": 1215,
+    "rearHand": 6155,
+    "body": 19848
+  }
+]
